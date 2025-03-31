@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
-using Meritocious.Common.DTOs.Auth;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
 

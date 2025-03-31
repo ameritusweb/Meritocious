@@ -44,10 +44,10 @@ namespace Meritocious.Infrastructure.Data
 
                 var defaultTags = new[]
                 {
-                    new Core.Entities.Tag { Name = "Discussion", Description = "General discussions" },
-                    new Core.Entities.Tag { Name = "Question", Description = "Questions and inquiries" },
-                    new Core.Entities.Tag { Name = "Insight", Description = "Insightful contributions" },
-                    new Core.Entities.Tag { Name = "Meta", Description = "About Meritocious" }
+                    Core.Entities.Tag.Create("Discussion", "General discussions", Core.Features.Tags.Models.TagCategory.Topic),
+                    Core.Entities.Tag.Create("Question", "Questions and inquiries", Core.Features.Tags.Models.TagCategory.Topic),
+                    Core.Entities.Tag.Create("Insight", "Insightful contributions", Core.Features.Tags.Models.TagCategory.Topic),
+                    Core.Entities.Tag.Create("Meta", "About Meritocious", Core.Features.Tags.Models.TagCategory.Topic),
                 };
 
                 await context.Tags.AddRangeAsync(defaultTags);

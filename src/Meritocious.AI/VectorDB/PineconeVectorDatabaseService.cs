@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pinecone;
-using System.Numerics;
-using System.Text.Json;
+using Index = Pinecone.Index;
+using Vector = Pinecone.Vector;
 
 namespace Meritocious.AI.VectorDB
 {

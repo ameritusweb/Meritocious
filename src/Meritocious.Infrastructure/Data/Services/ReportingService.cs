@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.Enums;
+using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Reporting.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

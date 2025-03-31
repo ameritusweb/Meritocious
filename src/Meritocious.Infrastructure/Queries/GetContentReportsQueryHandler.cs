@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Meritocious.Core.Features.Reporting.Queries;
+using Meritocious.Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;

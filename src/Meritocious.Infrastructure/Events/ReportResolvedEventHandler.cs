@@ -8,6 +8,7 @@ namespace Meritocious.Core.Features.Reporting.Events
 {
     using MediatR;
     using Meritocious.Core.Features.Notifications.Models;
+    using Meritocious.Core.Interfaces;
     using Microsoft.Extensions.Logging;
 
     public class ReportResolvedEventHandler : INotificationHandler<ReportResolvedEvent>

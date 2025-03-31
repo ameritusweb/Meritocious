@@ -8,6 +8,7 @@ namespace Meritocious.Core.Features.Moderation.Commands
 {
     using MediatR;
     using Meritocious.Common.Enums;
+    using Meritocious.Core.Entities;
     using Meritocious.Core.Results;
 
     public record ModerateContentCommand : IRequest<Result<ModerationResult>>

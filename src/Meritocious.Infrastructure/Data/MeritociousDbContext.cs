@@ -1,10 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Meritocious.Core.Entities;
-using Meritocious.Core.Features.Versioning.Models;
-using Meritocious.Core.Features.Moderation.Models;
-using Meritocious.Core.Features.Merit.Models;
-using Meritocious.Core.Features.Tags.Models;
-using Meritocious.Common.Enums;
+using Meritocious.Core.Features.Versioning;
 
 namespace Meritocious.Infrastructure.Data
 {
@@ -14,6 +10,7 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<ExternalLogin> ExternalLogins { get; set; }
 
         // Content versioning
         public DbSet<ContentVersion> ContentVersions { get; set; }
@@ -23,6 +20,8 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<ModerationAction> ModerationActions { get; set; }
         public DbSet<ModerationActionEffect> ModerationEffects { get; set; }
         public DbSet<ModerationAppeal> ModerationAppeals { get; set; }
+        public DbSet<ContentModerationEvent> ContentModerationEvents { get; set; }
+        public DbSet<ContentReport> ContentReports { get; set; }
 
         // Merit scoring
         public DbSet<MeritScoreHistory> MeritScoreHistory { get; set; }
