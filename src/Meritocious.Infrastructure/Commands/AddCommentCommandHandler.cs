@@ -12,6 +12,7 @@ namespace Meritocious.Core.Features.Comments.Commands
     using Meritocious.Core.Interfaces;
     using Meritocious.Infrastructure.Data.Repositories;
     using Meritocious.AI.MeritScoring.Interfaces;
+    using Meritocious.Core.Features.Comments.Events;
 
     public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Result<Comment>>
     {
