@@ -5,6 +5,7 @@ using Meritocious.Common.Enums;
 using Meritocious.Core.Entities;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Features.Versioning;
+using Meritocious.Common.DTOs.Moderation;
 
 namespace Meritocious.Infrastructure.Data.Extensions
 {
