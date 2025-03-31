@@ -1,0 +1,6 @@
+@Meritocious.Web_HostAddress = http://localhost:5185
+
+GET {{Meritocious.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
