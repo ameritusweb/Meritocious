@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Meritocious.AI.Search;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pinecone;
 using System.Numerics;

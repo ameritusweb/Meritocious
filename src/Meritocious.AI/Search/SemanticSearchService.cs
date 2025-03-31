@@ -3,6 +3,7 @@ using Microsoft.SemanticKernel;
 using Meritocious.Core.Entities;
 using System.Collections.Concurrent;
 using Meritocious.Common.Enums;
+using Meritocious.AI.VectorDB;
 
 namespace Meritocious.AI.Search
 {
