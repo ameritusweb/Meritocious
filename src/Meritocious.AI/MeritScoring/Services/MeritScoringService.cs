@@ -16,21 +16,28 @@ namespace Meritocious.AI.MeritScoring.Services
 {
     public class MeritScoringService : IMeritScorer
     {
-        private readonly IKernel _semanticKernel;
+        private readonly IKernelBuilder _semanticKernelBuilder;
         private readonly ILogger<MeritScoringService> _logger;
         private readonly AIServiceConfiguration _config;
         private readonly IContentModerator _contentModerator;
 
         public MeritScoringService(
-            IKernel semanticKernel,
+            IKernelBuilder semanticKernelBuilder,
             IContentModerator contentModerator,
             IOptions<AIServiceConfiguration> config,
             ILogger<MeritScoringService> logger)
         {
-            _semanticKernel = semanticKernel;
+            _semanticKernelBuilder = semanticKernelBuilder;
             _contentModerator = contentModerator;
             _config = config.Value;
             _logger = logger;
+        }
+
+        private Kernel CreateKernel()
+        {
+            // Create a new kernel using the builder
+            var kernel = _semanticKernelBuilder.Build();
+            return kernel;
         }
 
         public async Task<MeritScoreDto> ScoreContentAsync(string content, string? context = null)
@@ -121,14 +128,16 @@ namespace Meritocious.AI.MeritScoring.Services
             string content,
             string? context)
         {
+            var semanticKernel = CreateKernel();
+
             // 1. Generate embeddings for the content
-            var contentEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
+            var contentEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
 
             // 2. If context exists, compare with it
             decimal similarityScore = 0;
             if (!string.IsNullOrEmpty(context))
             {
-                var contextEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(context);
+                var contextEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(context);
                 similarityScore = CalculateCosineSimilarity(contentEmbedding, contextEmbedding);
             }
 
@@ -228,9 +237,11 @@ namespace Meritocious.AI.MeritScoring.Services
                 return (1.0m, "No context provided for relevance calculation");
             }
 
+            var semanticKernel = CreateKernel();
+
             // 1. Calculate semantic similarity
-            var contentEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
-            var contextEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(context);
+            var contentEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
+            var contextEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(context);
             var semanticSimilarity = CalculateCosineSimilarity(contentEmbedding, contextEmbedding);
 
             // 2. Analyze topic coherence
