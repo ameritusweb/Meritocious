@@ -1,28 +1,24 @@
-﻿using System.Numerics;
-
+﻿
 namespace Meritocious.AI.VectorDB
 {
-    public interface IVectorDatabaseService
+    public interface IVectorDatabaseService : IAsyncDisposable
     {
-        Task<bool> CreateCollectionAsync(string collectionName, int dimension);
-        Task<bool> DeleteCollectionAsync(string collectionName);
-        Task<bool> InsertVectorsAsync(string collectionName, List<VectorEntry> vectors);
-        Task<List<SearchResult>> SearchAsync(string collectionName, float[] queryVector, int topK = 10);
-        Task<bool> DeleteVectorsAsync(string collectionName, List<string> ids);
-        Task<bool> UpdateVectorAsync(string collectionName, VectorEntry vector);
-    }
+        // Index Management
+        Task<bool> CreateIndexAsync(string indexName, int dimension);
+        Task<bool> DeleteIndexAsync(string indexName);
+        Task<Pinecone.Index> GetIndexAsync(string indexName);
+        Task<List<Pinecone.Index>> ListIndexesAsync();
+        Task ConfigureIndexAsync(string indexName, IndexConfigurationOptions options);
+        Task<IndexStats> GetIndexStatsAsync(string indexName);
 
-    public class VectorEntry
-    {
-        public string Id { get; set; }
-        public float[] Vector { get; set; }
-        public Dictionary<string, string> Metadata { get; set; }
-    }
-
-    public class SearchResult
-    {
-        public string Id { get; set; }
-        public float Score { get; set; }
-        public Dictionary<string, string> Metadata { get; set; }
+        // Vector Operations
+        Task<bool> InsertVectorsAsync(string indexName, List<VectorEntry> vectors);
+        Task<bool> UpdateVectorAsync(string indexName, VectorEntry vector);
+        Task<bool> DeleteVectorsAsync(string indexName, List<string> ids);
+        Task<List<SearchResult>> SearchAsync(
+            string indexName,
+            float[] queryVector,
+            int topK = 10,
+            SearchFilter filter = null);
     }
 }
