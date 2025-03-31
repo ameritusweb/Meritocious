@@ -15,6 +15,22 @@ namespace Meritocious.Infrastructure.Data.Repositories
         protected readonly MeritociousDbContext _context;
         protected readonly DbSet<T> _dbSet;
 
+        internal MeritociousDbContext DbContext
+        {
+            get
+            {
+                return _context;
+            }
+        }
+
+        internal DbSet<T> DbSet
+        {
+            get
+            {
+                return _dbSet;
+            }
+        }
+
         public GenericRepository(MeritociousDbContext context)
         {
             _context = context;

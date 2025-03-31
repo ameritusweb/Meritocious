@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Common.Enums
 {
-    public enum ModerationAction
+    public enum ModerationActionType
     {
         None,
         Flag,

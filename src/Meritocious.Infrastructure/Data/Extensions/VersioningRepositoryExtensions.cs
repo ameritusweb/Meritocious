@@ -1,12 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Meritocious.Core.Features.Versioning.Models;
 using Meritocious.Core.Features.Moderation.Models;
-using Meritocious.Core.Features.Merit.Models;
 using Meritocious.Core.Features.Tags.Models;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Entities;
 using Meritocious.Infrastructure.Data.Repositories;
-using System.Threading.Tasks;
+using Meritocious.Core.Features.Versioning;
 
 namespace Meritocious.Infrastructure.Data.Extensions
 {
@@ -18,7 +16,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             DateTime start,
             DateTime end)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(v => v.Editor)
                 .Where(v =>
                     v.EditorId == userId &&
@@ -33,7 +31,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             Guid contentId,
             ContentType contentType)
         {
-            var distribution = await repository._dbSet
+            var distribution = await repository.DbSet
                 .Where(v => v.ContentId == contentId && v.ContentType == contentType)
                 .GroupBy(v => v.EditType)
                 .Select(g => new
@@ -53,7 +51,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this ModerationActionRepository repository,
             Guid moderatorId)
         {
-            var outcomes = await repository._dbSet
+            var outcomes = await repository.DbSet
                 .Where(a =>
                     a.ModeratorId == moderatorId &&
                     a.ReviewedAt.HasValue)
@@ -71,7 +69,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
         public static async Task<List<ModerationAction>> GetContentWithActiveEffectsAsync(
             this ModerationActionRepository repository)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(a => a.Effects)
                 .Where(a => a.Effects.Any(e =>
                     !e.IsReverted &&
@@ -89,7 +87,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
         {
             var startDate = DateTime.UtcNow.AddDays(-daysWindow);
 
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(m => m.User)
                 .Where(m => m.CreatedAt >= startDate)
                 .OrderByDescending(m => m.OverallMeritScore)
@@ -101,7 +99,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this ReputationBadgeRepository repository,
             Guid userId)
         {
-            var badges = await repository._dbSet
+            var badges = await repository.DbSet
                 .Where(b =>
                     b.UserId == userId &&
                     b.AwardedAt.HasValue)
@@ -121,7 +119,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
         decimal minThreshold,
             decimal maxThreshold)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Where(t =>
                     t.Status == TagStatus.Active &&
                     t.MeritThreshold >= minThreshold &&
@@ -134,7 +132,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this TagRepository repository,
             int minimumUseCount = 10)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(t => t.WikiVersions)
                 .Where(t =>
                     t.Status == TagStatus.Active &&
@@ -182,7 +180,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this TagRelationshipRepository repository,
             decimal minStrength = 0.5m)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(r => r.SourceTag)
                 .Include(r => r.RelatedTag)
                 .Where(r =>

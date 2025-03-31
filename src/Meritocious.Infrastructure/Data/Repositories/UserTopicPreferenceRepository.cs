@@ -1,4 +1,5 @@
 ﻿using Meritocious.Core.Entities;
+using Meritocious.Core.Features.Recommendations.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

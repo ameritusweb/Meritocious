@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Meritocious.Core.Features.Moderation.Queries;
 using Meritocious.Infrastructure.Data;
 using Microsoft.Extensions.Logging;
 using System;
@@ -76,3 +77,4 @@ namespace Meritocious.Infrastructure.Queries
             }
         }
     }
+}

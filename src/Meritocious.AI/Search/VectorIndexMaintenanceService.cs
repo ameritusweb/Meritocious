@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Meritocious.Infrastructure.Data.Repositories;
 using System.Collections.Concurrent;
 using Meritocious.Common.Enums;
+using Meritocious.AI.MeritScoring.Interfaces;
 
 namespace Meritocious.AI.Search
 {
