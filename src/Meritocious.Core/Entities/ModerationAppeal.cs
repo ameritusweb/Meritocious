@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Meritocious.Core.Features.Moderation.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

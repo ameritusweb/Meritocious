@@ -1,5 +1,6 @@
 ﻿using Meritocious.Common.Enums;
 using Meritocious.Core.Features.Search.Queries;
+using Meritocious.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;

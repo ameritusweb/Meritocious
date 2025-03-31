@@ -8,6 +8,7 @@ using Meritocious.Core.Features.Discovery.Queries;
 using Meritocious.Core.Features.Notifications.Commands;
 using Meritocious.Core.Features.Notifications.Queries;
 using Meritocious.Core.Features.Posts.Queries;
+using Meritocious.Common.DTOs.Notifications;
 
 namespace Meritocious.Web.Controllers;
 

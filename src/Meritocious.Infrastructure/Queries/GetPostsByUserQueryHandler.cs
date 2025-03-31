@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Posts.Queries;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data.Repositories;
@@ -11,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Queries
 {
-    public class GetPostsByUserQueryHandler : IRequestHandler<GetPostsByUserQuery, Result<List<Post>>>
+    public class GetPostsByUserQueryHandler : IRequestHandler<GetPostsByUserQuery, Result<List<PostDto>>>
     {
         private readonly PostRepository _postRepository;
         private readonly UserRepository _userRepository;
@@ -24,14 +26,14 @@ namespace Meritocious.Infrastructure.Queries
             _userRepository = userRepository;
         }
 
-        public async Task<Result<List<Post>>> Handle(GetPostsByUserQuery request, CancellationToken cancellationToken)
+        public async Task<Result<List<PostDto>>> Handle(GetPostsByUserQuery request, CancellationToken cancellationToken)
         {
             try
             {
                 // Verify the user exists
                 var user = await _userRepository.GetByIdAsync(request.UserId);
                 if (user == null)
-                    return Result.Failure<List<Post>>($"User {request.UserId} not found");
+                    return Result.Failure<List<PostDto>>($"User {request.UserId} not found");
 
                 // Get posts by user
                 var posts = await _postRepository.GetPostsByUserAsync(request.UserId);
@@ -50,11 +52,11 @@ namespace Meritocious.Infrastructure.Queries
                     posts = posts.Skip(skip).Take(request.PageSize.Value).ToList();
                 }
 
-                return Result.Success(posts);
+                return Result.Success(posts.ToDtoList());
             }
             catch (Exception ex)
             {
-                return Result.Failure<List<Post>>($"Error retrieving posts: {ex.Message}");
+                return Result.Failure<List<PostDto>>($"Error retrieving posts: {ex.Message}");
             }
         }
     }

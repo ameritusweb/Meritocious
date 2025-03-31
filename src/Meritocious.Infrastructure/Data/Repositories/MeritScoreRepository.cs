@@ -2,6 +2,7 @@
 using Meritocious.Core.Features.Merit.Models;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
+using Meritocious.Common.Enums;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {

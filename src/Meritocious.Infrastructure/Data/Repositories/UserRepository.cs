@@ -3,11 +3,11 @@ using Meritocious.Core.Entities;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
-    public class UserRepository
+    public class UserRepository : GenericRepository<User>
     {
         private readonly MeritociousDbContext _context;
 
-        public UserRepository(MeritociousDbContext context)
+        public UserRepository(MeritociousDbContext context) : base(context)
         {
             _context = context;
         }

@@ -1,6 +1,8 @@
 ﻿using MediatR;
+using Meritocious.Common.DTOs.Moderation;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -83,3 +85,4 @@ namespace Meritocious.Infrastructure.Queries
             }
         }
     }
+}

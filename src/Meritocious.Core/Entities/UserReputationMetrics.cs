@@ -1,4 +1,5 @@
 ﻿using Meritocious.Core.Entities;
+using Meritocious.Core.Features.Reputation.Models;
 
 public class UserReputationMetrics : BaseEntity
 {

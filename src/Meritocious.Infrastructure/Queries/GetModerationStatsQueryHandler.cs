@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Meritocious.Core.Features.Moderation.Queries;
 using Meritocious.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -62,7 +63,7 @@ namespace Meritocious.Infrastructure.Queries
 
                 return new ModerationStatsDto
                 {
-                    TotalReports = reports.Count,
+                    TotalReports = reports.Count(),
                     PendingReports = pendingReports,
                     ResolvedReports = resolvedReports,
                     ReportsByType = reportsByType,

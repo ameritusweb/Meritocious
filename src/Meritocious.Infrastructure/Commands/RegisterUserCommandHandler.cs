@@ -13,8 +13,11 @@ namespace Meritocious.Core.Features.Users.Commands
     using Meritocious.Infrastructure.Data.Repositories;
     using BCrypt.Net;
     using Microsoft.Extensions.Logging;
+    using Meritocious.Core.Events;
+    using Meritocious.Core.Extensions;
+    using Meritocious.Common.DTOs.Auth;
 
-    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result<User>>
+    public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result<UserProfileDto>>
     {
         private readonly UserRepository _userRepository;
         private readonly IMediator _mediator;
@@ -30,15 +33,15 @@ namespace Meritocious.Core.Features.Users.Commands
             _logger = logger;
         }
 
-        public async Task<Result<User>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+        public async Task<Result<UserProfileDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
             // Check for existing username
             if (await _userRepository.GetByUsernameAsync(request.Username) != null)
-                return Result.Failure<User>("Username is already taken");
+                return Result.Failure<UserProfileDto>("Username is already taken");
 
             // Check for existing email
             if (await _userRepository.GetByEmailAsync(request.Email) != null)
-                return Result.Failure<User>("Email is already registered");
+                return Result.Failure<UserProfileDto>("Email is already registered");
 
             // Hash password
             string passwordHash = BCrypt.EnhancedHashPassword(request.Password);
@@ -50,7 +53,7 @@ namespace Meritocious.Core.Features.Users.Commands
             // Publish event
             await _mediator.Publish(new UserRegisteredEvent(user.Id), cancellationToken);
 
-            return Result.Success(user);
+            return Result.Success(user.ToDto());
         }
     }
 }

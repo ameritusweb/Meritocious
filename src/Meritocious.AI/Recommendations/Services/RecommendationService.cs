@@ -223,7 +223,7 @@ namespace Meritocious.AI.Recommendations.Services
                 if (userProfile.InteractionHistory.Any(h => h.ContentId == content.ContentId))
                     continue;
 
-                var contentEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content.Content);
+                var contentEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content.Value);
 
                 // Calculate average similarity to user's positive interactions
                 var avgSimilarity = interactionEmbeddings
@@ -428,7 +428,7 @@ namespace Meritocious.AI.Recommendations.Services
         private class Content
         {
             public Guid ContentId { get; set; }
-            public string Content { get; set; }
+            public string Value { get; set; }
             public DateTime CreatedAt { get; set; }
         }
 

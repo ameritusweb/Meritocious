@@ -3,6 +3,7 @@ using Meritocious.AI.Search;
 using Meritocious.AI.VectorDB;
 using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.AI.SemanticClustering.Services;
+using Meritocious.Common.Enums;
 
 namespace Meritocious.AI.Recommendations
 {
@@ -14,7 +15,7 @@ namespace Meritocious.AI.Recommendations
         {
             // Configure vector database
             services.Configure(configureVectorDb);
-            services.AddSingleton<IVectorDatabaseService, MilvusVectorDatabaseService>();
+            services.AddSingleton<IVectorDatabaseService, PineconeVectorDatabaseService>();
 
             // Add semantic search services
             services.AddScoped<ISemanticSearchService, SemanticSearchService>();
@@ -172,7 +173,7 @@ namespace Meritocious.AI.Recommendations
                     ContentType.Post,
                     5);
 
-                foreach (var relatedTopic in relatedTopics.Where(t => t.Score between 0.6f and 0.8f))
+                foreach (var relatedTopic in relatedTopics.Where(t => t.Score >= 0.6 && t.Score <= 0.8))
                 {
                     var topicResults = await semanticSearch.SearchSimilarContentAsync(
                         relatedTopic.Metadata["topic"],

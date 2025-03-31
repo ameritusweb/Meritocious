@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Versioning;
+using Meritocious.Core.Features.Notifications.Models;
 
 namespace Meritocious.Infrastructure.Data
 {
@@ -22,6 +23,9 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<ModerationAppeal> ModerationAppeals { get; set; }
         public DbSet<ContentModerationEvent> ContentModerationEvents { get; set; }
         public DbSet<ContentReport> ContentReports { get; set; }
+
+        // Notifications
+        public DbSet<Notification> Notifications { get; set; }
 
         // Merit scoring
         public DbSet<MeritScoreHistory> MeritScoreHistory { get; set; }

@@ -1,10 +1,6 @@
 ﻿using Meritocious.Core.Features.Notifications.Models;
+using Meritocious.Core.Interfaces;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Services
 {

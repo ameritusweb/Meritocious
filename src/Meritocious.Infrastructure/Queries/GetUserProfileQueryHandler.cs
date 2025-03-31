@@ -3,6 +3,7 @@
 
     using MediatR;
     using Meritocious.Common.DTOs.Auth;
+    using Meritocious.Common.DTOs.Contributions;
     using Meritocious.Core.Features.Users.Queries;
     using Meritocious.Core.Results;
     using Meritocious.Infrastructure.Data.Repositories;

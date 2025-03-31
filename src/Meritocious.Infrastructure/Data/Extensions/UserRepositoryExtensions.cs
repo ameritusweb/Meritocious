@@ -15,7 +15,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             int count = 10,
             DateTime? startDate = null)
         {
-            var query = repository._dbSet
+            var query = repository.DbSet
                 .Where(u => u.IsActive);
 
             if (startDate.HasValue)
@@ -41,7 +41,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             // This is a placeholder implementation
 
             // For now, we'll just get the top users by merit score
-            return await repository._dbSet
+            return await repository.DbSet
                 .Where(u => u.IsActive)
                 .OrderByDescending(u => u.MeritScore)
                 .Take(5)

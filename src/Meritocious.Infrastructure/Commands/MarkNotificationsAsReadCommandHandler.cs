@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Meritocious.Core.Features.Notifications.Commands;
+using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
 using System;
 using System.Collections.Generic;

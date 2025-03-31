@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Meritocious.AI.SemanticClustering.Services;
+using Meritocious.AI.Recommendations;
 
 namespace Meritocious.Infrastructure.Data.Extensions
 {
@@ -15,7 +16,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this PostRepository repository,
             int count = 10)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(p => p.Author)
                 .Include(p => p.Tags)
                 .Where(p => !p.IsDeleted)
@@ -28,7 +29,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this PostRepository repository,
             int count = 10)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(p => p.Author)
                 .Include(p => p.Tags)
                 .Where(p => !p.IsDeleted)
@@ -41,7 +42,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this PostRepository repository,
             int count = 10)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(p => p.Author)
                 .Include(p => p.Tags)
                 .Include(p => p.Comments)
@@ -55,7 +56,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             this PostRepository repository,
             DateTime startDate)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(p => p.Author)
                 .Where(p => !p.IsDeleted && p.CreatedAt >= startDate)
                 .ToListAsync();
@@ -66,7 +67,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             string topic,
             DateTime? startDate = null)
         {
-            var query = repository._dbSet
+            var query = repository.DbSet
                 .Include(p => p.Author)
                 .Include(p => p.Comments)
                 .Where(p => !p.IsDeleted);
@@ -89,7 +90,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             Guid userId)
         {
             // Get posts the user has interacted with
-            var posts = await repository._dbSet
+            var posts = await repository.DbSet
                 .Include(p => p.Comments.Where(c => c.AuthorId == userId))
                 .Where(p => p.AuthorId == userId || p.Comments.Any(c => c.AuthorId == userId))
                 .ToListAsync();
