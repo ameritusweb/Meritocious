@@ -20,6 +20,11 @@
             services.Configure<AIServiceConfiguration>(
                 configuration.GetSection("AIServices"));
 
+            services.AddVectorRecommendations(options =>
+            {
+                configuration.GetSection("VectorDB").Bind(options);
+            });
+
             // Register AI services
             services.AddScoped<IMeritScorer, MeritScoringService>();
             services.AddScoped<IContentModerator, ContentModerationService>();
