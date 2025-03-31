@@ -1,14 +1,10 @@
 ﻿using MediatR;
 using Meritocious.Common.DTOs.Moderation;
+using Meritocious.Core.Features.Moderation.Queries;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Queries
 {

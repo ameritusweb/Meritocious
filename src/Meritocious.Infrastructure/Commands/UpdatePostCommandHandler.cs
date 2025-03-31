@@ -12,6 +12,7 @@ namespace Meritocious.Core.Features.Posts.Commands
     using Meritocious.Core.Interfaces;
     using Meritocious.Infrastructure.Data.Repositories;
     using Meritocious.AI.MeritScoring.Interfaces;
+    using Meritocious.Core.Events;
 
     public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, Result<Post>>
     {

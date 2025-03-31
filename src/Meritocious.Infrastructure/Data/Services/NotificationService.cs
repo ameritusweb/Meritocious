@@ -1,5 +1,6 @@
 ﻿using Meritocious.Core.Features.Notifications.Models;
 using Meritocious.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Meritocious.Infrastructure.Data.Services

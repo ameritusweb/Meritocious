@@ -8,6 +8,7 @@ namespace Meritocious.Core.Features.Posts.Queries
 {
     using MediatR;
     using Meritocious.Core.Entities;
+    using Meritocious.Infrastructure.Data.Extensions;
     using Meritocious.Infrastructure.Data.Repositories;
 
     public record GetTopPostsQuery : IRequest<List<Post>>

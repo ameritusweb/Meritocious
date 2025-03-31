@@ -3,6 +3,7 @@ using Meritocious.Core.Features.Merit.Models;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
 using Meritocious.Common.Enums;
+using Meritocious.Core.Features.Reputation.Models;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
