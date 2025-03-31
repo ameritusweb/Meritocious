@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using Meritocious.Common.Enums;
 using Meritocious.AI.VectorDB;
 using Meritocious.AI.MeritScoring.Interfaces;
+using Pinecone;
 
 namespace Meritocious.AI.Search
 {
@@ -57,7 +58,7 @@ namespace Meritocious.AI.Search
                 {
                     Id = contentId.ToString(),
                     Vector = embedding.ToArray(),
-                    Metadata = new Dictionary<string, string>
+                    Metadata = new Dictionary<string, object>
                     {
                         ["contentType"] = contentType.ToString(),
                         ["indexedAt"] = DateTime.UtcNow.ToString("O")
@@ -139,7 +140,7 @@ namespace Meritocious.AI.Search
                 {
                     Id = contentId.ToString(),
                     Vector = embedding.ToArray(),
-                    Metadata = new Dictionary<string, string>
+                    Metadata = new Dictionary<string, object>
                     {
                         ["contentType"] = contentType.ToString(),
                         ["indexedAt"] = DateTime.UtcNow.ToString("O"),
@@ -189,7 +190,7 @@ namespace Meritocious.AI.Search
                     new SearchFilter
                     {
                         FieldName = "id",
-                        Value = contentId.ToString()
+                        Value = new MetadataValue(contentId.ToString())
                     });
 
                 var result = results.FirstOrDefault();
@@ -273,11 +274,5 @@ namespace Meritocious.AI.Search
 
             return dotProduct / (float)Math.Sqrt(norm1 * norm2);
         }
-    }
-
-    public class SearchFilter
-    {
-        public string FieldName { get; set; }
-        public string Value { get; set; }
     }
 }

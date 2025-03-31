@@ -8,6 +8,7 @@ using System.Text.Json;
 using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.AI.SemanticClustering.Interfaces;
 using Meritocious.AI.SemanticClustering.Services;
+using Meritocious.Core.Features.Recommendations.Models;
 
 namespace Meritocious.AI.Recommendations.Services
 {
