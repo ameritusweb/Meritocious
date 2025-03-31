@@ -4,6 +4,7 @@ using Meritocious.Core.Entities;
 using System.Collections.Concurrent;
 using Meritocious.Common.Enums;
 using Meritocious.AI.VectorDB;
+using Meritocious.AI.MeritScoring.Interfaces;
 
 namespace Meritocious.AI.Search
 {
@@ -278,21 +279,5 @@ namespace Meritocious.AI.Search
     {
         public string FieldName { get; set; }
         public string Value { get; set; }
-    }
-
-    public interface ISemanticSearchService
-    {
-        Task InitializeCollectionsAsync();
-        Task IndexContentAsync(Guid contentId, ContentType contentType, string content);
-        Task<List<SearchResult>> SearchSimilarContentAsync(string query, ContentType contentType, int maxResults = 10);
-        Task<List<SearchResult>> FindSimilarContentAsync(Guid contentId, ContentType contentType, int maxResults = 10);
-        Task UpdateContentAsync(Guid contentId, ContentType contentType, string newContent);
-        Task DeleteContentAsync(Guid contentId, ContentType contentType);
-        Task<float[]> GetContentEmbeddingAsync(Guid contentId, ContentType contentType);
-        Task<decimal> CalculateContentSimilarityAsync(Guid contentId1, Guid contentId2, ContentType contentType);
-        Task<List<(Guid contentId, decimal similarity)>> FindSemanticDuplicatesAsync(
-            string content,
-            ContentType contentType,
-            decimal similarityThreshold = 0.95m);
     }
 }
