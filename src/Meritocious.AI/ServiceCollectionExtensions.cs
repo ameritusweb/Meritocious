@@ -1,5 +1,4 @@
-﻿
-namespace Meritocious.AI
+﻿namespace Meritocious.AI
 {
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Configuration;
@@ -8,6 +7,8 @@ namespace Meritocious.AI
     using Meritocious.AI.Moderation.Interfaces;
     using Meritocious.AI.SemanticClustering.Interfaces;
     using Meritocious.AI.Shared.Configuration;
+    using Meritocious.AI.Moderation.Services;
+    using Meritocious.AI.SemanticClustering.Services;
 
     public static class ServiceCollectionExtensions
     {
@@ -16,12 +17,15 @@ namespace Meritocious.AI
             IConfiguration configuration)
         {
             // Register configuration
-            // services.Configure<AIServiceConfiguration>( // TODO: Fix this
-            //     configuration.GetSection("AIServices"));
+            services.Configure<AIServiceConfiguration>(
+                configuration.GetSection("AIServices"));
 
             // Register AI services
             services.AddScoped<IMeritScorer, MeritScoringService>();
-            // TODO: Add other AI service implementations as they are developed
+            services.AddScoped<IContentModerator, ContentModerationService>();
+            services.AddScoped<IThreadAnalyzer, ThreadAnalyzerService>();
+            services.AddScoped<IRecommendationService, RecommendationService>();
+            services.AddScoped<ISemanticClusteringService, SemanticClusteringService>();
 
             return services;
         }

@@ -9,6 +9,8 @@ namespace Meritocious.Infrastructure.Data
     using Microsoft.EntityFrameworkCore;
     using Meritocious.Core.Entities;
     using System.Reflection;
+    using Meritocious.Core.Features.Notifications.Models;
+    using Meritocious.Core.Features.Reporting.Models;
 
     public class MeritociousDbContext : DbContext
     {
@@ -16,6 +18,12 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Tag> Tags { get; set; }
+
+        // Add missing DbSet properties
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<ContentReport> ContentReports { get; set; }
+        public DbSet<MeritScoreHistory> MeritScoreHistory { get; set; }
+        public DbSet<ContentModerationEvent> ContentModerationEvents { get; set; }
 
         public MeritociousDbContext(DbContextOptions<MeritociousDbContext> options)
             : base(options)
