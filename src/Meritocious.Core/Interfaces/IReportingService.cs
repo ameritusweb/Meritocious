@@ -1,10 +1,5 @@
 ﻿using Meritocious.Common.Enums;
-using Meritocious.Core.Features.Reporting.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Meritocious.Core.Entities;
 
 namespace Meritocious.Core.Interfaces
 {
