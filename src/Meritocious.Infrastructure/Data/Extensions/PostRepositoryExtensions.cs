@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Meritocious.AI.SemanticClustering.Services;
 using Meritocious.AI.Recommendations;
+using Meritocious.Core.Features.Recommendations.Models;
 
 namespace Meritocious.Infrastructure.Data.Extensions
 {

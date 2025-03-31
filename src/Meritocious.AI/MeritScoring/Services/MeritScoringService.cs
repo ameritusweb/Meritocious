@@ -104,7 +104,7 @@ namespace Meritocious.AI.MeritScoring.Services
             // Combine scores with weights
             decimal finalScore = (
                 readabilityMetrics.score * 0.3m +
-                structureScore.score * 0.3m +
+                structureScore * 0.3m +
                 technicalScore.score * 0.2m +
                 grammarScore.score * 0.2m
             );

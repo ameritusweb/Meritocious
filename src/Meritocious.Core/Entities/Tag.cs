@@ -89,7 +89,7 @@ namespace Meritocious.Core.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        private static string GenerateSlug(string name)
+        internal static string GenerateSlug(string name)
         {
             return name.ToLowerInvariant()
                 .Replace(" ", "-")

@@ -8,6 +8,7 @@ namespace Meritocious.Core.Features.Reporting.Commands
 {
     using MediatR;
     using Meritocious.Common.Enums;
+    using Meritocious.Core.Entities;
     using Meritocious.Core.Features.Moderation.Commands;
     using Meritocious.Core.Results;
     using Microsoft.Extensions.Logging;

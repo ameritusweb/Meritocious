@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace Meritocious.Infrastructure.Data.Repositories
 {
     using Microsoft.EntityFrameworkCore;
@@ -41,6 +36,71 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .Where(c => c.ParentCommentId == parentCommentId && !c.IsDeleted)
                 .OrderByDescending(c => c.MeritScore)
                 .ToListAsync();
+        }
+
+        public async Task<List<Comment>> GetCommentsByPostOrderedByMeritAsync(
+    Guid postId,
+    int? page = null,
+    int? pageSize = null)
+        {
+            var query = _context.Comments
+                .Include(c => c.Author)
+                .Include(c => c.Replies)
+                .Where(c => c.PostId == postId && !c.IsDeleted)
+                .OrderByDescending(c => c.MeritScore);
+
+            if (page.HasValue && pageSize.HasValue)
+            {
+                query = query.Skip((page.Value - 1) * pageSize.Value)
+                            .Take(pageSize.Value)
+                             .OrderByDescending(c => c.MeritScore); ;
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<Comment>> GetCommentsByPostOrderedByDateAsync(
+            Guid postId,
+            int? page = null,
+            int? pageSize = null)
+        {
+            var query = _context.Comments
+                .Include(c => c.Author)
+                .Include(c => c.Replies)
+                .Where(c => c.PostId == postId && !c.IsDeleted)
+                .OrderByDescending(c => c.CreatedAt);
+
+            if (page.HasValue && pageSize.HasValue)
+            {
+                query = query.Skip((page.Value - 1) * pageSize.Value)
+                            .Take(pageSize.Value)
+                             .OrderByDescending(c => c.CreatedAt);
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<Comment>> GetCommentsByPostThreadedAsync(
+            Guid postId,
+            int? page = null,
+            int? pageSize = null)
+        {
+            var query = _context.Comments
+                .Include(c => c.Author)
+                .Include(c => c.Replies)
+                .Where(c => c.PostId == postId &&
+                           !c.IsDeleted &&
+                           !c.ParentCommentId.HasValue)  // Root comments only
+                .OrderByDescending(c => c.MeritScore);
+
+            if (page.HasValue && pageSize.HasValue)
+            {
+                query = query.Skip((page.Value - 1) * pageSize.Value)
+                            .Take(pageSize.Value)
+                            .OrderByDescending(c => c.MeritScore);
+            }
+
+            return await query.ToListAsync();
         }
     }
 }

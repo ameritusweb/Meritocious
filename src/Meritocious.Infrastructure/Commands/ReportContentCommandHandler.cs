@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Meritocious.Core.Features.Moderation.Commands;
 using Meritocious.Core.Features.Reporting.Commands;
+using Meritocious.Core.Features.Reporting.Events;
+using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
 using Microsoft.Extensions.Logging;
 using System;

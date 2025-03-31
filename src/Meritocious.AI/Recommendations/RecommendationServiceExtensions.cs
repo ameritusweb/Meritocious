@@ -4,6 +4,7 @@ using Meritocious.AI.VectorDB;
 using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.AI.SemanticClustering.Services;
 using Meritocious.Common.Enums;
+using Meritocious.Core.Interfaces;
 
 namespace Meritocious.AI.Recommendations
 {

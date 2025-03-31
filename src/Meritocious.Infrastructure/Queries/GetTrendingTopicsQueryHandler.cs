@@ -1,6 +1,7 @@
 ﻿namespace Meritocious.Core.Features.Search.Queries
 {
     using MediatR;
+    using Meritocious.AI.Clustering.Interfaces;
     using Meritocious.Core.Features.Discovery.Queries;
     using Meritocious.Core.Interfaces;
     using Meritocious.Infrastructure.Data.Repositories;

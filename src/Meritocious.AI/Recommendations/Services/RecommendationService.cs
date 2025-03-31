@@ -9,6 +9,7 @@ using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.AI.SemanticClustering.Interfaces;
 using Meritocious.AI.SemanticClustering.Services;
 using Meritocious.Core.Features.Recommendations.Models;
+using Meritocious.Core.Interfaces;
 
 namespace Meritocious.AI.Recommendations.Services
 {

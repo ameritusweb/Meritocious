@@ -1,13 +1,8 @@
 ﻿using Meritocious.Common.Enums;
 using Meritocious.Core.Entities;
-using Meritocious.Core.Features.Reporting.Models;
+using Meritocious.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Services
 {

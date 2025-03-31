@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Meritocious.Core.Exceptions;
 using Meritocious.Core.Features.Discovery.Queries;
+using Meritocious.Core.Interfaces;
 using Meritocious.Infrastructure.Data.Repositories;
 using System;
 using System.Collections.Generic;

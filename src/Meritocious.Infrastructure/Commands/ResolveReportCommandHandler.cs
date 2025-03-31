@@ -1,7 +1,10 @@
 ﻿using MediatR;
+using Meritocious.Common.DTOs.Moderation;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Features.Moderation.Commands;
 using Meritocious.Core.Features.Reporting.Commands;
+using Meritocious.Core.Features.Reporting.Events;
+using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
 using Microsoft.Extensions.Logging;
 using System;
@@ -44,7 +47,7 @@ namespace Meritocious.Infrastructure.Commands
                     request.Notes);
 
                 // Apply moderation action if needed
-                if (request.Action != ModerationAction.None)
+                if (request.Action.ActionType != ModerationActionType.None)
                 {
                     await _mediator.Send(new ModerateContentCommand
                     {

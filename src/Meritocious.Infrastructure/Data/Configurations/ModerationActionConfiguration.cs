@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Meritocious.Core.Features.Moderation.Models;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Entities;
 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Meritocious.Core.Features.Merit.Models;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
 using Meritocious.Common.Enums;
@@ -80,7 +79,8 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
             if (!string.IsNullOrEmpty(category))
             {
-                query = query.Where(m => m.CategoryScores.ContainsKey(category));
+                query = query.Where(m => m.CategoryScores.ContainsKey(category))
+                    .Include(m => m.User);
             }
 
             return await query

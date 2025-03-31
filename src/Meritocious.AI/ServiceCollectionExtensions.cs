@@ -13,6 +13,7 @@
     using Meritocious.AI.Search;
     using Meritocious.AI.Recommendations.Services;
     using Meritocious.AI.Recommendations;
+    using Meritocious.Core.Interfaces;
 
     public static class ServiceCollectionExtensions
     {

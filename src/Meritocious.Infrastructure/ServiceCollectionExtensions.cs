@@ -18,7 +18,6 @@ namespace Meritocious.Infrastructure
     using Meritocious.Core.Extensions;
     using Meritocious.Core.Features.Notifications.Models;
     using Meritocious.Core.Entities;
-    using Meritocious.Core.Features.Reporting.Models;
     using Meritocious.Infrastructure.Data.Services;
 
     public static class ServiceCollectionExtensions

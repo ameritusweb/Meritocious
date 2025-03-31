@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Meritocious.Core.Features.Moderation.Models;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Entities;
+using Meritocious.Common.DTOs.Moderation;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {

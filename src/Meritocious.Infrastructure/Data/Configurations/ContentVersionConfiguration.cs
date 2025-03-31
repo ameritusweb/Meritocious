@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Meritocious.Core.Features.Versioning.Models;
+using Meritocious.Core.Features.Versioning;
+using Meritocious.Core.Entities;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {

@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Meritocious.Common.DTOs.Moderation;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Moderation.Queries;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data;
@@ -40,7 +41,7 @@ namespace Meritocious.Infrastructure.Queries
                 var meritScoreHistory = await _context.MeritScoreHistory
                     .Where(h => h.ContentId == request.ContentId &&
                                h.ContentType == request.ContentType)
-                    .OrderByDescending(h => h.Timestamp)
+                    .OrderByDescending(h => h.UpdatedAt)
                     .ToListAsync(cancellationToken);
 
                 var history = new List<ModerationHistoryDto>();
@@ -49,19 +50,19 @@ namespace Meritocious.Infrastructure.Queries
                 {
                     // Find the merit scores before and after this moderation event
                     var meritBefore = meritScoreHistory
-                        .Where(h => h.Timestamp < evt.ModeratedAt)
-                        .OrderByDescending(h => h.Timestamp)
+                        .Where(h => h.UpdatedAt < evt.ModeratedAt)
+                        .OrderByDescending(h => h.UpdatedAt)
                         .FirstOrDefault()?.Score;
 
                     var meritAfter = meritScoreHistory
-                        .Where(h => h.Timestamp >= evt.ModeratedAt)
-                        .OrderBy(h => h.Timestamp)
+                        .Where(h => h.UpdatedAt >= evt.ModeratedAt)
+                        .OrderBy(h => h.UpdatedAt)
                         .FirstOrDefault()?.Score;
 
                     history.Add(new ModerationHistoryDto
                     {
                         Timestamp = evt.ModeratedAt,
-                        Action = evt.Action,
+                        Action = evt.Action.ToDto(),
                         Reason = evt.Reason,
                         IsAutomated = evt.IsAutomated,
                         ModeratorUsername = evt.Moderator?.Username ?? "System",

@@ -4,9 +4,9 @@ using Meritocious.Core.Features.Moderation.Commands;
 using Meritocious.Core.Features.Reporting.Commands;
 using Meritocious.Core.Features.Reporting.Queries;
 using Meritocious.Common.Enums;
-using Meritocious.Core.Features.Reporting.Models;
 using Meritocious.Core.Features.Merit.Commands;
 using Meritocious.Core.Results;
+using Meritocious.Core.Entities;
 
 namespace Meritocious.Web.Controllers;
 

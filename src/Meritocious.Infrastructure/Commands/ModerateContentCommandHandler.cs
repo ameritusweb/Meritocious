@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Meritocious.AI.Moderation.Interfaces;
+using Meritocious.Common.DTOs.Moderation;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Features.Moderation.Commands;
 using Meritocious.Core.Features.Moderation.Events;
@@ -68,7 +69,7 @@ namespace Meritocious.Infrastructure.Commands
                     Action = moderationAction,
                     CivilityScore = 1 - (decimal)toxicityScores["toxicity"],
                     ViolatedPolicies = toxicityScores
-                        .Where(s => s.Value > 0.7)
+                        .Where(s => s.Value > 0.7m)
                         .Select(s => s.Key)
                         .ToList()
                 };
@@ -83,7 +84,7 @@ namespace Meritocious.Infrastructure.Commands
                 {
                     case ContentType.Post:
                         var post = await _postRepository.GetByIdAsync(request.ContentId);
-                        if (moderationAction == ModerationAction.Delete)
+                        if (moderationAction.ActionType == ModerationActionType.Delete)
                         {
                             post.Delete();
                             await _postRepository.UpdateAsync(post);
@@ -92,7 +93,7 @@ namespace Meritocious.Infrastructure.Commands
 
                     case ContentType.Comment:
                         var comment = await _commentRepository.GetByIdAsync(request.ContentId);
-                        if (moderationAction == ModerationAction.Delete)
+                        if (moderationAction.ActionType == ModerationActionType.Delete)
                         {
                             comment.Delete();
                             await _commentRepository.UpdateAsync(comment);
