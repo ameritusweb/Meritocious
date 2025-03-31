@@ -6,6 +6,7 @@ using Meritocious.Common.Enums;
 using System.Text.Json;
 using Meritocious.AI.Moderation.Interfaces;
 using Meritocious.Core.Features.Moderation.Models;
+using Meritocious.Common.DTOs.Moderation;
 
 namespace Meritocious.AI.Moderation.Services
 {

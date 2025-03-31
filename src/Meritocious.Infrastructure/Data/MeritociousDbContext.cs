@@ -2,6 +2,7 @@
 using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Versioning;
 using Meritocious.Core.Features.Notifications.Models;
+using Meritocious.Core.Features.Recommendations.Models;
 
 namespace Meritocious.Infrastructure.Data
 {
@@ -16,6 +17,7 @@ namespace Meritocious.Infrastructure.Data
         // Content versioning
         public DbSet<ContentVersion> ContentVersions { get; set; }
         public DbSet<ContentDiff> ContentDiffs { get; set; }
+        public DbSet<UserContentInteraction> UserContentInteractions { get; set; }
 
         // Moderation
         public DbSet<ModerationAction> ModerationActions { get; set; }

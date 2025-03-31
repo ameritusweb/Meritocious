@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Meritocious.AI.Recommendations
+namespace Meritocious.Core.Features.Recommendations.Models
 {
     public class UserInteractionHistory
     {

@@ -17,7 +17,12 @@ namespace Meritocious.Common.DTOs.Moderation
         AddNotice,
         RestrictPrivileges,
         RequireApproval,
-        AutomaticFilter
+        AutomaticFilter,
+        RequireReview,
+        Delete,
+        Hide,
+        Flag,
+        None
     }
 
     public enum ModerationDecisionOutcome

@@ -1,4 +1,5 @@
-﻿using Meritocious.Common.Enums;
+﻿using Meritocious.Common.DTOs.Moderation;
+using Meritocious.Common.Enums;
 using Meritocious.Core.Features.Moderation.Models;
 using System;
 using System.Collections.Generic;
