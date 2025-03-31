@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Meritocious.Core.Features.Tags.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,31 +9,93 @@ namespace Meritocious.Core.Entities
 {
     public class Tag : BaseEntity
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public string Name { get; private set; }
+        public string Slug { get; private set; }
+        public string Description { get; private set; }
+        public Guid? ParentTagId { get; private set; }
+        public Tag ParentTag { get; private set; }
+        public TagCategory Category { get; private set; }
+        public int UseCount { get; private set; }
+        public decimal MeritThreshold { get; private set; }
+        public TagStatus Status { get; private set; }
+        public List<TagSynonym> Synonyms { get; private set; }
+        public List<TagRelationship> RelatedTags { get; private set; }
+        public List<Tag> ChildTags { get; private set; }
+        public Dictionary<string, string> Metadata { get; private set; }
+        public List<TagWiki> WikiVersions { get; private set; }
 
-        private readonly List<Post> _posts;
-        public IReadOnlyCollection<Post> Posts => _posts.AsReadOnly();
-
-        public Tag()
+        private Tag()
         {
-            _posts = new List<Post>();
+            Synonyms = new List<TagSynonym>();
+            RelatedTags = new List<TagRelationship>();
+            ChildTags = new List<Tag>();
+            Metadata = new Dictionary<string, string>();
+            WikiVersions = new List<TagWiki>();
         }
 
-        public static Tag Create(string name, string description = null)
+        public static Tag Create(
+            string name,
+            string description,
+            TagCategory category,
+            Tag parentTag = null,
+            decimal meritThreshold = 0.5m)
         {
             return new Tag
             {
                 Name = name,
+                Slug = GenerateSlug(name),
                 Description = description,
+                ParentTagId = parentTag?.Id,
+                ParentTag = parentTag,
+                Category = category,
+                UseCount = 0,
+                MeritThreshold = meritThreshold,
+                Status = TagStatus.Active,
                 CreatedAt = DateTime.UtcNow
             };
         }
 
-        public void UpdateDescription(string newDescription)
+        public void AddSynonym(string synonym, User creator)
         {
-            Description = newDescription;
+            if (!Synonyms.Any(s => s.Name == synonym))
+            {
+                Synonyms.Add(TagSynonym.Create(this, synonym, creator));
+                UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        public void AddRelatedTag(
+            Tag relatedTag,
+            TagRelationType relationType,
+            decimal strength,
+            User creator)
+        {
+            if (!RelatedTags.Any(r => r.RelatedTagId == relatedTag.Id))
+            {
+                RelatedTags.Add(TagRelationship.Create(this, relatedTag, relationType, strength, creator));
+                UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        public void IncrementUseCount()
+        {
+            UseCount++;
             UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateWiki(string content, User editor, string editReason)
+        {
+            WikiVersions.Add(TagWiki.Create(this, content, editor, editReason));
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        private static string GenerateSlug(string name)
+        {
+            return name.ToLowerInvariant()
+                .Replace(" ", "-")
+                .Replace("_", "-")
+                .Where(c => char.IsLetterOrDigit(c) || c == '-')
+                .Aggregate("", (current, c) => current + c);
         }
     }
 }
