@@ -69,8 +69,8 @@ We’re just getting started. You can help by:
 
 ```plaintext
 /ai               ← AI moderation + merit-ranking modules
-/frontend         ← Web UI (Next.js)
-/backend          ← API + auth + data services (FastAPI)
+/frontend         ← Web UI
+/backend          ← API + auth + data services
 /docs             ← Design specs, vision docs, contribution guides
 /discussions      ← Open forum for planning + input
 
