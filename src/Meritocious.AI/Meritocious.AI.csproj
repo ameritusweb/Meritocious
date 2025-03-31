@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Meritocious.Common\Meritocious.Common.csproj" />
+    <ProjectReference Include="..\Meritocious.Core\Meritocious.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

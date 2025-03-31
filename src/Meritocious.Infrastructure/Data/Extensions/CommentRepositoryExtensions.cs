@@ -16,7 +16,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             int? page = null,
             int? pageSize = null)
         {
-            var query = repository._dbSet
+            var query = repository.DbSet
                 .Include(c => c.Author)
                 .Include(c => c.Replies)
                 .Where(c => c.PostId == postId && !c.IsDeleted && c.ParentCommentId == null)
@@ -26,7 +26,8 @@ namespace Meritocious.Infrastructure.Data.Extensions
             if (page.HasValue && pageSize.HasValue)
             {
                 int skip = (page.Value - 1) * pageSize.Value;
-                query = query.Skip(skip).Take(pageSize.Value);
+                query = query.Skip(skip).Take(pageSize.Value)
+                    .OrderByDescending(c => c.MeritScore);
             }
 
             return await query.ToListAsync();
@@ -38,7 +39,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             int? page = null,
             int? pageSize = null)
         {
-            var query = repository._dbSet
+            var query = repository.DbSet
                 .Include(c => c.Author)
                 .Include(c => c.Replies)
                 .Where(c => c.PostId == postId && !c.IsDeleted && c.ParentCommentId == null)
@@ -48,7 +49,8 @@ namespace Meritocious.Infrastructure.Data.Extensions
             if (page.HasValue && pageSize.HasValue)
             {
                 int skip = (page.Value - 1) * pageSize.Value;
-                query = query.Skip(skip).Take(pageSize.Value);
+                query = query.Skip(skip).Take(pageSize.Value)
+                    .OrderByDescending(c => c.CreatedAt);
             }
 
             return await query.ToListAsync();
@@ -61,7 +63,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             int? pageSize = null)
         {
             // First get all root-level comments
-            var rootComments = await repository._dbSet
+            var rootComments = await repository.DbSet
                 .Include(c => c.Author)
                 .Where(c => c.PostId == postId && !c.IsDeleted && c.ParentCommentId == null)
                 .OrderByDescending(c => c.MeritScore)
@@ -87,7 +89,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             CommentRepository repository,
             Comment parentComment)
         {
-            var replies = await repository._dbSet
+            var replies = await repository.DbSet
                 .Include(c => c.Author)
                 .Where(c => c.ParentCommentId == parentComment.Id && !c.IsDeleted)
                 .OrderByDescending(c => c.MeritScore)
@@ -106,7 +108,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             Guid userId,
             int count = 5)
         {
-            return await repository._dbSet
+            return await repository.DbSet
                 .Include(c => c.Post)
                 .Where(c => c.AuthorId == userId && !c.IsDeleted)
                 .OrderByDescending(c => c.MeritScore)

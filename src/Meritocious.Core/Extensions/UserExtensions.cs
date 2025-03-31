@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.DTOs.Auth;
+using Meritocious.Common.DTOs.Contributions;
 using Meritocious.Core.Entities;
 using System;
 using System.Collections.Generic;

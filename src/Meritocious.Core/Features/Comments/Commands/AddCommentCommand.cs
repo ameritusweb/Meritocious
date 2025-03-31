@@ -10,8 +10,9 @@ namespace Meritocious.Core.Features.Comments.Commands
     using FluentValidation;
     using Meritocious.Core.Entities;
     using Meritocious.Core.Results;
+    using Meritocious.Common.DTOs.Content;
 
-    public record AddCommentCommand : IRequest<Result<Comment>>
+    public record AddCommentCommand : IRequest<Result<CommentDto>>
     {
         public Guid PostId { get; init; }
         public Guid AuthorId { get; init; }

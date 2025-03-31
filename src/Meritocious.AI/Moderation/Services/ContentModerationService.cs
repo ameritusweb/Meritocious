@@ -5,6 +5,7 @@ using Meritocious.AI.Shared.Configuration;
 using Meritocious.Common.Enums;
 using System.Text.Json;
 using Meritocious.AI.Moderation.Interfaces;
+using Meritocious.Core.Features.Moderation.Models;
 
 namespace Meritocious.AI.Moderation.Services
 {
@@ -24,7 +25,7 @@ namespace Meritocious.AI.Moderation.Services
             _logger = logger;
         }
 
-        public async Task<ModerationAction> EvaluateContentAsync(string content)
+        public async Task<ModerationActionType> EvaluateContentAsync(string content)
         {
             try
             {
@@ -45,36 +46,36 @@ namespace Meritocious.AI.Moderation.Services
                     toxicityScores["threat"] > 0.8m ||
                     prohibitedScore > 0.8m)
                 {
-                    return ModerationAction.Delete;
+                    return ModerationActionType.Delete;
                 }
 
                 if (toxicityScores["toxicity"] > 0.7m ||
                     spamScore > 0.8m ||
                     harmScore > 0.7m)
                 {
-                    return ModerationAction.Hide;
+                    return ModerationActionType.Hide;
                 }
 
                 if (toxicityScores["toxicity"] > 0.5m ||
                     spamScore > 0.6m ||
                     harmScore > 0.5m)
                 {
-                    return ModerationAction.Flag;
+                    return ModerationActionType.Flag;
                 }
 
                 if (toxicityScores["toxicity"] > 0.3m ||
                     spamScore > 0.4m ||
                     harmScore > 0.3m)
                 {
-                    return ModerationAction.RequireReview;
+                    return ModerationActionType.RequireReview;
                 }
 
-                return ModerationAction.None;
+                return ModerationActionType.None;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error evaluating content for moderation");
-                return ModerationAction.RequireReview;
+                return ModerationActionType.RequireReview;
             }
         }
 

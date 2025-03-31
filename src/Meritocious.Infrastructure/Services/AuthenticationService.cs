@@ -5,6 +5,7 @@ using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Infrastructure.Services
 {

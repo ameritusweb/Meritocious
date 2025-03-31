@@ -1,18 +1,15 @@
 ﻿using MediatR;
+using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Comments.Commands;
 using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Commands
 {
-    public class UpdateCommentCommandHandler : IRequestHandler<UpdateCommentCommand, Result<Comment>>
+    public class UpdateCommentCommandHandler : IRequestHandler<UpdateCommentCommand, Result<CommentDto>>
     {
         private readonly ICommentService _commentService;
         private readonly CommentRepository _commentRepository;
@@ -28,17 +25,17 @@ namespace Meritocious.Infrastructure.Commands
             _mediator = mediator;
         }
 
-        public async Task<Result<Comment>> Handle(UpdateCommentCommand request, CancellationToken cancellationToken)
+        public async Task<Result<CommentDto>> Handle(UpdateCommentCommand request, CancellationToken cancellationToken)
         {
             try
             {
                 // Verify the comment exists and the editor is the author
                 var comment = await _commentRepository.GetByIdAsync(request.CommentId);
                 if (comment == null)
-                    return Result.Failure<Comment>($"Comment {request.CommentId} not found");
+                    return Result.Failure<CommentDto>($"Comment {request.CommentId} not found");
 
                 if (comment.AuthorId != request.EditorId)
-                    return Result.Failure<Comment>("Only the author can edit this comment");
+                    return Result.Failure<CommentDto>("Only the author can edit this comment");
 
                 // Update comment
                 var updatedComment = await _commentService.UpdateCommentAsync(request.CommentId, request.Content);
@@ -46,11 +43,11 @@ namespace Meritocious.Infrastructure.Commands
                 // Publish event (could add a CommentUpdatedEvent)
                 // await _mediator.Publish(new CommentUpdatedEvent(comment.Id, request.EditorId), cancellationToken);
 
-                return Result.Success(updatedComment);
+                return Result.Success(updatedComment.ToDto());
             }
             catch (Exception ex)
             {
-                return Result.Failure<Comment>($"Error updating comment: {ex.Message}");
+                return Result.Failure<CommentDto>($"Error updating comment: {ex.Message}");
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Results;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Features.Comments.Commands
 {
-    public record UpdateCommentCommand : IRequest<Result<Comment>>
+    public record UpdateCommentCommand : IRequest<Result<CommentDto>>
     {
         public Guid CommentId { get; init; }
         public Guid EditorId { get; init; }

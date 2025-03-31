@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Comments.Queries;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data.Repositories;
@@ -11,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Queries
 {
-    public class GetCommentRepliesQueryHandler : IRequestHandler<GetCommentRepliesQuery, Result<List<Comment>>>
+    public class GetCommentRepliesQueryHandler : IRequestHandler<GetCommentRepliesQuery, Result<List<CommentDto>>>
     {
         private readonly CommentRepository _commentRepository;
 
@@ -20,14 +22,14 @@ namespace Meritocious.Infrastructure.Queries
             _commentRepository = commentRepository;
         }
 
-        public async Task<Result<List<Comment>>> Handle(GetCommentRepliesQuery request, CancellationToken cancellationToken)
+        public async Task<Result<List<CommentDto>>> Handle(GetCommentRepliesQuery request, CancellationToken cancellationToken)
         {
             try
             {
                 // Verify the parent comment exists
                 var parentComment = await _commentRepository.GetByIdAsync(request.CommentId);
                 if (parentComment == null)
-                    return Result.Failure<List<Comment>>($"Comment {request.CommentId} not found");
+                    return Result.Failure<List<CommentDto>>($"Comment {request.CommentId} not found");
 
                 // Get replies
                 var replies = await _commentRepository.GetRepliesAsync(request.CommentId);
@@ -46,11 +48,11 @@ namespace Meritocious.Infrastructure.Queries
                     replies = replies.Skip(skip).Take(request.PageSize.Value).ToList();
                 }
 
-                return Result.Success(replies);
+                return Result.Success(replies.ToDtoList());
             }
             catch (Exception ex)
             {
-                return Result.Failure<List<Comment>>($"Error retrieving comment replies: {ex.Message}");
+                return Result.Failure<List<CommentDto>>($"Error retrieving comment replies: {ex.Message}");
             }
         }
     }

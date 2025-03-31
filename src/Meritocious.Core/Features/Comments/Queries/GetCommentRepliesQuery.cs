@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Results;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Features.Comments.Queries
 {
-    public record GetCommentRepliesQuery : IRequest<Result<List<Comment>>>
+    public record GetCommentRepliesQuery : IRequest<Result<List<CommentDto>>>
     {
         public Guid CommentId { get; init; }
         public string SortBy { get; init; } = "merit"; // merit, date

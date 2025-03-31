@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Comments.Commands;
 using Meritocious.Core.Features.Comments.Queries;
 using Meritocious.Common.DTOs.Content;

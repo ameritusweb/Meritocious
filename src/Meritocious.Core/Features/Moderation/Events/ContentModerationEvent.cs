@@ -8,6 +8,7 @@ namespace Meritocious.Core.Features.Moderation.Events
 {
     using MediatR;
     using Meritocious.Common.Enums;
+    using Meritocious.Core.Entities;
 
     public record ContentModeratedEvent : INotification
     {
