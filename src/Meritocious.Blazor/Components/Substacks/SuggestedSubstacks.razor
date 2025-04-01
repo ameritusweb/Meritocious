@@ -1,0 +1,276 @@
+﻿@page "/suggested"
+@inject ISubstackService SubstackService
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+
+<PageHeader
+    Title="Suggested Substacks"
+    Subtitle="Discover content aligned with your interests"
+    Extra="@(
+        <Space>
+            <Input Placeholder="Search substacks..."
+                   Prefix="@searchIcon"
+                   @bind-Value="searchTerm"
+                   OnChange="HandleSearch" />
+            <Button Type="primary" OnClick="RefreshSuggestions">
+                <Icon Type="reload" /> Refresh
+            </Button>
+        </Space>
+    )">
+</PageHeader>
+
+<div class="flex space-x-6">
+    <div class="w-3/4">
+        <Tabs ActiveKey="@activeTab" OnTabClick="HandleTabChange">
+            <TabPane Key="all" Tab="All Suggestions">
+                <div class="grid grid-cols-1 gap-4">
+                    @if (isLoading)
+                    {
+                        @for (int i = 0; i < 3; i++)
+                        {
+                            <Card Loading Bordered />
+                        }
+                    }
+                    else
+                    {
+                        @foreach (var substack in filteredSubstacks)
+                        {
+                            <SubstackCard Substack="substack"
+                                         OnFollow="HandleFollow"
+                                         IsFollowing="followedSubstacks.Contains(substack.Id)" />
+                        }
+                    }
+                </div>
+            </TabPane>
+            <TabPane Key="trending" Tab="Trending">
+                <div class="grid grid-cols-1 gap-4">
+                    @foreach (var substack in trendingSubstacks)
+                    {
+                        <SubstackCard Substack="substack"
+                                     OnFollow="HandleFollow"
+                                     IsFollowing="followedSubstacks.Contains(substack.Id)"
+                                     ShowTrendingMetrics="true" />
+                    }
+                </div>
+            </TabPane>
+            <TabPane Key="similar" Tab="Similar to Followed">
+                <div class="grid grid-cols-1 gap-4">
+                    @foreach (var substack in similarSubstacks)
+                    {
+                        <SubstackCard Substack="substack"
+                                     OnFollow="HandleFollow"
+                                     IsFollowing="followedSubstacks.Contains(substack.Id)"
+                                     ShowSimilarity="true" />
+                    }
+                </div>
+            </TabPane>
+        </Tabs>
+    </div>
+
+    <div class="w-1/4">
+        <Card Title="Filter Suggestions">
+            <Form Layout="FormLayout.Vertical">
+                <FormItem Label="Topics">
+                    <Select Mode="multiple"
+                            @bind-Value="selectedTopics"
+                            Placeholder="Select topics"
+                            OnSelectedItemsChanged="HandleTopicChange">
+                        @foreach (var topic in availableTopics)
+                        {
+                            <SelectOption Value="@topic">@topic</SelectOption>
+                        }
+                    </Select>
+                </FormItem>
+                <FormItem Label="Merit Score">
+                    <Slider Range
+                            @bind-Value="meritRange"
+                            Min="0"
+                            Max="1"
+                            Step="0.1"
+                            OnAfterChange="HandleFilterChange" />
+                </FormItem>
+                <FormItem Label="Post Frequency">
+                    <RadioGroup @bind-Value="postFrequency" OnChange="HandleFilterChange">
+                        <Radio Value="@("any")">Any</Radio>
+                        <Radio Value="@("daily")">Daily</Radio>
+                        <Radio Value="@("weekly")">Weekly</Radio>
+                        <Radio Value="@("monthly")">Monthly</Radio>
+                    </RadioGroup>
+                </FormItem>
+            </Form>
+        </Card>
+
+        <Card Title="Your Interests" Class="mt-4">
+            <div class="space-y-2">
+                @foreach (var interest in userInterests)
+                {
+                    <Tag Class="mr-2 mb-2" 
+                         Closable 
+                         OnClose="() => RemoveInterest(interest)">
+                        @interest
+                    </Tag>
+                }
+                <Button Type="dashed" Block OnClick="ShowInterestModal">
+                    <Icon Type="plus" /> Add Interest
+                </Button>
+            </div>
+        </Card>
+    </div>
+</div>
+
+<Modal Title="Add Interests"
+       Visible="showInterestModal"
+       OnOk="SaveInterests"
+       OnCancel="@(() => showInterestModal = false)">
+    <Select Mode="multiple"
+            @bind-Value="newInterests"
+            Style="width: 100%;"
+            Placeholder="Select new interests">
+        @foreach (var interest in availableInterests)
+        {
+            <SelectOption Value="@interest">@interest</SelectOption>
+        }
+    </Select>
+</Modal>
+
+@code {
+    private bool isLoading;
+    private string activeTab = "all";
+    private string searchTerm = "";
+    private double[] meritRange = new[] { 0.0, 1.0 };
+    private string postFrequency = "any";
+    private List<string> selectedTopics = new();
+    private HashSet<Guid> followedSubstacks = new();
+    private bool showInterestModal;
+    private List<string> newInterests = new();
+
+    private List<SubstackDto> allSubstacks = new();
+    private List<SubstackDto> trendingSubstacks = new();
+    private List<SubstackDto> similarSubstacks = new();
+    private List<string> userInterests = new();
+    private List<string> availableTopics = new();
+    private List<string> availableInterests = new();
+
+    private RenderFragment searchIcon =>@<Icon Type="search" />;
+
+    private IEnumerable<SubstackDto> filteredSubstacks =>
+        allSubstacks.Where(s =>
+            (string.IsNullOrEmpty(searchTerm) ||
+             s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             s.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (selectedTopics.Count == 0 ||
+             s.Tags.Any(t => selectedTopics.Contains(t))) &&
+            s.MeritScore >= meritRange[0] &&
+            s.MeritScore <= meritRange[1] &&
+            (postFrequency == "any" ||
+             s.PostFrequency == postFrequency));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+
+            var tasks = new[]
+            {
+                LoadSubstacks(),
+                LoadTrendingSubstacks(),
+                LoadSimilarSubstacks(),
+                LoadUserInterests(),
+                LoadAvailableTopics()
+            };
+
+            await Task.WhenAll(tasks);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadSubstacks()
+    {
+        allSubstacks = await SubstackService.GetSuggestedSubstacksAsync();
+    }
+
+    private async Task LoadTrendingSubstacks()
+    {
+        trendingSubstacks = await SubstackService.GetTrendingSubstacksAsync();
+    }
+
+    private async Task LoadSimilarSubstacks()
+    {
+        similarSubstacks = await SubstackService.GetSimilarSubstacksAsync();
+    }
+
+    private async Task LoadUserInterests()
+    {
+        userInterests = await SubstackService.GetUserInterestsAsync();
+        availableInterests = await SubstackService.GetAvailableInterestsAsync();
+    }
+
+    private async Task LoadAvailableTopics()
+    {
+        availableTopics = await SubstackService.GetAvailableTopicsAsync();
+    }
+
+    private async Task HandleFollow(Guid substackId)
+    {
+        if (followedSubstacks.Contains(substackId))
+        {
+            followedSubstacks.Remove(substackId);
+            await SubstackService.UnfollowSubstackAsync(substackId);
+        }
+        else
+        {
+            followedSubstacks.Add(substackId);
+            await SubstackService.FollowSubstackAsync(substackId);
+        }
+    }
+
+    private async Task HandleSearch(string value)
+    {
+        searchTerm = value;
+    }
+
+    private async Task HandleTabChange(string tab)
+    {
+        activeTab = tab;
+    }
+
+    private async Task HandleTopicChange(IEnumerable<string> topics)
+    {
+        selectedTopics = topics.ToList();
+    }
+
+    private async Task HandleFilterChange()
+    {
+        // Filters are automatically applied through the filteredSubstacks property
+    }
+
+    private async Task RefreshSuggestions()
+    {
+        await LoadData();
+        await MessageService.Success("Suggestions refreshed");
+    }
+
+    private void RemoveInterest(string interest)
+    {
+        userInterests.Remove(interest);
+        // Update backend
+    }
+
+    private async Task SaveInterests()
+    {
+        userInterests.AddRange(newInterests);
+        await SubstackService.UpdateUserInterestsAsync(userInterests);
+        showInterestModal = false;
+        newInterests.Clear();
+        await LoadData(); // Refresh suggestions
+    }
+}

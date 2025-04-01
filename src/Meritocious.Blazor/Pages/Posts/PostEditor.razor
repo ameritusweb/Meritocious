@@ -1,0 +1,311 @@
+﻿@page "/s/{SubstackSlug}/new"
+@page "/s/{SubstackSlug}/edit/{PostId}"
+@inject IPostService PostService
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+
+<PageHeader
+    Title="@(isEditing ? "Edit Post" : "Create Post")"
+    Subtitle="@SubstackSlug"
+    OnBack="NavigateBack"
+    Extra="@(
+        <Space>
+            <Button OnClick="SaveDraft" Disabled="@isSaving">
+                Save Draft
+            </Button>
+            <Button Type="primary" OnClick="PublishPost" Loading="@isSaving">
+                @(isEditing ? "Update" : "Publish")
+            </Button>
+        </Space>
+    )">
+</PageHeader>
+
+<div class="flex space-x-6">
+    <div class="w-2/3">
+        <Card>
+            <Form Model="@model" Layout="FormLayout.Vertical">
+                <FormItem Label="Title">
+                    <Input @bind-Value="@model.Title" 
+                           Placeholder="Post title"
+                           Size="large" />
+                </FormItem>
+
+                <FormItem Label="Content">
+                    <MarkdownEditor @bind-Value="@model.Content"
+                                  OnPreview="PreviewMarkdown"
+                                  Height="600px" />
+                </FormItem>
+            </Form>
+        </Card>
+    </div>
+
+    <div class="w-1/3 space-y-4">
+        <Card Title="Post Settings">
+            <Form Layout="FormLayout.Vertical">
+                <FormItem Label="Tags">
+                    <Select Mode="multiple"
+                            @bind-Value="@model.Tags"
+                            Placeholder="Add tags"
+                            AllowClear>
+                        @foreach (var tag in availableTags)
+                        {
+                            <SelectOption Value="@tag">@tag</SelectOption>
+                        }
+                    </Select>
+                </FormItem>
+
+                <FormItem Label="Visibility">
+                    <RadioGroup @bind-Value="@model.Visibility">
+                        <Radio Value="@VisibilityLevel.Public">
+                            <div>
+                                <div>Public</div>
+                                <div class="text-sm text-gray-500">
+                                    Anyone can view this post
+                                </div>
+                            </div>
+                        </Radio>
+                        <Radio Value="@VisibilityLevel.Friends">
+                            <div>
+                                <div>Friends Only</div>
+                                <div class="text-sm text-gray-500">
+                                    Only your friends can view this post
+                                </div>
+                            </div>
+                        </Radio>
+                        <Radio Value="@VisibilityLevel.Private">
+                            <div>
+                                <div>Private</div>
+                                <div class="text-sm text-gray-500">
+                                    Only you can view this post
+                                </div>
+                            </div>
+                        </Radio>
+                    </RadioGroup>
+                </FormItem>
+
+                @if (isEditing && model.IsFork)
+                {
+                    <FormItem Label="Fork Settings">
+                        <Alert Message="This is a forked post"
+                               Type="info"
+                               ShowIcon />
+                        <div class="mt-2">
+                            <a href="@($"/s/{originalPost?.SubstackSlug}/{originalPost?.Id}")">
+                                View Original Post
+                            </a>
+                        </div>
+                    </FormItem>
+                }
+            </Form>
+        </Card>
+
+        <Card Title="AI Analysis" Loading="@isAnalyzing">
+            @if (analysis != null)
+            {
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>Estimated Merit Score</span>
+                            <span class="font-medium">@analysis.EstimatedMeritScore.ToString("N2")</span>
+                        </div>
+                        <Progress Percent="@((double)(analysis.EstimatedMeritScore * 100))"
+                                 StrokeColor="@GetMeritColor(analysis.EstimatedMeritScore)" />
+                    </div>
+
+                    @foreach (var metric in analysis.Metrics)
+                    {
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>@metric.Key</span>
+                                <span>@metric.Value.ToString("N2")</span>
+                            </div>
+                            <Progress Percent="@((double)(metric.Value * 100))"
+                                     ShowInfo="false"
+                                     Size="small" />
+                        </div>
+                    }
+
+                    @if (analysis.Suggestions.Any())
+                    {
+                        <Divider />
+                        <div>
+                            <h4 class="font-medium mb-2">Suggestions</h4>
+                            <ul class="space-y-2">
+                                @foreach (var suggestion in analysis.Suggestions)
+                                {
+                                    <li class="flex items-start">
+                                        <Icon Type="info-circle" 
+                                              Class="text-blue-500 mt-1 mr-2" />
+                                        <span>@suggestion</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+            }
+        </Card>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string SubstackSlug { get; set; } = "";
+    [Parameter] public string? PostId { get; set; }
+
+    private bool isEditing => !string.IsNullOrEmpty(PostId);
+    private bool isSaving;
+    private bool isAnalyzing;
+    private PostDto? originalPost;
+    private PostModel model = new();
+    private List<string> availableTags = new();
+    private PostAnalysis? analysis;
+    private System.Timers.Timer? analysisDebounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAvailableTags();
+
+        if (isEditing)
+        {
+            await LoadPost();
+        }
+
+        // Set up content analysis timer
+        analysisDebounceTimer = new System.Timers.Timer(1000);
+        analysisDebounceTimer.Elapsed += async (sender, e) => await AnalyzeContent();
+        analysisDebounceTimer.AutoReset = false;
+    }
+
+    private async Task LoadAvailableTags()
+    {
+        availableTags = await PostService.GetAvailableTagsAsync(SubstackSlug);
+    }
+
+    private async Task LoadPost()
+    {
+        try
+        {
+            var post = await PostService.GetPostAsync(SubstackSlug, PostId!);
+            
+            model = new PostModel
+            {
+                Title = post.Title,
+                Content = post.Content,
+                Tags = post.Tags,
+                Visibility = post.Visibility,
+                IsFork = post.IsFork
+            };
+
+            if (post.IsFork)
+            {
+                originalPost = await PostService.GetOriginalPostAsync(PostId!);
+            }
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load post");
+            NavigateBack();
+        }
+    }
+
+    private async Task AnalyzeContent()
+    {
+        if (string.IsNullOrWhiteSpace(model.Content))
+            return;
+
+        try
+        {
+            isAnalyzing = true;
+            analysis = await PostService.AnalyzePostAsync(new AnalyzePostRequest
+            {
+                Title = model.Title,
+                Content = model.Content,
+                Tags = model.Tags
+            });
+        }
+        finally
+        {
+            isAnalyzing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SaveDraft()
+    {
+        await SavePost(isDraft: true);
+    }
+
+    private async Task PublishPost()
+    {
+        await SavePost(isDraft: false);
+    }
+
+    private async Task SavePost(bool isDraft)
+    {
+        try
+        {
+            isSaving = true;
+
+            if (isEditing)
+            {
+                await PostService.UpdatePostAsync(SubstackSlug, PostId!, new UpdatePostRequest
+                {
+                    Title = model.Title,
+                    Content = model.Content,
+                    Tags = model.Tags,
+                    Visibility = model.Visibility,
+                    IsDraft = isDraft
+                });
+            }
+            else
+            {
+                var postId = await PostService.CreatePostAsync(SubstackSlug, new CreatePostRequest
+                {
+                    Title = model.Title,
+                    Content = model.Content,
+                    Tags = model.Tags,
+                    Visibility = model.Visibility,
+                    IsDraft = isDraft
+                });
+
+                PostId = postId;
+            }
+
+            await MessageService.Success(isDraft ? "Draft saved" : "Post published");
+
+            if (!isDraft)
+            {
+                NavigationManager.NavigateTo($"/s/{SubstackSlug}/{PostId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error(isDraft ? "Failed to save draft" : "Failed to publish post");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private string GetMeritColor(decimal score)
+    {
+        return score switch
+        {
+            >= 0.8m => "#52c41a",
+            >= 0.6m => "#1890ff",
+            >= 0.4m => "#faad14",
+            _ => "#ff4d4f"
+        };
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"/s/{SubstackSlug}");
+    }
+
+    public void Dispose()
+    {
+        analysisDebounceTimer?.Dispose();
+    }
+}

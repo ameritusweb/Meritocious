@@ -1,0 +1,142 @@
+﻿@namespace Meritocious.Web.Components.Substacks
+
+<Card Bordered
+      Class="substack-card @(IsFollowing ? "following" : "")">
+    <div class="flex items-start space-x-4">
+        <div class="flex-shrink-0">
+            @if (string.IsNullOrEmpty(Substack.AvatarUrl))
+            {
+                <Avatar Size="large">
+                    @Substack.Name[0]
+                </Avatar>
+            }
+            else
+            {
+                <Avatar Size="large" Src="@Substack.AvatarUrl" />
+            }
+        </div>
+
+        <div class="flex-grow min-w-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2 min-w-0">
+                    <h3 class="text-lg font-medium truncate">
+                        <a href="/s/@Substack.Slug" class="hover:text-blue-500">
+                            @Substack.Name
+                        </a>
+                    </h3>
+                    <MeritBadge Score="@Substack.MeritScore" Size="small" />
+                </div>
+                <div>
+                    <Button Type="@(IsFollowing ? "primary" : "default")"
+                            OnClick="@(() => OnFollow.InvokeAsync(Substack.Id))">
+                        @(IsFollowing ? "Following" : "Follow")
+                    </Button>
+                </div>
+            </div>
+
+            <p class="text-gray-500 mt-1 line-clamp-2">@Substack.Description</p>
+
+            <div class="mt-2 flex items-center space-x-4">
+                <div class="flex items-center text-gray-500 text-sm">
+                    <Icon Type="user" Class="mr-1" />
+                    <span>@Substack.FollowerCount followers</span>
+                </div>
+                <div class="flex items-center text-gray-500 text-sm">
+                    <Icon Type="file-text" Class="mr-1" />
+                    <span>@Substack.PostCount posts</span>
+                </div>
+                <div class="flex items-center text-gray-500 text-sm">
+                    <Icon Type="clock-circle" Class="mr-1" />
+                    <span>@GetPostFrequency()</span>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                @foreach (var tag in Substack.Tags)
+                {
+                    <Tag Class="mr-1">@tag</Tag>
+                }
+            </div>
+
+            @if (ShowTrendingMetrics && Substack.TrendingMetrics != null)
+            {
+                <div class="mt-3 p-2 bg-gray-50 rounded">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500">Growth (7d)</span>
+                        <span class="@GetTrendClass(Substack.TrendingMetrics.GrowthRate)">
+                            @($"{Substack.TrendingMetrics.GrowthRate:+0.0%;-0.0%}")
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm mt-1">
+                        <span class="text-gray-500">Engagement</span>
+                        <span class="font-medium">
+                            @Substack.TrendingMetrics.EngagementRate.ToString("P1")
+                        </span>
+                    </div>
+                </div>
+            }
+
+            @if (ShowSimilarity && Substack.SimilarityScore.HasValue)
+            {
+                <div class="mt-3 text-sm">
+                    <span class="text-gray-500">Similar to substacks you follow: </span>
+                    <span class="font-medium">
+                        @Substack.SimilarityScore.Value.ToString("P0")
+                    </span>
+                    @if (!string.IsNullOrEmpty(Substack.SimilarityReason))
+                    {
+                        <Tooltip Title="@Substack.SimilarityReason">
+                            <Icon Type="info-circle" Class="ml-1 text-gray-400" />
+                        </Tooltip>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</Card>
+
+<style>
+    .substack-card {
+        transition: all 0.3s ease;
+    }
+
+    .substack-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .substack-card.following {
+        border-color: #1890ff;
+    }
+</style>
+
+@code {
+    [Parameter] public SubstackDto Substack { get; set; } = null!;
+    [Parameter] public bool IsFollowing { get; set; }
+    [Parameter] public EventCallback<Guid> OnFollow { get; set; }
+    [Parameter] public bool ShowTrendingMetrics { get; set; }
+    [Parameter] public bool ShowSimilarity { get; set; }
+
+    private string GetPostFrequency()
+    {
+        return Substack.PostFrequency switch
+        {
+            "daily" => "Posts daily",
+            "weekly" => "Posts weekly",
+            "monthly" => "Posts monthly",
+            _ => $"{Substack.PostCount} posts total"
+        };
+    }
+
+    private string GetTrendClass(decimal growthRate)
+    {
+        return growthRate switch
+        {
+            > 0.1m => "text-green-500 font-medium",
+            > 0 => "text-green-400",
+            < -0.1m => "text-red-500 font-medium",
+            < 0 => "text-red-400",
+            _ => "text-gray-500"
+        };
+    }
+}

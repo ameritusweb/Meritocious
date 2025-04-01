@@ -1,0 +1,281 @@
+﻿@page "/s/{SubstackSlug}/{PostId}/fork"
+@page "/s/{SubstackSlug}/{PostId}/synthesize"
+@inject IPostService PostService
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+
+<PageHeader
+    Title="@(isSynthesis ? "Create Synthesis" : "Fork Post")"
+    Subtitle="@(isSynthesis ? "Build on multiple ideas" : "Create your own branch")"
+    OnBack="NavigateBack">
+</PageHeader>
+
+<div class="flex space-x-6">
+    <div class="w-2/3">
+        <Card>
+            <Form Model="@model" Layout="FormLayout.Vertical">
+                <FormItem Label="Title">
+                    <Input @bind-Value="@model.Title" 
+                           Placeholder="@(isSynthesis ? "Name your synthesis" : "Name your fork")"
+                           Size="large" />
+                </FormItem>
+
+                @if (isSynthesis)
+                {
+                    <FormItem Label="Source Posts">
+                        <div class="space-y-2 mb-4">
+                            @foreach (var source in model.SourcePosts)
+                            {
+                                <Card Size="small" Bordered>
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <div class="font-medium">@source.Title</div>
+                                            <div class="text-sm text-gray-500">
+                                                by @source.Author in @source.SubstackName
+                                            </div>
+                                        </div>
+                                        <Button Type="link" 
+                                                Danger
+                                                OnClick="@(() => RemoveSource(source.Id))">
+                                            Remove
+                                        </Button>
+                                    </div>
+                                </Card>
+                            }
+                            <Button Type="dashed" 
+                                    Block 
+                                    Icon="plus"
+                                    OnClick="@(() => showSourceModal = true)">
+                                Add Source Post
+                            </Button>
+                        </div>
+                    </FormItem>
+                }
+
+                <FormItem Label="Content">
+                    <MarkdownEditor @bind-Value="@model.Content"
+                                  OnPreview="PreviewMarkdown"
+                                  Height="600px" />
+                </FormItem>
+
+                <FormItem Label="@(isSynthesis ? "Synthesis Description" : "Fork Description")">
+                    <TextArea @bind-Value="@model.Description"
+                             Placeholder="@GetDescriptionPlaceholder()"
+                             AutoSize
+                             MaxLength="500"
+                             ShowCount />
+                </FormItem>
+            </Form>
+        </Card>
+    </div>
+
+    <div class="w-1/3 space-y-4">
+        <Card Title="@(isSynthesis ? "Synthesis Settings" : "Fork Settings")">
+            <Form Layout="FormLayout.Vertical">
+                <FormItem Label="Target Substack">
+                    <Select @bind-Value="@model.TargetSubstackId"
+                            Loading="@loadingSubstacks"
+                            Placeholder="Select where to create your post">
+                        @foreach (var substack in availableSubstacks)
+                        {
+                            <SelectOption Value="@substack.Id">
+                                @substack.Name
+                            </SelectOption>
+                        }
+                    </Select>
+                </FormItem>
+
+                <FormItem Label="Tags">
+                    <Select Mode="multiple"
+                            @bind-Value="@model.Tags"
+                            Placeholder="Add or modify tags"
+                            DefaultValue="@(isSynthesis ? null : originalTags)"
+                            AllowClear>
+                        @foreach (var tag in availableTags)
+                        {
+                            <SelectOption Value="@tag">@tag</SelectOption>
+                        }
+                    </Select>
+                </FormItem>
+
+                <FormItem Label="Relationship Type">
+                    <RadioGroup @bind-Value="@model.RelationType">
+                        @if (!isSynthesis)
+                        {
+                            <Radio Value="@PostRelationType.Extension">
+                                <div>
+                                    <div>Extension</div>
+                                    <div class="text-sm text-gray-500">
+                                        Builds upon and extends the original ideas
+                                    </div>
+                                </div>
+                            </Radio>
+                            <Radio Value="@PostRelationType.Alternative">
+                                <div>
+                                    <div>Alternative Perspective</div>
+                                    <div class="text-sm text-gray-500">
+                                        Offers a different viewpoint or approach
+                                    </div>
+                                </div>
+                            </Radio>
+                            <Radio Value="@PostRelationType.Critique">
+                                <div>
+                                    <div>Critique</div>
+                                    <div class="text-sm text-gray-500">
+                                        Critically examines the original ideas
+                                    </div>
+                                </div>
+                            </Radio>
+                        }
+                        else
+                        {
+                            <Radio Value="@PostRelationType.Synthesis">
+                                <div>
+                                    <div>Synthesis</div>
+                                    <div class="text-sm text-gray-500">
+                                        Combines and builds on multiple ideas
+                                    </div>
+                                </div>
+                            </Radio>
+                            <Radio Value="@PostRelationType.Comparison">
+                                <div>
+                                    <div>Comparison</div>
+                                    <div class="text-sm text-gray-500">
+                                        Analyzes and compares different approaches
+                                    </div>
+                                </div>
+                            </Radio>
+                        }
+                    </RadioGroup>
+                </FormItem>
+
+                <Divider />
+
+                <div class="space-x-2">
+                    <Button OnClick="NavigateBack">
+                        Cancel
+                    </Button>
+                    <Button Type="primary" 
+                            OnClick="CreatePost"
+                            Loading="@isCreating">
+                        @(isSynthesis ? "Create Synthesis" : "Create Fork")
+                    </Button>
+                </div>
+            </Form>
+        </Card>
+
+        <Card Title="Original Post@(isSynthesis ? "s" : "")">
+            @if (isSynthesis)
+            {
+                <Alert Message="Synthesis posts build on multiple ideas"
+                       Description="Add source posts to acknowledge and build upon their ideas"
+                       Type="info"
+                       ShowIcon
+                       Class="mb-4" />
+            }
+            else
+            {
+                <Descriptions Size="small">
+                    <DescriptionItem Title="Author">
+                        @originalPost?.Author.Username
+                    </DescriptionItem>
+                    <DescriptionItem Title="Created">
+                        @(originalPost?.CreatedAt.Humanize())
+                    </DescriptionItem>
+                    <DescriptionItem Title="Merit Score">
+                        <MeritBadge Score="@(originalPost?.MeritScore ?? 0)" Size="small" />
+                    </DescriptionItem>
+                </Descriptions>
+            }
+        </Card>
+    </div>
+</div>
+
+@if (showSourceModal)
+{
+    <Modal Title="Add Source Post"
+           Visible="true"
+           OnCancel="@(() => showSourceModal = false)"
+           Footer="null"
+           Width="800">
+        <div class="space-y-4">
+            <Input Placeholder="Search posts..."
+                   Prefix="@searchIcon"
+                   @bind-Value="searchTerm"
+                   OnChange="HandleSearch" />
+
+            <div class="h-96 overflow-y-auto">
+                @foreach (var post in filteredPosts)
+                {
+                    <Card Size="small" 
+                          Bordered 
+                          Class="mb-2 cursor-pointer hover:border-blue-500"
+                          @onclick="@(() => AddSource(post))">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-medium">@post.Title</div>
+                                <div class="text-sm text-gray-500">
+                                    by @post.Author in @post.SubstackName
+                                </div>
+                            </div>
+                            <MeritBadge Score="@post.MeritScore" Size="small" />
+                        </div>
+                    </Card>
+                }
+            </div>
+        </div>
+    </Modal>
+}
+
+@code {
+    [Parameter] public string SubstackSlug { get; set; } = "";
+    [Parameter] public string PostId { get; set; } = "";
+
+    private bool isSynthesis => NavigationManager.Uri.Contains("/synthesize");
+    private bool isCreating;
+    private bool loadingSubstacks;
+    private bool showSourceModal;
+    private string searchTerm = "";
+    private PostDto? originalPost;
+    private List<string> originalTags = new();
+    private List<SubstackDto> availableSubstacks = new();
+    private List<string> availableTags = new();
+    private List<PostDto> searchResults = new();
+    private ForkModel model = new();
+
+    private RenderFragment searchIcon => builder =>
+    {
+        builder.OpenComponent<Icon>(0);
+        builder.AddAttribute(1, "Type", "search");
+        builder.CloseComponent();
+    };
+
+    private IEnumerable<PostDto> filteredPosts => searchResults
+        .Where(p => string.IsNullOrEmpty(searchTerm) ||
+                    p.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                    p.Author.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(
+            LoadOriginalPost(),
+            LoadAvailableSubstacks(),
+            LoadAvailableTags()
+        );
+
+        if (!isSynthesis)
+        {
+            model.Title = $"Fork of {originalPost?.Title}";
+            model.Content = originalPost?.Content ?? "";
+            originalTags = originalPost?.Tags ?? new();
+            model.Tags = new List<string>(originalTags);
+            model.SourcePosts.Add(originalPost);
+        }
+    }
+
+    private string GetDescriptionPlaceholder() => isSynthesis
+        ? "Explain how you're combining and building upon these ideas"
+        : "Describe how your fork relates to or differs from the original";
+
+    // ... rest of the component implementation
+}

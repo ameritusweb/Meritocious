@@ -1,0 +1,149 @@
+﻿@namespace Meritocious.Web.Components.Substacks
+
+<Card Title="Trending Now" 
+      Extra="@extra"
+      Class="trending-substacks">
+    <Tabs DefaultActiveKey="@period"
+          OnTabClick="HandlePeriodChange">
+        <TabPane Key="day" Tab="24h" />
+        <TabPane Key="week" Tab="7d" />
+        <TabPane Key="month" Tab="30d" />
+    </Tabs>
+
+    <div class="space-y-4 mt-4">
+        @if (isLoading)
+        {
+            @for (int i = 0; i < 3; i++)
+            {
+                <Skeleton Active />
+            }
+        }
+        else if (!trending.Any())
+        {
+            <Empty Description="No trending substacks for this period" />
+        }
+        else
+        {
+            @foreach (var substack in trending)
+            {
+                <div class="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded transition-colors">
+                    <div class="text-lg font-medium text-gray-400 w-6 text-center">
+                        @(trending.IndexOf(substack) + 1)
+                    </div>
+                    
+                    <Avatar Size="small" Src="@substack.AvatarUrl">
+                        @substack.Name[0]
+                    </Avatar>
+                    
+                    <div class="flex-grow min-w-0">
+                        <div class="flex items-center space-x-2">
+                            <h4 class="font-medium truncate">
+                                <a href="/s/@substack.Slug" class="hover:text-blue-500">
+                                    @substack.Name
+                                </a>
+                            </h4>
+                            <MeritBadge Score="@substack.MeritScore" Size="small" />
+                        </div>
+                        <div class="text-sm text-gray-500 truncate">
+                            @substack.TrendingMetrics?.TopPost?.Title
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <div class="@GetTrendClass(substack.TrendingMetrics?.GrowthRate ?? 0)">
+                            @FormatGrowth(substack.TrendingMetrics?.GrowthRate ?? 0)
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            @($"+{substack.TrendingMetrics?.NewFollowers ?? 0} followers")
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (trending.Count > 5)
+            {
+                <div class="text-center mt-4">
+                    <Button Type="link" OnClick="ViewAll">
+                        View All Trending
+                    </Button>
+                </div>
+            }
+        </div>
+    }
+</Card>
+
+@code {
+    [Parameter] public string Period { get; set; } = "week";
+    [Parameter] public EventCallback<string> PeriodChanged { get; set; }
+    [Parameter] public bool Compact { get; set; }
+    [Parameter] public int MaxItems { get; set; } = 5;
+
+    private bool isLoading;
+    private List<SubstackDto> trending = new();
+    private string period = "week";
+
+    private RenderFragment extra => builder =>
+    {
+        builder.OpenComponent<Tooltip>(0);
+        builder.AddAttribute(1, "Title", "Trending based on growth rate, merit score, and engagement");
+        builder.AddAttribute(2, "ChildContent", (RenderFragment)(b =>
+        {
+            b.OpenComponent<Icon>(3);
+            b.AddAttribute(4, "Type", "info-circle");
+            b.AddAttribute(5, "Class", "text-gray-400");
+            b.CloseComponent();
+        }));
+        builder.CloseComponent();
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        period = Period;
+        await LoadTrending();
+    }
+
+    private async Task HandlePeriodChange(string newPeriod)
+    {
+        period = newPeriod;
+        await PeriodChanged.InvokeAsync(newPeriod);
+        await LoadTrending();
+    }
+
+    private async Task LoadTrending()
+    {
+        try
+        {
+            isLoading = true;
+            trending = await SubstackService.GetTrendingSubstacksAsync(
+                period,
+                MaxItems);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetTrendClass(decimal growthRate)
+    {
+        return growthRate switch
+        {
+            > 0.1m => "text-green-500 font-medium",
+            > 0 => "text-green-400",
+            < -0.1m => "text-red-500 font-medium",
+            < 0 => "text-red-400",
+            _ => "text-gray-500"
+        };
+    }
+
+    private string FormatGrowth(decimal growth)
+    {
+        var sign = growth > 0 ? "+" : "";
+        return $"{sign}{growth:P1}";
+    }
+
+    private void ViewAll()
+    {
+        NavigationManager.NavigateTo("/trending");
+    }
+}
