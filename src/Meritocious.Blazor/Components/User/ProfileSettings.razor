@@ -1,0 +1,86 @@
+﻿@page "/settings"
+@inject IUserService UserService
+@inject MessageService MessageService
+@inject NavigationManager NavigationManager
+
+<PageHeader Title="Profile Settings" />
+
+<div class="flex space-x-6">
+    <div class="w-1/4">
+        <Card>
+            <Menu Mode="MenuMode.Inline" 
+                  DefaultSelectedKeys="@(new[] { activeTab })"
+                  OnMenuItemClick="HandleTabChange">
+                <MenuItem Key="profile">
+                    <Icon Type="user" Theme="outline" />
+                    Profile
+                </MenuItem>
+                <MenuItem Key="preferences">
+                    <Icon Type="setting" Theme="outline" />
+                    Feed Preferences
+                </MenuItem>
+                <MenuItem Key="notifications">
+                    <Icon Type="bell" Theme="outline" />
+                    Notifications
+                </MenuItem>
+                <MenuItem Key="privacy">
+                    <Icon Type="lock" Theme="outline" />
+                    Privacy
+                </MenuItem>
+                <MenuItem Key="substacks">
+                    <Icon Type="project" Theme="outline" />
+                    My Substacks
+                </MenuItem>
+                <MenuItem Key="account">
+                    <Icon Type="safety" Theme="outline" />
+                    Account
+                </MenuItem>
+            </Menu>
+        </Card>
+    </div>
+
+    <div class="w-3/4">
+        <div class="space-y-6">
+            @switch (activeTab)
+            {
+                case "profile":
+                    <ProfileSettings OnSaved="HandleSettingsSaved" />
+                    break;
+
+                case "preferences":
+                    <FeedPreferences OnSaved="HandleSettingsSaved" />
+                    break;
+
+                case "notifications":
+                    <NotificationSettings OnSaved="HandleSettingsSaved" />
+                    break;
+
+                case "privacy":
+                    <PrivacySettings OnSaved="HandleSettingsSaved" />
+                    break;
+
+                case "substacks":
+                    <SubstackSettings OnSaved="HandleSettingsSaved" />
+                    break;
+
+                case "account":
+                    <AccountSettings OnSaved="HandleSettingsSaved" />
+                    break;
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string activeTab = "profile";
+
+    private void HandleTabChange(MenuItem item)
+    {
+        activeTab = item.Key;
+    }
+
+    private async Task HandleSettingsSaved()
+    {
+        await MessageService.Success("Settings saved successfully");
+    }
+}

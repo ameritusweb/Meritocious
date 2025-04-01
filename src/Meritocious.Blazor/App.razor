@@ -1,0 +1,38 @@
+﻿@using AntDesign
+@using Meritocious.Blazor.Components.Auth
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (!context.User.Identity?.IsAuthenticated ?? true)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <Result
+                            Status="403"
+                            Title="403"
+                            SubTitle="Sorry, you are not authorized to access this page." />
+                    }
+                </NotAuthorized>
+                <Authorizing>
+                    <div class="page-loading">
+                        <Spin Size="large" Tip="Authorizing..." />
+                    </div>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <Result
+                    Status="404"
+                    Title="404"
+                    SubTitle="Sorry, the page you visited does not exist." />
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

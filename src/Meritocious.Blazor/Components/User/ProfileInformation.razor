@@ -1,0 +1,273 @@
+﻿@namespace Meritocious.Web.Components.Profile
+
+<Card Title="Profile Information">
+    <Form Model="@model"
+          OnFinish="HandleSubmit"
+          Layout="FormLayout.Vertical">
+        <div class="flex items-start space-x-6">
+            <div class="flex-shrink-0">
+                <Upload Action="/api/upload/avatar"
+                        ListType="picture-card"
+                        ShowUploadList="false"
+                        BeforeUpload="BeforeUpload"
+                        OnChange="HandleAvatarChange">
+                    @if (!string.IsNullOrEmpty(model.AvatarUrl))
+                    {
+                        <img src="@model.AvatarUrl" 
+                             alt="Avatar" 
+                             style="width: 100%" />
+                    }
+                    else
+                    {
+                        <div>
+                            <Icon Type="plus" />
+                            <div style="margin-top: 8px">Upload</div>
+                        </div>
+                    }
+                </Upload>
+            </div>
+
+            <div class="flex-grow">
+                <FormItem Label="Display Name">
+                    <Input @bind-Value="@model.DisplayName" 
+                           Placeholder="How should we call you?" />
+                </FormItem>
+
+                <FormItem Label="Username" Extra="This will be your unique identifier">
+                    <Input @bind-Value="@model.Username"
+                           Placeholder="Choose a username"
+                           OnChange="@ValidateUsername" />
+                    @if (isCheckingUsername)
+                    {
+                        <small class="text-gray-500">
+                            <Icon Type="loading" Spin /> Checking availability...
+                        </small>
+                    }
+                    else if (usernameAvailable.HasValue)
+                    {
+                        <small class="@(usernameAvailable.Value ? "text-green-500" : "text-red-500")">
+                            @(usernameAvailable.Value ? "Username is available" : "Username is taken")
+                        </small>
+                    }
+                </FormItem>
+
+                <FormItem Label="Bio">
+                    <TextArea @bind-Value="@model.Bio"
+                             Placeholder="Tell others about yourself"
+                             MaxLength="160"
+                             ShowCount
+                             AutoSize />
+                </FormItem>
+
+                <FormItem Label="Website">
+                    <Input @bind-Value="@model.Website"
+                           Placeholder="Your personal website or blog" />
+                </FormItem>
+
+                <FormItem Label="Location">
+                    <Input @bind-Value="@model.Location"
+                           Placeholder="Where are you based?" />
+                </FormItem>
+
+                <FormItem Label="Interests">
+                    <Select Mode="multiple"
+                            @bind-Value="@model.Interests"
+                            Placeholder="Select your interests">
+                        @foreach (var interest in availableInterests)
+                        {
+                            <SelectOption Value="@interest">@interest</SelectOption>
+                        }
+                    </Select>
+                </FormItem>
+
+                <FormItem Label="Profile Visibility">
+                    <RadioGroup @bind-Value="@model.Visibility">
+                        <Radio Value="@VisibilityLevel.Public">
+                            <div>
+                                <div>Public</div>
+                                <div class="text-sm text-gray-500">
+                                    Anyone can see your profile
+                                </div>
+                            </div>
+                        </Radio>
+                        <Radio Value="@VisibilityLevel.Friends">
+                            <div>
+                                <div>Friends Only</div>
+                                <div class="text-sm text-gray-500">
+                                    Only your friends can see your profile
+                                </div>
+                            </div>
+                        </Radio>
+                        <Radio Value="@VisibilityLevel.Private">
+                            <div>
+                                <div>Private</div>
+                                <div class="text-sm text-gray-500">
+                                    Only you can see your profile
+                                </div>
+                            </div>
+                        </Radio>
+                    </RadioGroup>
+                </FormItem>
+
+                <FormItem>
+                    <Button Type="primary"
+                            HtmlType="submit"
+                            Loading="@isSaving">
+                        Save Changes
+                    </Button>
+                </FormItem>
+            </div>
+        </div>
+    </Form>
+</Card>
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    private ProfileModel model = new();
+    private bool isSaving;
+    private bool isCheckingUsername;
+    private bool? usernameAvailable;
+    private List<string> availableInterests = new();
+    private System.Timers.Timer? usernameDebounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+        await LoadAvailableInterests();
+    }
+
+    private async Task LoadProfile()
+    {
+        var profile = await UserService.GetProfileAsync();
+        model = new ProfileModel
+        {
+            DisplayName = profile.DisplayName,
+            Username = profile.Username,
+            Bio = profile.Bio,
+            Website = profile.Website,
+            Location = profile.Location,
+            AvatarUrl = profile.AvatarUrl,
+            Interests = profile.Interests,
+            Visibility = profile.Visibility
+        };
+    }
+
+    private async Task LoadAvailableInterests()
+    {
+        availableInterests = await UserService.GetAvailableInterestsAsync();
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSaving = true;
+
+            // Validate username if changed
+            if (model.Username != UserService.CurrentUsername)
+            {
+                var isAvailable = await UserService.CheckUsernameAvailabilityAsync(
+                    model.Username);
+                    
+                if (!isAvailable)
+                {
+                    await MessageService.Error("Username is no longer available");
+                    return;
+                }
+            }
+
+            await UserService.UpdateProfileAsync(model);
+            await OnSaved.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to save profile");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task ValidateUsername(string username)
+    {
+        usernameDebounceTimer?.Stop();
+        usernameDebounceTimer?.Dispose();
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            usernameAvailable = null;
+            return;
+        }
+
+        usernameDebounceTimer = new System.Timers.Timer(500);
+        usernameDebounceTimer.Elapsed += async (sender, e) => 
+        {
+            await InvokeAsync(async () =>
+            {
+                isCheckingUsername = true;
+                StateHasChanged();
+
+                try
+                {
+                    usernameAvailable = await UserService
+                        .CheckUsernameAvailabilityAsync(username);
+                }
+                finally
+                {
+                    isCheckingUsername = false;
+                    StateHasChanged();
+                }
+            });
+        };
+
+        usernameDebounceTimer.AutoReset = false;
+        usernameDebounceTimer.Start();
+    }
+
+    private async Task<bool> BeforeUpload(IBrowserFile file)
+    {
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        var extension = Path.GetExtension(file.Name).ToLowerInvariant();
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            await MessageService.Error("Please upload an image file");
+            return false;
+        }
+
+        if (file.Size > 2 * 1024 * 1024) // 2MB
+        {
+            await MessageService.Error("Image must be smaller than 2MB");
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task HandleAvatarChange(UploadChangeEventArgs args)
+    {
+        if (args.File.State == UploadState.Success)
+        {
+            model.AvatarUrl = args.File.Response.ToString();
+        }
+    }
+
+    public void Dispose()
+    {
+        usernameDebounceTimer?.Dispose();
+    }
+}
+
+public class ProfileModel
+{
+    public string DisplayName { get; set; } = "";
+    public string Username { get; set; } = "";
+    public string Bio { get; set; } = "";
+    public string Website { get; set; } = "";
+    public string Location { get; set; } = "";
+    public string? AvatarUrl { get; set; }
+    public List<string> Interests { get; set; } = new();
+    public VisibilityLevel Visibility { get; set; }
+}

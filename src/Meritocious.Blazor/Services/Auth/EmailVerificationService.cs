@@ -1,0 +1,83 @@
+﻿using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components;
+
+namespace Meritocious.Blazor.Services.Auth
+{
+    public class EmailVerificationService : IEmailVerificationService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly NavigationManager _navigationManager;
+        private readonly ILocalStorageService _localStorage;
+        private readonly ILogger<EmailVerificationService> _logger;
+
+        public EmailVerificationService(
+            HttpClient httpClient,
+            NavigationManager navigationManager,
+            ILocalStorageService localStorage,
+            ILogger<EmailVerificationService> logger)
+        {
+            _httpClient = httpClient;
+            _navigationManager = navigationManager;
+            _localStorage = localStorage;
+            _logger = logger;
+        }
+
+        public async Task<bool> SendVerificationEmailAsync(string email)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(
+                    "api/auth/verify-email/send",
+                    new { Email = email });
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send verification email");
+                return false;
+            }
+        }
+
+        public async Task<bool> VerifyEmailAsync(string token)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(
+                    "api/auth/verify-email",
+                    new { Token = token });
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Store verification status
+                    await _localStorage.SetItemAsync("emailVerified", true);
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to verify email");
+                return false;
+            }
+        }
+
+        public async Task<bool> ResendVerificationEmailAsync(string email)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(
+                    "api/auth/verify-email/resend",
+                    new { Email = email });
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to resend verification email");
+                return false;
+            }
+        }
+    }
+}

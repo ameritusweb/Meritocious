@@ -1,0 +1,351 @@
+﻿@namespace Meritocious.Web.Components.Profile
+
+<div class="space-y-6">
+    <Card Title="Content Quality Thresholds">
+        <Alert Message="Posts below these thresholds won't appear in your feed"
+               ShowIcon
+               Type="info"
+               Class="mb-4" />
+
+        <div class="space-y-6">
+            @foreach (var metric in qualityMetrics)
+            {
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <div>
+                            <h4 class="font-medium">@metric.Label</h4>
+                            <p class="text-sm text-gray-500">@metric.Description</p>
+                        </div>
+                        <span class="font-medium">
+                            @(metric.Value.ToString("P0"))
+                        </span>
+                    </div>
+                    <Slider @bind-Value="@metric.Value"
+                           TipFormatter="@(v => (v * 100).ToString("F0") + "%")"
+                           Min="0"
+                           Max="1"
+                           Step="0.1" />
+                </div>
+            }
+        </div>
+    </Card>
+
+    <Card Title="Topic Preferences">
+        <div class="space-y-4">
+            <div class="flex justify-between items-center">
+                <span>Selected Topics (@selectedTopics.Count)</span>
+                <Button Type="link" OnClick="@(() => showTopicModal = true)">
+                    Manage Topics
+                </Button>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                @foreach (var topic in selectedTopics)
+                {
+                    <Tag Closable 
+                         OnClose="@(() => RemoveTopic(topic.Id))"
+                         Class="@GetTopicClass(topic)">
+                        @topic.Name
+                        <span class="ml-1 text-gray-500">
+                            @(topic.Weight.ToString("P0"))
+                        </span>
+                    </Tag>
+                }
+            </div>
+        </div>
+    </Card>
+
+    <Card Title="Feed Customization">
+        <Form Layout="FormLayout.Vertical">
+            <FormItem Label="View Mode">
+                <RadioGroup @bind-Value="@settings.ViewMode">
+                    <Radio Value="@("compact")">
+                        <div>
+                            <div>Compact</div>
+                            <div class="text-sm text-gray-500">
+                                Show more posts with less detail
+                            </div>
+                        </div>
+                    </Radio>
+                    <Radio Value="@("standard")">
+                        <div>
+                            <div>Standard</div>
+                            <div class="text-sm text-gray-500">
+                                Balanced view with key information
+                            </div>
+                        </div>
+                    </Radio>
+                    <Radio Value="@("detailed")">
+                        <div>
+                            <div>Detailed</div>
+                            <div class="text-sm text-gray-500">
+                                Show full post previews and metrics
+                            </div>
+                        </div>
+                    </Radio>
+                </RadioGroup>
+            </FormItem>
+
+            <FormItem Label="Post Sorting">
+                <Select @bind-Value="@settings.DefaultSort"
+                        Style="width: 200px;">
+                    <SelectOption Value="@("merit")">By Merit Score</SelectOption>
+                    <SelectOption Value="@("recent")">Most Recent</SelectOption>
+                    <SelectOption Value="@("discussed")">Most Discussed</SelectOption>
+                    <SelectOption Value="@("forked")">Most Forked</SelectOption>
+                </Select>
+            </FormItem>
+
+            <FormItem Label="Feed Filters">
+                <Checkbox @bind-Value="@settings.ShowOnlyFollowed">
+                    Only show posts from followed substacks
+                </Checkbox>
+                <Checkbox @bind-Value="@settings.HideLowQuality">
+                    Hide posts below quality thresholds
+                </Checkbox>
+                <Checkbox @bind-Value="@settings.HighlightNew">
+                    Highlight new posts since last visit
+                </Checkbox>
+            </FormItem>
+
+            <FormItem>
+                <Button Type="primary"
+                        OnClick="SaveSettings"
+                        Loading="@isSaving">
+                    Save Preferences
+                </Button>
+            </FormItem>
+        </Form>
+    </Card>
+</div>
+
+<Modal Title="Manage Topics"
+       Visible="@showTopicModal"
+       OnOk="SaveTopics"
+       OnCancel="@(() => showTopicModal = false)"
+       Width="800">
+    <div class="space-y-4">
+        <Input Placeholder="Search topics..."
+               Prefix="@searchIcon"
+               @bind-Value="topicSearchTerm"
+               OnChange="HandleTopicSearch" />
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <h4 class="font-medium mb-2">Available Topics</h4>
+                <div class="h-96 overflow-y-auto border rounded p-2">
+                    @foreach (var topic in availableTopics.Where(FilterTopics))
+                    {
+                        <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer"
+                             @onclick="() => AddTopic(topic)">
+                            <span>@topic.Name</span>
+                            <Icon Type="plus" Class="text-gray-400" />
+                        </div>
+                    }
+                </div>
+            </div>
+            <div>
+                <h4 class="font-medium mb-2">Selected Topics</h4>
+                <div class="h-96 overflow-y-auto border rounded p-2">
+                    @foreach (var topic in selectedTopics)
+                    {
+                        <div class="p-2 hover:bg-gray-50 rounded">
+                            <div class="flex items-center justify-between mb-1">
+                                <span>@topic.Name</span>
+                                <Button Type="link" 
+                                        Danger
+                                        OnClick="@(() => RemoveTopic(topic.Id))">
+                                    Remove
+                                </Button>
+                            </div>
+                            <Slider @bind-Value="@topic.Weight"
+                                   TipFormatter="@(v => (v * 100).ToString("F0") + "%")"
+                                   Min="0"
+                                   Max="1"
+                                   Step="0.1" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</Modal>
+
+@code {
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    private bool isSaving;
+    private bool showTopicModal;
+    private string topicSearchTerm = "";
+    private FeedSettings settings = new();
+    private List<QualityMetric> qualityMetrics = new();
+    private List<TopicPreference> selectedTopics = new();
+    private List<TopicOption> availableTopics = new();
+
+    private RenderFragment searchIcon => builder =>
+    {
+        builder.OpenComponent<Icon>(0);
+        builder.AddAttribute(1, "Type", "search");
+        builder.CloseComponent();
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettings();
+        await LoadTopics();
+        InitializeQualityMetrics();
+    }
+
+    private void InitializeQualityMetrics()
+    {
+        qualityMetrics = new List<QualityMetric>
+        {
+            new("clarity", "Content Clarity", 
+                "How well-written and understandable the content should be", 0.6m),
+            new("novelty", "Original Ideas", 
+                "Preference for unique perspectives and new ideas", 0.5m),
+            new("relevance", "Topic Relevance", 
+                "How closely content should match your interests", 0.7m),
+            new("contribution", "Discussion Value", 
+                "How much the content adds to the conversation", 0.6m)
+        };
+    }
+
+    private async Task LoadSettings()
+    {
+        try
+        {
+            settings = await UserService.GetFeedSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load feed settings");
+        }
+    }
+
+    private async Task LoadTopics()
+    {
+        try
+        {
+            var result = await UserService.GetTopicPreferencesAsync();
+            selectedTopics = result.Selected;
+            availableTopics = result.Available;
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load topics");
+        }
+    }
+
+    private bool FilterTopics(TopicOption topic)
+    {
+        if (string.IsNullOrEmpty(topicSearchTerm))
+            return true;
+
+        return topic.Name.Contains(topicSearchTerm, 
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void AddTopic(TopicOption topic)
+    {
+        if (!selectedTopics.Any(t => t.Id == topic.Id))
+        {
+            selectedTopics.Add(new TopicPreference
+            {
+                Id = topic.Id,
+                Name = topic.Name,
+                Weight = 0.5m // Default weight
+            });
+        }
+    }
+
+    private void RemoveTopic(string id)
+    {
+        selectedTopics.RemoveAll(t => t.Id == id);
+    }
+
+    private string GetTopicClass(TopicPreference topic)
+    {
+        return topic.Weight switch
+        {
+            >= 0.7m => "bg-blue-100 text-blue-800",
+            >= 0.4m => "bg-gray-100 text-gray-800",
+            _ => "bg-gray-50 text-gray-600"
+        };
+    }
+
+    private async Task SaveSettings()
+    {
+        try
+        {
+            isSaving = true;
+
+            await UserService.UpdateFeedSettingsAsync(new UpdateFeedSettingsRequest
+            {
+                QualityThresholds = qualityMetrics.ToDictionary(
+                    m => m.Key,
+                    m => m.Value),
+                TopicPreferences = selectedTopics,
+                ViewMode = settings.ViewMode,
+                DefaultSort = settings.DefaultSort,
+                ShowOnlyFollowed = settings.ShowOnlyFollowed,
+                HideLowQuality = settings.HideLowQuality,
+                HighlightNew = settings.HighlightNew
+            });
+
+            await OnSaved.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to save preferences");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task SaveTopics()
+    {
+        showTopicModal = false;
+        await SaveSettings();
+    }
+
+    private class QualityMetric
+    {
+        public string Key { get; }
+        public string Label { get; }
+        public string Description { get; }
+        public decimal Value { get; set; }
+
+        public QualityMetric(string key, string label, string description, decimal defaultValue)
+        {
+            Key = key;
+            Label = label;
+            Description = description;
+            Value = defaultValue;
+        }
+    }
+
+    private class FeedSettings
+    {
+        public string ViewMode { get; set; } = "standard";
+        public string DefaultSort { get; set; } = "merit";
+        public bool ShowOnlyFollowed { get; set; }
+        public bool HideLowQuality { get; set; } = true;
+        public bool HighlightNew { get; set; } = true;
+    }
+
+    private class TopicPreference
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public decimal Weight { get; set; }
+    }
+
+    private class TopicOption
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+    }
+}
