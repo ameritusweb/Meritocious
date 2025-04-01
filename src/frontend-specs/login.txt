@@ -1,0 +1,156 @@
+@page "/login"
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="login-container">
+    <Card Style="width: 400px;">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">Welcome to Meritocious</h2>
+            <p class="text-gray-500">Where ideas rise on merit</p>
+        </div>
+
+        <Form Model="@loginModel"
+              OnFinish="HandleLogin"
+              Layout="FormLayout.Vertical">
+            <FormItem Label="Email">
+                <Input @bind-Value="@loginModel.Email" 
+                       Placeholder="Enter your email" />
+            </FormItem>
+
+            <FormItem Label="Password">
+                <InputPassword @bind-Value="@loginModel.Password"
+                             Placeholder="Enter your password" />
+            </FormItem>
+
+            <FormItem>
+                <Button Type="primary"
+                        HtmlType="submit"
+                        Block
+                        Loading="@isLoading">
+                    Log In
+                </Button>
+            </FormItem>
+
+            <Divider>Or</Divider>
+
+            <Button Type="default"
+                    Block
+                    OnClick="HandleGoogleLogin"
+                    Loading="@isGoogleLoading">
+                <Space>
+                    <Icon Type="google" Theme="outline" />
+                    <span>Continue with Google</span>
+                </Space>
+            </Button>
+        </Form>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <Alert Type="error"
+                   Message="@errorMessage"
+                   ShowIcon
+                   Banner
+                   Class="mt-4" />
+        }
+
+        <div class="mt-4 text-center">
+            <a href="/register">Don't have an account? Sign up</a>
+        </div>
+    </Card>
+</div>
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f2f5;
+    }
+</style>
+
+@code {
+    private LoginRequest loginModel = new();
+    private bool isLoading;
+    private bool isGoogleLoading;
+    private string? errorMessage;
+    private string? returnUrl;
+
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("returnUrl", out var param))
+        {
+            returnUrl = param[0];
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            var result = await AuthService.LoginAsync(loginModel);
+
+            if (result.Success)
+            {
+                NavigateToReturnUrl();
+            }
+            else
+            {
+                errorMessage = result.Error ?? "Login failed";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unexpected error occurred";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleGoogleLogin()
+    {
+        try
+        {
+            isGoogleLoading = true;
+            errorMessage = null;
+
+            // Initialize Google Sign-In
+            var idToken = await JSRuntime.InvokeAsync<string>("initializeGoogleSignIn");
+            
+            if (!string.IsNullOrEmpty(idToken))
+            {
+                var result = await AuthService.GoogleLoginAsync(idToken);
+
+                if (result.Success)
+                {
+                    NavigateToReturnUrl();
+                }
+                else
+                {
+                    errorMessage = result.Error ?? "Google login failed";
+                }
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An unexpected error occurred during Google login";
+        }
+        finally
+        {
+            isGoogleLoading = false;
+        }
+    }
+
+    private void NavigateToReturnUrl()
+    {
+        var url = string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl;
+        NavigationManager.NavigateTo(url);
+    }
+}

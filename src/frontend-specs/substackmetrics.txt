@@ -1,0 +1,197 @@
+@namespace Meritocious.Web.Components.Substacks
+
+<div class="substack-metrics">
+    <Row Gutter="16">
+        <Col Span="8">
+            <Statistic Title="Merit Score"
+                       Value="@Metrics.MeritScore.ToString("N2")"
+                       Prefix="@GetMeritIcon()"
+                       ValueStyle="@GetMeritStyle()" />
+        </Col>
+        <Col Span="8">
+            <Statistic Title="Posts"
+                       Value="@Metrics.PostCount"
+                       Suffix="@($"/ {GetPostFrequency()}")" />
+        </Col>
+        <Col Span="8">
+            <Statistic Title="Followers"
+                       Value="@Metrics.FollowerCount"
+                       Prefix="@followerIcon" />
+        </Col>
+    </Row>
+
+    <Divider />
+
+    <Row Gutter="16">
+        <Col Span="12">
+            <Card Size="small" Title="Growth Trend">
+                <TinyArea Data="@Metrics.DailyGrowth" 
+                         AutoFit
+                         Smooth />
+                <div class="flex justify-between mt-2 text-sm">
+                    <span class="text-gray-500">Past 30 days</span>
+                    <span class="@GetTrendClass(Metrics.GrowthRate)">
+                        @FormatGrowth(Metrics.GrowthRate)
+                    </span>
+                </div>
+            </Card>
+        </Col>
+        <Col Span="12">
+            <Card Size="small" Title="Post Quality">
+                <TinyColumn Data="@Metrics.PostQuality" 
+                           AutoFit />
+                <div class="flex justify-between mt-2 text-sm">
+                    <span class="text-gray-500">Last 10 posts</span>
+                    <span class="font-medium">
+                        Avg: @Metrics.AveragePostQuality.ToString("N2")
+                    </span>
+                </div>
+            </Card>
+        </Col>
+    </Row>
+
+    <div class="mt-4">
+        <h4 class="text-sm font-medium mb-2">Engagement Breakdown</h4>
+        <div class="space-y-2">
+            @foreach (var metric in engagementMetrics)
+            {
+                <div>
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-500">@metric.Label</span>
+                        <span>@metric.Value.ToString("P1")</span>
+                    </div>
+                    <Progress Percent="@((double)(metric.Value * 100))"
+                             ShowInfo="false"
+                             StrokeWidth="4"
+                             Status="@GetProgressStatus(metric.Value)" />
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (ShowTopPosts)
+    {
+        <div class="mt-4">
+            <h4 class="text-sm font-medium mb-2">Top Posts</h4>
+            <List DataSource="@Metrics.TopPosts"
+                  Size="small">
+                <Item Context="post">
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0">
+                            <a href="/s/@Metrics.Slug/@post.Id" 
+                               class="hover:text-blue-500 truncate block">
+                                @post.Title
+                            </a>
+                            <span class="text-sm text-gray-500">
+                                @post.CreatedAt.Humanize()
+                            </span>
+                        </div>
+                        <MeritBadge Score="@post.MeritScore" Size="small" />
+                    </div>
+                </Item>
+            </List>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public SubstackMetricsDto Metrics { get; set; } = null!;
+    [Parameter] public bool ShowTopPosts { get; set; } = true;
+
+    private RenderFragment followerIcon => builder =>
+    {
+        builder.OpenComponent<Icon>(0);
+        builder.AddAttribute(1, "Type", "user");
+        builder.CloseComponent();
+    };
+
+    private List<EngagementMetric> engagementMetrics => new()
+    {
+        new("Discussion Rate", Metrics.DiscussionRate),
+        new("Fork Rate", Metrics.ForkRate),
+        new("Watch Rate", Metrics.WatchRate),
+        new("Return Rate", Metrics.ReturnRate)
+    };
+
+    private RenderFragment GetMeritIcon()
+    {
+        var type = Metrics.MeritScore switch
+        {
+            >= 0.8m => "star",
+            >= 0.6m => "like",
+            _ => "meh"
+        };
+
+        return builder =>
+        {
+            builder.OpenComponent<Icon>(0);
+            builder.AddAttribute(1, "Type", type);
+            builder.CloseComponent();
+        };
+    }
+
+    private string GetMeritStyle()
+    {
+        var color = Metrics.MeritScore switch
+        {
+            >= 0.8m => "#52c41a",
+            >= 0.6m => "#1890ff",
+            >= 0.4m => "#faad14",
+            _ => "#ff4d4f"
+        };
+
+        return $"color: {color}";
+    }
+
+    private string GetPostFrequency()
+    {
+        return Metrics.PostFrequency switch
+        {
+            "daily" => "day",
+            "weekly" => "week",
+            "monthly" => "month",
+            _ => "total"
+        };
+    }
+
+    private string GetTrendClass(decimal rate)
+    {
+        return rate switch
+        {
+            > 0.1m => "text-green-500 font-medium",
+            > 0 => "text-green-400",
+            < -0.1m => "text-red-500 font-medium",
+            < 0 => "text-red-400",
+            _ => "text-gray-500"
+        };
+    }
+
+    private string FormatGrowth(decimal growth)
+    {
+        var sign = growth > 0 ? "+" : "";
+        return $"{sign}{growth:P1}";
+    }
+
+    private ProgressStatus GetProgressStatus(decimal value)
+    {
+        return value switch
+        {
+            >= 0.7m => ProgressStatus.Success,
+            >= 0.4m => ProgressStatus.Normal,
+            >= 0.2m => ProgressStatus.Active,
+            _ => ProgressStatus.Exception
+        };
+    }
+
+    private class EngagementMetric
+    {
+        public string Label { get; }
+        public decimal Value { get; }
+
+        public EngagementMetric(string label, decimal value)
+        {
+            Label = label;
+            Value = value;
+        }
+    }
+}

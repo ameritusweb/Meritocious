@@ -1,0 +1,80 @@
+// Add authentication services
+builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+
+// Add HTTP client with JWT handler
+builder.Services.AddScoped<JwtAuthenticationHeaderHandler>();
+builder.Services.AddHttpClient("API", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001");
+}).AddHttpMessageHandler<JwtAuthenticationHeaderHandler>();
+
+// Configure client for auth service
+builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001");
+});
+
+---
+
+using Meritocious.Infrastructure;
+using Meritocious.AI;
+using AntDesign.ProLayout;
+using Microsoft.AspNetCore.Components;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Existing services
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
+
+// Add Blazor Server services
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
+// Add Ant Design Blazor
+builder.Services.AddAntDesign();
+
+// Add custom services
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ISubstackService, SubstackService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IMarkdownService, MarkdownService>();
+
+// Add HttpClient for API communication
+builder.Services.AddHttpClient("API", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001");
+});
+
+// Existing infrastructure services
+builder.Services.AddMeritociousInfrastructure(builder.Configuration);
+builder.Services.AddMeritociousAI(builder.Configuration);
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+app.UseAuthorization();
+
+// Map both API controllers and Blazor
+app.MapControllers();
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+
+await Meritocious.Infrastructure.Data.DbInitializer.InitializeAsync(app.Services);
+
+app.Run();

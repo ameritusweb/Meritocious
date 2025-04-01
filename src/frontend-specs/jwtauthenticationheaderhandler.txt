@@ -1,0 +1,59 @@
+namespace Meritocious.Web.Services.Auth;
+
+public class JwtAuthenticationHeaderHandler : DelegatingHandler
+{
+    private readonly ILocalStorageService _localStorage;
+    private readonly NavigationManager _navigationManager;
+    private readonly IAuthService _authService;
+
+    public JwtAuthenticationHeaderHandler(
+        ILocalStorageService localStorage,
+        NavigationManager navigationManager,
+        IAuthService authService)
+    {
+        _localStorage = localStorage;
+        _navigationManager = navigationManager;
+        _authService = authService;
+    }
+
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, 
+        CancellationToken cancellationToken)
+    {
+        // Try to get the token
+        var token = await _localStorage.GetItemAsync<string>("authToken");
+
+        // Add token to request header if available
+        if (!string.IsNullOrEmpty(token))
+        {
+            request.Headers.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+
+        var response = await base.SendAsync(request, cancellationToken);
+
+        // Handle 401 Unauthorized
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            // Try to refresh the token
+            var refreshSuccess = await _authService.RefreshTokenAsync();
+            
+            if (refreshSuccess)
+            {
+                // Retry the request with the new token
+                token = await _localStorage.GetItemAsync<string>("authToken");
+                request.Headers.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    
+                return await base.SendAsync(request, cancellationToken);
+            }
+            else
+            {
+                // Navigate to login if refresh fails
+                _navigationManager.NavigateTo("/login", true);
+            }
+        }
+
+        return response;
+    }
+}

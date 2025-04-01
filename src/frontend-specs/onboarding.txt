@@ -1,0 +1,155 @@
+@page "/onboarding"
+@inject ISubstackService SubstackService
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+
+<div class="onboarding-container">
+    <div class="max-w-4xl mx-auto p-6">
+        <Steps Current="@currentStep" 
+               ProgressDot="true" 
+               Direction="@(isSmallScreen ? "vertical" : "horizontal")">
+            <Step Title="Pick Your Interests" />
+            <Step Title="Choose Substacks" />
+            <Step Title="Set Feed Preferences" />
+            <Step Title="Get Started" />
+        </Steps>
+
+        <div class="mt-12">
+            @switch (currentStep)
+            {
+                case 0:
+                    <Card Title="What interests you?">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach (var category in interestCategories)
+                            {
+                                <Card Bordered Size="small" 
+                                      Class="@(selectedInterests.Contains(category.Id) ? "border-blue-500" : "")">
+                                    <div class="flex items-center justify-between cursor-pointer"
+                                         @onclick="() => ToggleInterest(category.Id)">
+                                        <div>
+                                            <h4 class="font-medium">@category.Name</h4>
+                                            <p class="text-sm text-gray-500">@category.Description</p>
+                                        </div>
+                                        <Checkbox Checked="@selectedInterests.Contains(category.Id)" />
+                                    </div>
+                                </Card>
+                            }
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <Button Type="primary" 
+                                    OnClick="NextStep"
+                                    Disabled="@(!selectedInterests.Any())">
+                                Next
+                            </Button>
+                        </div>
+                    </Card>
+                    break;
+
+                case 1:
+                    <Card Title="Recommended Substacks">
+                        <Alert Message="Based on your interests, here are some substacks you might like"
+                               Type="info"
+                               ShowIcon
+                               Class="mb-4" />
+
+                        <div class="space-y-4">
+                            @foreach (var substack in recommendedSubstacks)
+                            {
+                                <Card Size="small" 
+                                      Bordered
+                                      Class="@(selectedSubstacks.Contains(substack.Id) ? "border-blue-500" : "")">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-2">
+                                                <h4 class="font-medium">@substack.Name</h4>
+                                                <MeritBadge Score="@substack.MeritScore" Size="small" />
+                                            </div>
+                                            <p class="text-sm text-gray-500 mt-1">@substack.Description</p>
+                                            <div class="mt-2">
+                                                @foreach (var tag in substack.Tags)
+                                                {
+                                                    <Tag Class="mr-1">@tag</Tag>
+                                                }
+                                            </div>
+                                        </div>
+                                        <Button Type="@(selectedSubstacks.Contains(substack.Id) ? "primary" : "default")"
+                                                OnClick="() => ToggleSubstack(substack.Id)">
+                                            @(selectedSubstacks.Contains(substack.Id) ? "Following" : "Follow")
+                                        </Button>
+                                    </div>
+                                </Card>
+                            }
+                        </div>
+                        <div class="mt-6 flex justify-between">
+                            <Button OnClick="PreviousStep">Previous</Button>
+                            <Button Type="primary" 
+                                    OnClick="NextStep"
+                                    Disabled="@(!selectedSubstacks.Any())">
+                                Next
+                            </Button>
+                        </div>
+                    </Card>
+                    break;
+
+                case 2:
+                    <Card Title="Customize Your Feed">
+                        <Alert Message="Set your content quality thresholds. Posts below these values won't appear in your feed."
+                               Type="info"
+                               ShowIcon
+                               Class="mb-4" />
+
+                        <div class="space-y-6">
+                            @foreach (var preference in feedPreferences)
+                            {
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <div>
+                                            <h4 class="font-medium">@preference.Label</h4>
+                                            <p class="text-sm text-gray-500">@preference.Description</p>
+                                        </div>
+                                        <span class="font-medium">
+                                            @(preference.Value.ToString("P0"))
+                                        </span>
+                                    </div>
+                                    <Slider @bind-Value="@preference.Value"
+                                           TipFormatter="@(v => (v * 100).ToString("F0") + "%")"
+                                           Min="0"
+                                           Max="1"
+                                           Step="0.1" />
+                                </div>
+                            }
+                        </div>
+                        <div class="mt-6 flex justify-between">
+                            <Button OnClick="PreviousStep">Previous</Button>
+                            <Button Type="primary" OnClick="NextStep">Next</Button>
+                        </div>
+                    </Card>
+                    break;
+
+                case 3:
+                    <Result Status="success"
+                            Title="You're All Set!"
+                            SubTitle="Your personalized experience is ready">
+                        <Extra>
+                            <Space>
+                                <Button OnClick="PreviousStep">
+                                    Go Back
+                                </Button>
+                                <Button Type="primary" OnClick="FinishOnboarding">
+                                    Start Exploring
+                                </Button>
+                            </Space>
+                        </Extra>
+                    </r>
+                    break;
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .onboarding-container {
+        min-height: 100vh;
+        background: #f0f2f5;
+    }
+</style>

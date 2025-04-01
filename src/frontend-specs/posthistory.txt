@@ -1,0 +1,249 @@
+@page "/s/{SubstackSlug}/{PostId}/history"
+@inject IPostService PostService
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+
+<PageHeader
+    Title="Post History"
+    Subtitle="View and compare changes"
+    OnBack="NavigateBack">
+</PageHeader>
+
+<div class="flex space-x-6">
+    <div class="w-1/3">
+        <Card>
+            <div class="space-y-4">
+                <RadioGroup @bind-Value="@selectedVersionId" Class="w-full">
+                    @foreach (var version in versions)
+                    {
+                        <div class="version-item border rounded p-4 mb-2 cursor-pointer 
+                                  @(selectedVersionId == version.Id ? "border-blue-500 bg-blue-50" : "border-gray-200")">
+                            <Radio Value="@version.Id">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-medium">Version @version.VersionNumber</span>
+                                        <span class="text-sm text-gray-500">
+                                            @version.CreatedAt.Humanize()
+                                        </span>
+                                    </div>
+                                    <div class="text-sm text-gray-500 mt-1">
+                                        by @version.Editor.Username
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(version.EditReason))
+                                    {
+                                        <div class="text-sm mt-2">@version.EditReason</div>
+                                    }
+                                    @if (version.IsModerationEdit)
+                                    {
+                                        <Tag Color="red" Class="mt-2">Moderation Edit</Tag>
+                                    }
+                                    <div class="flex items-center space-x-2 mt-2">
+                                        <MeritBadge Score="@version.MeritScore" Size="small" />
+                                        @if (version.MeritScore > (version.PreviousVersion?.MeritScore ?? 0))
+                                        {
+                                            <Tag Color="green">
+                                                <Icon Type="arrow-up" /> Improved
+                                            </Tag>
+                                        }
+                                    </div>
+                                </div>
+                            </Radio>
+                        </div>
+                    }
+                </RadioGroup>
+
+                @if (versions.Count > 1)
+                {
+                    <div class="text-center">
+                        <Button Type="primary" OnClick="CompareVersions">
+                            Compare with Current
+                        </Button>
+                    </div>
+                }
+            </div>
+        </Card>
+    </div>
+
+    <div class="w-2/3">
+        @if (isLoading)
+        {
+            <Card>
+                <Skeleton Active />
+            </Card>
+        }
+        else if (selectedVersion != null)
+        {
+            <Card Title="@($"Version {selectedVersion.VersionNumber}")">
+                @if (isComparing)
+                {
+                    <DiffEditor OriginalValue="@selectedVersion.Content"
+                               Value="@currentVersion.Content"
+                               Height="600px"
+                               Language="markdown" />
+                }
+                else
+                {
+                    <MarkdownDisplay Value="@selectedVersion.Content" />
+
+                    <Divider />
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Title</span>
+                            <span>@selectedVersion.Title</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Tags</span>
+                            <div>
+                                @foreach (var tag in selectedVersion.Tags)
+                                {
+                                    <Tag Class="mr-1">@tag</Tag>
+                                }
+                            </div>
+                        </div>
+                        @if (selectedVersion.ComponentScores != null)
+                        {
+                            <Divider />
+                            <h4 class="font-medium mb-2">Quality Metrics</h4>
+                            @foreach (var score in selectedVersion.ComponentScores)
+                            {
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>@score.Key</span>
+                                        <span>@score.Value.ToString("N2")</span>
+                                    </div>
+                                    <Progress Percent="@((double)(score.Value * 100))"
+                                             ShowInfo="false"
+                                             Size="small" />
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    @if (selectedVersion.Id != currentVersion.Id)
+                    {
+                        <Divider />
+                        <Button Type="primary" OnClick="RestoreVersion">
+                            Restore this Version
+                        </Button>
+                    }
+                </div>
+            </Card>
+        }
+    </div>
+</div>
+
+@if (showRestoreModal)
+{
+    <Modal Title="Restore Version"
+           Visible="true"
+           OnOk="ConfirmRestore"
+           OnCancel="@(() => showRestoreModal = false)"
+           OkButtonProps="@(new ButtonProps { Loading = isRestoring })">
+        <Form Model="@restoreModel" Layout="FormLayout.Vertical">
+            <FormItem Label="Reason for Restoring">
+                <TextArea @bind-Value="@restoreModel.Reason"
+                         Placeholder="Explain why you're restoring this version"
+                         AutoSize
+                         MaxLength="500"
+                         ShowCount />
+            </FormItem>
+        </Form>
+    </Modal>
+}
+
+@code {
+    [Parameter] public string SubstackSlug { get; set; } = "";
+    [Parameter] public string PostId { get; set; } = "";
+
+    private bool isLoading = true;
+    private bool isComparing;
+    private bool showRestoreModal;
+    private bool isRestoring;
+    private string selectedVersionId = "";
+    private List<PostVersion> versions = new();
+    private PostVersion? selectedVersion;
+    private PostVersion? currentVersion;
+    private RestoreVersionModel restoreModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVersions();
+    }
+
+    private async Task LoadVersions()
+    {
+        try
+        {
+            isLoading = true;
+            versions = await PostService.GetPostVersionsAsync(SubstackSlug, PostId);
+            
+            if (versions.Any())
+            {
+                currentVersion = versions[0]; // Latest version
+                selectedVersionId = currentVersion.Id;
+                selectedVersion = currentVersion;
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        selectedVersion = versions.FirstOrDefault(v => v.Id == selectedVersionId);
+    }
+
+    private void CompareVersions()
+    {
+        if (selectedVersion?.Id != currentVersion?.Id)
+        {
+            isComparing = !isComparing;
+        }
+    }
+
+    private void ShowRestoreDialog()
+    {
+        showRestoreModal = true;
+    }
+
+    private async Task ConfirmRestore()
+    {
+        if (selectedVersion == null) return;
+
+        try
+        {
+            isRestoring = true;
+
+            await PostService.RestoreVersionAsync(
+                SubstackSlug,
+                PostId,
+                selectedVersion.Id,
+                restoreModel.Reason);
+
+            await MessageService.Success("Version restored successfully");
+            NavigateBack();
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to restore version");
+        }
+        finally
+        {
+            isRestoring = false;
+            showRestoreModal = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"/s/{SubstackSlug}/{PostId}");
+    }
+}
+
+public class RestoreVersionModel
+{
+    public string Reason { get; set; } = "";
+}

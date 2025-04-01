@@ -1,0 +1,159 @@
+@page "/verify-email"
+@page "/verify-email/{Token}"
+@inject IEmailVerificationService EmailVerificationService
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+
+<div class="verify-email-container">
+    <Card Style="width: 400px;">
+        @if (isVerifying)
+        {
+            <div class="text-center">
+                <Spin Size="large" Tip="Verifying your email..." />
+            </div>
+        }
+        else if (verificationSuccess)
+        {
+            <Result Status="success"
+                    Title="Email Verified!"
+                    SubTitle="Your email has been successfully verified.">
+                <Extra>
+                    <Button Type="primary"
+                            OnClick="@(() => NavigationManager.NavigateTo("/"))">
+                        Continue to Homepage
+                    </Button>
+                </Extra>
+            </Result>
+        }
+        else if (!string.IsNullOrEmpty(Token))
+        {
+            <Result Status="error"
+                    Title="Verification Failed"
+                    SubTitle="@errorMessage">
+                <Extra>
+                    <Space>
+                        <Button OnClick="ResendVerification">
+                            Resend Verification Email
+                        </Button>
+                        <Button Type="primary"
+                                OnClick="@(() => NavigationManager.NavigateTo("/"))">
+                            Go to Homepage
+                        </Button>
+                    </Space>
+                </Extra>
+            </Result>
+        }
+        else
+        {
+            <div class="text-center">
+                <Icon Type="mail" 
+                      Theme="outline"
+                      Class="text-6xl text-blue-500 mb-4" />
+                <h2 class="text-2xl font-bold mb-2">Check Your Email</h2>
+                <p class="text-gray-500 mb-8">
+                    We've sent a verification link to your email address.
+                    Please click the link to verify your account.
+                </p>
+                <Space>
+                    <Button OnClick="ResendVerification"
+                            Loading="@isResending">
+                        Resend Verification Email
+                    </Button>
+                    <Button Type="link"
+                            OnClick="@(() => NavigationManager.NavigateTo("/"))">
+                        Skip for now
+                    </Button>
+                </Space>
+            </div>
+        }
+    </Card>
+</div>
+
+<style>
+    .verify-email-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f2f5;
+    }
+</style>
+
+@code {
+    [Parameter] public string? Token { get; set; }
+    
+    private bool isVerifying;
+    private bool isResending;
+    private bool verificationSuccess;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Token))
+        {
+            await VerifyEmail();
+        }
+    }
+
+    private async Task VerifyEmail()
+    {
+        try
+        {
+            isVerifying = true;
+            verificationSuccess = await EmailVerificationService.VerifyEmailAsync(Token!);
+            
+            if (!verificationSuccess)
+            {
+                errorMessage = "The verification link is invalid or has expired.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred during verification.";
+            verificationSuccess = false;
+        }
+        finally
+        {
+            isVerifying = false;
+        }
+    }
+
+    private async Task ResendVerification()
+    {
+        try
+        {
+            isResending = true;
+            
+            // Get email from state or query parameter
+            var email = await GetStoredEmail();
+            
+            if (string.IsNullOrEmpty(email))
+            {
+                await MessageService.Error("Email address not found. Please log in again.");
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            var success = await EmailVerificationService.ResendVerificationEmailAsync(email);
+            
+            if (success)
+            {
+                await MessageService.Success("Verification email sent!");
+            }
+            else
+            {
+                await MessageService.Error("Failed to send verification email. Please try again.");
+            }
+        }
+        finally
+        {
+            isResending = false;
+        }
+    }
+
+    private async Task<string?> GetStoredEmail()
+    {
+        // Try to get from local storage or state management
+        return await Task.FromResult<string?>(null);
+    }
+}

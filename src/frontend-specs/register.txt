@@ -1,0 +1,207 @@
+@page "/register"
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject MessageService MessageService
+
+<div class="register-container">
+    <Card Style="width: 400px;">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold">Join Meritocious</h2>
+            <p class="text-gray-500">Create thoughtful content and engage in meaningful discussions</p>
+        </div>
+
+        <Steps Current="@currentStep" Size="small" Class="mb-8">
+            <Step Title="Account" />
+            <Step Title="Profile" />
+            <Step Title="Interests" />
+        </Steps>
+
+        @switch (currentStep)
+        {
+            case 0:
+                <Form Model="@registerModel"
+                      OnFinish="HandleAccountStep"
+                      Layout="FormLayout.Vertical">
+                    <FormItem Label="Email">
+                        <Input @bind-Value="@registerModel.Email" 
+                               Placeholder="Enter your email" />
+                    </FormItem>
+
+                    <FormItem Label="Username">
+                        <Input @bind-Value="@registerModel.Username"
+                               Placeholder="Choose a username"
+                               OnChange="@ValidateUsername" />
+                        @if (isCheckingUsername)
+                        {
+                            <small class="text-gray-500">
+                                <Icon Type="loading" Spin /> Checking availability...
+                            </small>
+                        }
+                        else if (usernameAvailable.HasValue)
+                        {
+                            <small class="@(usernameAvailable.Value ? "text-green-500" : "text-red-500")">
+                                @(usernameAvailable.Value ? "Username is available" : "Username is taken")
+                            </small>
+                        }
+                    </FormItem>
+
+                    <FormItem Label="Password">
+                        <InputPassword @bind-Value="@registerModel.Password"
+                                     Placeholder="Create a password" />
+                        <PasswordStrengthIndicator Password="@registerModel.Password" />
+                    </FormItem>
+
+                    <FormItem Label="Confirm Password">
+                        <InputPassword @bind-Value="@registerModel.ConfirmPassword"
+                                     Placeholder="Confirm your password" />
+                    </FormItem>
+
+                    <FormItem>
+                        <Button Type="primary"
+                                HtmlType="submit"
+                                Block
+                                Loading="@isLoading">
+                            Continue
+                        </Button>
+                    </FormItem>
+
+                    <Divider>Or</Divider>
+
+                    <Button Type="default"
+                            Block
+                            OnClick="HandleGoogleSignUp"
+                            Loading="@isGoogleLoading">
+                        <Space>
+                            <Icon Type="google" Theme="outline" />
+                            <span>Sign up with Google</span>
+                        </Space>
+                    </Button>
+                </Form>
+                break;
+
+            case 1:
+                <Form Model="@profileModel"
+                      OnFinish="HandleProfileStep"
+                      Layout="FormLayout.Vertical">
+                    <FormItem Label="Display Name">
+                        <Input @bind-Value="@profileModel.DisplayName"
+                               Placeholder="How should we call you?" />
+                    </FormItem>
+
+                    <FormItem Label="Bio">
+                        <TextArea @bind-Value="@profileModel.Bio"
+                                 Placeholder="Tell us about yourself"
+                                 MaxLength="160"
+                                 ShowCount />
+                    </FormItem>
+
+                    <FormItem Label="Avatar">
+                        <Upload Action="/api/upload"
+                                ListType="picture-card"
+                                OnChange="HandleAvatarChange"
+                                Accept="image/*"
+                                MaxCount="1">
+                            <div>
+                                <Icon Type="plus" />
+                                <div style="margin-top: 8px">Upload</div>
+                            </div>
+                        </Upload>
+                    </FormItem>
+
+                    <FormItem>
+                        <Space>
+                            <Button OnClick="@(() => currentStep--)">
+                                Back
+                            </Button>
+                            <Button Type="primary"
+                                    HtmlType="submit"
+                                    Loading="@isLoading">
+                                Continue
+                            </Button>
+                        </Space>
+                    </FormItem>
+                </Form>
+                break;
+
+            case 2:
+                <Form Model="@interestsModel"
+                      OnFinish="HandleInterestsStep"
+                      Layout="FormLayout.Vertical">
+                    <FormItem Label="Select Topics">
+                        <Select Mode="multiple"
+                                @bind-Value="@interestsModel.Topics"
+                                Placeholder="Select topics you're interested in">
+                            @foreach (var category in topicCategories)
+                            {
+                                <SelectOptGroup Label="@category.Name">
+                                    @foreach (var topic in category.Topics)
+                                    {
+                                        <SelectOption Value="@topic.Id">
+                                            @topic.Name
+                                        </SelectOption>
+                                    }
+                                </SelectOptGroup>
+                            }
+                        </Select>
+                    </FormItem>
+
+                    <FormItem Label="Content Preferences">
+                        <div class="space-y-4">
+                            @foreach (var preference in contentPreferences)
+                            {
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span>@preference.Label</span>
+                                        <span>@preference.Value</span>
+                                    </div>
+                                    <Slider Min="0" 
+                                            Max="1" 
+                                            Step="0.1"
+                                            @bind-Value="@preference.Value" />
+                                </div>
+                            }
+                        </div>
+                    </FormItem>
+
+                    <FormItem>
+                        <Space>
+                            <Button OnClick="@(() => currentStep--)">
+                                Back
+                            </Button>
+                            <Button Type="primary"
+                                    HtmlType="submit"
+                                    Loading="@isLoading">
+                                Complete Registration
+                            </Button>
+                        </Space>
+                    </FormItem>
+                </Form>
+                break;
+        }
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <Alert Type="error"
+                   Message="@errorMessage"
+                   ShowIcon
+                   Banner
+                   Class="mt-4" />
+        }
+
+        <div class="mt-4 text-center">
+            <a href="/login">Already have an account? Log in</a>
+        </div>
+    </Card>
+</div>
+
+<style>
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f2f5;
+        padding: 24px;
+    }
+</style>

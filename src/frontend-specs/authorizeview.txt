@@ -1,0 +1,50 @@
+@namespace Meritocious.Web.Components.Auth
+
+<AuthorizeView>
+    <Authorized>
+        @if (RequiredRoles == null || 
+             RequiredRoles.Any(role => context.User.IsInRole(role)))
+        {
+            @ChildContent
+        }
+        else if (FallbackContent != null)
+        {
+            @FallbackContent
+        }
+        else
+        {
+            <Result
+                Status="403"
+                Title="Access Denied"
+                SubTitle="You don't have permission to access this content." />
+        }
+    </Authorized>
+    <NotAuthorized>
+        @if (FallbackContent != null)
+        {
+            @FallbackContent
+        }
+        else
+        {
+            <Result
+                Status="401"
+                Title="Authentication Required"
+                SubTitle="Please log in to access this content.">
+                <Extra>
+                    <Button Type="primary" 
+                            OnClick="@(() => NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}"))">
+                        Log In
+                    </Button>
+                </Extra>
+            </Result>
+        }
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? FallbackContent { get; set; }
+    [Parameter] public string[]? RequiredRoles { get; set; }
+    
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+}
