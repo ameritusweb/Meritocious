@@ -107,7 +107,7 @@ Font: `'Inter', system-ui, sans-serif`
 | Tool            | Role                             |
 |-----------------|----------------------------------|
 | Blazor Server   | SPA + SSR                        |
-| MudBlazor       | UI components                    |
+| AntDesignBlazor | UI components                    |
 | ASP.NET Core    | Backend + API                    |
 | Semantic Kernel | AI integration                   |
 | Tailwind (opt)  | Custom styles                    |
@@ -128,3 +128,103 @@ Design rules:
 - Clarity > noise
 - Transparent moderation
 - Guidance > punishment
+
+# 🧱 Meritocious Frontend Layout Vision
+
+## ✨ Overview
+
+This document outlines the desired frontend layout and interaction design for **Meritocious**, taking inspiration from **Ant Design Pro**, but tailored to support the platform's values: focus, merit, clarity, and intelligent discussion.
+
+---
+
+## 🎯 Key UX Goals
+
+- ✅ Clean, responsive layout
+- ✅ Sidebar that collapses intelligently
+- ✅ Icon-only mode on small screens
+- ✅ Hover-to-expand sidebar behavior
+- ✅ Tabbed navigation docked to routes
+- ✅ Closable, persistent tabs
+- ✅ Smooth multi-page user flow
+
+---
+
+## 🧭 Sidebar Design
+
+### Features:
+- **Responsive collapse**: At narrow widths, the sidebar should collapse to icon-only mode.
+- **Hover-to-expand**: On desktop, hovering over the collapsed sidebar reveals the menu temporarily.
+- **Icons with tooltips**: Provide context when collapsed.
+- **Persistent navigation state**: Sidebar should remember the last state (collapsed/expanded).
+
+### Components:
+- `Layout.Sider`
+- `Menu`, `MenuItem`, `SubMenu`
+- Tooltips for collapsed mode
+
+---
+
+## 🧩 Tabbed Navigation Workspace
+
+Inspired by IDEs and Ant Design Pro:
+
+### Behavior:
+- Tabs represent **active views**, each tied to a route
+- Clicking sidebar items **opens a new tab**
+- Users can **switch between open tabs**
+- Tabs can be **closed manually**
+- Tabs are **route-aware** — clicking a tab navigates to that route
+
+### Advanced:
+- Restore tabs from session or local storage
+- Indicate unsaved changes
+- Allow middle-click to close tabs
+
+### Component Concept:
+```razor
+<Tabs Type="EditableCard">
+    <TabPane Key="home" Tab="Home" Closable="false" />
+    <TabPane Key="t-123" Tab="Thread: AGI Risks" Closable="true" />
+</Tabs>
+```
+
+---
+
+## 📱 Responsiveness
+
+- Sidebar collapses below `lg` breakpoint
+- Content adjusts with flexbox/grid layouts
+- Tab layout adapts to available width (with overflow scroll)
+- Mobile-friendly toggles or drawers when necessary
+
+---
+
+## 🧠 Navigation Flow
+
+| Action                  | Behavior                           |
+|-------------------------|------------------------------------|
+| Click Sidebar Item      | Opens or focuses corresponding tab |
+| Click Tab               | Navigates to that view             |
+| Close Tab               | Removes from view, switches focus  |
+| Refresh page            | Tabs and routes are restored       |
+
+---
+
+## 🧪 Future Enhancements
+
+- Drag-to-reorder tabs
+- Detachable pop-out tabs (multi-view)
+- Multi-account/multi-context session separation
+- Tab group saving for power users
+
+---
+
+## ✅ Summary
+
+The layout should support:
+- Merit-focused browsing
+- Multitasking without clutter
+- Context-rich navigation
+- Responsive and intuitive user flow
+
+The goal is to give users a sense of **workspace for ideas**, not just a feed.
