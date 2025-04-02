@@ -103,4 +103,55 @@ public class UsersController : ApiControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+
+    [HttpGet("me/profile")]
+    public async Task<ActionResult<UserProfileDto>> GetCurrentUserProfile()
+    {
+        var userId = GetUserId();
+        var query = new GetUserProfileQuery { UserId = userId };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{id}/merit-score")]
+    public async Task<ActionResult<MeritScoreDto>> GetUserMeritScore(Guid id)
+    {
+        var query = new GetUserMeritScoreQuery { UserId = id };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpPut("me/profile")]
+    public async Task<ActionResult<UserProfileDto>> UpdateProfile(UpdateUserProfileCommand command)
+    {
+        var userId = GetUserId();
+        command.UserId = userId;
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpPut("me/settings")]
+    public async Task<ActionResult<UserSettingsDto>> UpdateSettings(UpdateUserSettingsCommand command)
+    {
+        var userId = GetUserId();
+        command.UserId = userId;
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{id}/contributions")]
+    public async Task<ActionResult<List<ContributionSummaryDto>>> GetUserContributions(
+        Guid id,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var query = new GetUserContributionsQuery 
+        { 
+            UserId = id,
+            Page = page,
+            PageSize = pageSize
+        };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
 }

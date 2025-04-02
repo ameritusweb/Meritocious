@@ -35,7 +35,10 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add services to the container.
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<RateLimitExceededFilter>();
+})
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -54,6 +57,21 @@ builder.Services.AddMediatR(cfg => {
 
 // Add infrastructure services
 builder.Services.AddMeritociousInfrastructure(builder.Configuration);
+
+// Configure rate limiting
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddSingleton<IClientResolveContributor, ClientRateLimitMiddleware>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitStore>();
+
+// Configure IP rate limiting
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+// Configure client rate limiting
+builder.Services.Configure<ClientRateLimitOptions>(builder.Configuration.GetSection("ClientRateLimiting"));
+builder.Services.AddSingleton<IClientPolicyStore, MemoryCacheClientPolicyStore>();
 
 // Add AI services
 builder.Services.AddMeritociousAI(builder.Configuration);
@@ -88,6 +106,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Add rate limiting middleware
+app.UseIpRateLimiting();
+app.UseClientRateLimiting();
 
 app.UseAuthorization();
 

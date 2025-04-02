@@ -103,4 +103,36 @@ public class PostsController : ControllerBase
 
         return Ok(result.Value);
     }
+
+    [HttpPost("{id}/comments")]
+    public async Task<ActionResult<CommentDto>> AddComment(Guid id, AddCommentCommand command)
+    {
+        if (id != command.PostId)
+            return BadRequest("ID mismatch");
+
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpGet("trending")]
+    public async Task<ActionResult<List<PostSummaryDto>>> GetTrendingPosts(
+        [FromQuery] string period = "day",
+        [FromQuery] int count = 10)
+    {
+        var query = new GetTrendingPostsQuery
+        {
+            Period = period,
+            Count = count
+        };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{id}/history")]
+    public async Task<ActionResult<List<PostVersionDto>>> GetPostHistory(Guid id)
+    {
+        var query = new GetPostHistoryQuery { PostId = id };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
 }

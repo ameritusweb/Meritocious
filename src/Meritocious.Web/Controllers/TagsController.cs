@@ -108,6 +108,128 @@ public class TagsController : ApiControllerBase
         var result = await _mediator.Send(query);
         return HandleResult(result);
     }
+
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<List<TagDto>>> GetUserTags(Guid userId)
+    {
+        var query = new GetUserTagsQuery { UserId = userId };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{name}/synonyms")]
+    public async Task<ActionResult<List<TagSynonymDto>>> GetTagSynonyms(string name)
+    {
+        var query = new GetTagSynonymsQuery { TagName = name };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{name}/synonyms")]
+    public async Task<ActionResult> AddTagSynonym(string name, AddTagSynonymCommand command)
+    {
+        if (name != command.TagName)
+            return BadRequest("Tag name mismatch");
+        
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{name}/wiki")]
+    public async Task<ActionResult<TagWikiDto>> GetTagWiki(string name)
+    {
+        var query = new GetTagWikiQuery { TagName = name };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpPut("{name}/wiki")]
+    public async Task<ActionResult> UpdateTagWiki(string name, UpdateTagWikiCommand command)
+    {
+        if (name != command.TagName)
+            return BadRequest("Tag name mismatch");
+        
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{name}/relationships")]
+    public async Task<ActionResult<List<TagRelationshipDto>>> GetTagRelationships(string name)
+    {
+        var query = new GetTagRelationshipsQuery { TagName = name };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpPost("relationships")]
+    public async Task<ActionResult> AddTagRelationship(CreateTagRelationshipCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpDelete("relationships/{parentTag}/{childTag}")]
+    public async Task<ActionResult> RemoveTagRelationship(string parentTag, string childTag)
+    {
+        var command = new RemoveTagRelationshipCommand 
+        { 
+            ParentTag = parentTag,
+            ChildTag = childTag
+        };
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{name}/stats")]
+    public async Task<ActionResult<TagStatsDto>> GetTagStats(string name)
+    {
+        var query = new GetTagStatsQuery { TagName = name };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{name}/follow")]
+    public async Task<ActionResult> FollowTag(string name)
+    {
+        var userId = GetUserId();
+        var command = new FollowTagCommand 
+        { 
+            UserId = userId,
+            TagName = name
+        };
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpDelete("{name}/follow")]
+    public async Task<ActionResult> UnfollowTag(string name)
+    {
+        var userId = GetUserId();
+        var command = new UnfollowTagCommand 
+        { 
+            UserId = userId,
+            TagName = name
+        };
+        var result = await _mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpGet("following")]
+    public async Task<ActionResult<List<TagDto>>> GetFollowedTags()
+    {
+        var userId = GetUserId();
+        var query = new GetFollowedTagsQuery { UserId = userId };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{name}/moderation-history")]
+    public async Task<ActionResult<List<TagModerationLogDto>>> GetTagModerationHistory(string name)
+    {
+        var query = new GetTagModerationHistoryQuery { TagName = name };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
 }
 
 public record CreateTagCommand

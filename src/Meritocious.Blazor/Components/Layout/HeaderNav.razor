@@ -1,10 +1,12 @@
 @using AntDesign
 @using Meritocious.Common.DTOs.Notifications
 @using Microsoft.AspNetCore.SignalR.Client
+@using Meritocious.Blazor.Services.Api
 @inject NavigationManager NavigationManager
-@inject IMediator Mediator
+@inject INotificationApiService NotificationService
 @inject ILogger<HeaderNav> Logger
 @inject AuthenticationStateProvider AuthStateProvider
+@inject MessageService MessageService
 @implements IAsyncDisposable
 
 <Header Class="bg-white px-4 flex justify-between items-center border-b">
@@ -315,24 +317,14 @@
     {
         try
         {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var userId = authState.User?.FindFirst("sub")?.Value;
-            
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var response = await Mediator.Send(new GetUserNotificationsQuery 
-                { 
-                    UserId = Guid.Parse(userId) 
-                });
-                
-                notifications = response.ToList();
-                NotificationCount = notifications.Count(n => !n.IsRead);
-                StateHasChanged();
-            }
+            notifications = await NotificationService.GetNotificationsAsync();
+            NotificationCount = await NotificationService.GetUnreadCountAsync();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error loading initial notifications");
+            MessageService.Error("Error", "Failed to load notifications");
         }
     }
 
@@ -364,24 +356,10 @@
     {
         try
         {
-            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-            var userId = authState.User?.FindFirst("sub")?.Value;
-            
-            if (!string.IsNullOrEmpty(userId))
-            {
-                foreach (var notification in notifications.Where(n => !n.IsRead))
-                {
-                    await Mediator.Send(new MarkNotificationAsReadCommand 
-                    { 
-                        UserId = Guid.Parse(userId),
-                        NotificationId = notification.Id
-                    });
-                }
-
-                notifications.ForEach(n => n.IsRead = true);
-                NotificationCount = 0;
-                StateHasChanged();
-            }
+            await NotificationService.MarkAllAsReadAsync();
+            notifications.ForEach(n => n.IsRead = true);
+            NotificationCount = 0;
+            StateHasChanged();
         }
         catch (Exception ex)
         {
