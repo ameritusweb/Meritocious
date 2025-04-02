@@ -1,10 +1,12 @@
 ﻿@namespace Meritocious.Web.Components.Substacks
+@inject NavigationManager Navigation
+@inject SubstackService SubstackService
 
 <Card Title="Trending Now" 
-      Extra="@extra"
-      Class="trending-substacks">
+Extra="@extra"
+Class="trending-substacks">
     <Tabs DefaultActiveKey="@period"
-          OnTabClick="HandlePeriodChange">
+    OnTabClick="HandlePeriodChange">
         <TabPane Key="day" Tab="24h" />
         <TabPane Key="week" Tab="7d" />
         <TabPane Key="month" Tab="30d" />
@@ -20,7 +22,7 @@
         }
         else if (!trending.Any())
         {
-            <Empty Description="No trending substacks for this period" />
+            <Empty Description="@emptyDescription" />
         }
         else
         {
@@ -30,11 +32,11 @@
                     <div class="text-lg font-medium text-gray-400 w-6 text-center">
                         @(trending.IndexOf(substack) + 1)
                     </div>
-                    
-                    <Avatar Size="small" Src="@substack.AvatarUrl">
+
+                    <Avatar Size="AvatarSize.Small" Src="@substack.AvatarUrl">
                         @substack.Name[0]
                     </Avatar>
-                    
+
                     <div class="flex-grow min-w-0">
                         <div class="flex items-center space-x-2">
                             <h4 class="font-medium truncate">
@@ -68,11 +70,12 @@
                     </Button>
                 </div>
             }
-        </div>
-    }
+        }
+    </div>
 </Card>
 
 @code {
+
     [Parameter] public string Period { get; set; } = "week";
     [Parameter] public EventCallback<string> PeriodChanged { get; set; }
     [Parameter] public bool Compact { get; set; }
@@ -82,9 +85,11 @@
     private List<SubstackDto> trending = new();
     private string period = "week";
 
+    private string emptyDescription = "No trending substacks for this period";
+
     private RenderFragment extra => builder =>
     {
-        builder.OpenComponent<Tooltip>(0);
+        builder.OpenComponent<AntDesign.Tooltip>(0);
         builder.AddAttribute(1, "Title", "Trending based on growth rate, merit score, and engagement");
         builder.AddAttribute(2, "ChildContent", (RenderFragment)(b =>
         {
@@ -144,6 +149,6 @@
 
     private void ViewAll()
     {
-        NavigationManager.NavigateTo("/trending");
+        Navigation.NavigateTo("/trending");
     }
 }
