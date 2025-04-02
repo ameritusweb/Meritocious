@@ -79,18 +79,34 @@ public class SubstackFeedService : ISubstackFeedService
     {
         try
         {
+            _logger.LogInformation("Validating Substack URL: {Url}", url);
+
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                _logger.LogWarning("Invalid URL format: {Url}", url);
                 return false;
+            }
 
-            // Check if it's a Substack domain
-            if (!uri.Host.EndsWith(".substack.com") && !IsCustomDomain(uri.Host))
-                return false;
+            // Check if it's a standard Substack domain
+            if (uri.Host.EndsWith(".substack.com"))
+            {
+                var response = await _httpClient.GetAsync(url);
+                var isValid = response.IsSuccessStatusCode;
+                
+                if (!isValid)
+                {
+                    _logger.LogWarning("Standard Substack URL not accessible: {Url}", url);
+                }
+                
+                return isValid;
+            }
 
-            var response = await _httpClient.GetAsync(url);
-            return response.IsSuccessStatusCode;
+            // If not a standard domain, validate as custom domain
+            return await IsCustomDomain(uri.Host);
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error validating Substack URL: {Url}", url);
             return false;
         }
     }
@@ -120,11 +136,57 @@ public class SubstackFeedService : ISubstackFeedService
         return $"{scheme}://{host}";
     }
 
-    private bool IsCustomDomain(string host)
+    private async Task<bool> IsCustomDomain(string host)
     {
-        // TODO: Implement more comprehensive custom domain validation
-        // For now, we'll just check if it resolves and returns Substack content
-        return true;
+        try
+        {
+            // Construct the URL to check
+            var url = $"https://{host}";
+            
+            // Make a request to the potential Substack site
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to access custom domain {Host}", host);
+                return false;
+            }
+
+            var html = await response.Content.ReadAsStringAsync();
+
+            // Check for Substack-specific indicators
+            var isSubstack = false;
+            isSubstack |= html.Contains("cdn.substack.com");
+            isSubstack |= html.Contains("substackcdn.com");
+            isSubstack |= html.Contains("substack-custom-domains");
+            isSubstack |= response.Headers.Contains("x-substack-backend");
+
+            // Check for Substack API endpoint
+            if (isSubstack)
+            {
+                try
+                {
+                    var apiResponse = await _httpClient.GetAsync($"{url}/api/v1/archive");
+                    isSubstack &= apiResponse.IsSuccessStatusCode;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to validate Substack API endpoint for {Host}", host);
+                    return false;
+                }
+            }
+
+            if (!isSubstack)
+            {
+                _logger.LogWarning("Domain {Host} does not appear to be a valid Substack custom domain", host);
+            }
+
+            return isSubstack;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error validating custom domain {Host}", host);
+            return false;
+        }
     }
 
     private string ExtractPostContent(string html)

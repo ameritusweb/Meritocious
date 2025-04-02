@@ -1,7 +1,9 @@
 @namespace Meritocious.Blazor.Components.Posts
 @using Meritocious.Common.DTOs.Content
 @using Meritocious.Web.Components.Substacks
+@using Meritocious.Blazor.Services.Substacks
 @inject IJSRuntime JSRuntime
+@inject ISubstackService SubstackService
 
 <div class="post-editor">
     <Form Model="@PostData" Layout="FormLayout.Vertical">
@@ -34,21 +36,39 @@
                          TagsChanged="HandleTagsChanged" />
         </FormItem>
         
-        @if (ShowSubstackSelection && availableSubstacks.Any())
+        @if (ShowSubstackSelection)
         {
             <FormItem Label="Post to Substack">
                 <Select DefaultValue="@(PostData.SubstackId.HasValue ? PostData.SubstackId.ToString() : "")"
-                        Placeholder="Select a substack to post to"
+                        Placeholder="@(isLoadingSubstacks ? "Loading..." : "Select a substack to post to")"
                         Style="width: 100%;"
                         OnSelectedItemChanged="HandleSubstackChange"
+                        Loading="@isLoadingSubstacks"
+                        Disabled="@isLoadingSubstacks"
                         AllowClear>
                     <SelectOptions>
                         @foreach (var substack in availableSubstacks)
                         {
-                            <SelectOption Value="@substack.Id.ToString()" Label="@substack.Name" />
+                            <SelectOption Value="@substack.Id.ToString()" Label="@substack.Name">
+                                <div style="display: flex; align-items: center;">
+                                    @if (!string.IsNullOrEmpty(substack.AvatarUrl))
+                                    {
+                                        <img src="@substack.AvatarUrl" alt="@substack.Name" 
+                                             style="width: 20px; height: 20px; border-radius: 50%; margin-right: 8px;" />
+                                    }
+                                    <span>@substack.Name</span>
+                                </div>
+                            </SelectOption>
                         }
                     </SelectOptions>
                 </Select>
+                @if (!isLoadingSubstacks && !availableSubstacks.Any())
+                {
+                    <small class="text-muted">
+                        You haven't created any substacks yet. 
+                        <a href="/substacks/create">Create one now</a>
+                    </small>
+                }
             </FormItem>
         }
         
@@ -135,14 +155,55 @@
     
     private List<SubstackDto> availableSubstacks = new();
     
+    private bool isLoadingSubstacks = false;
+    private string? errorMessage;
+
     private bool IsValid => !string.IsNullOrWhiteSpace(PostData.Title) && 
-                            !string.IsNullOrWhiteSpace(PostData.Content) &&
-                            (ShowSubstackSelection ? PostData.SubstackId.HasValue : true);
+                           !string.IsNullOrWhiteSpace(PostData.Content) &&
+                           (!ShowSubstackSelection || !isLoadingSubstacks) &&
+                           (ShowSubstackSelection ? PostData.SubstackId.HasValue : true);
     
     protected override async Task OnInitializedAsync()
     {
-        // TODO: Load available substacks
-        // availableSubstacks = await SubstackService.GetCreatedSubstacksAsync();
+        await LoadAvailableSubstacksAsync();
+    }
+
+    private async Task LoadAvailableSubstacksAsync()
+    {
+        try
+        {
+            isLoadingSubstacks = true;
+            availableSubstacks = await SubstackService.GetCreatedSubstacksAsync();
+            
+            // If editing and substack ID is set, verify it's in available substacks
+            if (IsEditMode && PostData.SubstackId.HasValue && 
+                !availableSubstacks.Any(s => s.Id == PostData.SubstackId.Value))
+            {
+                try
+                {
+                    // Load the specific substack details
+                    var substack = await SubstackService.GetSubstackByIdAsync(PostData.SubstackId.Value);
+                    if (substack != null)
+                    {
+                        availableSubstacks.Add(substack);
+                    }
+                }
+                catch
+                {
+                    PostData.SubstackId = null; // Reset if substack no longer exists
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load available substacks. Please try again later.";
+            PostData.SubstackId = null;
+        }
+        finally
+        {
+            isLoadingSubstacks = false;
+            StateHasChanged();
+        }
     }
     
     private void HandleContentChange(string value)

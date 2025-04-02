@@ -1,6 +1,8 @@
 using System.Net.Http.Json;
 using Meritocious.Blazor.Services.Auth;
 using Meritocious.Web.Components.Substacks;
+using Meritocious.Core.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Meritocious.Blazor.Services.Substacks
 {
@@ -8,25 +10,39 @@ namespace Meritocious.Blazor.Services.Substacks
     {
         private readonly HttpClient _httpClient;
         private readonly IAuthService _authService;
+        private readonly ILogger<SubstackService> _logger;
 
-        public SubstackService(HttpClient httpClient, IAuthService authService)
+        public SubstackService(HttpClient httpClient, IAuthService authService, ILogger<SubstackService> logger)
         {
             _httpClient = httpClient;
             _authService = authService;
+            _logger = logger;
         }
 
         public async Task<List<SubstackDto>> GetTrendingSubstacksAsync(string period, int limit = 5)
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<SubstackDto>>(
-                    $"api/substacks/trending?period={period}&limit={limit}") 
-                    ?? new List<SubstackDto>();
+                _logger.LogInformation("Fetching trending substacks with period {Period} and limit {Limit}", period, limit);
+                var result = await _httpClient.GetFromJsonAsync<List<SubstackDto>>(
+                    $"api/substacks/trending?period={period}&limit={limit}");
+                
+                if (result == null)
+                {
+                    _logger.LogWarning("No trending substacks found for period {Period}", period);
+                    return new List<SubstackDto>();
+                }
+                
+                return result;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error occurred while fetching trending substacks");
+                return new List<SubstackDto>();
             }
             catch (Exception ex)
             {
-                // TODO: Implement proper error handling/logging
-                Console.WriteLine($"Error fetching trending substacks: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error occurred while fetching trending substacks");
                 return new List<SubstackDto>();
             }
         }
@@ -64,13 +80,29 @@ namespace Meritocious.Blazor.Services.Substacks
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<SubstackDto>($"api/substacks/{id}")
-                       ?? throw new Exception("Substack not found");
+                _logger.LogInformation("Fetching substack with ID {SubstackId}", id);
+                var result = await _httpClient.GetFromJsonAsync<SubstackDto>($"api/substacks/{id}");
+                
+                if (result == null)
+                {
+                    _logger.LogWarning("Substack not found with ID {SubstackId}", id);
+                    throw new ResourceNotFoundException($"Substack not found with ID {id}");
+                }
+                
+                return result;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error occurred while fetching substack with ID {SubstackId}", id);
+                throw;
+            }
+            catch (ResourceNotFoundException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                // TODO: Implement proper error handling/logging
-                Console.WriteLine($"Error fetching substack by ID: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error occurred while fetching substack with ID {SubstackId}", id);
                 throw;
             }
         }
@@ -79,13 +111,29 @@ namespace Meritocious.Blazor.Services.Substacks
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<SubstackDto>($"api/substacks/slug/{slug}")
-                       ?? throw new Exception("Substack not found");
+                _logger.LogInformation("Fetching substack with slug {Slug}", slug);
+                var result = await _httpClient.GetFromJsonAsync<SubstackDto>($"api/substacks/slug/{slug}");
+                
+                if (result == null)
+                {
+                    _logger.LogWarning("Substack not found with slug {Slug}", slug);
+                    throw new ResourceNotFoundException($"Substack not found with slug {slug}");
+                }
+                
+                return result;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error occurred while fetching substack with slug {Slug}", slug);
+                throw;
+            }
+            catch (ResourceNotFoundException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
-                // TODO: Implement proper error handling/logging
-                Console.WriteLine($"Error fetching substack by slug: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error occurred while fetching substack with slug {Slug}", slug);
                 throw;
             }
         }
@@ -94,19 +142,36 @@ namespace Meritocious.Blazor.Services.Substacks
         {
             try
             {
-                // Ensure user is authenticated
+                _logger.LogInformation("Fetching followed substacks");
+                
                 if (!await _authService.IsUserAuthenticated())
                 {
+                    _logger.LogWarning("Unauthenticated user attempted to fetch followed substacks");
                     throw new UnauthorizedAccessException("User must be authenticated to get followed substacks");
                 }
                 
-                return await _httpClient.GetFromJsonAsync<List<SubstackDto>>("api/substacks/following")
-                       ?? new List<SubstackDto>();
+                var result = await _httpClient.GetFromJsonAsync<List<SubstackDto>>("api/substacks/following");
+                
+                if (result == null)
+                {
+                    _logger.LogInformation("No followed substacks found");
+                    return new List<SubstackDto>();
+                }
+                
+                return result;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error occurred while fetching followed substacks");
+                return new List<SubstackDto>();
             }
             catch (Exception ex)
             {
-                // TODO: Implement proper error handling/logging
-                Console.WriteLine($"Error fetching followed substacks: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error occurred while fetching followed substacks");
                 return new List<SubstackDto>();
             }
         }
@@ -136,19 +201,37 @@ namespace Meritocious.Blazor.Services.Substacks
         {
             try
             {
-                // Ensure user is authenticated
+                _logger.LogInformation("Following substack with ID {SubstackId}", substackId);
+                
                 if (!await _authService.IsUserAuthenticated())
                 {
+                    _logger.LogWarning("Unauthenticated user attempted to follow substack {SubstackId}", substackId);
                     throw new UnauthorizedAccessException("User must be authenticated to follow a substack");
                 }
                 
                 var response = await _httpClient.PostAsync($"api/substacks/{substackId}/follow", null);
-                return response.IsSuccessStatusCode;
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Successfully followed substack {SubstackId}", substackId);
+                    return true;
+                }
+                
+                _logger.LogWarning("Failed to follow substack {SubstackId}. Status code: {StatusCode}", 
+                    substackId, (int)response.StatusCode);
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error occurred while following substack {SubstackId}", substackId);
+                return false;
             }
             catch (Exception ex)
             {
-                // TODO: Implement proper error handling/logging
-                Console.WriteLine($"Error following substack: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error occurred while following substack {SubstackId}", substackId);
                 return false;
             }
         }
@@ -178,25 +261,44 @@ namespace Meritocious.Blazor.Services.Substacks
         {
             try
             {
-                // Ensure user is authenticated
+                _logger.LogInformation("Creating new substack");
+                
                 if (!await _authService.IsUserAuthenticated())
                 {
+                    _logger.LogWarning("Unauthenticated user attempted to create substack");
                     throw new UnauthorizedAccessException("User must be authenticated to create a substack");
                 }
                 
                 var response = await _httpClient.PostAsJsonAsync("api/substacks", createSubstack);
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<SubstackDto>()
-                           ?? throw new Exception("Failed to deserialize created substack");
+                    var result = await response.Content.ReadFromJsonAsync<SubstackDto>();
+                    if (result == null)
+                    {
+                        _logger.LogError("Failed to deserialize created substack response");
+                        throw new InvalidOperationException("Failed to deserialize created substack");
+                    }
+                    
+                    _logger.LogInformation("Successfully created substack with ID {SubstackId}", result.Id);
+                    return result;
                 }
                 
-                throw new Exception($"Failed to create substack: {response.ReasonPhrase}");
+                _logger.LogError("Failed to create substack. Status code: {StatusCode}, Reason: {Reason}", 
+                    (int)response.StatusCode, response.ReasonPhrase);
+                throw new InvalidOperationException($"Failed to create substack: {response.ReasonPhrase}");
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error occurred while creating substack");
+                throw;
             }
             catch (Exception ex)
             {
-                // TODO: Implement proper error handling/logging
-                Console.WriteLine($"Error creating substack: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error occurred while creating substack");
                 throw;
             }
         }
@@ -205,19 +307,32 @@ namespace Meritocious.Blazor.Services.Substacks
         {
             try
             {
-                // For unauthenticated users, return trending instead of personalized recommendations
+                _logger.LogInformation("Fetching recommended substacks with limit {Limit}", limit);
+                
                 if (!await _authService.IsUserAuthenticated())
                 {
+                    _logger.LogInformation("User not authenticated, returning trending substacks instead");
                     return await GetTrendingSubstacksAsync("week", limit);
                 }
                 
-                return await _httpClient.GetFromJsonAsync<List<SubstackDto>>($"api/substacks/recommended?limit={limit}")
-                       ?? new List<SubstackDto>();
+                var result = await _httpClient.GetFromJsonAsync<List<SubstackDto>>($"api/substacks/recommended?limit={limit}");
+                
+                if (result == null)
+                {
+                    _logger.LogInformation("No recommended substacks found");
+                    return new List<SubstackDto>();
+                }
+                
+                return result;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error occurred while fetching recommended substacks");
+                return new List<SubstackDto>();
             }
             catch (Exception ex)
             {
-                // TODO: Implement proper error handling/logging
-                Console.WriteLine($"Error fetching recommended substacks: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error occurred while fetching recommended substacks");
                 return new List<SubstackDto>();
             }
         }

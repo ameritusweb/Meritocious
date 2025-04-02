@@ -146,12 +146,60 @@ namespace Meritocious.Infrastructure.Services
         private async Task<List<(Guid id1, string content1, Guid id2, string content2)>> GetContentPairsForUpdateAsync(
             IServiceScope scope)
         {
-            // TODO: Implement logic to identify content pairs that need similarity updates
-            // This could be based on:
-            // - New content
-            // - Content with outdated similarity scores
-            // - Content that has been significantly updated
-            return new List<(Guid, string, Guid, string)>();
+            var postRepo = scope.ServiceProvider.GetRequiredService<PostRepository>();
+            var similarityRepo = scope.ServiceProvider.GetRequiredService<ContentSimilarityRepository>();
+            var results = new List<(Guid id1, string content1, Guid id2, string content2)>();
+
+            try
+            {
+                // Get content modified in last 24 hours
+                var recentPosts = await postRepo.GetPostsAfterDateAsync(DateTime.UtcNow.AddHours(-24));
+                
+                if (recentPosts.Any())
+                {
+                    _logger.LogInformation("Found {Count} recently modified posts to process", recentPosts.Count);
+                    
+                    // Create missing similarity records for new content
+                    var recentIds = recentPosts.Select(p => p.Id).ToList();
+                    await similarityRepo.CreateMissingSimilaritiesAsync(recentIds);
+
+                    // Mark existing similarities involving recent posts for update
+                    foreach (var post in recentPosts)
+                    {
+                        await similarityRepo.MarkForUpdateAsync(post.Id, priority: 2);
+                    }
+                }
+
+                // Get pairs that need updating (either newly created or marked for update)
+                var pairsToUpdate = await similarityRepo.GetContentPairsForUpdateAsync(100);
+                
+                foreach (var pair in pairsToUpdate)
+                {
+                    var post1 = await postRepo.GetByIdAsync(pair.id1);
+                    var post2 = await postRepo.GetByIdAsync(pair.id2);
+
+                    if (post1 != null && post2 != null && !post1.IsDeleted && !post2.IsDeleted)
+                    {
+                        results.Add((post1.Id, post1.Content, post2.Id, post2.Content));
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Skipping similarity pair ({Id1}, {Id2}) - one or both posts not found or deleted",
+                            pair.id1, pair.id2);
+                    }
+                }
+
+                _logger.LogInformation(
+                    "Retrieved {Count} content pairs for similarity update", 
+                    results.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving content pairs for similarity update");
+            }
+
+            return results;
         }
     }
 }
