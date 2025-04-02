@@ -17,6 +17,8 @@ namespace Meritocious.Core.Entities
         public Post ParentPost { get; private set; }
         public decimal MeritScore { get; private set; }
         public bool IsDeleted { get; private set; }
+        public string SubstackId { get; private set; }
+        public Substack Substack { get; private set; }
 
         private readonly List<Comment> _comments;
         public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
@@ -34,7 +36,7 @@ namespace Meritocious.Core.Entities
             _forks = new List<Post>();
         }
 
-        public static Post Create(string title, string content, User author, Post parent = null)
+        public static Post Create(string title, string content, User author, Post parent = null, Substack substack = null)
         {
             return new Post
             {
@@ -44,6 +46,8 @@ namespace Meritocious.Core.Entities
                 Author = author,
                 ParentPostId = parent?.Id,
                 ParentPost = parent,
+                SubstackId = substack?.Id,
+                Substack = substack,
                 MeritScore = 0,
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow

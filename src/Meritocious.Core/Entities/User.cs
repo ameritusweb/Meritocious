@@ -22,10 +22,14 @@ namespace Meritocious.Core.Entities
         private readonly List<Comment> _comments;
         public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
 
+        private readonly List<Substack> _followedSubstacks;
+        public IReadOnlyCollection<Substack> FollowedSubstacks => _followedSubstacks.AsReadOnly();
+
         private User()
         {
             _posts = new List<Post>();
             _comments = new List<Comment>();
+            _followedSubstacks = new List<Substack>();
         }
 
         public static User Create(string username, string email, string passwordHash)
