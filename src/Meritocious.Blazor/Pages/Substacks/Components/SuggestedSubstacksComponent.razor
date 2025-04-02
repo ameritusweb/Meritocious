@@ -12,7 +12,7 @@
                    Prefix="@searchIcon"
                    @bind-Value="searchTerm"
                    OnChange="HandleSearch" />
-            <Button Type="primary" OnClick="RefreshSuggestions">
+            <Button Type="ButtonType.Primary" OnClick="RefreshSuggestions">
                 <Icon Type="reload" /> Refresh
             </Button>
         </Space>
@@ -110,7 +110,7 @@
                         @interest
                     </Tag>
                 }
-                <Button Type="dashed" Block OnClick="ShowInterestModal">
+                <Button Type="ButtonType.Dashed" Block OnClick="ShowInterestModal">
                     <Icon Type="plus" /> Add Interest
                 </Button>
             </div>

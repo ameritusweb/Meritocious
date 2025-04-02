@@ -15,7 +15,7 @@
             <p class="text-gray-500">Discover topic-based spaces where ideas grow</p>
         </div>
         <div>
-            <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/substacks/create"))">
+            <Button Type="ButtonType.Primary" OnClick="@(() => NavigationManager.NavigateTo("/substacks/create"))">
                 <template>
                     <Icon Type="plus" /> Create Substack
                 </template>
@@ -142,8 +142,8 @@
                             {
                                 <Empty Description="You haven't created any substacks yet"
                                        Image="Empty.PRESENTED_IMAGE_SIMPLE">
-                                    <Button Type="primary" 
-                                            OnClick="@(() => NavigationManager.NavigateTo("/substacks/create"))">
+                                <Button Type="ButtonType.Primary"
+                                        OnClick="@(() => NavigationManager.NavigateTo("/substacks/create"))">
                                         Create Substack
                                     </Button>
                                 </Empty>
@@ -156,8 +156,8 @@
                     <Result Status="info"
                             Title="Sign in to track substacks"
                             SubTitle="Follow substacks to customize your experience">
-                        <Button Type="primary" 
-                                OnClick="@(() => NavigationManager.NavigateTo("/auth/login"))">
+                    <Button Type="ButtonType.Primary"
+                            OnClick="@(() => NavigationManager.NavigateTo("/auth/login"))">
                             Sign In
                         </Button>
                     </Result>

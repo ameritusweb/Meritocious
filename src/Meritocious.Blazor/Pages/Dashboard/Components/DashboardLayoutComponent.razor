@@ -23,10 +23,10 @@
             </Select>
         </div>
         <div>
-            <Button Type="default" OnClick="RefreshData" Class="mr-2">
+            <Button Type="ButtonType.Default" OnClick="RefreshData" Class="mr-2">
                 <Icon Type="reload" /> Refresh
             </Button>
-            <Button Type="primary" OnClick="ExportDashboard">
+            <Button Type="ButtonType.Primary" OnClick="ExportDashboard">
                 <Icon Type="download" /> Export
             </Button>
         </div>
@@ -64,7 +64,7 @@
                               <SelectOption Value="novelty">Novelty</SelectOption>
                               <SelectOption Value="contribution">Contribution</SelectOption>
                           </Select>
-                          <Button Type="link" OnClick="@(() => ShowChartSettings())">
+                          <Button Type="ButtonType.Link" OnClick="@(() => ShowChartSettings())">
                               <Icon Type="setting" />
                           </Button>
                       </Space>
@@ -91,7 +91,7 @@
             <Card Title="Topic Distribution" 
                   Loading="@isLoading"
                   Extra="@(
-                      <Button Type="link" OnClick="@(() => ShowTopicDetails())">
+                      <Button Type="ButtonType.Link" OnClick="@(() => ShowTopicDetails())">
                           <Icon Type="info-circle" />
                       </Button>
                   )">
@@ -105,7 +105,7 @@
             <Card Title="Activity Patterns" 
                   Loading="@isLoading"
                   Extra="@(
-                      <Button Type="link" OnClick="@(() => ShowActivityDetails())">
+                      <Button Type="ButtonType.Link" OnClick="@(() => ShowActivityDetails())">
                           <Icon Type="info-circle" />
                       </Button>
                   )">

@@ -1,11 +1,5 @@
 ﻿@page "/register"
 @using Meritocious.Blazor.Services.Forms
-@inject IAuthService AuthService
-@inject NavigationManager NavigationManager
-@inject IJSRuntime JSRuntime
-@inject MessageService MessageService
-@inject IFormStatusService FormStatus
-@inject IValidationService ValidationService
 
 <div class="register-container">
     <Card Style="width: 400px;">
@@ -14,7 +8,7 @@
             <p class="text-gray-500">Create thoughtful content and engage in meaningful discussions</p>
         </div>
 
-        <Steps Current="@currentStep" Size="small" Class="mb-8">
+        <Steps Current="@currentStep" Size="StepsSize.Small" Class="mb-8">
             <Step Title="Account" />
             <Step Title="Profile" />
             <Step Title="Interests" />
@@ -80,12 +74,12 @@
 
                     <Divider>Or</Divider>
 
-                    <Button Type="default"
+                    <Button Type="ButtonType.Default"
                             Block
                             OnClick="HandleGoogleSignUp"
                             Loading="@isGoogleLoading">
                         <Space>
-                            <Icon Type="google" Theme="outline" />
+                            <Icon Type="google" Theme="IconThemeType.Outline" />
                             <span>Sign up with Google</span>
                         </Space>
                     </Button>
@@ -113,7 +107,7 @@
 
                     <FormItem Label="Avatar">
                         <Upload Action="/api/upload"
-                               ListType="picture-card"
+                               ListType="UploadListType.PictureCard"
                                OnChange="HandleAvatarChange"
                                Accept="image/*"
                                MaxCount="1">

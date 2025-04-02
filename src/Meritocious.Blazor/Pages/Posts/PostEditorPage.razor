@@ -17,7 +17,7 @@
             <Button OnClick="HandleSaveDraft" Loading="@FormStatus.IsLoading">
                 Save Draft
             </Button>
-            <Button Type="primary" OnClick="HandleSubmit" Loading="@FormStatus.IsLoading" Disabled="!IsValid">
+            <Button Type="ButtonType.Primary" OnClick="HandleSubmit" Loading="@FormStatus.IsLoading" Disabled="!IsValid">
                 @(isEditing ? "Update" : "Publish")
             </Button>
         </Space>

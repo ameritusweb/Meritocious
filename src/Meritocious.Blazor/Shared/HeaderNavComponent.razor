@@ -36,7 +36,7 @@
     </div>
 
     <div class="flex items-center space-x-6">
-        <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/posts/create"))">
+        <Button Type="ButtonType.Primary" OnClick="@(() => NavigationManager.NavigateTo("/posts/create"))">
             <Icon Type="edit" /> New Post
         </Button>
 
@@ -78,7 +78,7 @@
                         <h4 class="text-lg font-medium m-0">Notifications</h4>
                         @if (notifications.Any())
                         {
-                            <Button Type="link" Size="small" OnClick="MarkAllRead">
+                            <Button Type="ButtonType.Link" Size="small" OnClick="MarkAllRead">
                                 Mark all read
                             </Button>
                         }
@@ -118,7 +118,7 @@
                         </AntList>
                         
                         <div class="text-center mt-4">
-                            <Button Type="link" OnClick="@(() => NavigationManager.NavigateTo("/notifications"))">
+                            <Button Type="ButtonType.Link" OnClick="@(() => NavigationManager.NavigateTo("/notifications"))">
                                 View All
                             </Button>
                         </div>

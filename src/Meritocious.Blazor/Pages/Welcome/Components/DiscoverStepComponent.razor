@@ -35,7 +35,7 @@
                                 <div class="ml-3 flex-1">
                                     <div class="flex items-center justify-between">
                                         <h4 class="font-medium">@substack.Name</h4>
-                                        <Button Type="@(selectedSubstacks.Contains(substack.Id) ? "primary" : "default")"
+                                <Button Type="@(selectedSubstacks.Contains(substack.Id) ? ButtonType.Primary : ButtonType.Default)"
                                                 Size="small"
                                                 OnClick="() => ToggleSubstack(substack.Id)">
                                             @(selectedSubstacks.Contains(substack.Id) ? "Following" : "Follow")
@@ -121,7 +121,7 @@
                                     Title="@contributor.Name"
                                     Description="@($"{contributor.Role} • {contributor.PostCount} posts")">
                                 </ListItemMeta>
-                                <Button Type="link" Size="small">Follow</Button>
+                            <Button Type="ButtonType.Link" Size="small">Follow</Button>
                             </ListItem>
                         </ChildContent>
                     </List>
@@ -134,7 +134,7 @@
         <Button OnClick="@(() => OnBack.InvokeAsync())">
             <Icon Type="left" /> Back
         </Button>
-        <Button Type="primary" 
+        <Button Type="ButtonType.Primary"
                 OnClick="@(() => OnComplete.InvokeAsync())"
                 Disabled="@(!selectedSubstacks.Any())">
             Finish Setup <Icon Type="right" />

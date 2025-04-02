@@ -29,7 +29,7 @@
                     Title="Authentication Required"
                     SubTitle="Please log in to access this content.">
                 <Extra>
-                    <Button Type="primary"
+                    <Button Type="ButtonType.Primary"
                             OnClick="@(() => NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}"))">
                         Log In
                     </Button>

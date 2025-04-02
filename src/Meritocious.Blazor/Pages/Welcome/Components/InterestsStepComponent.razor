@@ -104,7 +104,7 @@
         <Button OnClick="@(() => OnBack.InvokeAsync())">
             <Icon Type="left" /> Back
         </Button>
-        <Button Type="primary" 
+        <Button Type="ButtonType.Primary"
                 OnClick="@(() => OnComplete.InvokeAsync())"
                 Disabled="@(!SelectedInterests.Any())">
             Next <Icon Type="right" />

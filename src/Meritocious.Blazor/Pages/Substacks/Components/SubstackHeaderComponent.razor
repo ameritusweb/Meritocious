@@ -34,7 +34,7 @@
         <Col Span="6" Class="text-right">
             <div class="space-y-2">
                 <div>
-                    <Button Type="@(IsFollowing ? "primary" : "default")"
+                <Button Type="@(IsFollowing ? ButtonType.Primary : ButtonType.Default)"
                             OnClick="HandleFollowToggle">
                         @(IsFollowing ? "Following" : "Follow")
                     </Button>

@@ -102,7 +102,7 @@
             <div class="post-engagement">
                 <Space>
                     <SpaceItem>
-                        <Button Type="@(HasLiked ? "primary" : "default")" 
+                        <Button Type="@(HasLiked ? ButtonType.Primary : ButtonType.Default)"
                                 OnClick="HandleLike">
                             <Icon Type="like" /> @LikesCount
                         </Button>

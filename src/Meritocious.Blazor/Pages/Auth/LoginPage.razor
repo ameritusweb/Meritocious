@@ -10,21 +10,22 @@
             <p class="text-gray-500">Where ideas rise on merit</p>
         </div>
 
-        <Form Model="@loginModel"
+        <Form @ref="loginForm" 
+            Model="@loginModel"
               OnFinish="HandleLogin"
               Layout="FormLayout.Vertical">
             <FormItem Label="Email">
-                <Input @bind-Value="@loginModel.Email" 
+                <Input @bind-Value="@context.Email" 
                        Placeholder="Enter your email" />
             </FormItem>
 
             <FormItem Label="Password">
-                <InputPassword @bind-Value="@loginModel.Password"
+                <InputPassword @bind-Value="@context.Password"
                              Placeholder="Enter your password" />
             </FormItem>
 
             <FormItem>
-                <Button Type="primary"
+                <Button Type="ButtonType.Primary"
                         HtmlType="submit"
                         Block
                         Loading="@isLoading">
@@ -34,12 +35,12 @@
 
             <Divider>Or</Divider>
 
-            <Button Type="default"
+            <Button Type="ButtonType.Default"
                     Block
                     OnClick="HandleGoogleLogin"
                     Loading="@isGoogleLoading">
                 <Space>
-                    <Icon Type="google" Theme="outline" />
+                    <Icon Type="google" Theme="IconThemeType.Outline" />
                     <span>Continue with Google</span>
                 </Space>
             </Button>
@@ -47,9 +48,9 @@
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <Alert Type="error"
+            <Alert Type="AlertType.Error"
                    Message="@errorMessage"
-                   ShowIcon
+                   ShowIcon="true"
                    Banner
                    Class="mt-4" />
         }
@@ -76,6 +77,8 @@
     private bool isGoogleLoading;
     private string? errorMessage;
     private string? returnUrl;
+
+    AntDesign.Form<LoginRequest> loginForm;
 
     protected override void OnInitialized()
     {

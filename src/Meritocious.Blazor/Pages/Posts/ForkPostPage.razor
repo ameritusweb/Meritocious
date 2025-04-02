@@ -34,7 +34,7 @@
                                                 by @source.Author in @source.SubstackName
                                             </div>
                                         </div>
-                                        <Button Type="link" 
+                                        <Button Type="ButtonType.Link"
                                                 Danger
                                                 OnClick="@(() => RemoveSource(source.Id))">
                                             Remove
@@ -42,7 +42,7 @@
                                     </div>
                                 </Card>
                             }
-                            <Button Type="dashed" 
+                            <Button Type="ButtonType.Dashed"
                                     Block 
                                     Icon="plus"
                                     OnClick="@(() => showSourceModal = true)">
@@ -155,7 +155,7 @@
                     <Button OnClick="NavigateBack">
                         Cancel
                     </Button>
-                    <Button Type="primary" 
+                    <Button Type="ButtonType.Primary"
                             OnClick="CreatePost"
                             Loading="@isCreating">
                         @(isSynthesis ? "Create Synthesis" : "Create Fork")

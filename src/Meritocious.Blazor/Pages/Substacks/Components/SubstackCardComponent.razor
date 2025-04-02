@@ -29,7 +29,7 @@
                     <MeritBadge Score="@Substack.MeritScore" Size="small" />
                 </div>
                 <div>
-                    <Button Type="@(IsFollowing ? "primary" : "default")"
+                    <Button Type="@(IsFollowing ? ButtonType.Primary : ButtonType.Default)"
                             OnClick="@(() => OnFollow.InvokeAsync(Substack.Id))">
                         @(IsFollowing ? "Following" : "Follow")
                     </Button>

@@ -7,7 +7,7 @@
                 <h2 class="text-xl font-medium mb-2">Understanding Merit Scores</h2>
                 <p class="text-gray-600">Learn how our AI evaluates content quality across five key dimensions</p>
             </div>
-            <Button Type="primary" OnClick="@(() => OnDemoComplete.InvokeAsync())">
+            <Button Type="ButtonType.Primary" OnClick="@(() => OnDemoComplete.InvokeAsync())">
                 Try It Out
             </Button>
         </div>
@@ -83,7 +83,7 @@
         <Button OnClick="@(() => OnBack.InvokeAsync())">
             <Icon Type="left" /> Back
         </Button>
-        <Button Type="primary" OnClick="@(() => OnComplete.InvokeAsync())">
+        <Button Type="ButtonType.Primary" OnClick="@(() => OnComplete.InvokeAsync())">
             Next <Icon Type="right" />
         </Button>
     </div>

@@ -22,7 +22,7 @@
                 <Button OnClick="OnBack">
                     Back
                 </Button>
-                <Button Type="primary"
+                <Button Type="ButtonType.Primary"
                         HtmlType="submit"
                         Loading="@FormStatus.IsLoading">
                     @SubmitText
@@ -31,7 +31,7 @@
         }
         else
         {
-            <Button Type="primary"
+            <Button Type="ButtonType.Primary"
                     HtmlType="submit"
                     Loading="@FormStatus.IsLoading"
                     Block="@BlockSubmitButton">

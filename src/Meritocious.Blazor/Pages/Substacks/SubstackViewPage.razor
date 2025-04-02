@@ -23,7 +23,7 @@ else if (substack == null)
     <Result Status="404"
             Title="Substack Not Found"
             SubTitle="The substack you're looking for doesn't exist or has been removed">
-        <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/substacks"))">
+        <Button Type="ButtonType.Primary" OnClick="@(() => NavigationManager.NavigateTo("/substacks"))">
             Browse Substacks
         </Button>
     </Result>

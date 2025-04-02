@@ -10,7 +10,7 @@
     <div class="remix-header">
         <div class="flex items-center justify-between px-6 py-4 bg-white border-b">
             <div class="flex items-center space-x-4">
-                <Button Type="link" OnClick="@HandleBack">
+                <Button Type="ButtonType.Link" OnClick="@HandleBack">
                     <Icon Type="arrow-left" /> Back
                 </Button>
                 <Input @bind-Value="remixTitle" 
@@ -19,10 +19,10 @@
                        Style="width: 400px;" />
             </div>
             <div class="flex items-center space-x-2">
-                <Button Type="default" OnClick="@HandleSaveDraft">
+                <Button Type="ButtonType.Default" OnClick="@HandleSaveDraft">
                     <Icon Type="save" /> Save Draft
                 </Button>
-                <Button Type="primary" OnClick="@HandlePublish">
+                <Button Type="ButtonType.Primary" OnClick="@HandlePublish">
                     <Icon Type="share-alt" /> Publish Remix
                 </Button>
             </div>
@@ -82,7 +82,7 @@
                                             <SelectOption Value="example">Example</SelectOption>
                                             <SelectOption Value="question">Question</SelectOption>
                                         </Select>
-                                        <Button Type="link" 
+                                        <Button Type="ButtonType.Link"
                                                 Danger
                                                 Size="small"
                                                 OnClick="@(() => RemoveSource(source))">

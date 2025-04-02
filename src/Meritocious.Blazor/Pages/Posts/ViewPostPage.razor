@@ -21,7 +21,7 @@
         <Result Status="404"
                 Title="Post Not Found"
                 SubTitle="The post you're looking for doesn't exist or has been removed">
-            <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/posts"))">
+            <Button Type="ButtonType.Primary" OnClick="@(() => NavigationManager.NavigateTo("/posts"))">
                 Browse Posts
             </Button>
         </Result>
@@ -112,7 +112,7 @@
                         </div>
                     </div>
 
-                    <Button Type="default" Block OnClick="HandleFollowAuthor">
+                    <Button Type="ButtonType.Default" Block OnClick="HandleFollowAuthor">
                         <Icon Type="@(isFollowingAuthor ? "user-delete" : "user-add")" />
                         @(isFollowingAuthor ? "Unfollow" : "Follow")
                     </Button>
@@ -166,8 +166,8 @@
                             <p class="text-sm text-gray-700 line-clamp-3 mb-3">
                                 @substack.Description
                             </p>
-                            
-                            <Button Type="primary" Block>
+
+                        <Button Type="ButtonType.Primary" Block>
                                 <Icon Type="plus" /> Follow
                             </Button>
                         }

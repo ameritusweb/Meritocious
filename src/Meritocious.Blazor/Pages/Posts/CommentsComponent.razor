@@ -18,7 +18,7 @@
                              Placeholder="Share your thoughts..." />
                 </FormItem>
                 <FormItem>
-                    <Button Type="primary" HtmlType="submit">
+                    <Button Type="ButtonType.Primary" HtmlType="submit">
                         <Icon Type="comment" /> Comment
                     </Button>
                 </FormItem>
@@ -64,7 +64,7 @@
                         <div class="ml-8 mt-2">
                             <div class="flex items-center text-sm text-gray-500 mb-2">
                                 <Icon Type="undo" Class="mr-1" /> Replying to @comment.AuthorUsername
-                                <Button Type="link" OnClick="@(() => CancelReply(comment.Id))" Class="ml-2">
+                                <Button Type="ButtonType.Link" OnClick="@(() => CancelReply(comment.Id))" Class="ml-2">
                                     Cancel
                                 </Button>
                             </div>
@@ -80,7 +80,7 @@
                                              Placeholder="Write your reply..." />
                                 </FormItem>
                                 <FormItem>
-                                    <Button Type="primary" HtmlType="submit">
+                                    <Button Type="ButtonType.Primary" HtmlType="submit">
                                         Reply
                                     </Button>
                                 </FormItem>
@@ -109,7 +109,7 @@
         @if (HasMoreComments)
         {
             <div class="text-center mt-6">
-                <Button Type="default" 
+                <Button Type="ButtonType.Default"
                         OnClick="LoadMoreComments" 
                         Loading="@IsLoadingMore"
                         Block>

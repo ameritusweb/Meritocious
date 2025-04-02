@@ -38,7 +38,7 @@
                             }
                         </div>
                         <div class="mt-6 flex justify-end">
-                            <Button Type="primary" 
+                            <Button Type="ButtonType.Primary"
                                     OnClick="NextStep"
                                     Disabled="@(!selectedInterests.Any())">
                                 Next
@@ -74,7 +74,7 @@
                                                 }
                                             </div>
                                         </div>
-                                        <Button Type="@(selectedSubstacks.Contains(substack.Id) ? "primary" : "default")"
+                                        <Button Type="@(selectedSubstacks.Contains(substack.Id) ? ButtonType.Primary : ButtonType.Default)"
                                                 OnClick="() => ToggleSubstack(substack.Id)">
                                             @(selectedSubstacks.Contains(substack.Id) ? "Following" : "Follow")
                                         </Button>
@@ -84,7 +84,7 @@
                         </div>
                         <div class="mt-6 flex justify-between">
                             <Button OnClick="PreviousStep">Previous</Button>
-                            <Button Type="primary" 
+                            <Button Type="ButtonType.Primary"
                                     OnClick="NextStep"
                                     Disabled="@(!selectedSubstacks.Any())">
                                 Next
@@ -123,7 +123,7 @@
                         </div>
                         <div class="mt-6 flex justify-between">
                             <Button OnClick="PreviousStep">Previous</Button>
-                            <Button Type="primary" OnClick="NextStep">Next</Button>
+                            <Button Type="ButtonType.Primary" OnClick="NextStep">Next</Button>
                         </div>
                     </Card>
                     break;
@@ -137,7 +137,7 @@
                                 <Button OnClick="PreviousStep">
                                     Go Back
                                 </Button>
-                                <Button Type="primary" OnClick="FinishOnboarding">
+                                <Button Type="ButtonType.Primary" OnClick="FinishOnboarding">
                                     Start Exploring
                                 </Button>
                             </Space>

@@ -18,7 +18,7 @@
                     Title="Email Verified!"
                     SubTitle="Your email has been successfully verified.">
                 <Extra>
-                    <Button Type="primary"
+                    <Button Type="ButtonType.Primary"
                             OnClick="@(() => NavigationManager.NavigateTo("/"))">
                         Continue to Homepage
                     </Button>
@@ -35,7 +35,7 @@
                         <Button OnClick="ResendVerification">
                             Resend Verification Email
                         </Button>
-                        <Button Type="primary"
+                        <Button Type="ButtonType.Primary"
                                 OnClick="@(() => NavigationManager.NavigateTo("/"))">
                             Go to Homepage
                         </Button>
@@ -59,7 +59,7 @@
                             Loading="@isResending">
                         Resend Verification Email
                     </Button>
-                    <Button Type="link"
+                    <Button Type="ButtonType.Link"
                             OnClick="@(() => NavigationManager.NavigateTo("/"))">
                         Skip for now
                     </Button>

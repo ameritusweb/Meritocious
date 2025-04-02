@@ -55,7 +55,7 @@
                 @if (versions.Count > 1)
                 {
                     <div class="text-center">
-                        <Button Type="primary" OnClick="CompareVersions">
+                        <Button Type="ButtonType.Primary" OnClick="CompareVersions">
                             Compare with Current
                         </Button>
                     </div>
@@ -123,7 +123,7 @@
                     @if (selectedVersion.Id != currentVersion.Id)
                     {
                         <Divider />
-                        <Button Type="primary" OnClick="RestoreVersion">
+                    <Button Type="ButtonType.Primary" OnClick="RestoreVersion">
                             Restore this Version
                         </Button>
                     }

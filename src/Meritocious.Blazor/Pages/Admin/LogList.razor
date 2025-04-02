@@ -35,7 +35,7 @@
                                Style="width: 200px;" />
                     </SpaceItem>
                     <SpaceItem>
-                        <Button Type="primary" OnClick="HandleSearch">
+                        <Button Type="ButtonType.Primary" OnClick="HandleSearch">
                             <Icon Type="search" /> Search
                         </Button>
                     </SpaceItem>
@@ -65,7 +65,7 @@
                 <PropertyColumn Property="c => c.Source" Title="Source" />
                 <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM yyyy HH:mm:ss" />
                 <ActionColumn Title="Action">
-                    <Button Type="link" OnClick="() => ShowLogDetails(context)">
+                    <Button Type="ButtonType.Link" OnClick="() => ShowLogDetails(context)">
                         <Icon Type="eye" /> Details
                     </Button>
                 </ActionColumn>

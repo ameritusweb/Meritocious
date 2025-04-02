@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="mt-6 flex justify-end">
-                        <Button Type="primary" 
+                        <Button Type="ButtonType.Primary"
                                 OnClick="SubmitScores"
                                 Disabled="@(!HasScoredAll())">
                             Submit Scores
@@ -85,7 +85,7 @@
                     }
 
                     <div class="mt-6 flex justify-end">
-                        <Button Type="primary" 
+                        <Button Type="ButtonType.Primary"
                                 OnClick="SubmitAnalysis"
                                 Disabled="@(!HasCompletedAnalysis())">
                             See AI Analysis
@@ -137,7 +137,7 @@
                 </Row>
 
                 <div class="mt-6 flex justify-end">
-                    <Button Type="primary" OnClick="@(() => OnComplete.InvokeAsync(true))">
+                    <Button Type="ButtonType.Primary" OnClick="@(() => OnComplete.InvokeAsync(true))">
                         Complete Tutorial
                     </Button>
                 </div>
