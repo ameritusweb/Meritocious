@@ -116,9 +116,35 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Add custom security middleware
+app.UseMiddleware<AuditLoggingMiddleware>();
+
+// Configure exception handling
+app.UseExceptionHandler(options => {
+    options.ExceptionHandlers.Add<SecurityExceptionHandler>();
+});
+
 // Add rate limiting middleware
 app.UseIpRateLimiting();
 app.UseClientRateLimiting();
+
+// Configure security headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Add("X-Frame-Options", "DENY");
+    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Add("Content-Security-Policy", 
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "img-src 'self' data: https:; " +
+        "font-src 'self' https://fonts.gstatic.com; " +
+        "connect-src 'self' https://apis.google.com; " +
+        "frame-src https://accounts.google.com;");
+    await next();
+});
 
 app.UseAuthorization();
 
