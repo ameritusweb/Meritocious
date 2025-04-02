@@ -1,0 +1,207 @@
+{
+  "id": "complete",
+  "description": "Complete set of API endpoints with comprehensive responses",
+  "responses": {
+    "GET:/api/comments/:commentId": {
+      "id": "param:commentId",
+      "content": "This is a mock comment",
+      "author": "Commenter",
+      "meritScore": 75,
+      "createdAt": "2024-04-01T00:00:00Z",
+      "likes": 5,
+      "replies": 2
+    },
+    "GET:/api/comments/:commentId/replies": [
+      {
+        "id": 101,
+        "content": "Reply to the comment",
+        "author": "Replier1",
+        "meritScore": 70,
+        "createdAt": "2024-04-01T01:00:00Z"
+      }
+    ],
+    "POST:/api/comments/:commentId/like": {
+      "success": true,
+      "likes": 6
+    },
+    "GET:/api/tags/popular": [
+      {
+        "name": "technology",
+        "count": 1500,
+        "meritScore": 85,
+        "trend": "rising"
+      },
+      {
+        "name": "community",
+        "count": 1200,
+        "meritScore": 82,
+        "trend": "stable"
+      }
+    ],
+    "GET:/api/tags/search": [
+      {
+        "name": "tech",
+        "count": 1500,
+        "related": ["technology", "software"]
+      }
+    ],
+    "GET:/api/tags/:name/posts": [
+      {
+        "id": 1,
+        "title": "Post with tag",
+        "author": "Author1",
+        "meritScore": 85,
+        "createdAt": "2024-04-01T00:00:00Z"
+      }
+    ],
+    "GET:/api/tags/:name/wiki": {
+      "content": "Tag wiki content",
+      "contributors": ["User1", "User2"],
+      "lastUpdated": "2024-04-01T00:00:00Z"
+    },
+    "GET:/api/tags/:name/relationships": {
+      "parent": ["software", "development"],
+      "related": ["coding", "programming"],
+      "children": ["javascript", "python"]
+    },
+    "GET:/api/substack/trending": [
+      {
+        "id": 1,
+        "name": "Tech Weekly",
+        "followers": 5000,
+        "meritScore": 92,
+        "trend": "rising"
+      }
+    ],
+    "GET:/api/substack/:slug": {
+      "id": "param:slug",
+      "name": "Mock Substack",
+      "description": "A mock substack",
+      "followers": 1000,
+      "meritScore": 85,
+      "posts": 50,
+      "metrics": {
+        "views": 10000,
+        "comments": 500
+      }
+    },
+    "GET:/api/substack/:slug/metrics": {
+      "views": 10000,
+      "comments": 500,
+      "shares": 100,
+      "meritScore": 85,
+      "trending": {
+        "daily": "+5%",
+        "weekly": "+15%"
+      }
+    },
+    "GET:/api/remix/:id": {
+      "id": "param:id",
+      "title": "Remix Title",
+      "content": "Remixed content",
+      "originalPost": {
+        "id": 1,
+        "title": "Original Post"
+      },
+      "changes": [
+        {
+          "type": "addition",
+          "content": "New perspective"
+        }
+      ],
+      "meritScore": 82
+    },
+    "GET:/api/remix/:id/analytics": {
+      "views": 500,
+      "engagement": 85,
+      "citations": 10,
+      "quality": {
+        "originality": 80,
+        "synthesis": 85,
+        "clarity": 90
+      }
+    },
+    "GET:/api/remix/:id/suggestions": [
+      {
+        "type": "content",
+        "suggestion": "Consider adding more examples",
+        "confidence": 0.85
+      },
+      {
+        "type": "structure",
+        "suggestion": "Reorganize section 2 for better flow",
+        "confidence": 0.75
+      }
+    ],
+    "GET:/api/remix/:id/score": {
+      "overall": 85,
+      "components": {
+        "originality": 80,
+        "synthesis": 85,
+        "clarity": 90,
+        "attribution": 85
+      },
+      "feedback": [
+        "Good integration of sources",
+        "Clear attribution"
+      ]
+    },
+    "GET:/api/remix/trending": [
+      {
+        "id": 1,
+        "title": "Trending Remix",
+        "meritScore": 90,
+        "views": 1000,
+        "trend": "rising"
+      }
+    ],
+    "POST:/api/remix/:id/insights": {
+      "insights": [
+        {
+          "type": "content",
+          "insight": "Strong synthesis of ideas",
+          "confidence": 0.9
+        },
+        {
+          "type": "impact",
+          "insight": "High potential for community engagement",
+          "confidence": 0.85
+        }
+      ],
+      "suggestions": [
+        "Consider expanding section on implementation",
+        "Add more real-world examples"
+      ]
+    },
+    "GET:/api/tags/:name/moderation-history": [
+      {
+        "date": "2024-04-01T00:00:00Z",
+        "action": "rename",
+        "moderator": "Mod1",
+        "reason": "Clarity improvement"
+      }
+    ],
+    "GET:/api/tags/following": [
+      {
+        "name": "technology",
+        "followedSince": "2024-03-01T00:00:00Z",
+        "notificationLevel": "all"
+      }
+    ],
+    "POST:/api/substack/import": {
+      "success": true,
+      "imported": {
+        "posts": 5,
+        "comments": 25
+      },
+      "status": "completed"
+    },
+    "GET:/api/substack/validate": {
+      "valid": true,
+      "stats": {
+        "posts": 100,
+        "subscribers": 1000
+      }
+    }
+  }
+}

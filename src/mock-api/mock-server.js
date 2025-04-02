@@ -124,28 +124,70 @@ app.post('/mock-api/reload', (req, res) => {
 
 // Mock endpoints
 // Note: Each route uses the mockMiddleware to handle responses from config
+
+// User & Auth endpoints
 app.get('/api/user/profile', mockMiddleware);
 app.post('/api/auth/login', mockMiddleware);
+app.get('/api/users/:userId/preferences', mockMiddleware);
+app.put('/api/users/:userId/preferences', mockMiddleware);
+
+// Posts endpoints
 app.get('/api/posts/recommended', mockMiddleware);
 app.get('/api/posts/:id', mockMiddleware);
 app.post('/api/posts', mockMiddleware);
 app.get('/api/posts/:postId/comments', mockMiddleware);
+
+// Comments endpoints
+app.get('/api/comments/:commentId', mockMiddleware);
+app.get('/api/comments/:commentId/replies', mockMiddleware);
 app.post('/api/comments', mockMiddleware);
-app.get('/api/notifications', mockMiddleware);
-app.post('/api/notifications/read', mockMiddleware);
+app.post('/api/comments/:commentId/like', mockMiddleware);
+
+// Tags endpoints
+app.get('/api/tags/popular', mockMiddleware);
+app.get('/api/tags/search', mockMiddleware);
+app.get('/api/tags/:name/posts', mockMiddleware);
+app.get('/api/tags/:name/wiki', mockMiddleware);
+app.get('/api/tags/:name/relationships', mockMiddleware);
 app.get('/api/tags/trending', mockMiddleware);
-app.get('/api/substacks/recommended', mockMiddleware);
+app.get('/api/tags/:name/moderation-history', mockMiddleware);
+app.get('/api/tags/following', mockMiddleware);
+app.post('/api/tags/:name/follow', mockMiddleware);
+app.delete('/api/tags/:name/follow', mockMiddleware);
+
+// Substack endpoints
+app.get('/api/substack/trending', mockMiddleware);
+app.get('/api/substack/recommended', mockMiddleware);
+app.get('/api/substack/:slug', mockMiddleware);
+app.get('/api/substack/:slug/metrics', mockMiddleware);
+app.post('/api/substack/import', mockMiddleware);
+app.get('/api/substack/validate', mockMiddleware);
+
+// Remix endpoints
+app.get('/api/remix/:id', mockMiddleware);
+app.post('/api/remix', mockMiddleware);
+app.get('/api/remix/:id/analytics', mockMiddleware);
+app.get('/api/remix/:id/suggestions', mockMiddleware);
+app.get('/api/remix/:id/score', mockMiddleware);
+app.get('/api/remix/trending', mockMiddleware);
+app.post('/api/remix/:id/insights', mockMiddleware);
+
+// Moderation endpoints
 app.post('/api/moderation/report', mockMiddleware);
 app.get('/api/moderation/history/:userId', mockMiddleware);
+app.get('/api/moderation/queue', mockMiddleware);
+
+// Analytics & Merit endpoints
+app.get('/api/analytics/user/:userId', mockMiddleware);
 app.get('/api/merit/score/:userId', mockMiddleware);
 app.get('/api/merit/breakdown/:userId', mockMiddleware);
-app.get('/api/posts/:id/remixes', mockMiddleware);
-app.post('/api/posts/:id/remix', mockMiddleware);
+
+// Search endpoint
 app.get('/api/search', mockMiddleware);
-app.get('/api/moderation/queue', mockMiddleware);
-app.get('/api/analytics/user/:userId', mockMiddleware);
-app.get('/api/users/:userId/preferences', mockMiddleware);
-app.put('/api/users/:userId/preferences', mockMiddleware);
+
+// Notification endpoints
+app.get('/api/notifications', mockMiddleware);
+app.post('/api/notifications/read', mockMiddleware);
 
 // Optional: Proxy unhandled requests to real API
 /* 
