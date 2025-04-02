@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Meritocious.Common.DTOs.Content;
 using MediatR;
+using Meritocious.Core.Features.Substacks.Models;
+using Meritocious.Core.Features.Substacks.Commands;
 
 namespace Meritocious.Web.Controllers;
 

@@ -57,7 +57,7 @@
                         <div class="space-y-4">
                             @foreach (var substack in recommendedSubstacks)
                             {
-                                <Card Size="small" 
+                                <Card Size="CardSize.Small" 
                                       Bordered
                                       Class="@(selectedSubstacks.Contains(substack.Id) ? "border-blue-500" : "")">
                                     <div class="flex items-start justify-between">
