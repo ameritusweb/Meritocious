@@ -1,10 +1,12 @@
 ﻿@namespace Meritocious.Web.Components.Profile
+@inject IUserApiService UserService
+@inject MessageService MessageService
 
 <div class="space-y-6">
     <Card Title="Content Quality Thresholds">
         <Alert Message="Posts below these thresholds won't appear in your feed"
-               ShowIcon
-               Type="info"
+               ShowIcon="true"
+               Type="AlertType.Info"
                Class="mb-4" />
 
         <div class="space-y-6">
@@ -34,7 +36,7 @@
         <div class="space-y-4">
             <div class="flex justify-between items-center">
                 <span>Selected Topics (@selectedTopics.Count)</span>
-                <Button Type="link" OnClick="@(() => showTopicModal = true)">
+                <Button Type="ButtonType.Link" OnClick="@(() => showTopicModal = true)">
                     Manage Topics
                 </Button>
             </div>
@@ -56,9 +58,9 @@
     </Card>
 
     <Card Title="Feed Customization">
-        <Form Layout="FormLayout.Vertical">
+        <Form @ref="feedSettingsForm" Model="@settings" Layout="FormLayout.Vertical">
             <FormItem Label="View Mode">
-                <RadioGroup @bind-Value="@settings.ViewMode">
+                <RadioGroup @bind-Value="@context.ViewMode">
                     <Radio Value="@("compact")">
                         <div>
                             <div>Compact</div>
@@ -87,29 +89,30 @@
             </FormItem>
 
             <FormItem Label="Post Sorting">
-                <Select @bind-Value="@settings.DefaultSort"
-                        Style="width: 200px;">
-                    <SelectOption Value="@("merit")">By Merit Score</SelectOption>
-                    <SelectOption Value="@("recent")">Most Recent</SelectOption>
-                    <SelectOption Value="@("discussed")">Most Discussed</SelectOption>
-                    <SelectOption Value="@("forked")">Most Forked</SelectOption>
+                <Select TItemValue="string" TItem="string" @bind-Value="@context.DefaultSort" Style="width: 200px;">
+                    <SelectOptions>
+                        <SelectOption Value="@("merit")">By Merit Score</SelectOption>
+                        <SelectOption Value="@("recent")">Most Recent</SelectOption>
+                        <SelectOption Value="@("discussed")">Most Discussed</SelectOption>
+                        <SelectOption Value="@("forked")">Most Forked</SelectOption>
+                    </SelectOptions>
                 </Select>
             </FormItem>
 
             <FormItem Label="Feed Filters">
-                <Checkbox @bind-Value="@settings.ShowOnlyFollowed">
+                <Checkbox @bind-Value="@context.ShowOnlyFollowed">
                     Only show posts from followed substacks
                 </Checkbox>
-                <Checkbox @bind-Value="@settings.HideLowQuality">
+                <Checkbox @bind-Value="@context.HideLowQuality">
                     Hide posts below quality thresholds
                 </Checkbox>
-                <Checkbox @bind-Value="@settings.HighlightNew">
+                <Checkbox @bind-Value="@context.HighlightNew">
                     Highlight new posts since last visit
                 </Checkbox>
             </FormItem>
 
             <FormItem>
-                <Button Type="primary"
+                <Button Type="ButtonType.Primary"
                         OnClick="SaveSettings"
                         Loading="@isSaving">
                     Save Preferences
@@ -152,7 +155,7 @@
                         <div class="p-2 hover:bg-gray-50 rounded">
                             <div class="flex items-center justify-between mb-1">
                                 <span>@topic.Name</span>
-                                <Button Type="link" 
+                                <Button Type="ButtonType.Link" 
                                         Danger
                                         OnClick="@(() => RemoveTopic(topic.Id))">
                                     Remove
@@ -181,6 +184,8 @@
     private List<QualityMetric> qualityMetrics = new();
     private List<TopicPreference> selectedTopics = new();
     private List<TopicOption> availableTopics = new();
+
+    AntDesign.Form<FeedSettings> feedSettingsForm;
 
     private RenderFragment searchIcon => builder =>
     {

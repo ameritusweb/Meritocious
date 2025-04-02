@@ -9,6 +9,7 @@ public interface IModerationApiService
     Task<ModerationActionDto> AppealModerationAsync(Guid moderationId, AppealModerationRequest request);
     Task<List<ModerationHistoryDto>> GetUserModerationHistoryAsync(Guid userId);
     Task<ModerationActionEffectDto> GetModerationEffectAsync(Guid moderationId);
+    Task<List<ModerationActionDto>> GetRecentActionsAsync(int number);
 }
 
 public class ModerationApiService : IModerationApiService
@@ -80,6 +81,20 @@ public class ModerationApiService : IModerationApiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting moderation history for user {UserId}", userId);
+            throw;
+        }
+    }
+
+    public async Task<List<ModerationActionDto>> GetRecentActionsAsync(int number)
+    {
+        try
+        {
+            return await _apiClient.GetAsync<List<ModerationActionDto>>(
+                $"api/moderation/recent/{number}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting recent moderation actions {number}", number);
             throw;
         }
     }

@@ -12,7 +12,7 @@
                     <span class="font-medium">@Comment.AuthorUsername</span>
                     <span class="text-gray-500 text-sm ml-2">@GetTimeAgo(Comment.CreatedAt)</span>
                 </div>
-                <MeritScoreBadge Score="@Comment.MeritScore" ShowDetails="true" Size="small" />
+                <MeritScoreBadgeComponent Score="@Comment.MeritScore" ShowDetails="true" Size="small" />
             </div>
 
             @if (IsEditing)
@@ -30,7 +30,7 @@
                     <FormItem>
                         <Space>
                             <SpaceItem>
-                                <Button Type="primary" HtmlType="submit">Save</Button>
+                                <Button Type="ButtonType.Primary" HtmlType="submit">Save</Button>
                             </SpaceItem>
                             <SpaceItem>
                                 <Button OnClick="CancelEdit">Cancel</Button>
@@ -45,18 +45,18 @@
             }
 
             <div class="flex items-center space-x-4 mt-3 text-sm">
-                <Button Type="link"
+                <Button Type="ButtonType.Link"
                         OnClick="@(() => OnLike.InvokeAsync(Comment.Id))"
                         Class="@(Comment.HasLiked ? "text-blue-500" : "text-gray-500")">
                     <Space>
                         <SpaceItem>
-                            <Icon Type="like" Theme="@(Comment.HasLiked ? "fill" : "outline")" />
+                            <Icon Type="like" Theme="@(Comment.HasLiked ? IconThemeType.Fill : IconThemeType.Outline)" />
                         </SpaceItem>
                         <SpaceItem>@Comment.LikesCount</SpaceItem>
                     </Space>
                 </Button>
 
-                <Button Type="link"
+                <Button Type="ButtonType.Link"
                         OnClick="@(() => OnReply.InvokeAsync(Comment))"
                         Class="text-gray-500">
                     <Space>
@@ -80,7 +80,7 @@
                             </Menu>
                         </Overlay>
                         <ChildContent>
-                            <Button Type="link" Class="text-gray-500">
+                            <Button Type="ButtonType.Link" Class="text-gray-500">
                                 <Icon Type="more" />
                             </Button>
                         </ChildContent>

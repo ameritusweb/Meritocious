@@ -3,113 +3,128 @@
 @using Microsoft.AspNetCore.Authorization
 @using Meritocious.Common.DTOs.Auth
 @using Meritocious.Common.DTOs.Moderation
+@inject NavigationManager Navigation
 @inject IUserApiService UserService
 @inject IModerationApiService ModerationService
 @inject MessageService MessageService
 
 <PageTitle>Admin Dashboard - Meritocious</PageTitle>
 
-<DashboardLayout>
+<DashboardLayoutComponent>
     <div class="admin-dashboard">
         <Row Gutter="24">
             <Col Span="6">
-                <Card>
-                    <Statistic Title="Total Users" 
-                               Value="@statistics.TotalUsers" 
-                               Loading="@isLoading" 
-                               Prefix="@($"<Icon Type='user' />")" />
-                </Card>
+            <Card>
+                <Statistic Title="Total Users"
+                           Value="@statistics.TotalUsers"
+                           Loading="@isLoading"
+                           Prefix="@($"<Icon Type='user' />")" />
+            </Card>
             </Col>
             <Col Span="6">
-                <Card>
-                    <Statistic Title="Active Moderations" 
-                               Value="@statistics.ActiveModerations" 
-                               Loading="@isLoading"
-                               Prefix="@($"<Icon Type='exclamation-circle' />")" />
-                </Card>
+            <Card>
+                <Statistic Title="Active Moderations"
+                           Value="@statistics.ActiveModerations"
+                           Loading="@isLoading"
+                           Prefix="@($"<Icon Type='exclamation-circle' />")" />
+            </Card>
             </Col>
             <Col Span="6">
-                <Card>
-                    <Statistic Title="Posts Today" 
-                               Value="@statistics.PostsToday" 
-                               Loading="@isLoading"
-                               Prefix="@($"<Icon Type='file-text' />")" />
-                </Card>
+            <Card>
+                <Statistic Title="Posts Today"
+                           Value="@statistics.PostsToday"
+                           Loading="@isLoading"
+                           Prefix="@($"<Icon Type='file-text' />")" />
+            </Card>
             </Col>
             <Col Span="6">
-                <Card>
-                    <Statistic Title="Active Users (24h)" 
-                               Value="@statistics.ActiveUsers24h" 
-                               Loading="@isLoading"
-                               Prefix="@($"<Icon Type='team' />")" />
-                </Card>
+            <Card>
+                <Statistic Title="Active Users (24h)"
+                           Value="@statistics.ActiveUsers24h"
+                           Loading="@isLoading"
+                           Prefix="@($"<Icon Type='team' />")" />
+            </Card>
             </Col>
         </Row>
-
         <Row Gutter="24" Style="margin-top: 24px;">
             <Col Span="12">
-                <Card Title="Recent Moderation Actions" Extra="<a href='/admin/moderation'>View All</a>">
-                    <Table TItem="ModerationActionDto"
-                           DataSource="@recentModerations"
-                           Loading="@isLoading"
-                           PageSize="5">
-                        <PropertyColumn Property="c => c.Type" Title="Action" />
-                        <PropertyColumn Property="c => c.ContentType" Title="Content Type" />
-                        <PropertyColumn Property="c => c.Reason" Title="Reason" />
-                        <PropertyColumn Property="c => c.CreatedAt" Title="Date" Format="dd MMM yyyy" />
-                    </Table>
-                </Card>
+            <Card Title="Recent Moderation Actions" Extra="adminModerationViewAll">
+                <Table TItem="ModerationActionDto"
+                       DataSource="@recentModerations"
+                       Loading="@isLoading"
+                       PageSize="5">
+                    <PropertyColumn Property="c => c.ActionType" Title="Action" />
+                    <PropertyColumn Property="c => c.ContentType" Title="Content Type" />
+                    <PropertyColumn Property="c => c.Reason" Title="Reason" />
+                    <PropertyColumn Property="c => c.CreatedAt" Title="Date" Format="dd MMM yyyy" />
+                </Table>
+            </Card>
             </Col>
             <Col Span="12">
-                <Card Title="Latest System Logs" Extra="<a href='/admin/logs'>View All</a>">
-                    <Table TItem="LogEntryDto"
-                           DataSource="@recentLogs"
-                           Loading="@isLoading"
-                           PageSize="5">
-                        <PropertyColumn Property="c => c.Level" Title="Level" />
-                        <PropertyColumn Property="c => c.Message" Title="Message" />
-                        <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM HH:mm" />
-                    </Table>
-                </Card>
+            <Card Title="Latest System Logs" Extra="adminLogsViewAll">
+                <Table TItem="LogEntryDto"
+                       DataSource="@recentLogs"
+                       Loading="@isLoading"
+                       PageSize="5">
+                    <PropertyColumn Property="c => c.Level" Title="Level" />
+                    <PropertyColumn Property="c => c.Message" Title="Message" />
+                    <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM HH:mm" />
+                </Table>
+            </Card>
             </Col>
         </Row>
-
         <Row Gutter="24" Style="margin-top: 24px;">
             <Col Span="24">
-                <Card Title="Quick Actions">
-                    <Space>
-                        <SpaceItem>
-                            <Button Type="primary" OnClick="() => NavigateTo('/admin/users')">
-                                <Icon Type="user" /> Manage Users
-                            </Button>
-                        </SpaceItem>
-                        <SpaceItem>
-                            <Button Type="primary" OnClick="() => NavigateTo('/admin/moderation')">
-                                <Icon Type="safety" /> Moderation Queue
-                            </Button>
-                        </SpaceItem>
-                        <SpaceItem>
-                            <Button Type="primary" OnClick="() => NavigateTo('/admin/logs')">
-                                <Icon Type="profile" /> View Logs
-                            </Button>
-                        </SpaceItem>
-                        <SpaceItem>
-                            <Button Type="primary" OnClick="() => NavigateTo('/admin/settings')">
-                                <Icon Type="setting" /> System Settings
-                            </Button>
-                        </SpaceItem>
-                    </Space>
-                </Card>
+            <Card Title="Quick Actions">
+                <Space>
+                    <SpaceItem>
+                        <Button Type="ButtonType.Primary" OnClick="() => NavigateTo(adminUsersPage)">
+                            <Icon Type="user" /> Manage Users
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type="ButtonType.Primary" OnClick="() => NavigateTo(adminModerationPage)">
+                            <Icon Type="safety" /> Moderation Queue
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type="ButtonType.Primary" OnClick="() => NavigateTo(adminLogsPage)">
+                            <Icon Type="profile" /> View Logs
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type="ButtonType.Primary" OnClick="() => NavigateTo(adminSettingsPage)">
+                            <Icon Type="setting" /> System Settings
+                        </Button>
+                    </SpaceItem>
+                </Space>
+            </Card>
             </Col>
         </Row>
     </div>
-</DashboardLayout>
+</DashboardLayoutComponent>
 
 @code {
+
     private bool isLoading = true;
     private AdminDashboardStatistics statistics = new();
     private List<ModerationActionDto> recentModerations = new();
     private List<LogEntryDto> recentLogs = new();
+
+    private RenderFragment adminModerationViewAll = @<a href='/admin/moderation'>View All</a>;
+
+    private RenderFragment adminLogsViewAll =@<a href='/admin/logs'>View All</a>;
+
+
+
+    private string adminUsersPage = "/admin/users";
+
+    private string adminModerationPage = "/admin/moderation";
+
+    private string adminLogsPage = "/admin/logs";
+
+    private string adminSettingsPage = "/admin/settings";
+
 
     protected override async Task OnInitializedAsync()
     {
