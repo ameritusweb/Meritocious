@@ -35,6 +35,9 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<ReputationSnapshot> ReputationSnapshots { get; set; }
         public DbSet<ReputationBadge> ReputationBadges { get; set; }
 
+        // Substacks
+        public DbSet<Substack> Substacks { get; set; }
+
         // Tags
         public DbSet<Tag> Tags { get; set; }
         public DbSet<TagSynonym> TagSynonyms { get; set; }

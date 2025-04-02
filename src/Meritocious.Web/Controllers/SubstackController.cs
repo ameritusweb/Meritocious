@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Meritocious.Common.DTOs.Content;
 using MediatR;
-using Meritocious.Core.Features.Substacks.Models;
+using Meritocious.Common.DTOs.Substacks;
+using Meritocious.Core.Features.Substacks.Queries;
 using Meritocious.Core.Features.Substacks.Commands;
+using Meritocious.Core.Features.Substacks.Models;
+using Meritocious.Core.Features.Substacks.Services;
 
 namespace Meritocious.Web.Controllers;
 
@@ -12,106 +14,96 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class SubstackController : ApiControllerBase
 {
-    public SubstackController(IMediator mediator) : base(mediator)
+    private readonly IMediator _mediator;
+
+    public SubstackController(IMediator mediator) : base()
     {
+        _mediator = mediator;
     }
 
     [HttpGet("trending")]
     public async Task<ActionResult<List<SubstackDto>>> GetTrendingSubstacks(
-        [FromQuery] string period = "day",
-        [FromQuery] int count = 10)
+        [FromQuery] int limit = 10,
+        [FromQuery] int skip = 0)
     {
-        var query = new GetTrendingSubstacksQuery { Period = period, Count = count };
-        var result = await Mediator.Send(query);
+        var result = await _mediator.Send(new GetTrendingSubstacksQuery(limit, skip));
         return HandleResult(result);
     }
 
     [HttpGet("recommended")]
     public async Task<ActionResult<List<SubstackDto>>> GetRecommendedSubstacks(
-        [FromQuery] int count = 10)
+        [FromQuery] int limit = 10)
     {
-        var query = new GetRecommendedSubstacksQuery { Count = count };
-        var result = await Mediator.Send(query);
+        var userId = GetUserId();
+        var result = await _mediator.Send(new GetRecommendedSubstacksQuery(userId, limit));
         return HandleResult(result);
     }
 
     [HttpGet("{id}/similar")]
     public async Task<ActionResult<List<SubstackDto>>> GetSimilarSubstacks(
-        Guid id,
-        [FromQuery] int count = 10)
+        string id,
+        [FromQuery] int limit = 5)
     {
-        var query = new GetSimilarSubstacksQuery { SubstackId = id, Count = count };
-        var result = await Mediator.Send(query);
+        var result = await Mediator.Send(new GetSimilarSubstacksQuery(id, limit));
         return HandleResult(result);
     }
 
     [HttpGet("following")]
-    public async Task<ActionResult<List<SubstackDto>>> GetFollowedSubstacks()
+    public async Task<ActionResult<List<SubstackDto>>> GetFollowedSubstacks(
+        [FromQuery] int limit = 20,
+        [FromQuery] int skip = 0)
     {
         var userId = GetUserId();
-        var query = new GetFollowedSubstacksQuery { UserId = userId };
-        var result = await Mediator.Send(query);
+        var result = await Mediator.Send(new GetFollowedSubstacksQuery(userId, limit, skip));
         return HandleResult(result);
     }
 
-    [HttpGet("{slug}")]
-    public async Task<ActionResult<SubstackDto>> GetSubstack(string slug)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<SubstackDto>> GetSubstack(string id)
     {
-        var query = new GetSubstackQuery { Slug = slug };
-        var result = await Mediator.Send(query);
+        var result = await Mediator.Send(new GetSubstackQuery(id));
         return HandleResult(result);
     }
 
     [HttpPost]
     public async Task<ActionResult<SubstackDto>> CreateSubstack(CreateSubstackCommand command)
     {
-        command.UserId = GetUserId();
         var result = await Mediator.Send(command);
         return HandleResult(result);
     }
 
-    [HttpPut("{slug}")]
+    [HttpPut("{id}")]
     public async Task<ActionResult<SubstackDto>> UpdateSubstack(
-        string slug,
+        string id,
         UpdateSubstackCommand command)
     {
-        if (slug != command.Slug)
-            return BadRequest("Slug mismatch");
+        if (id != command.SubstackId)
+            return BadRequest("ID mismatch");
 
-        command.UserId = GetUserId();
         var result = await Mediator.Send(command);
         return HandleResult(result);
     }
 
-    [HttpPost("{slug}/follow")]
-    public async Task<ActionResult<SubstackDto>> FollowSubstack(string slug)
+    [HttpPost("{id}/follow")]
+    public async Task<ActionResult<bool>> FollowSubstack(string id)
     {
-        var command = new FollowSubstackCommand
-        {
-            UserId = GetUserId(),
-            Slug = slug
-        };
-        var result = await Mediator.Send(command);
+        var userId = GetUserId();
+        var result = await Mediator.Send(new FollowSubstackCommand(userId, id));
         return HandleResult(result);
     }
 
-    [HttpDelete("{slug}/follow")]
-    public async Task<ActionResult> UnfollowSubstack(string slug)
+    [HttpDelete("{id}/follow")]
+    public async Task<ActionResult<bool>> UnfollowSubstack(string id)
     {
-        var command = new UnfollowSubstackCommand
-        {
-            UserId = GetUserId(),
-            Slug = slug
-        };
-        var result = await Mediator.Send(command);
+        var userId = GetUserId();
+        var result = await Mediator.Send(new UnfollowSubstackCommand(userId, id));
         return HandleResult(result);
     }
 
-    [HttpGet("{slug}/metrics")]
-    public async Task<ActionResult<SubstackMetricsDto>> GetSubstackMetrics(string slug)
+    [HttpGet("{id}/metrics")]
+    public async Task<ActionResult<SubstackMetricsDto>> GetSubstackMetrics(string id)
     {
-        var query = new GetSubstackMetricsQuery { Slug = slug };
-        var result = await Mediator.Send(query);
+        var result = await Mediator.Send(new GetSubstackMetricsQuery(id));
         return HandleResult(result);
     }
 
@@ -126,7 +118,7 @@ public class SubstackController : ApiControllerBase
             ImportAsRemix = request.ImportAsRemix,
             RemixNotes = request.RemixNotes
         };
-        var result = await Mediator.Send(command);
+        var result = await _mediator.Send(command);
         return HandleResult(result);
     }
 
