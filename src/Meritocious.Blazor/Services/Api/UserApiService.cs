@@ -12,6 +12,9 @@ public interface IUserApiService
     Task UpdateProfileAsync(UserProfileDto profile);
     Task UpdateSettingsAsync(UserSettingsDto settings);
     Task<List<ContributionSummaryDto>> GetUserContributionsAsync(Guid userId, int page = 1, int pageSize = 10);
+    Task<AuthorDetailsDto> GetAuthorDetailsAsync(Guid userId);
+    Task FollowUserAsync(Guid userId);
+    Task UnfollowUserAsync(Guid userId);
 }
 
 public class UserApiService : IUserApiService
@@ -124,6 +127,45 @@ public class UserApiService : IUserApiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting contributions for user {UserId}", userId);
+            throw;
+        }
+    }
+
+    public async Task<AuthorDetailsDto> GetAuthorDetailsAsync(Guid userId)
+    {
+        try
+        {
+            return await _apiClient.GetAsync<AuthorDetailsDto>($"api/users/{userId}/author-details");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting author details for user {UserId}", userId);
+            throw;
+        }
+    }
+
+    public async Task FollowUserAsync(Guid userId)
+    {
+        try
+        {
+            await _apiClient.PostAsync<Unit>($"api/users/{userId}/follow", null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error following user {UserId}", userId);
+            throw;
+        }
+    }
+
+    public async Task UnfollowUserAsync(Guid userId)
+    {
+        try
+        {
+            await _apiClient.DeleteAsync<Unit>($"api/users/{userId}/follow");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error unfollowing user {UserId}", userId);
             throw;
         }
     }

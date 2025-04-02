@@ -84,25 +84,46 @@ namespace Meritocious.Infrastructure.Services
             try
             {
                 // Get content that needs similarity updates
-                // TODO: Implement a way to track which content needs updates
-                var contentPairsToUpdate = await GetContentPairsForUpdateAsync(scope);
+                // Get pairs needing update (max 100 at a time)
+                var contentPairs = await similarityRepo.GetContentPairsForUpdateAsync(100);
+                var postRepo = scope.ServiceProvider.GetRequiredService<IPostRepository>();
 
-                foreach (var pair in contentPairsToUpdate)
+                foreach (var pair in contentPairs)
                 {
                     if (stoppingToken.IsCancellationRequested) return;
 
                     try
                     {
+                        // Get the content for both posts
+                        var post1 = await postRepo.GetByIdAsync(pair.id1);
+                        var post2 = await postRepo.GetByIdAsync(pair.id2);
+
+                        if (post1 == null || post2 == null)
+                        {
+                            _logger.LogWarning("One or both posts not found for pair {Id1}, {Id2}", pair.id1, pair.id2);
+                            continue;
+                        }
+
+                        // Calculate new similarity score
                         var similarity = await threadAnalyzer.CalculateSemanticSimilarityAsync(
-                            pair.content1,
-                            pair.content2);
+                            post1.Content,
+                            post2.Content);
 
-                        var contentSimilarity = ContentSimilarity.Create(
-                            pair.id1,
-                            pair.id2,
-                            (decimal)similarity);
+                        // Update the similarity record
+                        var record = await similarityRepo._dbSet
+                            .FirstOrDefaultAsync(s => 
+                                (s.ContentId1 == pair.id1 && s.ContentId2 == pair.id2) ||
+                                (s.ContentId1 == pair.id2 && s.ContentId2 == pair.id1));
 
-                        await similarityRepo.AddAsync(contentSimilarity);
+                        if (record != null)
+                        {
+                            record.UpdateScore((decimal)similarity);
+                            await similarityRepo._context.SaveChangesAsync();
+                            
+                            _logger.LogInformation(
+                                "Updated similarity score for content pair {Id1}, {Id2} to {Score}",
+                                pair.id1, pair.id2, similarity);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -110,6 +131,11 @@ namespace Meritocious.Infrastructure.Services
                             pair.id1, pair.id2);
                     }
                 }
+
+                // Check for old similarity scores (older than 30 days)
+                await similarityRepo.MarkOldSimilaritiesForUpdateAsync(
+                    TimeSpan.FromDays(30),
+                    priority: 1);
             }
             catch (Exception ex)
             {

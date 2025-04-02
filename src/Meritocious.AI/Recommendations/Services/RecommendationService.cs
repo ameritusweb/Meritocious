@@ -365,42 +365,132 @@ namespace Meritocious.AI.Recommendations.Services
         #endregion
 
         #region Data Access Methods
-        // These methods would be implemented to interact with your actual data store
+        private readonly UserInteractionRepository _interactionRepo;
+        private readonly ContentTopicRepository _topicRepo;
+        private readonly UserTopicPreferenceRepository _preferenceRepo;
+        private readonly TrendingContentRepository _trendingRepo;
+        private readonly ContentSimilarityRepository _similarityRepo;
+        private readonly IPostRepository _postRepo;
 
         private async Task<List<SimilarUser>> FindSimilarUsersAsync(UserProfile userProfile)
         {
-            // TODO: Implement actual user similarity search
-            return new List<SimilarUser>();
+            // Find users with similar topic preferences
+            var similarUsers = new List<SimilarUser>();
+            foreach (var topic in userProfile.TopicPreferences
+                .OrderByDescending(t => t.Value)
+                .Take(5))
+            {
+                var users = await _preferenceRepo.GetUsersInterestedInTopicAsync(
+                    topic.Key,
+                    limit: 10,
+                    minWeight: 0.5m);
+
+                foreach (var user in users.Where(u => u.Id != userProfile.UserId))
+                {
+                    var userPrefs = await _preferenceRepo.GetUserTopicWeightsAsync(user.Id);
+                    var similarity = CalculatePreferenceSimilarity(
+                        userProfile.TopicPreferences,
+                        userPrefs);
+
+                    similarUsers.Add(new SimilarUser
+                    {
+                        UserId = user.Id,
+                        Similarity = similarity
+                    });
+                }
+            }
+
+            return similarUsers
+                .OrderByDescending(u => u.Similarity)
+                .Take(10)
+                .ToList();
         }
 
         private async Task<List<ContentInteraction>> GetUserPositiveInteractionsAsync(Guid userId)
         {
-            // TODO: Implement actual user interaction retrieval
-            return new List<ContentInteraction>();
+            var interactions = await _interactionRepo.GetUserInteractionsAsync(
+                userId,
+                since: DateTime.UtcNow.AddDays(-30));
+
+            return interactions
+                .Where(i => i.EngagementScore >= 0.7m)
+                .Select(i => new ContentInteraction
+                {
+                    ContentId = i.ContentId,
+                    EngagementScore = i.EngagementScore
+                })
+                .ToList();
         }
 
         private async Task<List<Content>> GetRecentContentByTopicAsync(string topic)
         {
-            // TODO: Implement actual content retrieval
-            return new List<Content>();
+            var content = await _topicRepo.GetTopicContentAsync(
+                topic,
+                limit: 50,
+                minRelevance: 0.5m);
+
+            var result = new List<Content>();
+            foreach (var item in content)
+            {
+                var post = await _postRepo.GetByIdAsync(item.ContentId);
+                if (post != null)
+                {
+                    result.Add(new Content
+                    {
+                        ContentId = post.Id,
+                        Value = post.Content,
+                        CreatedAt = post.CreatedAt
+                    });
+                }
+            }
+
+            return result;
         }
 
         private async Task<string> GetContentByIdAsync(Guid contentId)
         {
-            // TODO: Implement actual content retrieval
-            return string.Empty;
+            var post = await _postRepo.GetByIdAsync(contentId);
+            return post?.Content ?? string.Empty;
         }
 
         private async Task<List<Content>> GetRecentContentAsync(int count)
         {
-            // TODO: Implement actual content retrieval
-            return new List<Content>();
+            var posts = await _postRepo.GetRecentPostsAsync(count);
+            return posts.Select(p => new Content
+            {
+                ContentId = p.Id,
+                Value = p.Content,
+                CreatedAt = p.CreatedAt
+            }).ToList();
         }
 
         private async Task<List<TrendingContent>> GetTrendingContentAsync()
         {
-            // TODO: Implement actual trending content retrieval
-            return new List<TrendingContent>();
+            var trending = await _trendingRepo.GetTrendingContentAsync(
+                limit: 50,
+                timeWindow: "day",
+                minTrendingScore: 0.3m);
+
+            return trending.Select(t => new TrendingContent
+            {
+                ContentId = t.ContentId,
+                TrendingScore = t.TrendingScore
+            }).ToList();
+        }
+
+        private decimal CalculatePreferenceSimilarity(
+            Dictionary<string, decimal> prefs1,
+            Dictionary<string, decimal> prefs2)
+        {
+            var topics = prefs1.Keys.Union(prefs2.Keys);
+            var dotProduct = topics.Sum(t =>
+                (prefs1.ContainsKey(t) ? prefs1[t] : 0) *
+                (prefs2.ContainsKey(t) ? prefs2[t] : 0));
+
+            var norm1 = Math.Sqrt(prefs1.Values.Sum(v => v * v));
+            var norm2 = Math.Sqrt(prefs2.Values.Sum(v => v * v));
+
+            return (decimal)(dotProduct / (norm1 * norm2));
         }
 
         #endregion

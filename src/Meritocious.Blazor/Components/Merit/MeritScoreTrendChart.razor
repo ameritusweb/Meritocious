@@ -1,0 +1,162 @@
+@using Meritocious.Common.DTOs.Merit
+@using Meritocious.Core.Entities
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="merit-trend-chart">
+    @if (ChartData != null)
+    {
+        <div class="chart-container">
+            <canvas @ref="chartCanvas"></canvas>
+        </div>
+        <div class="chart-legend">
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #4CAF50"></span>
+                <span>Overall Merit</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #2196F3"></span>
+                <span>Clarity</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #FF9800"></span>
+                <span>Novelty</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #F44336"></span>
+                <span>Contribution</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #9C27B0"></span>
+                <span>Civility</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: #795548"></span>
+                <span>Relevance</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="loading">Loading merit score history...</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid UserId { get; set; }
+    [Parameter] public string TimeFrame { get; set; } = "monthly";
+    [Parameter] public DateTime? StartDate { get; set; }
+    [Parameter] public DateTime? EndDate { get; set; }
+
+    private ElementReference chartCanvas;
+    private List<ReputationSnapshot> ChartData;
+    private IJSObjectReference? chartModule;
+    private DotNetObjectReference<MeritScoreTrendChart>? objRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        StartDate ??= DateTime.UtcNow.AddMonths(-6);
+        EndDate ??= DateTime.UtcNow;
+        
+        await LoadChartData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            chartModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/meritChart.js");
+            objRef = DotNetObjectReference.Create(this);
+            await InitializeChart();
+        }
+    }
+
+    private async Task LoadChartData()
+    {
+        var client = HttpClientFactory.CreateClient("MeritociousAPI");
+        var response = await client.GetFromJsonAsync<List<ReputationSnapshot>>(
+            $"api/users/{UserId}/merit-history?timeFrame={TimeFrame}&start={StartDate:yyyy-MM-dd}&end={EndDate:yyyy-MM-dd}");
+        
+        ChartData = response;
+        StateHasChanged();
+        
+        if (chartModule != null)
+        {
+            await UpdateChart();
+        }
+    }
+
+    private async Task InitializeChart()
+    {
+        if (ChartData != null && chartModule != null)
+        {
+            await chartModule.InvokeVoidAsync("initializeChart", chartCanvas, objRef);
+            await UpdateChart();
+        }
+    }
+
+    private async Task UpdateChart()
+    {
+        if (ChartData != null && chartModule != null)
+        {
+            var labels = ChartData.Select(d => d.StartDate.ToString("MMM dd")).ToArray();
+            var datasets = new[]
+            {
+                new {
+                    label = "Overall Merit",
+                    data = ChartData.Select(d => d.OverallMeritScore).ToArray(),
+                    borderColor = "#4CAF50",
+                    backgroundColor = "#4CAF5022"
+                },
+                new {
+                    label = "Clarity",
+                    data = ChartData.Select(d => d.MetricSnapshots["Clarity"]).ToArray(),
+                    borderColor = "#2196F3",
+                    backgroundColor = "#2196F322"
+                },
+                new {
+                    label = "Novelty",
+                    data = ChartData.Select(d => d.MetricSnapshots["Novelty"]).ToArray(),
+                    borderColor = "#FF9800",
+                    backgroundColor = "#FF980022"
+                },
+                new {
+                    label = "Contribution",
+                    data = ChartData.Select(d => d.MetricSnapshots["Contribution"]).ToArray(),
+                    borderColor = "#F44336",
+                    backgroundColor = "#F4433622"
+                },
+                new {
+                    label = "Civility",
+                    data = ChartData.Select(d => d.MetricSnapshots["Civility"]).ToArray(),
+                    borderColor = "#9C27B0",
+                    backgroundColor = "#9C27B022"
+                },
+                new {
+                    label = "Relevance",
+                    data = ChartData.Select(d => d.MetricSnapshots["Relevance"]).ToArray(),
+                    borderColor = "#795548",
+                    backgroundColor = "#79554822"
+                }
+            };
+
+            await chartModule.InvokeVoidAsync("updateChartData", chartCanvas, labels, datasets);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (chartModule != null)
+            {
+                await chartModule.DisposeAsync();
+            }
+            
+            objRef?.Dispose();
+        }
+        catch (JSDisconnectedException)
+        {
+            // Handle JSRuntime disposal
+        }
+    }
+}

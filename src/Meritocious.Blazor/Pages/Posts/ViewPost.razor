@@ -3,8 +3,8 @@
 @using Meritocious.Common.DTOs.Content
 @using Meritocious.Common.DTOs.Merit
 @inject NavigationManager NavigationManager
-@inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject IUserApiService UserApi
 
 <PageTitle>@(post?.Title ?? "Loading...") - Meritocious</PageTitle>
 
@@ -68,10 +68,15 @@
                         }
                         else
                         {
-                            <!-- TODO: Implement comments component -->
-                            <Alert Message="Comments component will be implemented in a separate task"
-                                   Type="@AlertType.Info"
-                                   ShowIcon="true" />
+                            <Comments PostId="@PostId"
+                                     Comments="@comments"
+                                     IsLoading="@isLoadingComments"
+                                     IsLoggedIn="@isLoggedIn"
+                                     CurrentUserId="@currentUserId"
+                                     OnCommentAdded="HandleCommentAdded"
+                                     OnCommentDeleted="HandleCommentDeleted"
+                                     OnCommentUpdated="HandleCommentUpdated"
+                                     OnCommentLiked="HandleCommentLiked" />
                         }
                     </Card>
                 </div>
@@ -87,14 +92,27 @@
                                     @post.AuthorUsername
                                 </a>
                             </h3>
-                            <!-- TODO: Add author description/bio -->
-                            <p class="text-gray-500 text-sm">Member since @authorJoinDate.ToString("MMM yyyy")</p>
+                            <p class="text-gray-500 text-sm">
+                                Member since @authorJoinDate.ToString("MMM yyyy")<br/>
+                                @(authorBio ?? "No bio provided")
+                            </p>
                         </div>
                     </div>
                     
-                    <!-- TODO: Add author stats like total posts, average merit score -->
-                    <Button Type="default" Block>
-                        <Icon Type="user-add" /> Follow
+                    <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+                        <div>
+                            <div class="text-lg font-medium">@authorTotalPosts</div>
+                            <div class="text-sm text-gray-500">Posts</div>
+                        </div>
+                        <div>
+                            <div class="text-lg font-medium">@authorAvgMeritScore.ToString("0.00")</div>
+                            <div class="text-sm text-gray-500">Avg Merit</div>
+                        </div>
+                    </div>
+
+                    <Button Type="default" Block OnClick="HandleFollowAuthor">
+                        <Icon Type="@(isFollowingAuthor ? "user-delete" : "user-add")" />
+                        @(isFollowingAuthor ? "Unfollow" : "Follow")
                     </Button>
                 </Card>
                 
@@ -161,26 +179,42 @@
 @code {
     [Parameter] public Guid PostId { get; set; }
     [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; }
+    [Inject] private ICommentApiService CommentApi { get; set; }
     
     private PostDto post;
     private MeritScoreDto meritComponents;
     private SubstackDto substack;
     private List<PostDto> relatedPosts = new();
+    private List<CommentDto> comments = new();
     
     private bool isLoading = true;
     private bool isLoadingComments = true;
     private bool isLoadingSubstack = true;
     private bool isOwner = false;
     private bool hasLiked = false;
+    private bool isLoggedIn = false;
     private int likesCount = 0;
     private int commentsCount = 0;
     private int readTime = 3;
     private string commentSort = "merit";
     private DateTime authorJoinDate = DateTime.Now.AddYears(-1);
+    private string authorBio = null;
+    private int authorTotalPosts = 0;
+    private decimal authorAvgMeritScore = 0;
+    private bool isFollowingAuthor = false;
+    private Guid? currentUserId;
     
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthState;
+        isLoggedIn = authState.User.Identity?.IsAuthenticated ?? false;
+        if (isLoggedIn)
+        {
+            currentUserId = Guid.Parse(authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+        }
+
         await LoadPost();
+        await LoadComments();
     }
     
     private async Task LoadPost()
@@ -214,6 +248,17 @@
                 // Calculate read time
                 var words = post.Content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
                 readTime = Math.Max(1, (int)Math.Ceiling(words / 225.0));
+
+                // Get author details
+                var authorDetails = await UserApi.GetAuthorDetailsAsync(post.AuthorId);
+                if (authorDetails != null)
+                {
+                    authorBio = authorDetails.Bio;
+                    authorTotalPosts = authorDetails.TotalPosts;
+                    authorAvgMeritScore = authorDetails.AverageMeritScore;
+                    authorJoinDate = authorDetails.JoinDate;
+                    isFollowingAuthor = authorDetails.IsFollowing;
+                }
                 
                 await Task.WhenAll(
                     LoadRelatedPosts(),
@@ -406,16 +451,132 @@
     private async Task HandleCommentSortChange(string value)
     {
         commentSort = value;
-        
-        // TODO: Re-load comments with new sort order
-        isLoadingComments = true;
-        await Task.Delay(300);
-        isLoadingComments = false;
+        await LoadComments();
+    }
+
+    private async Task LoadComments()
+    {
+        try
+        {
+            isLoadingComments = true;
+            comments = await CommentApi.GetPostCommentsAsync(PostId, commentSort);
+            commentsCount = comments.Count;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading comments: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingComments = false;
+        }
+    }
+
+    private async Task HandleCommentAdded(CommentDto comment)
+    {
+        try
+        {
+            var newComment = await CommentApi.AddCommentAsync(comment);
+            comments.Insert(0, newComment);
+            commentsCount++;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error adding comment: {ex.Message}");
+        }
+    }
+
+    private async Task HandleCommentDeleted(Guid commentId)
+    {
+        try
+        {
+            await CommentApi.DeleteCommentAsync(commentId);
+            comments.RemoveAll(c => c.Id == commentId);
+            commentsCount--;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error deleting comment: {ex.Message}");
+        }
+    }
+
+    private async Task HandleCommentUpdated(CommentDto comment)
+    {
+        try
+        {
+            var updatedComment = await CommentApi.UpdateCommentAsync(comment);
+            var index = comments.FindIndex(c => c.Id == comment.Id);
+            if (index != -1)
+            {
+                comments[index] = updatedComment;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error updating comment: {ex.Message}");
+        }
+    }
+
+    private async Task HandleCommentLiked(Guid commentId)
+    {
+        try
+        {
+            await CommentApi.LikeCommentAsync(commentId);
+            var comment = comments.FirstOrDefault(c => c.Id == commentId);
+            if (comment != null)
+            {
+                comment.HasLiked = !comment.HasLiked;
+                comment.LikesCount += comment.HasLiked ? 1 : -1;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error liking comment: {ex.Message}");
+        }
+    }
+
+    private async Task HandleFollowAuthor()
+    {
+        try
+        {
+            if (isFollowingAuthor)
+            {
+                await UserApi.UnfollowUserAsync(post.AuthorId);
+            }
+            else
+            {
+                await UserApi.FollowUserAsync(post.AuthorId);
+            }
+            isFollowingAuthor = !isFollowingAuthor;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Implement proper error handling with user notification
+            Console.WriteLine($"Error updating follow status: {ex.Message}");
+        }
     }
     
     private class LikeInfo
     {
         public bool HasLiked { get; set; }
         public int Count { get; set; }
+    }
+
+    private class AuthorDetails
+    {
+        public string Bio { get; set; }
+        public int TotalPosts { get; set; }
+        public decimal AverageMeritScore { get; set; }
+        public DateTime JoinDate { get; set; }
+        public bool IsFollowing { get; set; }
     }
 }

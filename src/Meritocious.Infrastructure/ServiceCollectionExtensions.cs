@@ -41,6 +41,10 @@ namespace Meritocious.Infrastructure
             services.AddScoped<RemixRepository>();
             services.AddScoped<RemixSourceRepository>();
             services.AddScoped<RemixNoteRepository>();
+            services.AddScoped<ContentSimilarityRepository>();
+            services.AddScoped<ContentTopicRepository>();
+            services.AddScoped<UserTopicPreferenceRepository>();
+            services.AddScoped<TrendingContentRepository>();
 
             // Register Core Services
             services.AddScoped<IUserService, UserService>();
@@ -53,7 +57,10 @@ namespace Meritocious.Infrastructure
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IReportingService, ReportingService>();
             services.AddScoped<ISearchService, SearchService>();
+            services.AddHostedService<RecommendationBackgroundService>();
             services.AddScoped<IRemixService, RemixService>();
+            services.AddScoped<ISubstackFeedService, SubstackFeedService>();
+            services.AddHttpClient<ISubstackFeedService, SubstackFeedService>();
 
             // Add domain validators
             services.AddDomainValidators();

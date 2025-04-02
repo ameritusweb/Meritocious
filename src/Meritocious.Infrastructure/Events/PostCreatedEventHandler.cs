@@ -14,13 +14,19 @@ namespace Meritocious.Core.EventHandlers
     public class PostCreatedEventHandler : INotificationHandler<PostCreatedEvent>
     {
         private readonly IMeritScoringService _meritScoringService;
+        private readonly ContentSimilarityRepository _similarityRepository;
+        private readonly IPostRepository _postRepository;
         private readonly ILogger<PostCreatedEventHandler> _logger;
 
         public PostCreatedEventHandler(
             IMeritScoringService meritScoringService,
+            ContentSimilarityRepository similarityRepository,
+            IPostRepository postRepository,
             ILogger<PostCreatedEventHandler> logger)
         {
             _meritScoringService = meritScoringService;
+            _similarityRepository = similarityRepository;
+            _postRepository = postRepository;
             _logger = logger;
         }
 
@@ -31,10 +37,26 @@ namespace Meritocious.Core.EventHandlers
                 // Recalculate user's merit score
                 await _meritScoringService.CalculateUserMeritScoreAsync(notification.AuthorId);
 
+                // Get recently active posts for initial similarity comparison
+                var recentPosts = await _postRepository.Query
+                    .Where(p => p.CreatedAt > DateTime.UtcNow.AddDays(-30))
+                    .Select(p => p.Id)
+                    .ToListAsync(cancellationToken);
+
+                // Add the new post ID
+                recentPosts.Add(notification.PostId);
+
+                // Create similarity records for the new post with recent posts
+                await _similarityRepository.CreateMissingSimilaritiesAsync(recentPosts);
+
+                // Mark these new records for priority update
+                await _similarityRepository.MarkForUpdateAsync(notification.PostId, priority: 2);
+
                 _logger.LogInformation(
-                    "Handled PostCreatedEvent for Post {PostId} by User {UserId}",
+                    "Handled PostCreatedEvent for Post {PostId} by User {UserId}. Created {Count} similarity records.",
                     notification.PostId,
-                    notification.AuthorId);
+                    notification.AuthorId,
+                    recentPosts.Count - 1);
             }
             catch (Exception ex)
             {

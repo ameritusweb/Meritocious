@@ -9,6 +9,6 @@ public class RemixSource : BaseEntity
     public string Relationship { get; set; } // Support, Contrast, Example, Question
     public string Context { get; set; } // Explanation of how this source is used
     public int Order { get; set; } // Order in the synthesis flow
-    public List<string> QuotedExcerpts { get; set; } = new(); // Specific quotes used from this source
+    public List<QuoteLocation> Quotes { get; set; } = new(); // Quotes with location information
     public Dictionary<string, decimal> RelevanceScores { get; set; } = new(); // AI-generated relevance metrics
 }

@@ -278,3 +278,46 @@ a, .btn-link {
 .tag-cloud .ant-tag:hover {
     transform: scale(1.05);
 }
+
+.merit-trend-chart {
+    padding: 1rem;
+    background: var(--background-primary);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.merit-trend-chart .chart-container {
+    height: 400px;
+    margin-bottom: 1rem;
+}
+
+.merit-trend-chart .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+.merit-trend-chart .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.merit-trend-chart .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+.merit-trend-chart .loading {
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+}

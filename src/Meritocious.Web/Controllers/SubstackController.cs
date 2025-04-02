@@ -112,4 +112,42 @@ public class SubstackController : ApiControllerBase
         var result = await Mediator.Send(query);
         return HandleResult(result);
     }
+
+    [HttpPost("import")]
+    public async Task<ActionResult<Guid>> ImportSubstackPost(SubstackPostImportRequest request)
+    {
+        var command = new ImportSubstackPostCommand
+        {
+            PostUrl = request.PostUrl,
+            SubstackName = request.SubstackName,
+            UserId = GetUserId(),
+            ImportAsRemix = request.ImportAsRemix,
+            RemixNotes = request.RemixNotes
+        };
+        var result = await Mediator.Send(command);
+        return HandleResult(result);
+    }
+
+    [HttpGet("validate")]
+    public async Task<ActionResult<bool>> ValidateSubstackUrl([FromQuery] string url)
+    {
+        var substackService = HttpContext.RequestServices.GetRequiredService<ISubstackFeedService>();
+        var isValid = await substackService.ValidateSubstackUrlAsync(url);
+        return Ok(isValid);
+    }
+
+    [HttpGet("posts")]
+    public async Task<ActionResult<SubstackFeedResponse>> GetSubstackFeed([FromQuery] string url)
+    {
+        try
+        {
+            var substackService = HttpContext.RequestServices.GetRequiredService<ISubstackFeedService>();
+            var feed = await substackService.GetPublicationFeedAsync(url);
+            return Ok(feed);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = "Failed to fetch Substack feed" });
+        }
+    }
 }

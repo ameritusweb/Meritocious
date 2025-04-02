@@ -121,6 +121,24 @@ public class UsersController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("{id}/merit-history")]
+    public async Task<ActionResult<List<ReputationSnapshot>>> GetUserMeritHistory(
+        Guid id,
+        [FromQuery] string timeFrame = "monthly",
+        [FromQuery] DateTime? start = null,
+        [FromQuery] DateTime? end = null)
+    {
+        var query = new GetUserMeritHistoryQuery 
+        { 
+            UserId = id,
+            TimeFrame = timeFrame,
+            StartDate = start,
+            EndDate = end
+        };
+        var result = await _mediator.Send(query);
+        return HandleResult(result);
+    }
+
     [HttpPut("me/profile")]
     public async Task<ActionResult<UserProfileDto>> UpdateProfile(UpdateUserProfileCommand command)
     {

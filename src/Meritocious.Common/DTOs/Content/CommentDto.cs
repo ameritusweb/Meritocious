@@ -19,5 +19,7 @@ namespace Meritocious.Common.DTOs.Content
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public List<CommentDto> Replies { get; set; } = new List<CommentDto>();
+        public int LikesCount { get; set; }
+        public bool HasLiked { get; set; }
     }
 }

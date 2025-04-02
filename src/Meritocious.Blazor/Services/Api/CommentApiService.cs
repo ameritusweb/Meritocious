@@ -9,6 +9,9 @@ public interface ICommentApiService
     Task<CommentDto> CreateCommentAsync(CreateCommentRequest request);
     Task<CommentDto> UpdateCommentAsync(Guid commentId, UpdateCommentRequest request);
     Task DeleteCommentAsync(Guid commentId);
+    Task<List<CommentDto>> GetPostCommentsAsync(Guid postId, string sortBy = "merit");
+    Task<CommentDto> AddCommentAsync(CommentDto comment);
+    Task LikeCommentAsync(Guid commentId);
 }
 
 public class CommentApiService : ICommentApiService
@@ -91,6 +94,51 @@ public class CommentApiService : ICommentApiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting comment {CommentId}", commentId);
+            throw;
+        }
+    }
+
+    public async Task<List<CommentDto>> GetPostCommentsAsync(Guid postId, string sortBy = "merit")
+    {
+        try
+        {
+            return await _apiClient.GetAsync<List<CommentDto>>($"api/posts/{postId}/comments?sortBy={sortBy}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting comments for post {PostId}", postId);
+            throw;
+        }
+    }
+
+    public async Task<CommentDto> AddCommentAsync(CommentDto comment)
+    {
+        try
+        {
+            var request = new CreateCommentRequest
+            {
+                PostId = comment.PostId,
+                Content = comment.Content,
+                ParentId = comment.ParentCommentId
+            };
+            return await CreateCommentAsync(request);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding comment to post {PostId}", comment.PostId);
+            throw;
+        }
+    }
+
+    public async Task LikeCommentAsync(Guid commentId)
+    {
+        try
+        {
+            await _apiClient.PostAsync<Unit>($"api/comments/{commentId}/like", null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error liking comment {CommentId}", commentId);
             throw;
         }
     }

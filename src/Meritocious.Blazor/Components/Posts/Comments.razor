@@ -1,0 +1,136 @@
+@namespace Meritocious.Blazor.Components.Posts
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Blazor.Components.Merit
+
+<div class="space-y-4">
+    @if (IsLoggedIn)
+    {
+        <div class="mb-6">
+            <Form Model="@newComment"
+                  OnFinish="HandleAddComment"
+                  Layout="FormLayout.Vertical">
+                <FormItem Label="Add a comment">
+                    <TextArea @bind-Value="@newComment.Content"
+                             MaxLength="1000"
+                             ShowCount="true"
+                             AutoSize="true"
+                             Placeholder="Share your thoughts..." />
+                </FormItem>
+                <FormItem>
+                    <Button Type="primary" HtmlType="submit">
+                        <Icon Type="comment" /> Comment
+                    </Button>
+                </FormItem>
+            </Form>
+        </div>
+    }
+    else
+    {
+        <Alert Message="Please log in to comment"
+               Type="@AlertType.Info"
+               ShowIcon="true"
+               Class="mb-6" />
+    }
+
+    @if (IsLoading)
+    {
+        <div class="space-y-4">
+            @for (int i = 0; i < 3; i++)
+            {
+                <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 2 }" />
+            }
+        </div>
+    }
+    else if (!Comments.Any())
+    {
+        <Empty Description="No comments yet. Be the first to share your thoughts!" />
+    }
+    else
+    {
+        <div class="space-y-6">
+            @foreach (var comment in Comments)
+            {
+                <Comment Comment="@comment"
+                        OnDelete="HandleDeleteComment"
+                        OnEdit="HandleEditComment"
+                        OnLike="HandleLikeComment"
+                        OnReply="HandleReplyComment"
+                        CurrentUserId="@CurrentUserId" />
+            }
+        </div>
+
+        @if (HasMoreComments)
+        {
+            <div class="text-center mt-6">
+                <Button Type="default" OnClick="LoadMoreComments" Loading="@IsLoadingMore">
+                    Load More Comments
+                </Button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid PostId { get; set; }
+    [Parameter] public List<CommentDto> Comments { get; set; } = new();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsLoggedIn { get; set; }
+    [Parameter] public Guid? CurrentUserId { get; set; }
+    [Parameter] public EventCallback<CommentDto> OnCommentAdded { get; set; }
+    [Parameter] public EventCallback<Guid> OnCommentDeleted { get; set; }
+    [Parameter] public EventCallback<CommentDto> OnCommentUpdated { get; set; }
+    [Parameter] public EventCallback<Guid> OnCommentLiked { get; set; }
+
+    private bool IsLoadingMore = false;
+    private bool HasMoreComments = true;
+    private NewCommentModel newComment = new();
+
+    private async Task HandleAddComment()
+    {
+        if (string.IsNullOrWhiteSpace(newComment.Content))
+            return;
+
+        await OnCommentAdded.InvokeAsync(new CommentDto
+        {
+            Content = newComment.Content,
+            PostId = PostId,
+            AuthorId = CurrentUserId ?? Guid.Empty
+        });
+
+        newComment = new();
+    }
+
+    private async Task HandleDeleteComment(Guid commentId)
+    {
+        await OnCommentDeleted.InvokeAsync(commentId);
+    }
+
+    private async Task HandleEditComment(CommentDto comment)
+    {
+        await OnCommentUpdated.InvokeAsync(comment);
+    }
+
+    private async Task HandleLikeComment(Guid commentId)
+    {
+        await OnCommentLiked.InvokeAsync(commentId);
+    }
+
+    private async Task HandleReplyComment(CommentDto parentComment)
+    {
+        // Set reply mode and focus reply input
+        // TODO: Implement reply functionality
+    }
+
+    private async Task LoadMoreComments()
+    {
+        // TODO: Implement pagination
+        IsLoadingMore = true;
+        await Task.Delay(500); // Replace with actual API call
+        IsLoadingMore = false;
+    }
+
+    private class NewCommentModel
+    {
+        public string Content { get; set; }
+    }
+}

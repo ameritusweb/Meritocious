@@ -107,8 +107,51 @@
     
     private string GetPostSummary(string content)
     {
-        // TODO: Implement actual summary generation
-        return content.Length > 200 ? content.Substring(0, 200) + "..." : content;
+        // Strip markdown syntax
+        content = StripMarkdown(content);
+
+        // Split into sentences
+        var sentences = content.Split(new[] { ". ", "! ", "? " }, StringSplitOptions.RemoveEmptyEntries);
+
+        // Take first 2-3 sentences or ~200 chars, whichever comes first
+        var summary = "";
+        var sentenceCount = 0;
+        
+        foreach (var sentence in sentences)
+        {
+            if (summary.Length + sentence.Length > 200 || sentenceCount >= 2) break;
+            summary += sentence + ". ";
+            sentenceCount++;
+        }
+
+        return summary.Trim();
+    }
+
+    private string StripMarkdown(string markdown)
+    {
+        // Remove headers
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, @"#+\s*", "");
+        
+        // Remove bold/italic
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, @"[*_]{1,2}(.*?)[*_]{1,2}", "$1");
+        
+        // Remove links
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, @"\[(.*?)\]\(.*?\)", "$1");
+        
+        // Remove blockquotes
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, @"^\s*>\s*(.*)$", "$1", System.Text.RegularExpressions.RegexOptions.Multiline);
+        
+        // Remove code blocks
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, @"```[\s\S]*?```", "");
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, @"`[^`]*`", "");
+        
+        // Remove HTML
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, "<[^>]*>", "");
+        
+        // Clean up extra whitespace
+        markdown = System.Text.RegularExpressions.Regex.Replace(markdown, @"\s+", " ");
+        
+        return markdown.Trim();
     }
     
     private async Task HandleSortChange(string key)

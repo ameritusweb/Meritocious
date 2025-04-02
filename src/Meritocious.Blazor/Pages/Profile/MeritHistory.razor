@@ -110,10 +110,10 @@
                             
                             <div>
                                 <h3 class="text-lg font-medium mb-4">Merit Score Trend</h3>
-                                <!-- TODO: Implement chart showing merit score over time -->
-                                <Alert Message="Merit score trend chart will be displayed here" 
-                                       Type="@AlertType.Info" 
-                                       ShowIcon="true" />
+                                <MeritScoreTrendChart UserId="@GetUserId()" 
+                                                     TimeFrame="monthly" 
+                                                     StartDate="@DateTime.UtcNow.AddMonths(-6)" 
+                                                     EndDate="@DateTime.UtcNow" />
                             </div>
                         </TabPane>
                         <TabPane Key="badges" Tab="Merit Badges">

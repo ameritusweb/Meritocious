@@ -1,0 +1,165 @@
+@namespace Meritocious.Blazor.Components.Posts
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Blazor.Components.Merit
+
+<div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+    <div class="flex items-start space-x-3">
+        <Avatar Size="default">@Comment.AuthorUsername[0]</Avatar>
+        
+        <div class="flex-grow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="font-medium">@Comment.AuthorUsername</span>
+                    <span class="text-gray-500 text-sm ml-2">@GetTimeAgo(Comment.CreatedAt)</span>
+                </div>
+                <MeritScoreBadge Score="@Comment.MeritScore" ShowDetails="true" Size="small" />
+            </div>
+
+            @if (IsEditing)
+            {
+                <Form Model="@editModel"
+                      OnFinish="SubmitEdit"
+                      Layout="FormLayout.Vertical"
+                      Class="mt-2">
+                    <FormItem>
+                        <TextArea @bind-Value="@editModel.Content"
+                                 MaxLength="1000"
+                                 ShowCount="true"
+                                 AutoSize="true" />
+                    </FormItem>
+                    <FormItem>
+                        <Space>
+                            <SpaceItem>
+                                <Button Type="primary" HtmlType="submit">Save</Button>
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Button OnClick="CancelEdit">Cancel</Button>
+                            </SpaceItem>
+                        </Space>
+                    </FormItem>
+                </Form>
+            }
+            else
+            {
+                <div class="mt-2 text-gray-700 dark:text-gray-300">@Comment.Content</div>
+            }
+
+            <div class="flex items-center space-x-4 mt-3 text-sm">
+                <Button Type="link"
+                        OnClick="@(() => OnLike.InvokeAsync(Comment.Id))"
+                        Class="@(Comment.HasLiked ? "text-blue-500" : "text-gray-500")">
+                    <Space>
+                        <SpaceItem>
+                            <Icon Type="like" Theme="@(Comment.HasLiked ? "fill" : "outline")" />
+                        </SpaceItem>
+                        <SpaceItem>@Comment.LikesCount</SpaceItem>
+                    </Space>
+                </Button>
+
+                <Button Type="link"
+                        OnClick="@(() => OnReply.InvokeAsync(Comment))"
+                        Class="text-gray-500">
+                    <Space>
+                        <SpaceItem><Icon Type="message" /></SpaceItem>
+                        <SpaceItem>Reply</SpaceItem>
+                    </Space>
+                </Button>
+
+                @if (CanModify)
+                {
+                    <Dropdown>
+                        <Overlay>
+                            <Menu>
+                                <MenuItem OnClick="StartEdit">
+                                    <Icon Type="edit" /> Edit
+                                </MenuItem>
+                                <MenuItem OnClick="@(() => OnDelete.InvokeAsync(Comment.Id))"
+                                        Danger>
+                                    <Icon Type="delete" /> Delete
+                                </MenuItem>
+                            </Menu>
+                        </Overlay>
+                        <ChildContent>
+                            <Button Type="link" Class="text-gray-500">
+                                <Icon Type="more" />
+                            </Button>
+                        </ChildContent>
+                    </Dropdown>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public CommentDto Comment { get; set; }
+    [Parameter] public Guid? CurrentUserId { get; set; }
+    [Parameter] public EventCallback<Guid> OnDelete { get; set; }
+    [Parameter] public EventCallback<CommentDto> OnEdit { get; set; }
+    [Parameter] public EventCallback<Guid> OnLike { get; set; }
+    [Parameter] public EventCallback<CommentDto> OnReply { get; set; }
+
+    private bool IsEditing = false;
+    private EditCommentModel editModel = new();
+    private bool CanModify => CurrentUserId == Comment.AuthorId;
+
+    protected override void OnParametersSet()
+    {
+        editModel.Content = Comment.Content;
+    }
+
+    private void StartEdit()
+    {
+        IsEditing = true;
+        editModel.Content = Comment.Content;
+    }
+
+    private void CancelEdit()
+    {
+        IsEditing = false;
+        editModel.Content = Comment.Content;
+    }
+
+    private async Task SubmitEdit()
+    {
+        if (string.IsNullOrWhiteSpace(editModel.Content) || editModel.Content == Comment.Content)
+        {
+            IsEditing = false;
+            return;
+        }
+
+        var updatedComment = new CommentDto
+        {
+            Id = Comment.Id,
+            Content = editModel.Content,
+            PostId = Comment.PostId,
+            AuthorId = Comment.AuthorId
+        };
+
+        await OnEdit.InvokeAsync(updatedComment);
+        IsEditing = false;
+    }
+
+    private string GetTimeAgo(DateTime date)
+    {
+        var timeSpan = DateTime.Now - date;
+        
+        if (timeSpan.TotalDays > 365)
+            return $"{(int)(timeSpan.TotalDays / 365)}y";
+        if (timeSpan.TotalDays > 30)
+            return $"{(int)(timeSpan.TotalDays / 30)}mo";
+        if (timeSpan.TotalDays > 1)
+            return $"{(int)timeSpan.TotalDays}d";
+        if (timeSpan.TotalHours > 1)
+            return $"{(int)timeSpan.TotalHours}h";
+        if (timeSpan.TotalMinutes > 1)
+            return $"{(int)timeSpan.TotalMinutes}m";
+        
+        return "now";
+    }
+
+    private class EditCommentModel
+    {
+        public string Content { get; set; }
+    }
+}
