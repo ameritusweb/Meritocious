@@ -1,4 +1,4 @@
-@namespace Meritocious.Blazor.Components.Posts
+@namespace Meritocious.Blazor.Pages.Posts
 @using Meritocious.Common.DTOs.Content
 
 <Drawer Title="Post Preview"
@@ -25,7 +25,7 @@
             }
         </div>
         
-        <MarkdownPreview Content="@Post.Content" />
+        <MarkdownPreviewComponent Content="@Post.Content" />
     </div>
 </Drawer>
 

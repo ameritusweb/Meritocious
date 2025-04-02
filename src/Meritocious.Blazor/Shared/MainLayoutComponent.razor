@@ -1,17 +1,17 @@
 @inherits LayoutComponentBase
 @using AntDesign
-@using Meritocious.Blazor.Components.Layout
+@using Meritocious.Blazor.Shared
 @inject TabService TabService
 
 <PageTitle>Meritocious</PageTitle>
 
 <Layout Class="min-h-screen">
-    <SideNavigation 
+    <SideNavigationComponent 
         Collapsed="@sidebarCollapsed"
         OnCollapse="@(collapsed => sidebarCollapsed = collapsed)" />
     
     <Layout>
-        <HeaderNav 
+        <HeaderNavComponent 
             Collapsed="@sidebarCollapsed"
             NotificationCount="@notificationCount"
             AvatarUrl="@currentUserAvatar"
@@ -19,11 +19,11 @@
             OnNotificationClick="@HandleNotificationClick"
             OnAvatarClick="@HandleAvatarClick">
             <ExtraContent>
-                <ThemeToggle />
+                <ThemeToggleComponent />
             </ExtraContent>
-        </HeaderNav>
+        </HeaderNavComponent>
         
-        <PageTabs />
+        <PageTabsComponent />
     </Layout>
 </Layout>
 

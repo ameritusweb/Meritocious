@@ -1,14 +1,14 @@
 ﻿@using AntDesign
-@using Meritocious.Blazor.Components.Auth
+@using Meritocious.Blazor.Pages.Auth.Components
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayoutComponent)">
                 <NotAuthorized>
                     @if (!context.User.Identity?.IsAuthenticated ?? true)
                     {
-                        <RedirectToLogin />
+                        <RedirectToLoginComponent />
                     }
                     else
                     {
@@ -27,7 +27,7 @@
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
-            <LayoutView Layout="@typeof(MainLayout)">
+            <LayoutView Layout="@typeof(MainLayoutComponent)">
                 <Result
                     Status="404"
                     Title="404"

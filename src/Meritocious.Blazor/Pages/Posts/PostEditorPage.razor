@@ -1,8 +1,10 @@
-﻿@page "/s/{SubstackSlug}/new"
+@page "/s/{SubstackSlug}/new"
 @page "/s/{SubstackSlug}/edit/{PostId}"
 @inject IPostService PostService
 @inject NavigationManager NavigationManager
 @inject MessageService MessageService
+@inject IJSRuntime JSRuntime
+@inject ISubstackService SubstackService
 
 <PageHeader
     Title="@(isEditing ? "Edit Post" : "Create Post")"
@@ -10,10 +12,10 @@
     OnBack="NavigateBack"
     Extra="@(
         <Space>
-            <Button OnClick="SaveDraft" Disabled="@isSaving">
+            <Button OnClick="HandleSaveDraft" Disabled="@isSaving" Loading="@isSavingDraft">
                 Save Draft
             </Button>
-            <Button Type="primary" OnClick="PublishPost" Loading="@isSaving">
+            <Button Type="primary" OnClick="HandleSubmit" Loading="@isSubmitting" Disabled="!IsValid">
                 @(isEditing ? "Update" : "Publish")
             </Button>
         </Space>
@@ -24,16 +26,26 @@
     <div class="w-2/3">
         <Card>
             <Form Model="@model" Layout="FormLayout.Vertical">
-                <FormItem Label="Title">
+                <FormItem Label="Title" Required>
                     <Input @bind-Value="@model.Title" 
-                           Placeholder="Post title"
+                           Placeholder="Enter a descriptive title"
+                           MaxLength="200" 
+                           ShowCount
                            Size="large" />
                 </FormItem>
 
-                <FormItem Label="Content">
-                    <MarkdownEditor @bind-Value="@model.Content"
-                                  OnPreview="PreviewMarkdown"
-                                  Height="600px" />
+                <FormItem Label="Content" Required>
+                    <div class="editor-container border rounded">
+                        <MarkdownToolbarComponent OnInsertLink="HandleInsertLink" />
+                        
+                        <TextArea @bind-Value="@model.Content"
+                                  Placeholder="Write your post content here. Use the formatting tools above to structure your post."
+                                  OnChange="HandleContentChange"
+                                  Class="border-none"
+                                  Rows="12" />
+                                  
+                        <WordCountComponent Content="@model.Content" @ref="wordCounter" />
+                    </div>
                 </FormItem>
             </Form>
         </Card>
@@ -43,15 +55,11 @@
         <Card Title="Post Settings">
             <Form Layout="FormLayout.Vertical">
                 <FormItem Label="Tags">
-                    <Select Mode="multiple"
-                            @bind-Value="@model.Tags"
-                            Placeholder="Add tags"
-                            AllowClear>
-                        @foreach (var tag in availableTags)
-                        {
-                            <SelectOption Value="@tag">@tag</SelectOption>
-                        }
-                    </Select>
+                    <TagSelectorComponent Tags="@model.Tags"
+                                     AvailableTags="@availableTags"
+                                     Placeholder="Add up to 5 tags"
+                                     MaxTags="5"
+                                     TagsChanged="HandleTagsChanged" />
                 </FormItem>
 
                 <FormItem Label="Visibility">
@@ -94,6 +102,16 @@
                                 View Original Post
                             </a>
                         </div>
+                    </FormItem>
+                }
+
+                @if (ShowVersionHistory)
+                {
+                    <FormItem Label="Version Notes (optional)">
+                        <Input @bind-Value="@versionNotes" 
+                               Placeholder="Briefly describe what changed in this update"
+                               MaxLength="100" 
+                               ShowCount />
                     </FormItem>
                 }
             </Form>
@@ -148,18 +166,43 @@
     </div>
 </div>
 
+<PostPreviewComponent Visible="@isPreviewVisible"
+                   Post="@model"
+                   ReadTime="@(wordCounter?.EstimatedReadTime ?? 1)"
+                   OnClose="ClosePreview" />
+
+<style>
+    .editor-container {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .editor-container .ant-input {
+        border-radius: 0;
+    }
+</style>
+
 @code {
     [Parameter] public string SubstackSlug { get; set; } = "";
     [Parameter] public string? PostId { get; set; }
 
     private bool isEditing => !string.IsNullOrEmpty(PostId);
-    private bool isSaving;
+    private bool isSubmitting;
+    private bool isSavingDraft;
     private bool isAnalyzing;
+    private bool isPreviewVisible;
+    private bool ShowVersionHistory => isEditing;
+    
     private PostDto? originalPost;
     private PostModel model = new();
     private List<string> availableTags = new();
     private PostAnalysis? analysis;
     private System.Timers.Timer? analysisDebounceTimer;
+    private WordCountComponent wordCounter;
+    private string versionNotes = string.Empty;
+    
+    private bool IsValid => !string.IsNullOrWhiteSpace(model.Title) && 
+                        !string.IsNullOrWhiteSpace(model.Content);
 
     protected override async Task OnInitializedAsync()
     {
@@ -208,43 +251,47 @@
         }
     }
 
-    private async Task AnalyzeContent()
+    private void HandleContentChange(string value)
     {
-        if (string.IsNullOrWhiteSpace(model.Content))
-            return;
-
-        try
+        model.Content = value;
+        analysisDebounceTimer?.Stop();
+        analysisDebounceTimer?.Start();
+    }
+    
+    private async Task HandleInsertLink(MarkdownToolbarComponent.LinkInfo linkInfo)
+    {
+        if (!string.IsNullOrWhiteSpace(linkInfo.Url))
         {
-            isAnalyzing = true;
-            analysis = await PostService.AnalyzePostAsync(new AnalyzePostRequest
-            {
-                Title = model.Title,
-                Content = model.Content,
-                Tags = model.Tags
-            });
-        }
-        finally
-        {
-            isAnalyzing = false;
-            StateHasChanged();
+            var markdown = $"[{linkInfo.Text}]({linkInfo.Url})";
+            await JSRuntime.InvokeVoidAsync("insertTextAtSelection", markdown);
         }
     }
-
-    private async Task SaveDraft()
+    
+    private void HandleTagsChanged(List<string> tags)
     {
-        await SavePost(isDraft: true);
+        model.Tags = tags;
     }
 
-    private async Task PublishPost()
+    private async Task HandleSubmit()
     {
         await SavePost(isDraft: false);
     }
 
+    private async Task HandleSaveDraft()
+    {
+        await SavePost(isDraft: true);
+    }
+
     private async Task SavePost(bool isDraft)
     {
+        if (!IsValid) return;
+        
         try
         {
-            isSaving = true;
+            if (isDraft)
+                isSavingDraft = true;
+            else
+                isSubmitting = true;
 
             if (isEditing)
             {
@@ -254,7 +301,8 @@
                     Content = model.Content,
                     Tags = model.Tags,
                     Visibility = model.Visibility,
-                    IsDraft = isDraft
+                    IsDraft = isDraft,
+                    VersionNotes = versionNotes
                 });
             }
             else
@@ -284,7 +332,30 @@
         }
         finally
         {
-            isSaving = false;
+            isSavingDraft = false;
+            isSubmitting = false;
+        }
+    }
+
+    private async Task AnalyzeContent()
+    {
+        if (string.IsNullOrWhiteSpace(model.Content))
+            return;
+
+        try
+        {
+            isAnalyzing = true;
+            analysis = await PostService.AnalyzePostAsync(new AnalyzePostRequest
+            {
+                Title = model.Title,
+                Content = model.Content,
+                Tags = model.Tags
+            });
+        }
+        finally
+        {
+            isAnalyzing = false;
+            StateHasChanged();
         }
     }
 

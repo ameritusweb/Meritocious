@@ -1,5 +1,4 @@
 @page "/posts/{PostId:guid}"
-@using Meritocious.Blazor.Components.Posts
 @using Meritocious.Common.DTOs.Content
 @using Meritocious.Common.DTOs.Merit
 @inject NavigationManager NavigationManager
@@ -32,15 +31,15 @@
         <Row Gutter="24">
             <Col Span="18">
                 <Card>
-                    <PostView Post="@post"
-                              MeritComponents="@meritComponents"
-                              IsOwner="@isOwner"
-                              HasLiked="@hasLiked"
-                              LikesCount="@likesCount"
-                              CommentsCount="@commentsCount"
-                              ReadTime="@readTime"
-                              OnLikeChanged="HandleLikeChanged"
-                              OnDeletePost="HandleDeletePost" />
+                    <PostViewComponent Post="@post"
+                                  MeritComponents="@meritComponents"
+                                  IsOwner="@isOwner"
+                                  HasLiked="@hasLiked"
+                                  LikesCount="@likesCount"
+                                  CommentsCount="@commentsCount"
+                                  ReadTime="@readTime"
+                                  OnLikeChanged="HandleLikeChanged"
+                                  OnDeletePost="HandleDeletePost" />
                 </Card>
                 
                 <div id="comments" class="mt-6">
@@ -68,15 +67,18 @@
                         }
                         else
                         {
-                            <Comments PostId="@PostId"
-                                     Comments="@comments"
-                                     IsLoading="@isLoadingComments"
-                                     IsLoggedIn="@isLoggedIn"
-                                     CurrentUserId="@currentUserId"
-                                     OnCommentAdded="HandleCommentAdded"
-                                     OnCommentDeleted="HandleCommentDeleted"
-                                     OnCommentUpdated="HandleCommentUpdated"
-                                     OnCommentLiked="HandleCommentLiked" />
+                            <CommentsComponent PostId="@PostId"
+                                         Comments="@comments"
+                                         IsLoading="@isLoadingComments"
+                                         IsLoggedIn="@isLoggedIn"
+                                         CurrentUserId="@currentUserId"
+                                         OnCommentAdded="HandleCommentAdded"
+                                         OnCommentDeleted="HandleCommentDeleted"
+                                         OnCommentUpdated="HandleCommentUpdated"
+                                         OnCommentLiked="HandleCommentLiked"
+                                         TotalComments="@commentsCount"
+                                         PageSize="@PageSize"
+                                         OnLoadMore="@HandleLoadMore" />
                         }
                     </Card>
                 </div>
@@ -125,9 +127,9 @@
                             <ListItem>
                                 <div>
                                     <div class="text-sm font-medium">
-                                        <OpenInTab Title="@context.Title" Url="@($"/posts/{context.Id}")">
+                                        <OpenInTabComponent Title="@context.Title" Url="@($"/posts/{context.Id}")">
                                             <a class="hover:text-blue-500">@context.Title</a>
-                                        </OpenInTab>
+                                        </OpenInTabComponent>
                                     </div>
                                     <div class="text-xs text-gray-500">
                                         by @context.AuthorUsername • @context.CreatedAt.ToString("MMM d, yyyy")
@@ -186,6 +188,7 @@
     private SubstackDto substack;
     private List<PostDto> relatedPosts = new();
     private List<CommentDto> comments = new();
+    private CommentListResponse commentResponse;
     
     private bool isLoading = true;
     private bool isLoadingComments = true;
@@ -195,6 +198,8 @@
     private bool isLoggedIn = false;
     private int likesCount = 0;
     private int commentsCount = 0;
+    private int currentPage = 1;
+    private const int PageSize = 20;
     private int readTime = 3;
     private string commentSort = "merit";
     private DateTime authorJoinDate = DateTime.Now.AddYears(-1);
@@ -454,13 +459,25 @@
         await LoadComments();
     }
 
-    private async Task LoadComments()
+    private async Task LoadComments(bool append = false)
     {
         try
         {
-            isLoadingComments = true;
-            comments = await CommentApi.GetPostCommentsAsync(PostId, commentSort);
-            commentsCount = comments.Count;
+            if (!append)
+            {
+                isLoadingComments = true;
+                currentPage = 1;
+                comments.Clear();
+            }
+
+            var response = await CommentApi.GetPostCommentsAsync(PostId, currentPage, PageSize, commentSort);
+            commentResponse = response;
+            commentsCount = response.TotalCount;
+
+            if (append)
+                comments.AddRange(response.Comments);
+            else
+                comments = response.Comments;
         }
         catch (Exception ex)
         {
@@ -563,6 +580,12 @@
             // TODO: Implement proper error handling with user notification
             Console.WriteLine($"Error updating follow status: {ex.Message}");
         }
+    }
+
+    private async Task HandleLoadMore((int page, int pageSize) args)
+    {
+        currentPage = args.page;
+        await LoadComments(append: true);
     }
     
     private class LikeInfo

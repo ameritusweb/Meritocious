@@ -6,6 +6,15 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Common.DTOs.Content
 {
+    public class CommentListResponse
+    {
+        public List<CommentDto> Comments { get; set; } = new();
+        public int TotalCount { get; set; }
+        public int CurrentPage { get; set; }
+        public int TotalPages { get; set; }
+        public bool HasNextPage => CurrentPage < TotalPages;
+    }
+
     public class CommentDto
     {
         public Guid Id { get; set; }

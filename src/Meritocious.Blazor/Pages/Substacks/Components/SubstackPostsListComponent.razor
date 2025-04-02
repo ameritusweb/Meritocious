@@ -1,6 +1,6 @@
-@namespace Meritocious.Blazor.Components.Substacks
-@using Meritocious.Blazor.Components.Merit
-@using Meritocious.Blazor.Components.Layout
+@namespace Meritocious.Blazor.Pages.Substacks.Components
+@using Meritocious.Blazor.Pages.Merit.Components
+@using Meritocious.Blazor.Shared
 @using Meritocious.Common.DTOs.Content
 @inject NavigationManager NavigationManager
 
@@ -43,16 +43,16 @@
         <List DataSource="@Posts" ItemLayout="ListItemLayout.Vertical" Class="mt-4">
             <ListItem>
                 <span class="ant-list-item-meta-title">
-                    <OpenInTab Title="@context.Title" Url="@($"/posts/{context.Id}")">
+                    <OpenInTabComponent Title="@context.Title" Url="@($"/posts/{context.Id}")">
                         <a class="text-lg font-medium hover:text-blue-500">@context.Title</a>
-                    </OpenInTab>
+                    </OpenInTabComponent>
                 </span>
                 <div class="flex items-center space-x-2 mb-2 text-sm">
                     <Avatar Size="small">@context.AuthorUsername[0]</Avatar>
                     <span class="text-gray-500">@context.AuthorUsername</span>
                     <span class="text-gray-400">posted @GetTimeAgo(context.CreatedAt)</span>
                     <div class="flex-grow"></div>
-                    <MeritScoreBadge Score="@context.MeritScore" ShowDetails="true" Size="small" />
+                    <MeritScoreBadgeComponent Score="@context.MeritScore" ShowDetails="true" Size="small" />
                 </div>
                 <div class="text-gray-700 mb-2 line-clamp-2">
                     @GetPostSummary(context.Content)

@@ -73,3 +73,11 @@ window.insertTextAtSelection = function (text) {
         activeElement.focus();
     }
 };
+
+// Focus on an element by ID
+window.focusElement = function (elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.focus();
+    }
+};

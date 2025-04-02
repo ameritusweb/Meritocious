@@ -98,11 +98,12 @@ public class CommentApiService : ICommentApiService
         }
     }
 
-    public async Task<List<CommentDto>> GetPostCommentsAsync(Guid postId, string sortBy = "merit")
+    public async Task<CommentListResponse> GetPostCommentsAsync(Guid postId, int page = 1, int pageSize = 20, string sortBy = "merit")
     {
         try
         {
-            return await _apiClient.GetAsync<List<CommentDto>>($"api/posts/{postId}/comments?sortBy={sortBy}");
+            return await _apiClient.GetAsync<CommentListResponse>(
+                $"api/posts/{postId}/comments?page={page}&pageSize={pageSize}&sortBy={sortBy}");
         }
         catch (Exception ex)
         {

@@ -1,0 +1,22 @@
+@page "/analytics"
+@using Meritocious.Blazor.Pages.Analytics.Components
+
+<PageTitle>Analytics - Meritocious</PageTitle>
+
+<div class="container mx-auto px-4 py-6">
+    <Card>
+        <Title>Contribution Analytics</Title>
+        <Body>
+            <ContributionFunnelComponent />
+        </Body>
+    </Card>
+
+    <div class="mt-6">
+        <Card>
+            <Title>Topic Evolution</Title>
+            <Body>
+                <TopicEvolutionTreemapComponent />
+            </Body>
+        </Card>
+    </div>
+</div>

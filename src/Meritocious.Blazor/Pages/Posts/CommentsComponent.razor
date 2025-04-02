@@ -1,0 +1,241 @@
+@namespace Meritocious.Blazor.Pages.Posts
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Blazor.Pages.Merit.Components
+@inject IJSRuntime JS
+
+<div class="space-y-4">
+    @if (IsLoggedIn)
+    {
+        <div class="mb-6">
+            <Form Model="@newComment"
+                  OnFinish="HandleAddComment"
+                  Layout="FormLayout.Vertical">
+                <FormItem Label="Add a comment">
+                    <TextArea @bind-Value="@newComment.Content"
+                             MaxLength="1000"
+                             ShowCount="true"
+                             AutoSize="true"
+                             Placeholder="Share your thoughts..." />
+                </FormItem>
+                <FormItem>
+                    <Button Type="primary" HtmlType="submit">
+                        <Icon Type="comment" /> Comment
+                    </Button>
+                </FormItem>
+            </Form>
+        </div>
+    }
+    else
+    {
+        <Alert Message="Please log in to comment"
+               Type="@AlertType.Info"
+               ShowIcon="true"
+               Class="mb-6" />
+    }
+
+    @if (IsLoading)
+    {
+        <div class="space-y-4">
+            @for (int i = 0; i < 3; i++)
+            {
+                <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 2 }" />
+            }
+        </div>
+    }
+    else if (!Comments.Any())
+    {
+        <Empty Description="No comments yet. Be the first to share your thoughts!" />
+    }
+    else
+    {
+        <div class="space-y-6">
+            @foreach (var comment in Comments)
+            {
+                <div class="comment-thread">
+                    <Comment Comment="@comment"
+                            OnDelete="HandleDeleteComment"
+                            OnEdit="HandleEditComment"
+                            OnLike="HandleLikeComment"
+                            OnReply="HandleReplyComment"
+                            CurrentUserId="@CurrentUserId" />
+
+                    @if (showReplyForms.ContainsKey(comment.Id) && showReplyForms[comment.Id])
+                    {
+                        <div class="ml-8 mt-2">
+                            <div class="flex items-center text-sm text-gray-500 mb-2">
+                                <Icon Type="undo" Class="mr-1" /> Replying to @comment.AuthorUsername
+                                <Button Type="link" OnClick="@(() => CancelReply(comment.Id))" Class="ml-2">
+                                    Cancel
+                                </Button>
+                            </div>
+                            <Form Model="@(new NewCommentModel())"
+                                  OnFinish="@(async () => await HandleAddReply(comment))"
+                                  Layout="FormLayout.Vertical">
+                                <FormItem>
+                                    <TextArea @bind-Value="@newComment.Content"
+                                             MaxLength="1000"
+                                             ShowCount="true"
+                                             AutoSize="true"
+                                             Id="@($"reply-input-{comment.Id}")"
+                                             Placeholder="Write your reply..." />
+                                </FormItem>
+                                <FormItem>
+                                    <Button Type="primary" HtmlType="submit">
+                                        Reply
+                                    </Button>
+                                </FormItem>
+                            </Form>
+                        </div>
+                    }
+
+                    @if (comment.Replies?.Any() == true)
+                    {
+                        <div class="ml-8 mt-2 space-y-4">
+                            @foreach (var reply in comment.Replies)
+                            {
+                                <Comment Comment="@reply"
+                                        OnDelete="HandleDeleteComment"
+                                        OnEdit="HandleEditComment"
+                                        OnLike="HandleLikeComment"
+                                        OnReply="HandleReplyComment"
+                                        CurrentUserId="@CurrentUserId" />
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (HasMoreComments)
+        {
+            <div class="text-center mt-6">
+                <Button Type="default" 
+                        OnClick="LoadMoreComments" 
+                        Loading="@IsLoadingMore"
+                        Block>
+                    @if (IsLoadingMore)
+                    {
+                        <span>
+                            <Icon Type="loading" Theme="outline" Class="mr-2" Spin />
+                            Loading more comments...
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            <Icon Type="plus" Theme="outline" Class="mr-2" />
+                            Load More Comments (@(TotalComments - Comments.Count) remaining)
+                        </span>
+                    }
+                </Button>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid PostId { get; set; }
+    [Parameter] public List<CommentDto> Comments { get; set; } = new();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsLoggedIn { get; set; }
+    [Parameter] public Guid? CurrentUserId { get; set; }
+    [Parameter] public EventCallback<CommentDto> OnCommentAdded { get; set; }
+    [Parameter] public EventCallback<Guid> OnCommentDeleted { get; set; }
+    [Parameter] public EventCallback<CommentDto> OnCommentUpdated { get; set; }
+    [Parameter] public EventCallback<Guid> OnCommentLiked { get; set; }
+    [Parameter] public EventCallback<(int page, int pageSize)> OnLoadMore { get; set; }
+    [Parameter] public int TotalComments { get; set; }
+    [Parameter] public int PageSize { get; set; } = 20;
+
+    private bool IsLoadingMore = false;
+    private bool HasMoreComments => Comments.Count < TotalComments;
+    private int CurrentPage = 1;
+    private NewCommentModel newComment = new();
+
+    private async Task HandleAddComment()
+    {
+        if (string.IsNullOrWhiteSpace(newComment.Content))
+            return;
+
+        await OnCommentAdded.InvokeAsync(new CommentDto
+        {
+            Content = newComment.Content,
+            PostId = PostId,
+            AuthorId = CurrentUserId ?? Guid.Empty
+        });
+
+        newComment = new();
+    }
+
+    private async Task HandleDeleteComment(Guid commentId)
+    {
+        await OnCommentDeleted.InvokeAsync(commentId);
+    }
+
+    private async Task HandleEditComment(CommentDto comment)
+    {
+        await OnCommentUpdated.InvokeAsync(comment);
+    }
+
+    private async Task HandleLikeComment(Guid commentId)
+    {
+        await OnCommentLiked.InvokeAsync(commentId);
+    }
+
+    private CommentDto replyingTo;
+    private Dictionary<Guid, bool> showReplyForms = new();
+
+    private async Task HandleReplyComment(CommentDto parentComment)
+    {
+        replyingTo = parentComment;
+        showReplyForms[parentComment.Id] = true;
+        await Task.Delay(100); // Allow UI to update
+        await JS.InvokeVoidAsync("focusElement", $"reply-input-{parentComment.Id}");
+    }
+
+    private async Task LoadMoreComments()
+    {
+        if (IsLoadingMore || !HasMoreComments) return;
+
+        try
+        {
+            IsLoadingMore = true;
+            CurrentPage++;
+            await OnLoadMore.InvokeAsync((CurrentPage, PageSize));
+        }
+        finally
+        {
+            IsLoadingMore = false;
+        }
+    }
+
+    private void CancelReply(Guid commentId)
+    {
+        showReplyForms[commentId] = false;
+        replyingTo = null;
+        newComment = new NewCommentModel();
+    }
+
+    private async Task HandleAddReply(CommentDto parentComment)
+    {
+        if (string.IsNullOrWhiteSpace(newComment.Content))
+            return;
+
+        await OnCommentAdded.InvokeAsync(new CommentDto
+        {
+            Content = newComment.Content,
+            PostId = PostId,
+            AuthorId = CurrentUserId ?? Guid.Empty,
+            ParentCommentId = parentComment.Id
+        });
+
+        newComment = new NewCommentModel();
+        showReplyForms[parentComment.Id] = false;
+        replyingTo = null;
+    }
+
+    private class NewCommentModel
+    {
+        public string Content { get; set; }
+    }
+}
