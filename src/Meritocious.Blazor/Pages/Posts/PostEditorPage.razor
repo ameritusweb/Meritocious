@@ -12,16 +12,7 @@
     Title="@(isEditing ? "Edit Post" : "Create Post")"
     Subtitle="@SubstackSlug"
     OnBack="NavigateBack"
-    Extra="@(
-        <Space>
-            <Button OnClick="HandleSaveDraft" Loading="@FormStatus.IsLoading">
-                Save Draft
-            </Button>
-            <Button Type="ButtonType.Primary" OnClick="HandleSubmit" Loading="@FormStatus.IsLoading" Disabled="!IsValid">
-                @(isEditing ? "Update" : "Publish")
-            </Button>
-        </Space>
-    )">
+    Extra="headerExtra">
 </PageHeader>
 
 <div class="flex space-x-6">
@@ -202,6 +193,15 @@
 @code {
     [Parameter] public string SubstackSlug { get; set; } = "";
     [Parameter] public string? PostId { get; set; }
+
+    private RenderFragment headerExtra = @<Space>
+            <Button OnClick="HandleSaveDraft" Loading="@FormStatus.IsLoading">
+                Save Draft
+            </Button>
+            <Button Type="ButtonType.Primary" OnClick="HandleSubmit" Loading="@FormStatus.IsLoading" Disabled="!IsValid">
+                @(isEditing ? "Update" : "Publish")
+            </Button>
+        </Space>;
 
     private bool isEditing => !string.IsNullOrEmpty(PostId);
     private bool isSubmitting;
