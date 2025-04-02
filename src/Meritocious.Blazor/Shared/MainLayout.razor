@@ -17,7 +17,11 @@
             AvatarUrl="@currentUserAvatar"
             OnToggleClick="@(() => sidebarCollapsed = !sidebarCollapsed)"
             OnNotificationClick="@HandleNotificationClick"
-            OnAvatarClick="@HandleAvatarClick" />
+            OnAvatarClick="@HandleAvatarClick">
+            <ExtraContent>
+                <ThemeToggle />
+            </ExtraContent>
+        </HeaderNav>
         
         <PageTabs />
     </Layout>

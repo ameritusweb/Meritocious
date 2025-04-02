@@ -1,0 +1,37 @@
+@using Meritocious.Blazor.Services.Theme
+@inject IThemeService ThemeService
+
+<Button Type="@ButtonType.Link"
+        OnClick="ToggleTheme"
+        Class="theme-toggle">
+    <Icon Type="@(ThemeService.IsDarkMode ? "sun" : "moon")" Theme="outline" />
+</Button>
+
+<style>
+    .theme-toggle {
+        padding: 4px 8px;
+        height: auto;
+        color: var(--text-primary);
+    }
+    
+    .theme-toggle:hover {
+        color: var(--accent-color);
+    }
+    
+    .theme-toggle .anticon {
+        font-size: 20px;
+    }
+</style>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.InitializeAsync();
+    }
+
+    private async Task ToggleTheme()
+    {
+        await ThemeService.ToggleThemeAsync();
+        StateHasChanged();
+    }
+}

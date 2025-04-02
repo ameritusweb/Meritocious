@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Meritocious.Blazor.Services.Theme;
 using Microsoft.AspNetCore.Components.Authorization;
 using Meritocious.Blazor.Data;
 using Meritocious.Blazor.Services.Auth;
@@ -62,6 +63,7 @@ builder.Services.AddScoped<IRemixApiService, RemixApiService>();
 // Register Application Services
 builder.Services.AddScoped<TabService>();
 builder.Services.AddScoped<DragDropService>();
+builder.Services.AddScoped<IThemeService, ThemeService>();
 
 var app = builder.Build();
 

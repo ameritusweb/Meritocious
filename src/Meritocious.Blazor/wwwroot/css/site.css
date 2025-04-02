@@ -1,7 +1,35 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
+:root {
+    /* Light theme colors */
+    --background-primary: #ffffff;
+    --background-secondary: #f5f5f5;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --border-color: #e5e7eb;
+    --accent-color: #1890ff;
+    --error-color: #ff4d4f;
+    --success-color: #52c41a;
+    --code-background: #f6f8fa;
+}
+
+:root[data-theme="dark"] {
+    /* Dark theme colors */
+    --background-primary: #1f2937;
+    --background-secondary: #111827;
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+    --accent-color: #2563eb;
+    --error-color: #ef4444;
+    --success-color: #10b981;
+    --code-background: #282c34;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--background-primary);
+    color: var(--text-primary);
 }
 
 h1:focus {
@@ -9,17 +37,17 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: var(--accent-color);
 }
 
 .btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    color: var(--text-primary);
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+  box-shadow: 0 0 0 0.1rem var(--background-primary), 0 0 0 0.25rem var(--accent-color);
 }
 
 .content {
