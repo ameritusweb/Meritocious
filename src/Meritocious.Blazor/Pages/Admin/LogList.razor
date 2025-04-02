@@ -1,0 +1,218 @@
+@page "/admin/logs"
+@attribute [Authorize(Roles = "Administrator")]
+@using Microsoft.AspNetCore.Authorization
+@using Meritocious.Common.DTOs.Auth
+@inject IUserApiService UserService
+@inject MessageService MessageService
+
+<PageTitle>System Logs - Meritocious Admin</PageTitle>
+
+<DashboardLayout>
+    <div class="logs-page">
+        <Card>
+            <div class="toolbar" style="margin-bottom: 16px;">
+                <Space>
+                    <SpaceItem>
+                        <RangePicker @bind-Value="dateRange" OnChange="HandleDateRangeChange" />
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Select DefaultValue="@selectedLevel"
+                                Style="width: 120px;"
+                                OnSelectedItemChanged="HandleLevelChange">
+                            <SelectOptions>
+                                <SelectOption Value="@("all")" Label="All Levels" />
+                                <SelectOption Value="@("error")" Label="Error" />
+                                <SelectOption Value="@("warning")" Label="Warning" />
+                                <SelectOption Value="@("info")" Label="Info" />
+                                <SelectOption Value="@("debug")" Label="Debug" />
+                            </SelectOptions>
+                        </Select>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Input @bind-Value="searchText"
+                               Placeholder="Search logs..."
+                               OnPressEnter="HandleSearch"
+                               Style="width: 200px;" />
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button Type="primary" OnClick="HandleSearch">
+                            <Icon Type="search" /> Search
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button OnClick="HandleExport">
+                            <Icon Type="download" /> Export
+                        </Button>
+                    </SpaceItem>
+                </Space>
+            </div>
+
+            <Table TItem="LogEntryDto"
+                   DataSource="@logs"
+                   Loading="@isLoading"
+                   Total="@totalLogs"
+                   PageIndex="@currentPage"
+                   PageSize="@pageSize"
+                   OnChange="HandleTableChange">
+                <PropertyColumn Property="c => c.Level" Title="Level">
+                    <CellRender Context="level">
+                        <Tag Color="@GetLevelColor(level)">
+                            @level
+                        </Tag>
+                    </CellRender>
+                </PropertyColumn>
+                <PropertyColumn Property="c => c.Message" Title="Message" />
+                <PropertyColumn Property="c => c.Source" Title="Source" />
+                <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM yyyy HH:mm:ss" />
+                <ActionColumn Title="Action">
+                    <Button Type="link" OnClick="() => ShowLogDetails(context)">
+                        <Icon Type="eye" /> Details
+                    </Button>
+                </ActionColumn>
+            </Table>
+        </Card>
+
+        <Modal Title="Log Details"
+               Visible="@isDetailsVisible"
+               OnCancel="() => isDetailsVisible = false"
+               Footer="null"
+               Width="800">
+            @if (selectedLog != null)
+            {
+                <Descriptions>
+                    <DescriptionItem Title="Timestamp">
+                        @selectedLog.Timestamp.ToString("dd MMM yyyy HH:mm:ss.fff")
+                    </DescriptionItem>
+                    <DescriptionItem Title="Level">
+                        <Tag Color="@GetLevelColor(selectedLog.Level)">@selectedLog.Level</Tag>
+                    </DescriptionItem>
+                    <DescriptionItem Title="Source">
+                        @selectedLog.Source
+                    </DescriptionItem>
+                    <DescriptionItem Title="Message">
+                        @selectedLog.Message
+                    </DescriptionItem>
+                    @if (!string.IsNullOrEmpty(selectedLog.Exception))
+                    {
+                        <DescriptionItem Title="Exception">
+                            <pre style="white-space: pre-wrap;">@selectedLog.Exception</pre>
+                        </DescriptionItem>
+                    }
+                    @if (selectedLog.AdditionalData != null)
+                    {
+                        <DescriptionItem Title="Additional Data">
+                            <pre style="white-space: pre-wrap;">@System.Text.Json.JsonSerializer.Serialize(selectedLog.AdditionalData, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                        </DescriptionItem>
+                    }
+                </Descriptions>
+            }
+        </Modal>
+    </div>
+</DashboardLayout>
+
+@code {
+    private bool isLoading = true;
+    private List<LogEntryDto> logs = new();
+    private int totalLogs;
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private string selectedLevel = "all";
+    private string searchText = "";
+    private DateRange? dateRange;
+    private bool isDetailsVisible;
+    private LogEntryDto? selectedLog;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLogsAsync();
+    }
+
+    private async Task LoadLogsAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            var result = await UserService.GetSystemLogsAsync(
+                new LogQueryParams
+                {
+                    Page = currentPage,
+                    PageSize = pageSize,
+                    Level = selectedLevel == "all" ? null : selectedLevel,
+                    SearchText = string.IsNullOrWhiteSpace(searchText) ? null : searchText,
+                    StartDate = dateRange?.Start,
+                    EndDate = dateRange?.End
+                });
+
+            logs = result.Items;
+            totalLogs = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load logs");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleTableChange(QueryModel<LogEntryDto> query)
+    {
+        currentPage = query.PageIndex;
+        await LoadLogsAsync();
+    }
+
+    private async Task HandleSearch()
+    {
+        currentPage = 1;
+        await LoadLogsAsync();
+    }
+
+    private async Task HandleLevelChange(string level)
+    {
+        selectedLevel = level;
+        currentPage = 1;
+        await LoadLogsAsync();
+    }
+
+    private async Task HandleDateRangeChange(DateRange? range)
+    {
+        dateRange = range;
+        currentPage = 1;
+        await LoadLogsAsync();
+    }
+
+    private async Task HandleExport()
+    {
+        try
+        {
+            var exportUrl = await UserService.GetLogExportUrlAsync(
+                selectedLevel == "all" ? null : selectedLevel,
+                dateRange?.Start,
+                dateRange?.End,
+                searchText);
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", exportUrl);
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to export logs");
+        }
+    }
+
+    private void ShowLogDetails(LogEntryDto log)
+    {
+        selectedLog = log;
+        isDetailsVisible = true;
+    }
+
+    private string GetLevelColor(string level) => level.ToLower() switch
+    {
+        "error" => "red",
+        "warning" => "orange",
+        "info" => "blue",
+        "debug" => "green",
+        _ => "default"
+    };
+}

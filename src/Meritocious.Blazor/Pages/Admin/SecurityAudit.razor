@@ -1,0 +1,484 @@
+@page "/admin/security"
+@attribute [Authorize(Roles = "Administrator")]
+@using Microsoft.AspNetCore.Authorization
+@using Meritocious.Common.DTOs.Auth
+@inject IUserApiService UserService
+@inject MessageService MessageService
+
+<PageTitle>Security Audit - Meritocious Admin</PageTitle>
+
+<DashboardLayout>
+    <div class="security-audit">
+        <Card>
+            <Row Gutter="24">
+                <Col Span="6">
+                    <Statistic 
+                        Title="Failed Logins (24h)" 
+                        Value="@overview.FailedLoginAttempts24h"
+                        Loading="@isLoading"
+                        Prefix="@($"<Icon Type='exclamation-circle' />")"
+                        ValueStyle="@(overview.FailedLoginAttempts24h > 100 ? "color: #cf1322" : null)" />
+                </Col>
+                <Col Span="6">
+                    <Statistic 
+                        Title="Suspicious IPs (24h)" 
+                        Value="@overview.UniqueSuspiciousIps24h"
+                        Loading="@isLoading"
+                        Prefix="@($"<Icon Type='warning' />")"
+                        ValueStyle="@(overview.UniqueSuspiciousIps24h > 50 ? "color: #cf1322" : null)" />
+                </Col>
+                <Col Span="6">
+                    <Statistic 
+                        Title="Security Incidents (24h)" 
+                        Value="@overview.SecurityIncidents24h"
+                        Loading="@isLoading"
+                        Prefix="@($"<Icon Type='safety' />")"
+                        ValueStyle="@(overview.SecurityIncidents24h > 10 ? "color: #cf1322" : null)" />
+                </Col>
+                <Col Span="6">
+                    <Statistic 
+                        Title="API Requests (24h)" 
+                        Value="@overview.TotalApiRequests24h"
+                        Loading="@isLoading"
+                        Prefix="@($"<Icon Type='api' />")" />
+                </Col>
+            </Row>
+        </Card>
+
+        <Tabs DefaultActiveKey="1" Style="margin-top: 24px;">
+            <TabPane Key="1" Tab="Login Attempts">
+                <Card>
+                    <div class="toolbar" style="margin-bottom: 16px;">
+                        <Space>
+                            <SpaceItem>
+                                <RangePicker @bind-Value="dateRange" OnChange="HandleDateRangeChange" />
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Input @bind-Value="searchText"
+                                       Placeholder="Search by username or IP..."
+                                       OnPressEnter="HandleSearch"
+                                       Style="width: 200px;" />
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Button Type="primary" OnClick="HandleSearch">
+                                    <Icon Type="search" /> Search
+                                </Button>
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Radio.Group @bind-Value="loginFilter">
+                                    <Radio Value="@("all")">All</Radio>
+                                    <Radio Value="@("failed")">Failed Only</Radio>
+                                    <Radio Value="@("suspicious")">Suspicious</Radio>
+                                </Radio.Group>
+                            </SpaceItem>
+                        </Space>
+                    </div>
+
+                    <Table TItem="LoginAttemptDto"
+                           DataSource="@loginAttempts"
+                           Loading="@isLoading"
+                           Total="@totalLoginAttempts"
+                           PageIndex="@currentPage"
+                           PageSize="@pageSize"
+                           OnChange="HandleTableChange">
+                        <PropertyColumn Property="c => c.Username" Title="Username" />
+                        <PropertyColumn Property="c => c.Success" Title="Status">
+                            <CellRender Context="success">
+                                <Tag Color="@(success ? "success" : "error")">
+                                    @(success ? "Success" : "Failed")
+                                </Tag>
+                            </CellRender>
+                        </PropertyColumn>
+                        <PropertyColumn Property="c => c.IpAddress" Title="IP Address" />
+                        <PropertyColumn Property="c => c.Location" Title="Location" />
+                        <PropertyColumn Property="c => c.Device" Title="Device" />
+                        <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM yyyy HH:mm:ss" />
+                    </Table>
+                </Card>
+            </TabPane>
+
+            <TabPane Key="2" Tab="Security Events">
+                <Card>
+                    <div class="toolbar" style="margin-bottom: 16px;">
+                        <Space>
+                            <SpaceItem>
+                                <RangePicker @bind-Value="dateRange" OnChange="HandleDateRangeChange" />
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Select DefaultValue="@selectedSeverity"
+                                        Style="width: 120px;"
+                                        OnSelectedItemChanged="HandleSeverityChange">
+                                    <SelectOptions>
+                                        <SelectOption Value="@("all")" Label="All Severities" />
+                                        <SelectOption Value="@("high")" Label="High" />
+                                        <SelectOption Value="@("medium")" Label="Medium" />
+                                        <SelectOption Value="@("low")" Label="Low" />
+                                    </SelectOptions>
+                                </Select>
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Input @bind-Value="searchText"
+                                       Placeholder="Search events..."
+                                       OnPressEnter="HandleSearch"
+                                       Style="width: 200px;" />
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Button Type="primary" OnClick="HandleSearch">
+                                    <Icon Type="search" /> Search
+                                </Button>
+                            </SpaceItem>
+                        </Space>
+                    </div>
+
+                    <Table TItem="SecurityAuditLogDto"
+                           DataSource="@securityEvents"
+                           Loading="@isLoading"
+                           Total="@totalSecurityEvents"
+                           PageIndex="@currentPage"
+                           PageSize="@pageSize"
+                           OnChange="HandleTableChange">
+                        <PropertyColumn Property="c => c.EventType" Title="Event Type" />
+                        <PropertyColumn Property="c => c.Severity" Title="Severity">
+                            <CellRender Context="severity">
+                                <Tag Color="@GetSeverityColor(severity)">
+                                    @severity
+                                </Tag>
+                            </CellRender>
+                        </PropertyColumn>
+                        <PropertyColumn Property="c => c.Description" Title="Description" />
+                        <PropertyColumn Property="c => c.Username" Title="User" />
+                        <PropertyColumn Property="c => c.IpAddress" Title="IP Address" />
+                        <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM yyyy HH:mm:ss" />
+                        <ActionColumn Title="Action">
+                            <Button Type="link" OnClick="() => ShowEventDetails(context)">
+                                <Icon Type="eye" /> Details
+                            </Button>
+                        </ActionColumn>
+                    </Table>
+                </Card>
+            </TabPane>
+
+            <TabPane Key="3" Tab="API Usage">
+                <Card>
+                    <div class="toolbar" style="margin-bottom: 16px;">
+                        <Space>
+                            <SpaceItem>
+                                <RangePicker @bind-Value="dateRange" OnChange="HandleDateRangeChange" />
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Select DefaultValue="@selectedEndpoint"
+                                        Style="width: 200px;"
+                                        OnSelectedItemChanged="HandleEndpointChange"
+                                        AllowClear
+                                        Placeholder="Filter by endpoint">
+                                    <SelectOptions>
+                                        @foreach (var endpoint in availableEndpoints)
+                                        {
+                                            <SelectOption Value="@endpoint" Label="@endpoint" />
+                                        }
+                                    </SelectOptions>
+                                </Select>
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Input @bind-Value="searchText"
+                                       Placeholder="Search by user or IP..."
+                                       OnPressEnter="HandleSearch"
+                                       Style="width: 200px;" />
+                            </SpaceItem>
+                            <SpaceItem>
+                                <Button Type="primary" OnClick="HandleSearch">
+                                    <Icon Type="search" /> Search
+                                </Button>
+                            </SpaceItem>
+                        </Space>
+                    </div>
+
+                    <Table TItem="ApiUsageLogDto"
+                           DataSource="@apiUsage"
+                           Loading="@isLoading"
+                           Total="@totalApiUsage"
+                           PageIndex="@currentPage"
+                           PageSize="@pageSize"
+                           OnChange="HandleTableChange">
+                        <PropertyColumn Property="c => c.Method" Title="Method">
+                            <CellRender Context="method">
+                                <Tag Color="@GetMethodColor(method)">
+                                    @method
+                                </Tag>
+                            </CellRender>
+                        </PropertyColumn>
+                        <PropertyColumn Property="c => c.Endpoint" Title="Endpoint" />
+                        <PropertyColumn Property="c => c.StatusCode" Title="Status">
+                            <CellRender Context="status">
+                                <Tag Color="@GetStatusColor(status)">
+                                    @status
+                                </Tag>
+                            </CellRender>
+                        </PropertyColumn>
+                        <PropertyColumn Property="c => c.Username" Title="User" />
+                        <PropertyColumn Property="c => c.IpAddress" Title="IP Address" />
+                        <PropertyColumn Property="c => c.DurationMs" Title="Duration">
+                            <CellRender Context="duration">
+                                @duration ms
+                            </CellRender>
+                        </PropertyColumn>
+                        <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM yyyy HH:mm:ss" />
+                    </Table>
+                </Card>
+            </TabPane>
+        </Tabs>
+
+        <Modal Title="Event Details"
+               Visible="@isDetailsVisible"
+               OnCancel="() => isDetailsVisible = false"
+               Footer="null"
+               Width="800">
+            @if (selectedEvent != null)
+            {
+                <Descriptions>
+                    <DescriptionItem Title="Event Type">
+                        @selectedEvent.EventType
+                    </DescriptionItem>
+                    <DescriptionItem Title="Severity">
+                        <Tag Color="@GetSeverityColor(selectedEvent.Severity)">
+                            @selectedEvent.Severity
+                        </Tag>
+                    </DescriptionItem>
+                    <DescriptionItem Title="Description">
+                        @selectedEvent.Description
+                    </DescriptionItem>
+                    <DescriptionItem Title="User">
+                        @(selectedEvent.Username ?? "-")
+                    </DescriptionItem>
+                    <DescriptionItem Title="IP Address">
+                        @selectedEvent.IpAddress
+                    </DescriptionItem>
+                    <DescriptionItem Title="User Agent">
+                        @(selectedEvent.UserAgent ?? "-")
+                    </DescriptionItem>
+                    <DescriptionItem Title="Timestamp">
+                        @selectedEvent.Timestamp.ToString("dd MMM yyyy HH:mm:ss.fff")
+                    </DescriptionItem>
+                    @if (selectedEvent.Context.Any())
+                    {
+                        <DescriptionItem Title="Additional Context">
+                            <pre style="white-space: pre-wrap;">@System.Text.Json.JsonSerializer.Serialize(selectedEvent.Context, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                        </DescriptionItem>
+                    }
+                </Descriptions>
+            }
+        </Modal>
+    </div>
+</DashboardLayout>
+
+@code {
+    private bool isLoading = true;
+    private SecurityOverviewDto overview = new();
+    private List<LoginAttemptDto> loginAttempts = new();
+    private List<SecurityAuditLogDto> securityEvents = new();
+    private List<ApiUsageLogDto> apiUsage = new();
+    private List<string> availableEndpoints = new();
+    
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalLoginAttempts;
+    private int totalSecurityEvents;
+    private int totalApiUsage;
+    
+    private DateRange? dateRange;
+    private string searchText = "";
+    private string loginFilter = "all";
+    private string selectedSeverity = "all";
+    private string? selectedEndpoint;
+    
+    private bool isDetailsVisible;
+    private SecurityAuditLogDto? selectedEvent;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSecurityOverviewAsync();
+        await LoadLoginAttemptsAsync();
+    }
+
+    private async Task LoadSecurityOverviewAsync()
+    {
+        try
+        {
+            overview = await UserService.GetSecurityOverviewAsync();
+            
+            // Extract unique endpoints for the dropdown
+            availableEndpoints = overview.ApiEndpointUsage.Keys.OrderBy(e => e).ToList();
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load security overview");
+        }
+    }
+
+    private async Task LoadLoginAttemptsAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            var result = await UserService.GetLoginAttemptsAsync(new AuditLogQueryParams
+            {
+                Page = currentPage,
+                PageSize = pageSize,
+                SearchText = searchText,
+                StartDate = dateRange?.Start,
+                EndDate = dateRange?.End,
+                Category = loginFilter == "all" ? null : loginFilter
+            });
+
+            loginAttempts = result.Items;
+            totalLoginAttempts = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load login attempts");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadSecurityEventsAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            var result = await UserService.GetSecurityEventsAsync(new AuditLogQueryParams
+            {
+                Page = currentPage,
+                PageSize = pageSize,
+                SearchText = searchText,
+                StartDate = dateRange?.Start,
+                EndDate = dateRange?.End,
+                Category = selectedSeverity == "all" ? null : selectedSeverity
+            });
+
+            securityEvents = result.Items;
+            totalSecurityEvents = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load security events");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadApiUsageAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            var result = await UserService.GetApiUsageAsync(new AuditLogQueryParams
+            {
+                Page = currentPage,
+                PageSize = pageSize,
+                SearchText = searchText,
+                StartDate = dateRange?.Start,
+                EndDate = dateRange?.End,
+                Category = selectedEndpoint
+            });
+
+            apiUsage = result.Items;
+            totalApiUsage = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load API usage");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleTableChange(QueryModel<object> query)
+    {
+        currentPage = query.PageIndex;
+        await ReloadCurrentTab();
+    }
+
+    private async Task HandleSearch()
+    {
+        currentPage = 1;
+        await ReloadCurrentTab();
+    }
+
+    private async Task HandleDateRangeChange(DateRange? range)
+    {
+        dateRange = range;
+        currentPage = 1;
+        await ReloadCurrentTab();
+    }
+
+    private async Task HandleSeverityChange(string severity)
+    {
+        selectedSeverity = severity;
+        currentPage = 1;
+        await LoadSecurityEventsAsync();
+    }
+
+    private async Task HandleEndpointChange(string? endpoint)
+    {
+        selectedEndpoint = endpoint;
+        currentPage = 1;
+        await LoadApiUsageAsync();
+    }
+
+    private async Task ReloadCurrentTab()
+    {
+        switch (activeTab)
+        {
+            case "1":
+                await LoadLoginAttemptsAsync();
+                break;
+            case "2":
+                await LoadSecurityEventsAsync();
+                break;
+            case "3":
+                await LoadApiUsageAsync();
+                break;
+        }
+    }
+
+    private void ShowEventDetails(SecurityAuditLogDto eventLog)
+    {
+        selectedEvent = eventLog;
+        isDetailsVisible = true;
+    }
+
+    private string GetSeverityColor(string severity) => severity.ToLower() switch
+    {
+        "high" => "red",
+        "medium" => "orange",
+        "low" => "blue",
+        _ => "default"
+    };
+
+    private string GetMethodColor(string method) => method.ToUpper() switch
+    {
+        "GET" => "blue",
+        "POST" => "green",
+        "PUT" => "orange",
+        "DELETE" => "red",
+        _ => "default"
+    };
+
+    private string GetStatusColor(int status)
+    {
+        if (status < 300) return "success";
+        if (status < 400) return "processing";
+        if (status < 500) return "warning";
+        return "error";
+    }
+}

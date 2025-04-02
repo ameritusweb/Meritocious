@@ -1,0 +1,163 @@
+@page "/admin"
+@attribute [Authorize(Roles = "Administrator")]
+@using Microsoft.AspNetCore.Authorization
+@using Meritocious.Common.DTOs.Auth
+@using Meritocious.Common.DTOs.Moderation
+@inject IUserApiService UserService
+@inject IModerationApiService ModerationService
+@inject MessageService MessageService
+
+<PageTitle>Admin Dashboard - Meritocious</PageTitle>
+
+<DashboardLayout>
+    <div class="admin-dashboard">
+        <Row Gutter="24">
+            <Col Span="6">
+                <Card>
+                    <Statistic Title="Total Users" 
+                               Value="@statistics.TotalUsers" 
+                               Loading="@isLoading" 
+                               Prefix="@($"<Icon Type='user' />")" />
+                </Card>
+            </Col>
+            <Col Span="6">
+                <Card>
+                    <Statistic Title="Active Moderations" 
+                               Value="@statistics.ActiveModerations" 
+                               Loading="@isLoading"
+                               Prefix="@($"<Icon Type='exclamation-circle' />")" />
+                </Card>
+            </Col>
+            <Col Span="6">
+                <Card>
+                    <Statistic Title="Posts Today" 
+                               Value="@statistics.PostsToday" 
+                               Loading="@isLoading"
+                               Prefix="@($"<Icon Type='file-text' />")" />
+                </Card>
+            </Col>
+            <Col Span="6">
+                <Card>
+                    <Statistic Title="Active Users (24h)" 
+                               Value="@statistics.ActiveUsers24h" 
+                               Loading="@isLoading"
+                               Prefix="@($"<Icon Type='team' />")" />
+                </Card>
+            </Col>
+        </Row>
+
+        <Row Gutter="24" Style="margin-top: 24px;">
+            <Col Span="12">
+                <Card Title="Recent Moderation Actions" Extra="<a href='/admin/moderation'>View All</a>">
+                    <Table TItem="ModerationActionDto"
+                           DataSource="@recentModerations"
+                           Loading="@isLoading"
+                           PageSize="5">
+                        <PropertyColumn Property="c => c.Type" Title="Action" />
+                        <PropertyColumn Property="c => c.ContentType" Title="Content Type" />
+                        <PropertyColumn Property="c => c.Reason" Title="Reason" />
+                        <PropertyColumn Property="c => c.CreatedAt" Title="Date" Format="dd MMM yyyy" />
+                    </Table>
+                </Card>
+            </Col>
+            <Col Span="12">
+                <Card Title="Latest System Logs" Extra="<a href='/admin/logs'>View All</a>">
+                    <Table TItem="LogEntryDto"
+                           DataSource="@recentLogs"
+                           Loading="@isLoading"
+                           PageSize="5">
+                        <PropertyColumn Property="c => c.Level" Title="Level" />
+                        <PropertyColumn Property="c => c.Message" Title="Message" />
+                        <PropertyColumn Property="c => c.Timestamp" Title="Time" Format="dd MMM HH:mm" />
+                    </Table>
+                </Card>
+            </Col>
+        </Row>
+
+        <Row Gutter="24" Style="margin-top: 24px;">
+            <Col Span="24">
+                <Card Title="Quick Actions">
+                    <Space>
+                        <SpaceItem>
+                            <Button Type="primary" OnClick="() => NavigateTo('/admin/users')">
+                                <Icon Type="user" /> Manage Users
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Button Type="primary" OnClick="() => NavigateTo('/admin/moderation')">
+                                <Icon Type="safety" /> Moderation Queue
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Button Type="primary" OnClick="() => NavigateTo('/admin/logs')">
+                                <Icon Type="profile" /> View Logs
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Button Type="primary" OnClick="() => NavigateTo('/admin/settings')">
+                                <Icon Type="setting" /> System Settings
+                            </Button>
+                        </SpaceItem>
+                    </Space>
+                </Card>
+            </Col>
+        </Row>
+    </div>
+</DashboardLayout>
+
+@code {
+    private bool isLoading = true;
+    private AdminDashboardStatistics statistics = new();
+    private List<ModerationActionDto> recentModerations = new();
+    private List<LogEntryDto> recentLogs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardDataAsync();
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+            
+            var tasks = new[]
+            {
+                LoadStatisticsAsync(),
+                LoadRecentModerationsAsync(),
+                LoadRecentLogsAsync()
+            };
+            
+            await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load dashboard data");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadStatisticsAsync()
+    {
+        statistics = await UserService.GetAdminDashboardStatisticsAsync();
+    }
+
+    private async Task LoadRecentModerationsAsync()
+    {
+        recentModerations = await ModerationService.GetRecentActionsAsync(5);
+    }
+
+    private async Task LoadRecentLogsAsync()
+    {
+        recentLogs = await UserService.GetRecentSystemLogsAsync(5);
+    }
+
+    private void NavigateTo(string url)
+    {
+        Navigation.NavigateTo(url);
+    }
+}
