@@ -1,5 +1,6 @@
 ﻿@page "/"
 @attribute [AllowAnonymous]
+@inject NavigationManager Navigation
 
 <PageTitle>Meritocious - Where ideas meet impact</PageTitle>
 
@@ -13,11 +14,11 @@
                 <h1 class="text-4xl font-bold mb-6">Welcome to Meritocious</h1>
                 <p class="text-xl text-gray-600 mb-8">Where ideas meet impact. Join our community of thinkers, builders, and innovators.</p>
                 
-                <Space Size="large">
-                    <Button Type="primary" Size="large" OnClick="@(() => NavigationManager.NavigateTo("/register"))">
+                <Space Size="SpaceSize.Large">
+                    <Button Type="ButtonType.Primary" Size="ButtonSize.Large" OnClick="@(() => Navigation.NavigateTo("/register"))">
                         Get Started
                     </Button>
-                    <Button Size="large" OnClick="@(() => NavigationManager.NavigateTo("/login"))">
+                    <Button Size="ButtonSize.Large" OnClick="@(() => Navigation.NavigateTo("/login"))">
                         Sign In
                     </Button>
                 </Space>
