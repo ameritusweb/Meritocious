@@ -1,0 +1,45 @@
+@namespace Meritocious.Blazor.Components.Posts
+@using System.Text.RegularExpressions
+
+<div class="editor-footer p-2 border-t bg-gray-50 text-gray-500 text-xs">
+    <div class="flex justify-between items-center">
+        <div>
+            @(EstimatedReadTime) min read • @(WordCount) words
+        </div>
+        <div>
+            <Tooltip Title="Markdown is supported">
+                <Icon Type="info-circle" /> Markdown supported
+            </Tooltip>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Content { get; set; } = string.Empty;
+    
+    public int WordCount { get; private set; }
+    public int EstimatedReadTime { get; private set; } = 1;
+    
+    protected override void OnParametersSet()
+    {
+        CalculateWordCount();
+    }
+    
+    private void CalculateWordCount()
+    {
+        if (string.IsNullOrWhiteSpace(Content))
+        {
+            WordCount = 0;
+            EstimatedReadTime = 1;
+            return;
+        }
+        
+        // Remove markdown formatting for word count
+        var plainText = Regex.Replace(Content, @"[#*_`~\[\]()>]+", "");
+        var words = plainText.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        WordCount = words.Length;
+        
+        // Average reading speed is 200-250 words per minute
+        EstimatedReadTime = Math.Max(1, (int)Math.Ceiling(WordCount / 225.0));
+    }
+}

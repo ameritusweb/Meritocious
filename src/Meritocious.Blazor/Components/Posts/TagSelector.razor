@@ -1,0 +1,53 @@
+@namespace Meritocious.Blazor.Components.Posts
+
+<div class="tag-selector">
+    <Select Mode="multiple"
+            Placeholder="@Placeholder"
+            MaxTagCount="@MaxTags"
+            Style="width: 100%;"
+            @bind-Values="selectedTags"
+            OnSelectedItemsChanged="HandleTagChange"
+            AllowClear
+            OnSearch="HandleTagSearch">
+        <SelectOptions>
+            @foreach (var tag in availableTags)
+            {
+                <SelectOption Value="@tag" Label="@tag" />
+            }
+        </SelectOptions>
+    </Select>
+</div>
+
+@code {
+    [Parameter] public List<string> Tags { get; set; } = new();
+    [Parameter] public List<string> AvailableTags { get; set; } = new();
+    [Parameter] public string Placeholder { get; set; } = "Add tags";
+    [Parameter] public int MaxTags { get; set; } = 5;
+    [Parameter] public EventCallback<List<string>> TagsChanged { get; set; }
+    
+    private List<string> selectedTags = new();
+    private List<string> availableTags = new();
+    
+    protected override void OnParametersSet()
+    {
+        selectedTags = Tags.ToList();
+        availableTags = AvailableTags.ToList();
+    }
+    
+    private async Task HandleTagChange(IEnumerable<string> tags)
+    {
+        selectedTags = tags.ToList();
+        await TagsChanged.InvokeAsync(selectedTags);
+    }
+    
+    private void HandleTagSearch(string searchText)
+    {
+        // In a real implementation, this would call an API to search for tags
+        // For now, we'll just add the search text to available tags if it's not already there
+        if (!string.IsNullOrWhiteSpace(searchText) && 
+            !availableTags.Contains(searchText, StringComparer.OrdinalIgnoreCase))
+        {
+            availableTags.Add(searchText);
+        }
+    }
+}

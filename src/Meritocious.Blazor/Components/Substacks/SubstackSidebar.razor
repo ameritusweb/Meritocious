@@ -1,0 +1,110 @@
+@namespace Meritocious.Blazor.Components.Substacks
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Web.Components.Substacks
+
+<div>
+    @if (IsAuthenticated)
+    {
+        <Card Title="Posting Guidelines" Class="mb-4">
+            @if (!string.IsNullOrEmpty(Guidelines))
+            {
+                <p class="text-sm">@Guidelines</p>
+            }
+            else
+            {
+                <p class="text-sm text-gray-500">
+                    This substack doesn't have specific posting guidelines. 
+                    Follow Meritocious general community standards.
+                </p>
+            }
+        </Card>
+    }
+    
+    <Card Title="Top Contributors" Class="mb-4">
+        @if (IsLoadingContributors)
+        {
+            <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 2 }" />
+        }
+        else if (!TopContributors.Any())
+        {
+            <Empty Description="No contributors yet" 
+                   Image="Empty.PRESENTED_IMAGE_SIMPLE" />
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var contributor in TopContributors)
+                {
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <Avatar Size="small">@contributor.Username[0]</Avatar>
+                            <span class="truncate">
+                                <a href="/users/@contributor.Username" class="hover:text-blue-500">
+                                    @contributor.Username
+                                </a>
+                            </span>
+                        </div>
+                        <div>
+                            <Tag Color="blue">@contributor.PostCount posts</Tag>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </Card>
+    
+    <Card Title="Similar Substacks" Class="mb-4">
+        @if (IsLoadingSimilar)
+        {
+            <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 2 }" />
+        }
+        else if (!SimilarSubstacks.Any())
+        {
+            <Empty Description="No similar substacks found" 
+                   Image="Empty.PRESENTED_IMAGE_SIMPLE" />
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var similar in SimilarSubstacks)
+                {
+                    <div class="flex items-center space-x-2">
+                        <Avatar Size="small" Src="@similar.AvatarUrl">
+                            @similar.Name[0]
+                        </Avatar>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center space-x-2">
+                                <span class="truncate">
+                                    <a href="/s/@similar.Slug" class="hover:text-blue-500">
+                                        @similar.Name
+                                    </a>
+                                </span>
+                                <MeritScoreBadge Score="@similar.MeritScore" Size="small" />
+                            </div>
+                            <div class="text-xs text-gray-500 truncate">
+                                @similar.FollowerCount followers
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </Card>
+</div>
+
+@code {
+    [Parameter] public bool IsAuthenticated { get; set; }
+    [Parameter] public string Guidelines { get; set; } = string.Empty;
+    [Parameter] public bool IsLoadingContributors { get; set; }
+    [Parameter] public bool IsLoadingSimilar { get; set; }
+    [Parameter] public List<ContributorInfo> TopContributors { get; set; } = new();
+    [Parameter] public List<SubstackDto> SimilarSubstacks { get; set; } = new();
+    
+    public class ContributorInfo
+    {
+        public Guid UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public int PostCount { get; set; }
+        public decimal AverageMeritScore { get; set; }
+    }
+}

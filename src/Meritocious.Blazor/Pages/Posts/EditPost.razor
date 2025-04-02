@@ -1,0 +1,157 @@
+@page "/posts/{PostId:guid}/edit"
+@using Meritocious.Blazor.Components.Posts
+@using Meritocious.Common.DTOs.Content
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Edit Post - Meritocious</PageTitle>
+
+<div class="container mx-auto px-4 py-6">
+    <Card>
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">Edit Post</h1>
+            <Button OnClick="@(() => NavigationManager.NavigateTo($"/posts/{PostId}"))" Type="link">
+                <Icon Type="arrow-left" /> Back to Post
+            </Button>
+        </div>
+        
+        @if (isLoading)
+        {
+            <div class="flex justify-center p-8">
+                <Spin Size="large" Tip="Loading..." />
+            </div>
+        }
+        else if (post == null)
+        {
+            <Alert Message="Post not found" 
+                   Description="The post you're trying to edit doesn't exist or you don't have permission to edit it."
+                   Type="@AlertType.Error"
+                   ShowIcon="true" />
+        }
+        else
+        {
+            <PostEditor PostData="@post"
+                        IsEditMode="true"
+                        OnSubmit="HandleSubmit"
+                        OnSaveDraft="HandleSaveDraft" />
+        }
+    </Card>
+</div>
+
+@code {
+    [Parameter] public Guid PostId { get; set; }
+    
+    private PostDto post;
+    private bool isLoading = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Add the JS file for the editor
+        await JSRuntime.InvokeVoidAsync("import", "/_content/Meritocious.Blazor/js/editor.js");
+        
+        await LoadPost();
+    }
+    
+    private async Task LoadPost()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            post = await Http.GetFromJsonAsync<PostDto>($"api/posts/{PostId}");
+            
+            if (post == null)
+            {
+                // Post not found or user doesn't have permission
+            }
+            */
+            
+            // For now, create a mock post
+            await Task.Delay(500);
+            post = new PostDto
+            {
+                Id = PostId,
+                Title = "Sample Post Title",
+                Content = "This is a sample post content.",
+                Tags = new List<string> { "Sample", "Test" }
+            };
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading post: {ex.Message}");
+            post = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task HandleSubmit(PostDto updatedPost)
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            var response = await Http.PutAsJsonAsync($"api/posts/{PostId}", updatedPost);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo($"/posts/{PostId}");
+            }
+            */
+            
+            // For now, just simulate success
+            await Task.Delay(1000);
+            NavigationManager.NavigateTo($"/posts/{PostId}");
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error updating post: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task HandleSaveDraft(PostDto updatedPost)
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            updatedPost.IsDraft = true;
+            var response = await Http.PutAsJsonAsync($"api/posts/{PostId}/draft", updatedPost);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/posts/drafts");
+            }
+            */
+            
+            // For now, just simulate success
+            await Task.Delay(1000);
+            NavigationManager.NavigateTo("/posts/drafts");
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error saving draft: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

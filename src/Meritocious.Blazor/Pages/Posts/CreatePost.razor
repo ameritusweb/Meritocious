@@ -1,0 +1,117 @@
+@page "/posts/create"
+@page "/posts/create/{SubstackId:guid}"
+@using Meritocious.Blazor.Components.Posts
+@using Meritocious.Common.DTOs.Content
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Create Post - Meritocious</PageTitle>
+
+<div class="container mx-auto px-4 py-6">
+    <Card>
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold">Create New Post</h1>
+            <Button OnClick="@(() => NavigationManager.NavigateTo("/posts"))" Type="link">
+                <Icon Type="arrow-left" /> Back to Posts
+            </Button>
+        </div>
+        
+        @if (isLoading)
+        {
+            <div class="flex justify-center p-8">
+                <Spin Size="large" Tip="Loading..." />
+            </div>
+        }
+        else
+        {
+            <PostEditor PostData="@postData"
+                        OnSubmit="HandleSubmit"
+                        OnSaveDraft="HandleSaveDraft" />
+        }
+    </Card>
+</div>
+
+@code {
+    [Parameter] public string SubstackId { get; set; }
+    
+    private PostDto postData = new();
+    private bool isLoading = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Add the JS file for the editor
+        await JSRuntime.InvokeVoidAsync("import", "/_content/Meritocious.Blazor/js/editor.js");
+        
+        if (!string.IsNullOrEmpty(SubstackId) && Guid.TryParse(SubstackId, out var substackId))
+        {
+            postData.SubstackId = substackId;
+        }
+    }
+    
+    private async Task HandleSubmit(PostDto post)
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            var response = await Http.PostAsJsonAsync("api/posts", post);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var createdPost = await response.Content.ReadFromJsonAsync<PostDto>();
+                NavigationManager.NavigateTo($"/posts/{createdPost.Id}");
+            }
+            */
+            
+            // For now, just simulate success
+            await Task.Delay(1000);
+            NavigationManager.NavigateTo("/posts");
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error creating post: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task HandleSaveDraft(PostDto post)
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            post.IsDraft = true;
+            var response = await Http.PostAsJsonAsync("api/posts/drafts", post);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var createdDraft = await response.Content.ReadFromJsonAsync<PostDto>();
+                NavigationManager.NavigateTo("/posts/drafts");
+            }
+            */
+            
+            // For now, just simulate success
+            await Task.Delay(1000);
+            NavigationManager.NavigateTo("/posts/drafts");
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error saving draft: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

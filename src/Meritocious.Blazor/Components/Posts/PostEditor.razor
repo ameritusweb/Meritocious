@@ -1,0 +1,223 @@
+@namespace Meritocious.Blazor.Components.Posts
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Web.Components.Substacks
+@inject IJSRuntime JSRuntime
+
+<div class="post-editor">
+    <Form Model="@PostData" Layout="FormLayout.Vertical">
+        <FormItem Label="Title" Required>
+            <Input @bind-Value="@PostData.Title" 
+                   Placeholder="Enter a descriptive title"
+                   MaxLength="200" 
+                   ShowCount />
+        </FormItem>
+        
+        <FormItem Label="Content" Required>
+            <div class="editor-container border rounded">
+                <MarkdownToolbar OnInsertLink="HandleInsertLink" />
+                
+                <TextArea @bind-Value="@PostData.Content"
+                          Placeholder="Write your post content here. Use the formatting tools above to structure your post."
+                          OnChange="HandleContentChange"
+                          Rows="12"
+                          Class="border-none" />
+                          
+                <WordCount Content="@PostData.Content" @ref="wordCounter" />
+            </div>
+        </FormItem>
+        
+        <FormItem Label="Tags">
+            <TagSelector Tags="@PostData.Tags"
+                         AvailableTags="@availableTags"
+                         Placeholder="Add up to 5 tags"
+                         MaxTags="5"
+                         TagsChanged="HandleTagsChanged" />
+        </FormItem>
+        
+        @if (ShowSubstackSelection && availableSubstacks.Any())
+        {
+            <FormItem Label="Post to Substack">
+                <Select DefaultValue="@(PostData.SubstackId.HasValue ? PostData.SubstackId.ToString() : "")"
+                        Placeholder="Select a substack to post to"
+                        Style="width: 100%;"
+                        OnSelectedItemChanged="HandleSubstackChange"
+                        AllowClear>
+                    <SelectOptions>
+                        @foreach (var substack in availableSubstacks)
+                        {
+                            <SelectOption Value="@substack.Id.ToString()" Label="@substack.Name" />
+                        }
+                    </SelectOptions>
+                </Select>
+            </FormItem>
+        }
+        
+        @if (IsEditMode && ShowVersionHistory)
+        {
+            <FormItem Label="Version Notes (optional)">
+                <Input @bind-Value="@versionNotes" 
+                       Placeholder="Briefly describe what changed in this update"
+                       MaxLength="100" 
+                       ShowCount />
+            </FormItem>
+        }
+        
+        <FormItem>
+            <div class="flex justify-between">
+                <div>
+                    @if (ShowPreviewButton)
+                    {
+                        <Button Type="default" OnClick="HandlePreview">
+                            <Icon Type="eye" /> Preview
+                        </Button>
+                    }
+                </div>
+                
+                <div>
+                    @if (ShowSaveDraft)
+                    {
+                        <Button Style="margin-right: 8px;" 
+                                OnClick="HandleSaveDraft"
+                                Loading="isSavingDraft">
+                            Save as Draft
+                        </Button>
+                    }
+                    
+                    <Button Type="primary" 
+                            OnClick="HandleSubmit"
+                            Loading="isSubmitting"
+                            Disabled="!IsValid">
+                        @(IsEditMode ? "Update Post" : "Publish Post")
+                    </Button>
+                </div>
+            </div>
+        </FormItem>
+    </Form>
+    
+    <PostPreview Visible="@isPreviewVisible"
+                 Post="@PostData"
+                 ReadTime="@(wordCounter?.EstimatedReadTime ?? 1)"
+                 OnClose="ClosePreview" />
+</div>
+
+<style>
+    .editor-container {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .editor-container .ant-input {
+        border-radius: 0;
+    }
+</style>
+
+@code {
+    [Parameter] public PostDto PostData { get; set; } = new();
+    [Parameter] public bool IsEditMode { get; set; } = false;
+    [Parameter] public bool ShowSubstackSelection { get; set; } = true;
+    [Parameter] public bool ShowVersionHistory { get; set; } = true;
+    [Parameter] public bool ShowSaveDraft { get; set; } = true;
+    [Parameter] public bool ShowPreviewButton { get; set; } = true;
+    [Parameter] public EventCallback<PostDto> OnSubmit { get; set; }
+    [Parameter] public EventCallback<PostDto> OnSaveDraft { get; set; }
+    
+    private WordCount wordCounter;
+    private bool isSubmitting = false;
+    private bool isSavingDraft = false;
+    private bool isPreviewVisible = false;
+    private string versionNotes = string.Empty;
+    
+    private List<string> availableTags = new() { 
+        "AI", "Technology", "Programming", "Philosophy", "Science", 
+        "Politics", "Economics", "Culture", "Society", "Ethics",
+        "Environment", "Education", "Health", "Psychology", "History"
+    };
+    
+    private List<SubstackDto> availableSubstacks = new();
+    
+    private bool IsValid => !string.IsNullOrWhiteSpace(PostData.Title) && 
+                            !string.IsNullOrWhiteSpace(PostData.Content) &&
+                            (ShowSubstackSelection ? PostData.SubstackId.HasValue : true);
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Load available substacks
+        // availableSubstacks = await SubstackService.GetCreatedSubstacksAsync();
+    }
+    
+    private void HandleContentChange(string value)
+    {
+        PostData.Content = value;
+    }
+    
+    private async Task HandleInsertLink(MarkdownToolbar.LinkInfo linkInfo)
+    {
+        if (!string.IsNullOrWhiteSpace(linkInfo.Url))
+        {
+            var markdown = $"[{linkInfo.Text}]({linkInfo.Url})";
+            await JSRuntime.InvokeVoidAsync("insertTextAtSelection", markdown);
+        }
+    }
+    
+    private void HandleTagsChanged(List<string> tags)
+    {
+        PostData.Tags = tags;
+    }
+    
+    private void HandleSubstackChange(string substackId)
+    {
+        if (Guid.TryParse(substackId, out var id))
+        {
+            PostData.SubstackId = id;
+        }
+        else
+        {
+            PostData.SubstackId = null;
+        }
+    }
+    
+    private void HandlePreview()
+    {
+        isPreviewVisible = true;
+    }
+    
+    private void ClosePreview()
+    {
+        isPreviewVisible = false;
+    }
+    
+    private async Task HandleSubmit()
+    {
+        if (!IsValid) return;
+        
+        try
+        {
+            isSubmitting = true;
+            
+            // Add version notes if provided in edit mode
+            if (IsEditMode && !string.IsNullOrWhiteSpace(versionNotes))
+            {
+                // In a real implementation, this would be passed to the API
+            }
+            
+            await OnSubmit.InvokeAsync(PostData);
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+    
+    private async Task HandleSaveDraft()
+    {
+        try
+        {
+            isSavingDraft = true;
+            await OnSaveDraft.InvokeAsync(PostData);
+        }
+        finally
+        {
+            isSavingDraft = false;
+        }
+    }
+}

@@ -1,0 +1,267 @@
+@namespace Meritocious.Blazor.Components.Merit
+
+<div class="merit-badge @SizeClass" @onclick="ToggleDetails">
+    <Tooltip Title="@GetTooltipText()">
+        <div class="merit-score @GetScoreClass()">
+            @FormatScore(Score)
+        </div>
+    </Tooltip>
+    
+    @if (ShowDetails && detailsVisible)
+    {
+        <Drawer Visible="true"
+                Width="360"
+                Placement="right"
+                Title="Merit Score Breakdown"
+                OnClose="CloseDetails">
+            <div class="mb-4">
+                <div class="text-center mb-3">
+                    <Progress Type="circle" 
+                              Percent="@((double)(Score * 100))" 
+                              Status="@GetProgressStatus()"
+                              Format="@(percent => $"{percent:F0}")"/>
+                </div>
+                <Descriptions Size="small" Layout="Descriptions.DescriptionsLayout.Vertical" Column="1">
+                    <DescriptionsItem Title="Final Score">@FormatScore(Score)</DescriptionsItem>
+                    <DescriptionsItem Title="Scoring Model">v1.0.0</DescriptionsItem>
+                    <DescriptionsItem Title="Last Evaluated">
+                        <span>@(LastEvaluated?.ToString("g") ?? "N/A")</span>
+                    </DescriptionsItem>
+                </Descriptions>
+            </div>
+            
+            <Divider>Score Components</Divider>
+            
+            <div class="mb-3">
+                <div class="flex justify-between mb-1">
+                    <span>Clarity (25%):</span>
+                    <span>@FormatScore(Components?.ClarityScore ?? 0)</span>
+                </div>
+                <Progress Percent="@((double)((Components?.ClarityScore ?? 0) * 100))" 
+                          Size="small" 
+                          Status="@GetComponentStatus(Components?.ClarityScore ?? 0)" />
+                <div class="text-xs text-gray-500 mt-1">
+                    Semantic coherence, readability, and structure
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="flex justify-between mb-1">
+                    <span>Novelty (25%):</span>
+                    <span>@FormatScore(Components?.NoveltyScore ?? 0)</span>
+                </div>
+                <Progress Percent="@((double)((Components?.NoveltyScore ?? 0) * 100))" 
+                          Size="small" 
+                          Status="@GetComponentStatus(Components?.NoveltyScore ?? 0)" />
+                <div class="text-xs text-gray-500 mt-1">
+                    Semantic divergence from nearby posts
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="flex justify-between mb-1">
+                    <span>Contribution (20%):</span>
+                    <span>@FormatScore(Components?.ContributionScore ?? 0)</span>
+                </div>
+                <Progress Percent="@((double)((Components?.ContributionScore ?? 0) * 100))" 
+                          Size="small" 
+                          Status="@GetComponentStatus(Components?.ContributionScore ?? 0)" />
+                <div class="text-xs text-gray-500 mt-1">
+                    Moves the discussion forward, refines ideas
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="flex justify-between mb-1">
+                    <span>Civility (15%):</span>
+                    <span>@FormatScore(Components?.CivilityScore ?? 0)</span>
+                </div>
+                <Progress Percent="@((double)((Components?.CivilityScore ?? 0) * 100))" 
+                          Size="small" 
+                          Status="@GetComponentStatus(Components?.CivilityScore ?? 0)" />
+                <div class="text-xs text-gray-500 mt-1">
+                    Tone, respectfulness, and non-toxic language
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="flex justify-between mb-1">
+                    <span>Relevance (15%):</span>
+                    <span>@FormatScore(Components?.RelevanceScore ?? 0)</span>
+                </div>
+                <Progress Percent="@((double)((Components?.RelevanceScore ?? 0) * 100))" 
+                          Size="small" 
+                          Status="@GetComponentStatus(Components?.RelevanceScore ?? 0)" />
+                <div class="text-xs text-gray-500 mt-1">
+                    Connection to thread or topic context
+                </div>
+            </div>
+            
+            @if (HasExplanations)
+            {
+                <Divider>Explanations</Divider>
+                <Collapse AccordionBordered>
+                    @foreach (var explanation in Components?.Explanations ?? new Dictionary<string, string>())
+                    {
+                        <Panel Header="@GetExplanationTitle(explanation.Key)" Key="@explanation.Key">
+                            <p>@explanation.Value</p>
+                        </Panel>
+                    }
+                </Collapse>
+            }
+            
+            <div class="mt-4">
+                <Button Type="link" OnClick="HandleLearnMore">
+                    Learn more about Merit Scoring
+                </Button>
+            </div>
+        </Drawer>
+    }
+</div>
+
+<style>
+    .merit-badge {
+        display: inline-flex;
+        cursor: pointer;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .merit-badge.small {
+        font-size: 0.75rem;
+    }
+    
+    .merit-badge.medium {
+        font-size: 0.875rem;
+    }
+    
+    .merit-badge.large {
+        font-size: 1rem;
+    }
+    
+    .merit-score {
+        padding: 2px 8px;
+        font-weight: 500;
+    }
+    
+    .merit-score.exceptional {
+        background-color: #52c41a;
+        color: white;
+    }
+    
+    .merit-score.high {
+        background-color: #1890ff;
+        color: white;
+    }
+    
+    .merit-score.moderate {
+        background-color: #faad14;
+        color: white;
+    }
+    
+    .merit-score.low {
+        background-color: #ff7875;
+        color: white;
+    }
+    
+    .merit-score.poor {
+        background-color: #ff4d4f;
+        color: white;
+    }
+</style>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; }
+    
+    [Parameter] public decimal Score { get; set; }
+    [Parameter] public MeritScoreDto Components { get; set; }
+    [Parameter] public DateTime? LastEvaluated { get; set; }
+    [Parameter] public bool ShowDetails { get; set; }
+    [Parameter] public string Size { get; set; } = "medium";
+    
+    private bool detailsVisible = false;
+    private bool HasExplanations => Components?.Explanations?.Any() ?? false;
+    
+    private string SizeClass => Size.ToLower() switch {
+        "small" => "small",
+        "large" => "large",
+        _ => "medium"
+    };
+    
+    private string GetScoreClass()
+    {
+        return Score switch {
+            >= 0.90m => "exceptional",
+            >= 0.80m => "high",
+            >= 0.60m => "moderate", 
+            >= 0.30m => "low",
+            _ => "poor"
+        };
+    }
+    
+    private string GetTooltipText()
+    {
+        return Score switch {
+            >= 0.90m => "Exceptional: Featured content",
+            >= 0.80m => "High-value insight",
+            >= 0.60m => "Solid contribution",
+            >= 0.30m => "Limited merit",
+            _ => "Low signal content"
+        };
+    }
+    
+    private string GetProgressStatus()
+    {
+        return Score switch {
+            >= 0.80m => "success",
+            >= 0.60m => "normal",
+            >= 0.30m => "exception",
+            _ => "exception"
+        };
+    }
+    
+    private string GetComponentStatus(decimal componentScore)
+    {
+        return componentScore switch {
+            >= 0.80m => "success",
+            >= 0.60m => "normal",
+            >= 0.30m => "exception",
+            _ => "exception"
+        };
+    }
+    
+    private string GetExplanationTitle(string key)
+    {
+        return key.ToLower() switch {
+            "clarity" => "Clarity Score Explanation",
+            "novelty" => "Novelty Score Explanation",
+            "contribution" => "Contribution Score Explanation",
+            "civility" => "Civility Score Explanation",
+            "relevance" => "Relevance Score Explanation",
+            _ => key
+        };
+    }
+    
+    private string FormatScore(decimal score)
+    {
+        return (score * 100).ToString("F0");
+    }
+    
+    private void ToggleDetails()
+    {
+        if (ShowDetails)
+        {
+            detailsVisible = !detailsVisible;
+        }
+    }
+    
+    private void CloseDetails()
+    {
+        detailsVisible = false;
+    }
+    
+    private void HandleLearnMore()
+    {
+        NavigationManager.NavigateTo("/docs/merit-scoring");
+    }
+}

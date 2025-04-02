@@ -1,0 +1,337 @@
+@page "/s/{Slug}"
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Blazor.Components.Substacks
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Web.Components.Substacks
+@using Meritocious.Blazor.Services.Substacks
+@inject ISubstackService SubstackService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(substack?.Name ?? "Loading...") - Meritocious</PageTitle>
+
+@if (isLoading)
+{
+    <div class="container mx-auto px-4 py-6">
+        <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 4 }" />
+        <div class="mt-6">
+            <Skeleton Active Paragraph="new SkeletonParagraph { Rows = 8 }" />
+        </div>
+    </div>
+}
+else if (substack == null)
+{
+    <Result Status="404"
+            Title="Substack Not Found"
+            SubTitle="The substack you're looking for doesn't exist or has been removed">
+        <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/substacks"))">
+            Browse Substacks
+        </Button>
+    </Result>
+}
+else
+{
+    <div class="container mx-auto px-4 py-6">
+        <!-- Substack Header -->
+        <SubstackHeader 
+            Substack="@substack"
+            IsFollowing="@isFollowing"
+            CanEdit="@canEdit"
+            OnFollowToggle="HandleFollowToggle"
+            OnReportSubstack="HandleReportSubstack" />
+        
+        <div class="substack-content">
+            <Row Gutter="24">
+                <Col Span="18">
+                    <!-- Posts List -->
+                    <SubstackPostsList 
+                        Posts="@posts"
+                        IsLoading="@isLoadingPosts"
+                        CurrentPage="@currentPage"
+                        PageSize="@pageSize"
+                        TotalPosts="@totalPosts"
+                        SortBy="@sortBy"
+                        IsAuthenticated="@isAuthenticated"
+                        SubstackId="@substack.Id"
+                        OnSortChange="HandleSortChange"
+                        OnPageChange="HandlePageChange" />
+                </Col>
+                
+                <Col Span="6">
+                    <!-- Sidebar -->
+                    <SubstackSidebar 
+                        IsAuthenticated="@isAuthenticated"
+                        Guidelines="@substack.Guidelines"
+                        IsLoadingContributors="@isLoadingContributors"
+                        IsLoadingSimilar="@isLoadingSimilar"
+                        TopContributors="@topContributors"
+                        SimilarSubstacks="@similarSubstacks" />
+                </Col>
+            </Row>
+        </div>
+    </div>
+    
+    <!-- Report Modal -->
+    <ReportSubstackModal 
+        Visible="@reportModalVisible"
+        OnSubmit="HandleSubmitReport"
+        OnCancel="() => reportModalVisible = false" />
+}
+
+@code {
+    [Parameter] public string Slug { get; set; }
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; }
+    
+    private bool isLoading = true;
+    private bool isLoadingPosts = true;
+    private bool isLoadingContributors = true;
+    private bool isLoadingSimilar = true;
+    private bool isFollowing = false;
+    private bool isAuthenticated = false;
+    private bool canEdit = false;
+    private bool reportModalVisible = false;
+    
+    // Content data
+    private SubstackDto substack;
+    private List<PostDto> posts = new();
+    private List<SubstackSidebar.ContributorInfo> topContributors = new();
+    private List<SubstackDto> similarSubstacks = new();
+    
+    // Pagination and sorting
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPosts = 0;
+    private string sortBy = "trending";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Check authentication state
+        var authState = await AuthState;
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+        
+        await LoadSubstack();
+    }
+    
+    private async Task LoadSubstack()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            substack = await SubstackService.GetSubstackBySlugAsync(Slug);
+            isFollowing = isAuthenticated && await SubstackService.IsFollowingAsync(substack.Id);
+            canEdit = isAuthenticated && substack.CreatorId.ToString() == userId;
+            */
+            
+            // Simulate API call
+            await Task.Delay(500);
+            substack = null; // Replace with mock data if needed for testing
+            
+            if (substack != null)
+            {
+                // Load related data in parallel
+                await Task.WhenAll(
+                    LoadPosts(),
+                    LoadTopContributors(),
+                    LoadSimilarSubstacks()
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading substack: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task LoadPosts()
+    {
+        try
+        {
+            isLoadingPosts = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            var result = await HttpClient.GetFromJsonAsync<PagedResult<PostDto>>(
+                $"api/substacks/{substack.Id}/posts?page={currentPage}&pageSize={pageSize}&sortBy={sortBy}");
+                
+            posts = result.Items;
+            totalPosts = result.TotalCount;
+            */
+            
+            // Simulate API call
+            await Task.Delay(300);
+            posts = new List<PostDto>();
+            totalPosts = 0;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading posts: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingPosts = false;
+        }
+    }
+    
+    private async Task LoadTopContributors()
+    {
+        try
+        {
+            isLoadingContributors = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            var result = await HttpClient.GetFromJsonAsync<List<ContributorInfo>>(
+                $"api/substacks/{substack.Id}/contributors?limit=5");
+            topContributors = result.Select(c => new SubstackSidebar.ContributorInfo
+            {
+                UserId = c.UserId,
+                Username = c.Username,
+                PostCount = c.PostCount,
+                AverageMeritScore = c.AverageMeritScore
+            }).ToList();
+            */
+            
+            // Simulate API call
+            await Task.Delay(200);
+            topContributors = new List<SubstackSidebar.ContributorInfo>();
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading contributors: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingContributors = false;
+        }
+    }
+    
+    private async Task LoadSimilarSubstacks()
+    {
+        try
+        {
+            isLoadingSimilar = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            similarSubstacks = await HttpClient.GetFromJsonAsync<List<SubstackDto>>(
+                $"api/substacks/{substack.Id}/similar?limit=3");
+            */
+            
+            // Simulate API call
+            await Task.Delay(200);
+            similarSubstacks = new List<SubstackDto>();
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading similar substacks: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingSimilar = false;
+        }
+    }
+    
+    private async Task HandleFollowToggle()
+    {
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/auth/login");
+            return;
+        }
+        
+        try
+        {
+            // TODO: Replace with actual API call
+            /*
+            if (isFollowing)
+            {
+                var success = await SubstackService.UnfollowSubstackAsync(substack.Id);
+                if (success)
+                {
+                    isFollowing = false;
+                    substack.FollowerCount--;
+                }
+            }
+            else
+            {
+                var success = await SubstackService.FollowSubstackAsync(substack.Id);
+                if (success)
+                {
+                    isFollowing = true;
+                    substack.FollowerCount++;
+                }
+            }
+            */
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error toggling follow status: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleSortChange(string key)
+    {
+        sortBy = key;
+        currentPage = 1;
+        await LoadPosts();
+    }
+    
+    private async Task HandlePageChange(PaginationEventArgs args)
+    {
+        currentPage = args.Page;
+        await LoadPosts();
+    }
+    
+    private void HandleReportSubstack()
+    {
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/auth/login");
+            return;
+        }
+        
+        reportModalVisible = true;
+    }
+    
+    private async Task HandleSubmitReport(ReportSubstackModal.ReportForm report)
+    {
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/auth/login");
+            return;
+        }
+        
+        try
+        {
+            // TODO: Replace with actual API call
+            /*
+            var success = await HttpClient.PostAsJsonAsync(
+                $"api/substacks/{substack.Id}/report", report);
+                
+            if (success.IsSuccessStatusCode)
+            {
+                // Show success message
+                await message.Success("Report submitted successfully");
+            }
+            */
+            
+            reportModalVisible = false;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error submitting report: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,421 @@
+@page "/posts/{PostId:guid}"
+@using Meritocious.Blazor.Components.Posts
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Common.DTOs.Merit
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>@(post?.Title ?? "Loading...") - Meritocious</PageTitle>
+
+<div class="container mx-auto px-4 py-6">
+    @if (isLoading)
+    {
+        <Card>
+            <div class="flex justify-center p-8">
+                <Spin Size="large" Tip="Loading post..." />
+            </div>
+        </Card>
+    }
+    else if (post == null)
+    {
+        <Result Status="404"
+                Title="Post Not Found"
+                SubTitle="The post you're looking for doesn't exist or has been removed">
+            <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/posts"))">
+                Browse Posts
+            </Button>
+        </Result>
+    }
+    else
+    {
+        <Row Gutter="24">
+            <Col Span="18">
+                <Card>
+                    <PostView Post="@post"
+                              MeritComponents="@meritComponents"
+                              IsOwner="@isOwner"
+                              HasLiked="@hasLiked"
+                              LikesCount="@likesCount"
+                              CommentsCount="@commentsCount"
+                              ReadTime="@readTime"
+                              OnLikeChanged="HandleLikeChanged"
+                              OnDeletePost="HandleDeletePost" />
+                </Card>
+                
+                <div id="comments" class="mt-6">
+                    <Card>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold">Comments (@commentsCount)</h2>
+                            <div>
+                                <Select DefaultValue="@commentSort" 
+                                        Style="width: 180px;"
+                                        OnSelectedItemChanged="HandleCommentSortChange">
+                                    <SelectOption Value="merit">Sort by Merit</SelectOption>
+                                    <SelectOption Value="newest">Sort by Newest</SelectOption>
+                                    <SelectOption Value="oldest">Sort by Oldest</SelectOption>
+                                </Select>
+                            </div>
+                        </div>
+                        
+                        @if (isLoadingComments)
+                        {
+                            <div class="p-4">
+                                <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 2 }" />
+                                <Divider />
+                                <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 2 }" />
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- TODO: Implement comments component -->
+                            <Alert Message="Comments component will be implemented in a separate task"
+                                   Type="@AlertType.Info"
+                                   ShowIcon="true" />
+                        }
+                    </Card>
+                </div>
+            </Col>
+            
+            <Col Span="6">
+                <Card Title="About the Author" Class="mb-4">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <Avatar Size="large">@post.AuthorUsername[0]</Avatar>
+                        <div>
+                            <h3 class="font-medium">
+                                <a href="/users/@post.AuthorUsername" class="hover:text-blue-500">
+                                    @post.AuthorUsername
+                                </a>
+                            </h3>
+                            <!-- TODO: Add author description/bio -->
+                            <p class="text-gray-500 text-sm">Member since @authorJoinDate.ToString("MMM yyyy")</p>
+                        </div>
+                    </div>
+                    
+                    <!-- TODO: Add author stats like total posts, average merit score -->
+                    <Button Type="default" Block>
+                        <Icon Type="user-add" /> Follow
+                    </Button>
+                </Card>
+                
+                @if (relatedPosts.Any())
+                {
+                    <Card Title="Similar Posts" Class="mb-4">
+                        <List DataSource="@relatedPosts"
+                              Size="small"
+                              ItemLayout="ListItemLayout.Horizontal">
+                            <ListItem>
+                                <div>
+                                    <div class="text-sm font-medium">
+                                        <a href="/posts/@context.Id" class="hover:text-blue-500">
+                                            @context.Title
+                                        </a>
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        by @context.AuthorUsername • @context.CreatedAt.ToString("MMM d, yyyy")
+                                    </div>
+                                </div>
+                            </ListItem>
+                        </List>
+                    </Card>
+                }
+                
+                @if (post.SubstackId.HasValue)
+                {
+                    <Card Title="From Substack" Class="mb-4">
+                        @if (isLoadingSubstack)
+                        {
+                            <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 2 }" />
+                        }
+                        else if (substack != null)
+                        {
+                            <div class="flex items-center space-x-3 mb-3">
+                                <Avatar Size="small" Src="@substack.AvatarUrl">
+                                    @substack.Name[0]
+                                </Avatar>
+                                <div>
+                                    <h3 class="font-medium">
+                                        <a href="/s/@substack.Slug" class="hover:text-blue-500">
+                                            @substack.Name
+                                        </a>
+                                    </h3>
+                                    <p class="text-gray-500 text-xs">@substack.FollowerCount followers</p>
+                                </div>
+                            </div>
+                            
+                            <p class="text-sm text-gray-700 line-clamp-3 mb-3">
+                                @substack.Description
+                            </p>
+                            
+                            <Button Type="primary" Block>
+                                <Icon Type="plus" /> Follow
+                            </Button>
+                        }
+                    </Card>
+                }
+            </Col>
+        </Row>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid PostId { get; set; }
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; }
+    
+    private PostDto post;
+    private MeritScoreDto meritComponents;
+    private SubstackDto substack;
+    private List<PostDto> relatedPosts = new();
+    
+    private bool isLoading = true;
+    private bool isLoadingComments = true;
+    private bool isLoadingSubstack = true;
+    private bool isOwner = false;
+    private bool hasLiked = false;
+    private int likesCount = 0;
+    private int commentsCount = 0;
+    private int readTime = 3;
+    private string commentSort = "merit";
+    private DateTime authorJoinDate = DateTime.Now.AddYears(-1);
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPost();
+    }
+    
+    private async Task LoadPost()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            post = await Http.GetFromJsonAsync<PostDto>($"api/posts/{PostId}");
+            
+            if (post != null)
+            {
+                // Check if the current user is the author
+                var authState = await AuthState;
+                var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                isOwner = userId == post.AuthorId.ToString();
+                
+                // Get merit score components
+                meritComponents = await Http.GetFromJsonAsync<MeritScoreDto>($"api/posts/{PostId}/merit");
+                
+                // Get like status and count
+                var likeInfo = await Http.GetFromJsonAsync<LikeInfo>($"api/posts/{PostId}/likes");
+                hasLiked = likeInfo.HasLiked;
+                likesCount = likeInfo.Count;
+                
+                // Get comments count
+                commentsCount = await Http.GetFromJsonAsync<int>($"api/posts/{PostId}/comments/count");
+                
+                // Calculate read time
+                var words = post.Content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+                readTime = Math.Max(1, (int)Math.Ceiling(words / 225.0));
+                
+                await Task.WhenAll(
+                    LoadRelatedPosts(),
+                    LoadSubstack(post.SubstackId)
+                );
+            }
+            */
+            
+            // For now, create a mock post
+            await Task.Delay(500);
+            post = new PostDto
+            {
+                Id = PostId,
+                Title = "Example Post Title That Demonstrates the Power of Meaningful Discourse",
+                Content = "# Introduction\n\nThis is an example post that showcases the formatting capabilities of our markdown editor. It's designed to demonstrate how thoughtful, well-structured content appears on Meritocious.\n\n## Why Discourse Matters\n\nHigh-quality discussion is essential for advancing our collective understanding. When participants engage with genuine curiosity and intellectual rigor, conversations yield insights that wouldn't emerge otherwise.\n\n> The quality of our thinking determines the quality of our future.\n\n## Key Points\n\n- Ideas should be evaluated on their merit, not their source\n- Respectful disagreement is more valuable than enthusiastic agreement\n- Complex topics require nuanced, multi-perspective analysis\n\n### Supporting Evidence\n\nResearch consistently shows that diverse viewpoints, when combined through constructive dialogue, lead to better outcomes. This is true in:\n\n1. Scientific research\n2. Policy development\n3. Business decision-making\n4. Creative collaboration\n\n## Conclusion\n\nBy focusing on merit rather than metrics, we can create spaces where ideas evolve through thoughtful iteration rather than popularity contests.",
+                AuthorUsername = "thoughtleader",
+                CreatedAt = DateTime.Now.AddDays(-3),
+                MeritScore = 0.87m,
+                Tags = new List<string> { "Discourse", "Communication", "Philosophy" }
+            };
+            
+            meritComponents = new MeritScoreDto
+            {
+                ClarityScore = 0.92m,
+                NoveltyScore = 0.85m,
+                ContributionScore = 0.88m,
+                CivilityScore = 0.95m,
+                RelevanceScore = 0.78m,
+                FinalScore = 0.87m,
+                ModelVersion = "1.0.0"
+            };
+            
+            likesCount = 12;
+            commentsCount = 7;
+            readTime = 4;
+            
+            isOwner = true;
+            
+            await Task.WhenAll(
+                LoadRelatedPosts(),
+                LoadSubstack(Guid.NewGuid())
+            );
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading post: {ex.Message}");
+            post = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task LoadRelatedPosts()
+    {
+        try
+        {
+            // TODO: Replace with actual API call
+            /*
+            relatedPosts = await Http.GetFromJsonAsync<List<PostDto>>($"api/posts/{PostId}/related");
+            */
+            
+            // For now, create mock related posts
+            await Task.Delay(200);
+            relatedPosts = new List<PostDto>
+            {
+                new PostDto
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "The Evolution of Online Discourse",
+                    AuthorUsername = "discourse_expert",
+                    CreatedAt = DateTime.Now.AddDays(-12)
+                },
+                new PostDto
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Fostering Productive Disagreement",
+                    AuthorUsername = "dialogue_builder",
+                    CreatedAt = DateTime.Now.AddDays(-5)
+                },
+                new PostDto
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Beyond Echo Chambers: Finding Truth in Diverse Perspectives",
+                    AuthorUsername = "truth_seeker",
+                    CreatedAt = DateTime.Now.AddDays(-1)
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading related posts: {ex.Message}");
+        }
+    }
+    
+    private async Task LoadSubstack(Guid? substackId)
+    {
+        if (!substackId.HasValue)
+        {
+            isLoadingSubstack = false;
+            return;
+        }
+        
+        try
+        {
+            isLoadingSubstack = true;
+            
+            // TODO: Replace with actual API call
+            /*
+            substack = await Http.GetFromJsonAsync<SubstackDto>($"api/substacks/{substackId}");
+            */
+            
+            // For now, create a mock substack
+            await Task.Delay(300);
+            substack = new SubstackDto
+            {
+                Id = substackId.Value,
+                Name = "Thoughtful Discourse",
+                Slug = "thoughtful-discourse",
+                Description = "A substack dedicated to exploring the art and science of meaningful conversation in the digital age.",
+                FollowerCount = 458
+            };
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading substack: {ex.Message}");
+        }
+        finally
+        {
+            isLoadingSubstack = false;
+        }
+    }
+    
+    private async Task HandleLikeChanged(bool newLikedState)
+    {
+        try
+        {
+            // TODO: Replace with actual API call
+            /*
+            var response = await Http.PostAsJsonAsync($"api/posts/{PostId}/likes", new { liked = newLikedState });
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var likeInfo = await response.Content.ReadFromJsonAsync<LikeInfo>();
+                hasLiked = likeInfo.HasLiked;
+                likesCount = likeInfo.Count;
+            }
+            */
+            
+            // For now, just update the state directly
+            hasLiked = newLikedState;
+            likesCount += newLikedState ? 1 : -1;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error updating like status: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleDeletePost()
+    {
+        try
+        {
+            // TODO: Replace with actual API call
+            /*
+            var response = await Http.DeleteAsync($"api/posts/{PostId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/posts");
+            }
+            */
+            
+            // For now, just navigate back
+            await Task.Delay(500);
+            NavigationManager.NavigateTo("/posts");
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error deleting post: {ex.Message}");
+        }
+    }
+    
+    private async Task HandleCommentSortChange(string value)
+    {
+        commentSort = value;
+        
+        // TODO: Re-load comments with new sort order
+        isLoadingComments = true;
+        await Task.Delay(300);
+        isLoadingComments = false;
+    }
+    
+    private class LikeInfo
+    {
+        public bool HasLiked { get; set; }
+        public int Count { get; set; }
+    }
+}

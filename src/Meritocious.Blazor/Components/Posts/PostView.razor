@@ -1,0 +1,242 @@
+@namespace Meritocious.Blazor.Components.Posts
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Common.DTOs.Merit
+@inject NavigationManager NavigationManager
+
+<div class="post-view">
+    <div class="post-header mb-6">
+        <h1 class="text-3xl font-bold mb-2">@Post.Title</h1>
+        
+        <div class="flex flex-wrap items-center text-sm text-gray-500 mb-4">
+            <div class="flex items-center mr-4">
+                <Avatar Size="small" Class="mr-2">@Post.AuthorUsername[0]</Avatar>
+                <a href="/users/@Post.AuthorUsername" class="hover:text-blue-500">
+                    @Post.AuthorUsername
+                </a>
+            </div>
+            
+            <div class="mr-4">
+                <Icon Type="calendar" Class="mr-1" />
+                <span>@Post.CreatedAt.ToString("MMM d, yyyy")</span>
+            </div>
+            
+            @if (Post.UpdatedAt.HasValue && Post.UpdatedAt.Value > Post.CreatedAt)
+            {
+                <div class="mr-4">
+                    <Tooltip Title="@($"Updated on {Post.UpdatedAt.Value.ToString("g")}")">
+                        <span><Icon Type="edit" Class="mr-1" /> edited</span>
+                    </Tooltip>
+                </div>
+            }
+            
+            <div class="mr-4">
+                <Icon Type="clock-circle" Class="mr-1" />
+                <span>@ReadTime min read</span>
+            </div>
+            
+            <div class="flex-grow"></div>
+            
+            <div>
+                <MeritScoreBadge Score="@Post.MeritScore" ShowDetails="true" Components="@MeritComponents" />
+            </div>
+        </div>
+        
+        @if (Post.Tags != null && Post.Tags.Any())
+        {
+            <div class="post-tags mb-4">
+                @foreach (var tag in Post.Tags)
+                {
+                    <Tag Class="mr-1 mb-1">
+                        <a href="/tags/@tag" class="hover:text-blue-500">@tag</a>
+                    </Tag>
+                }
+            </div>
+        }
+        
+        @if (IsOwner)
+        {
+            <div class="post-actions mb-4">
+                <Space>
+                    <SpaceItem>
+                        <Button OnClick="@(() => NavigationManager.NavigateTo($"/posts/{Post.Id}/edit"))">
+                            <Icon Type="edit" /> Edit
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Dropdown Trigger="new[] { TriggerType.Click }">
+                            <ChildContent>
+                                <Button>
+                                    <Icon Type="more" /> More
+                                </Button>
+                            </ChildContent>
+                            <Overlay>
+                                <Menu>
+                                    <MenuItem OnClick="@(() => NavigationManager.NavigateTo($"/posts/{Post.Id}/history"))">
+                                        <Icon Type="history" /> View History
+                                    </MenuItem>
+                                    <MenuItem OnClick="@(() => NavigationManager.NavigateTo($"/posts/{Post.Id}/stats"))">
+                                        <Icon Type="bar-chart" /> View Stats
+                                    </MenuItem>
+                                    <MenuDivider />
+                                    <MenuItem Danger OnClick="HandleDeleteClick">
+                                        <Icon Type="delete" /> Delete
+                                    </MenuItem>
+                                </Menu>
+                            </Overlay>
+                        </Dropdown>
+                    </SpaceItem>
+                </Space>
+            </div>
+        }
+    </div>
+    
+    <div class="post-content mb-8">
+        <MarkdownPreview Content="@Post.Content" />
+    </div>
+    
+    <Divider />
+    
+    <div class="post-footer">
+        <div class="flex items-center justify-between">
+            <div class="post-engagement">
+                <Space>
+                    <SpaceItem>
+                        <Button Type="@(HasLiked ? "primary" : "default")" 
+                                OnClick="HandleLike">
+                            <Icon Type="like" /> @LikesCount
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button OnClick="@(() => NavigationManager.NavigateTo($"/posts/{Post.Id}/fork"))">
+                            <Icon Type="fork" /> Fork
+                        </Button>
+                    </SpaceItem>
+                    <SpaceItem>
+                        <Button OnClick="ScrollToComments">
+                            <Icon Type="message" /> @CommentsCount
+                        </Button>
+                    </SpaceItem>
+                </Space>
+            </div>
+            
+            <div class="post-share">
+                <Dropdown Trigger="new[] { TriggerType.Click }">
+                    <ChildContent>
+                        <Button>
+                            <Icon Type="share-alt" /> Share
+                        </Button>
+                    </ChildContent>
+                    <Overlay>
+                        <Menu>
+                            <MenuItem OnClick="@(() => HandleShare("twitter"))">
+                                <Icon Type="twitter" /> Twitter
+                            </MenuItem>
+                            <MenuItem OnClick="@(() => HandleShare("linkedin"))">
+                                <Icon Type="linkedin" /> LinkedIn
+                            </MenuItem>
+                            <MenuItem OnClick="@(() => HandleShare("facebook"))">
+                                <Icon Type="facebook" /> Facebook
+                            </MenuItem>
+                            <MenuItem OnClick="@(() => HandleShare("email"))">
+                                <Icon Type="mail" /> Email
+                            </MenuItem>
+                            <MenuItem OnClick="HandleCopyLink">
+                                <Icon Type="link" /> Copy Link
+                            </MenuItem>
+                        </Menu>
+                    </Overlay>
+                </Dropdown>
+            </div>
+        </div>
+    </div>
+    
+    <Modal Title="Delete Post"
+           Visible="@isDeleteModalVisible"
+           OnOk="HandleDelete"
+           OnCancel="@(() => isDeleteModalVisible = false)"
+           OkText="Delete"
+           OkButtonProps="@(new Dictionary<string, object> { { "danger", true } })"
+           CancelText="Cancel">
+        <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+    </Modal>
+</div>
+
+@code {
+    [Parameter] public PostDto Post { get; set; } = new();
+    [Parameter] public MeritScoreDto MeritComponents { get; set; }
+    [Parameter] public bool IsOwner { get; set; }
+    [Parameter] public bool HasLiked { get; set; }
+    [Parameter] public int LikesCount { get; set; }
+    [Parameter] public int CommentsCount { get; set; }
+    [Parameter] public int ReadTime { get; set; } = 3;
+    [Parameter] public EventCallback<bool> OnLikeChanged { get; set; }
+    [Parameter] public EventCallback OnDeletePost { get; set; }
+    
+    private bool isDeleteModalVisible = false;
+    
+    private void ScrollToComments()
+    {
+        // In a real implementation, this would scroll to the comments section
+    }
+    
+    private async Task HandleLike()
+    {
+        await OnLikeChanged.InvokeAsync(!HasLiked);
+    }
+    
+    private void HandleDeleteClick()
+    {
+        isDeleteModalVisible = true;
+    }
+    
+    private async Task HandleDelete()
+    {
+        isDeleteModalVisible = false;
+        await OnDeletePost.InvokeAsync();
+    }
+    
+    private async Task HandleShare(string platform)
+    {
+        // Generate the post URL
+        var postUrl = NavigationManager.BaseUri + $"posts/{Post.Id}";
+        
+        // Share based on platform
+        switch (platform)
+        {
+            case "twitter":
+                // Open Twitter share dialog
+                var twitterUrl = $"https://twitter.com/intent/tweet?text={Uri.EscapeDataString(Post.Title)}&url={Uri.EscapeDataString(postUrl)}";
+                await JSRuntime.InvokeVoidAsync("open", twitterUrl, "_blank");
+                break;
+                
+            case "linkedin":
+                // Open LinkedIn share dialog
+                var linkedinUrl = $"https://www.linkedin.com/sharing/share-offsite/?url={Uri.EscapeDataString(postUrl)}";
+                await JSRuntime.InvokeVoidAsync("open", linkedinUrl, "_blank");
+                break;
+                
+            case "facebook":
+                // Open Facebook share dialog
+                var facebookUrl = $"https://www.facebook.com/sharer/sharer.php?u={Uri.EscapeDataString(postUrl)}";
+                await JSRuntime.InvokeVoidAsync("open", facebookUrl, "_blank");
+                break;
+                
+            case "email":
+                // Open email client
+                var subject = Uri.EscapeDataString(Post.Title);
+                var body = Uri.EscapeDataString($"Check out this post on Meritocious: {postUrl}");
+                var mailtoUrl = $"mailto:?subject={subject}&body={body}";
+                await JSRuntime.InvokeVoidAsync("open", mailtoUrl, "_blank");
+                break;
+        }
+    }
+    
+    private async Task HandleCopyLink()
+    {
+        var postUrl = NavigationManager.BaseUri + $"posts/{Post.Id}";
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", postUrl);
+        
+        // TODO: Show a notification that the link was copied
+    }
+}

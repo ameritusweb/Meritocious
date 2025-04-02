@@ -1,0 +1,195 @@
+@namespace Meritocious.Blazor.Components.Posts
+@inject IJSRuntime JSRuntime
+
+<div class="editor-toolbar border-b p-2 bg-gray-50">
+    <Space>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("bold")" 
+                    OnClick="@(() => FormatText("bold"))" 
+                    Size="small">
+                <Icon Type="bold" />
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("italic")" 
+                    OnClick="@(() => FormatText("italic"))" 
+                    Size="small">
+                <Icon Type="italic" />
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("underline")" 
+                    OnClick="@(() => FormatText("underline"))" 
+                    Size="small">
+                <Icon Type="underline" />
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Divider Type="vertical" />
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("h2")" 
+                    OnClick="@(() => FormatText("h2"))" 
+                    Size="small">
+                H2
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("h3")" 
+                    OnClick="@(() => FormatText("h3"))" 
+                    Size="small">
+                H3
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Divider Type="vertical" />
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("quote")" 
+                    OnClick="@(() => FormatText("quote"))" 
+                    Size="small">
+                <Icon Type="dash" />
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("code")" 
+                    OnClick="@(() => FormatText("code"))" 
+                    Size="small">
+                <Icon Type="code" />
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("link")" 
+                    OnClick="@(() => FormatText("link"))" 
+                    Size="small">
+                <Icon Type="link" />
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Divider Type="vertical" />
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("ul")" 
+                    OnClick="@(() => FormatText("ul"))" 
+                    Size="small">
+                <Icon Type="unordered-list" />
+            </Button>
+        </SpaceItem>
+        <SpaceItem>
+            <Button Type="@GetFormatButtonType("ol")" 
+                    OnClick="@(() => FormatText("ol"))" 
+                    Size="small">
+                <Icon Type="ordered-list" />
+            </Button>
+        </SpaceItem>
+    </Space>
+</div>
+
+<Modal Title="Insert Link"
+       Visible="@isLinkModalVisible"
+       OnOk="@InsertLink"
+       OnCancel="@CloseLinkModal"
+       OkText="Insert"
+       CancelText="Cancel">
+    <Form Layout="FormLayout.Vertical">
+        <FormItem Label="URL">
+            <Input @bind-Value="@linkUrl" Placeholder="https://example.com" />
+        </FormItem>
+        <FormItem Label="Text">
+            <Input @bind-Value="@linkText" Placeholder="Link text" />
+        </FormItem>
+    </Form>
+</Modal>
+
+@code {
+    [Parameter] public EventCallback<LinkInfo> OnInsertLink { get; set; }
+    
+    private string activeFormatButton = string.Empty;
+    private bool isLinkModalVisible = false;
+    private string linkUrl = string.Empty;
+    private string linkText = string.Empty;
+    
+    private string GetFormatButtonType(string format)
+    {
+        return activeFormatButton == format ? "primary" : "default";
+    }
+    
+    private async Task FormatText(string format)
+    {
+        activeFormatButton = activeFormatButton == format ? string.Empty : format;
+        
+        switch (format)
+        {
+            case "bold":
+                await InsertMarkdown("**", "**", "bold text");
+                break;
+            case "italic":
+                await InsertMarkdown("*", "*", "italic text");
+                break;
+            case "underline":
+                await InsertMarkdown("<u>", "</u>", "underlined text");
+                break;
+            case "h2":
+                await InsertMarkdown("## ", "", "Heading 2", true);
+                break;
+            case "h3":
+                await InsertMarkdown("### ", "", "Heading 3", true);
+                break;
+            case "quote":
+                await InsertMarkdown("> ", "", "Blockquote", true);
+                break;
+            case "code":
+                await InsertMarkdown("```\n", "\n```", "code block", true);
+                break;
+            case "link":
+                ShowLinkModal();
+                break;
+            case "ul":
+                await InsertMarkdown("- ", "", "List item", true);
+                break;
+            case "ol":
+                await InsertMarkdown("1. ", "", "List item", true);
+                break;
+        }
+    }
+    
+    private async Task InsertMarkdown(string prefix, string suffix, string placeholder, bool newLine = false)
+    {
+        await JSRuntime.InvokeVoidAsync("insertTextAtCursor", prefix, suffix, placeholder, newLine);
+    }
+    
+    private void ShowLinkModal()
+    {
+        linkUrl = string.Empty;
+        linkText = string.Empty;
+        isLinkModalVisible = true;
+    }
+    
+    private async Task InsertLink()
+    {
+        if (!string.IsNullOrWhiteSpace(linkUrl))
+        {
+            var text = string.IsNullOrWhiteSpace(linkText) ? linkUrl : linkText;
+            var linkInfo = new LinkInfo
+            {
+                Url = linkUrl,
+                Text = text
+            };
+            
+            await OnInsertLink.InvokeAsync(linkInfo);
+        }
+        
+        CloseLinkModal();
+    }
+    
+    private void CloseLinkModal()
+    {
+        isLinkModalVisible = false;
+    }
+    
+    public class LinkInfo
+    {
+        public string Url { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+    }
+}

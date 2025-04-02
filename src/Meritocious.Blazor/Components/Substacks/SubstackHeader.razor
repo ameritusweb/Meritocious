@@ -1,0 +1,128 @@
+@namespace Meritocious.Blazor.Components.Substacks
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Web.Components.Substacks
+@inject NavigationManager NavigationManager
+
+<div class="substack-header mb-6">
+    <Row Gutter="24" Align="middle">
+        <Col Span="18">
+            <div class="flex items-center space-x-4">
+                <Avatar Size="large" Src="@Substack.AvatarUrl">
+                    @Substack.Name[0]
+                </Avatar>
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <h1 class="text-2xl font-bold m-0">@Substack.Name</h1>
+                        <MeritScoreBadge Score="@Substack.MeritScore" ShowDetails="true" />
+                    </div>
+                    <p class="text-gray-500 mt-1">
+                        Created by @Substack.CreatorUsername, @GetCreationTime(Substack.CreatedAt)
+                    </p>
+                    <div class="mt-2">
+                        @foreach (var tag in Substack.Tags)
+                        {
+                            <Tag Class="mr-1">
+                                <a href="/substacks?topics=@tag" class="hover:text-blue-500">
+                                    @tag
+                                </a>
+                            </Tag>
+                        }
+                    </div>
+                </div>
+            </div>
+        </Col>
+        <Col Span="6" Class="text-right">
+            <div class="space-y-2">
+                <div>
+                    <Button Type="@(IsFollowing ? "primary" : "default")"
+                            OnClick="HandleFollowToggle">
+                        @(IsFollowing ? "Following" : "Follow")
+                    </Button>
+                    
+                    <Dropdown Trigger="new[] { TriggerType.Click }">
+                        <ChildContent>
+                            <Button>
+                                <Icon Type="more" />
+                            </Button>
+                        </ChildContent>
+                        <Overlay>
+                            <Menu>
+                                <MenuItem OnClick="@(() => NavigationManager.NavigateTo($"/s/{Substack.Slug}/about"))">
+                                    About this Substack
+                                </MenuItem>
+                                <MenuItem OnClick="@(() => NavigationManager.NavigateTo($"/s/{Substack.Slug}/guidelines"))">
+                                    Guidelines
+                                </MenuItem>
+                                @if (CanEdit)
+                                {
+                                    <MenuDivider />
+                                    <MenuItem OnClick="@(() => NavigationManager.NavigateTo($"/s/{Substack.Slug}/edit"))">
+                                        Edit Substack
+                                    </MenuItem>
+                                    <MenuItem OnClick="@(() => NavigationManager.NavigateTo($"/s/{Substack.Slug}/manage"))">
+                                        Manage Members
+                                    </MenuItem>
+                                }
+                                <MenuDivider />
+                                <MenuItem OnClick="ReportSubstack">
+                                    Report Substack
+                                </MenuItem>
+                            </Menu>
+                        </Overlay>
+                    </Dropdown>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <div class="text-right">
+                        <div>@Substack.FollowerCount</div>
+                        <div class="text-xs text-gray-500">Followers</div>
+                    </div>
+                    <div class="text-right">
+                        <div>@Substack.PostCount</div>
+                        <div class="text-xs text-gray-500">Posts</div>
+                    </div>
+                </div>
+            </div>
+        </Col>
+    </Row>
+    
+    <div class="mt-4">
+        <p class="text-gray-700">@Substack.Description</p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public SubstackDto Substack { get; set; }
+    [Parameter] public bool IsFollowing { get; set; }
+    [Parameter] public bool CanEdit { get; set; }
+    [Parameter] public EventCallback OnFollowToggle { get; set; }
+    [Parameter] public EventCallback OnReportSubstack { get; set; }
+    
+    private string GetCreationTime(DateTime createdAt)
+    {
+        var timeSpan = DateTime.Now - createdAt;
+        
+        if (timeSpan.TotalDays > 365)
+        {
+            var years = (int)(timeSpan.TotalDays / 365);
+            return $"{years} year{(years != 1 ? "s" : "")} ago";
+        }
+        
+        if (timeSpan.TotalDays > 30)
+        {
+            var months = (int)(timeSpan.TotalDays / 30);
+            return $"{months} month{(months != 1 ? "s" : "")} ago";
+        }
+        
+        return $"{(int)timeSpan.TotalDays} days ago";
+    }
+    
+    private async Task HandleFollowToggle()
+    {
+        await OnFollowToggle.InvokeAsync();
+    }
+    
+    private async Task ReportSubstack()
+    {
+        await OnReportSubstack.InvokeAsync();
+    }
+}

@@ -1,0 +1,386 @@
+@page "/substacks"
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Common.DTOs.Merit
+@using Meritocious.Web.Components.Substacks
+@using Meritocious.Blazor.Services.Substacks
+@inject ISubstackService SubstackService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Explore Substacks - Meritocious</PageTitle>
+
+<div class="container mx-auto px-4 py-6">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-2xl font-bold">Explore Substacks</h1>
+            <p class="text-gray-500">Discover topic-based spaces where ideas grow</p>
+        </div>
+        <div>
+            <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/substacks/create"))">
+                <template>
+                    <Icon Type="plus" /> Create Substack
+                </template>
+            </Button>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <Row Gutter="24">
+            <Col Span="16">
+                <Input Placeholder="Search substacks by name, description or topic..."
+                       Size="large"
+                       OnChange="HandleSearchChange"
+                       AllowClear
+                       Suffix="@searchSuffix" />
+            </Col>
+            <Col Span="8">
+                <Select Style="width: 100%;"
+                        Placeholder="Filter by topic"
+                        Mode="multiple"
+                        AllowClear
+                        DefaultValue="@selectedTopics"
+                        OnSelectedItemsChanged="HandleTopicFilterChange">
+                    <SelectOptions>
+                        @foreach (var topic in availableTopics)
+                        {
+                            <SelectOption Value="@topic" Label="@topic" />
+                        }
+                    </SelectOptions>
+                </Select>
+            </Col>
+        </Row>
+    </div>
+
+    <Row Gutter="24">
+        <Col Span="6">
+            <Card Class="mb-4">
+                <Template>
+                    <Tabs DefaultActiveKey="@sortBy"
+                          OnTabClick="HandleSortChange"
+                          TabPosition="@AntDesign.TabPosition.Left">
+                        <TabPane Key="merit" Tab="Highest Merit">
+                            <p class="text-gray-500 text-sm">Substacks ranked by average Merit Score</p>
+                        </TabPane>
+                        <TabPane Key="trending" Tab="Trending">
+                            <p class="text-gray-500 text-sm">Substacks with recent activity and growth</p>
+                        </TabPane>
+                        <TabPane Key="newest" Tab="Newest">
+                            <p class="text-gray-500 text-sm">Recently created substacks</p>
+                        </TabPane>
+                        <TabPane Key="active" Tab="Most Active">
+                            <p class="text-gray-500 text-sm">Substacks with the most posts per week</p>
+                        </TabPane>
+                    </Tabs>
+                </Template>
+            </Card>
+
+            <Card Title="Merit Threshold" Class="mb-4">
+                <div class="mb-2">
+                    <p class="text-gray-500 mb-3">Only show substacks with merit above:</p>
+                    <Slider Min="0"
+                            Max="100"
+                            @bind-Value="meritThreshold"
+                            OnAfterChange="HandleMeritThresholdChange"
+                            Tooltips="@(new[] { $"{meritThreshold}" })" />
+                </div>
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span>Any</span>
+                    <span>Exceptional</span>
+                </div>
+            </Card>
+
+            <Card Title="Your Substacks" Class="mb-4">
+                @if (isAuthenticated)
+                {
+                    <Tabs DefaultActiveKey="following">
+                        <TabPane Key="following" Tab="Following">
+                            @if (followedSubstacks.Any())
+                            {
+                                <div class="space-y-3">
+                                    @foreach (var substack in followedSubstacks)
+                                    {
+                                        <div class="flex items-center space-x-2">
+                                            <Avatar Size="small" Src="@substack.AvatarUrl">
+                                                @substack.Name[0]
+                                            </Avatar>
+                                            <span class="truncate">
+                                                <a href="/s/@substack.Slug" class="hover:text-blue-500">
+                                                    @substack.Name
+                                                </a>
+                                            </span>
+                                            <MeritScoreBadge Score="@substack.MeritScore" Size="small" />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <Empty Description="You're not following any substacks yet" 
+                                       Image="Empty.PRESENTED_IMAGE_SIMPLE" />
+                            }
+                        </TabPane>
+                        <TabPane Key="created" Tab="Created">
+                            @if (createdSubstacks.Any())
+                            {
+                                <div class="space-y-3">
+                                    @foreach (var substack in createdSubstacks)
+                                    {
+                                        <div class="flex items-center space-x-2">
+                                            <Avatar Size="small" Src="@substack.AvatarUrl">
+                                                @substack.Name[0]
+                                            </Avatar>
+                                            <span class="truncate">
+                                                <a href="/s/@substack.Slug" class="hover:text-blue-500">
+                                                    @substack.Name
+                                                </a>
+                                            </span>
+                                            <MeritScoreBadge Score="@substack.MeritScore" Size="small" />
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <Empty Description="You haven't created any substacks yet"
+                                       Image="Empty.PRESENTED_IMAGE_SIMPLE">
+                                    <Button Type="primary" 
+                                            OnClick="@(() => NavigationManager.NavigateTo("/substacks/create"))">
+                                        Create Substack
+                                    </Button>
+                                </Empty>
+                            }
+                        </TabPane>
+                    </Tabs>
+                }
+                else
+                {
+                    <Result Status="info"
+                            Title="Sign in to track substacks"
+                            SubTitle="Follow substacks to customize your experience">
+                        <Button Type="primary" 
+                                OnClick="@(() => NavigationManager.NavigateTo("/auth/login"))">
+                            Sign In
+                        </Button>
+                    </Result>
+                }
+            </Card>
+        </Col>
+
+        <Col Span="18">
+            @if (isLoading)
+            {
+                <div>
+                    @for (int i = 0; i < 3; i++)
+                    {
+                        <Skeleton Active Avatar Paragraph="new SkeletonParagraph { Rows = 4 }" Class="mb-4" />
+                    }
+                </div>
+            }
+            else if (!substacks.Any())
+            {
+                <Empty Description="No substacks found matching your criteria" />
+            }
+            else
+            {
+                <div class="space-y-4">
+                    @foreach (var substack in substacks)
+                    {
+                        <SubstackCard Substack="@substack"
+                                     IsFollowing="@IsUserFollowing(substack.Id)"
+                                     OnFollow="HandleFollowSubstack"
+                                     ShowTrendingMetrics="true"
+                                     ShowSimilarity="true" />
+                    }
+
+                    <div class="flex justify-center my-6">
+                        <Pagination Current="currentPage"
+                                    Total="totalItems"
+                                    PageSize="pageSize"
+                                    OnChange="HandlePageChange" />
+                    </div>
+                </div>
+            }
+        </Col>
+    </Row>
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> AuthState { get; set; }
+
+    private bool isLoading = true;
+    private bool isAuthenticated = false;
+    
+    // Search and filtering
+    private string searchQuery = string.Empty;
+    private List<string> selectedTopics = new();
+    private List<string> availableTopics = new();
+    private string sortBy = "merit";
+    private int meritThreshold = 0;
+    
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalItems = 0;
+    
+    // Data
+    private List<SubstackDto> substacks = new();
+    private List<SubstackDto> followedSubstacks = new();
+    private List<SubstackDto> createdSubstacks = new();
+    private HashSet<Guid> followedSubstackIds = new();
+    
+    // UI Templates
+    private RenderFragment searchSuffix => builder =>
+    {
+        builder.OpenComponent<Icon>(0);
+        builder.AddAttribute(1, "Type", "search");
+        builder.CloseComponent();
+    };
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Get authentication state
+        var authStateObj = await AuthState;
+        isAuthenticated = authStateObj.User.Identity?.IsAuthenticated ?? false;
+        
+        // TODO: Load topics from API
+        availableTopics = new List<string> { 
+            "AI", "Tech", "Society", "Governance", "Science", 
+            "Philosophy", "Politics", "Economics", "Culture" 
+        };
+        
+        // Initial data load
+        await LoadSubstacks();
+        
+        if (isAuthenticated)
+        {
+            await LoadUserSubstacks();
+        }
+    }
+    
+    private async Task LoadSubstacks()
+    {
+        isLoading = true;
+        
+        try
+        {
+            // TODO: Replace with actual API call to SubstackService
+            /* 
+            var result = await SubstackService.GetSubstacksAsync(
+                new SubstackQueryParams
+                {
+                    SearchQuery = searchQuery,
+                    Topics = selectedTopics,
+                    SortBy = sortBy,
+                    MeritThreshold = meritThreshold / 100m,
+                    Page = currentPage,
+                    PageSize = pageSize
+                });
+                
+            substacks = result.Items;
+            totalItems = result.TotalCount;
+            */
+            
+            // Placeholder until actual service implementation
+            await Task.Delay(500);
+            substacks = new List<SubstackDto>();
+            totalItems = 0;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading substacks: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private async Task LoadUserSubstacks()
+    {
+        try
+        {
+            // TODO: Replace with actual API calls
+            /*
+            followedSubstacks = await SubstackService.GetFollowedSubstacksAsync();
+            createdSubstacks = await SubstackService.GetCreatedSubstacksAsync();
+            followedSubstackIds = new HashSet<Guid>(followedSubstacks.Select(s => s.Id));
+            */
+            
+            // Placeholder until implementation
+            followedSubstacks = new List<SubstackDto>();
+            createdSubstacks = new List<SubstackDto>();
+            followedSubstackIds = new HashSet<Guid>();
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading user substacks: {ex.Message}");
+        }
+    }
+    
+    private bool IsUserFollowing(Guid substackId)
+    {
+        return followedSubstackIds.Contains(substackId);
+    }
+    
+    private async Task HandleFollowSubstack(Guid substackId)
+    {
+        if (!isAuthenticated)
+        {
+            NavigationManager.NavigateTo("/auth/login");
+            return;
+        }
+        
+        // TODO: Replace with actual API call
+        /*
+        if (IsUserFollowing(substackId))
+        {
+            await SubstackService.UnfollowSubstackAsync(substackId);
+            followedSubstackIds.Remove(substackId);
+        }
+        else
+        {
+            await SubstackService.FollowSubstackAsync(substackId);
+            followedSubstackIds.Add(substackId);
+        }
+        
+        // Refresh followed substacks
+        await LoadUserSubstacks();
+        */
+    }
+    
+    private async Task HandleSearchChange(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+        await LoadSubstacks();
+    }
+    
+    private async Task HandleTopicFilterChange(IEnumerable<string> topics)
+    {
+        selectedTopics = topics.ToList();
+        currentPage = 1;
+        await LoadSubstacks();
+    }
+    
+    private async Task HandleSortChange(string key)
+    {
+        sortBy = key;
+        currentPage = 1;
+        await LoadSubstacks();
+    }
+    
+    private async Task HandleMeritThresholdChange(double value)
+    {
+        // Slider returns double, convert to int
+        meritThreshold = (int)value;
+        currentPage = 1;
+        await LoadSubstacks();
+    }
+    
+    private async Task HandlePageChange(PaginationEventArgs args)
+    {
+        currentPage = args.Page;
+        await LoadSubstacks();
+    }
+}

@@ -1,0 +1,489 @@
+@page "/profile/merit"
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Common.DTOs.Merit
+@using Meritocious.Common.Enums
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@attribute [Authorize]
+
+<PageTitle>Your Merit Score - Meritocious</PageTitle>
+
+<div class="container mx-auto px-4 py-6">
+    <h1 class="text-2xl font-bold mb-6">Your Merit Score History</h1>
+
+    <div class="mb-8">
+        <Card>
+            <div class="flex items-start">
+                <div class="w-1/3 pr-8 border-r">
+                    <div class="text-center">
+                        <Progress Type="circle" 
+                                  Percent="@((double)(overallMeritScore * 100))" 
+                                  Status="@GetOverallStatus()"
+                                  Format="@(percent => $"{percent:F0}")"/>
+                        <h2 class="text-xl font-medium mt-3">Overall Merit Score</h2>
+                        <p class="text-gray-500">Based on your last 30 days of contributions</p>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <div class="mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Clarity:</span>
+                                <span>@FormatScore(meritComponents.ClarityScore)</span>
+                            </div>
+                            <Progress Percent="@((double)(meritComponents.ClarityScore * 100))" 
+                                      Size="small" 
+                                      ShowInfo="false"
+                                      Status="@GetComponentStatus(meritComponents.ClarityScore)" />
+                        </div>
+                        <div class="mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Novelty:</span>
+                                <span>@FormatScore(meritComponents.NoveltyScore)</span>
+                            </div>
+                            <Progress Percent="@((double)(meritComponents.NoveltyScore * 100))" 
+                                      Size="small" 
+                                      ShowInfo="false"
+                                      Status="@GetComponentStatus(meritComponents.NoveltyScore)" />
+                        </div>
+                        <div class="mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Contribution:</span>
+                                <span>@FormatScore(meritComponents.ContributionScore)</span>
+                            </div>
+                            <Progress Percent="@((double)(meritComponents.ContributionScore * 100))" 
+                                      Size="small" 
+                                      ShowInfo="false"
+                                      Status="@GetComponentStatus(meritComponents.ContributionScore)" />
+                        </div>
+                        <div class="mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Civility:</span>
+                                <span>@FormatScore(meritComponents.CivilityScore)</span>
+                            </div>
+                            <Progress Percent="@((double)(meritComponents.CivilityScore * 100))" 
+                                      Size="small" 
+                                      ShowInfo="false"
+                                      Status="@GetComponentStatus(meritComponents.CivilityScore)" />
+                        </div>
+                        <div class="mb-3">
+                            <div class="flex justify-between mb-1">
+                                <span>Relevance:</span>
+                                <span>@FormatScore(meritComponents.RelevanceScore)</span>
+                            </div>
+                            <Progress Percent="@((double)(meritComponents.RelevanceScore * 100))" 
+                                      Size="small" 
+                                      ShowInfo="false"
+                                      Status="@GetComponentStatus(meritComponents.RelevanceScore)" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-2/3 pl-8">
+                    <Tabs DefaultActiveKey="stats">
+                        <TabPane Key="stats" Tab="Statistics">
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <Card>
+                                    <Statistic Title="Exceptional Contributions (90+)"
+                                               Value="@stats.ExceptionalCount"
+                                               Suffix="posts/comments"
+                                               ValueStyle="color: #52c41a"/>
+                                </Card>
+                                <Card>
+                                    <Statistic Title="Highest Score"
+                                               Value="@stats.HighestScore"
+                                               Precision="0"
+                                               Suffix="%"
+                                               ValueStyle="color: #1890ff"/>
+                                </Card>
+                                <Card>
+                                    <Statistic Title="Average Merit Score"
+                                               Value="@stats.AverageScore"
+                                               Precision="0"
+                                               Suffix="%"/>
+                                </Card>
+                                <Card>
+                                    <Statistic Title="Total Evaluated Contributions"
+                                               Value="@stats.TotalContributions"
+                                               Suffix="items"/>
+                                </Card>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-medium mb-4">Merit Score Trend</h3>
+                                <!-- TODO: Implement chart showing merit score over time -->
+                                <Alert Message="Merit score trend chart will be displayed here" 
+                                       Type="@AlertType.Info" 
+                                       ShowIcon="true" />
+                            </div>
+                        </TabPane>
+                        <TabPane Key="badges" Tab="Merit Badges">
+                            @if (!meritBadges.Any())
+                            {
+                                <Empty Description="You haven't earned any merit badges yet"
+                                       Image="Empty.PRESENTED_IMAGE_SIMPLE">
+                                    <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/posts/create"))">
+                                        Create high-quality content to earn badges
+                                    </Button>
+                                </Empty>
+                            }
+                            else
+                            {
+                                <div class="grid grid-cols-3 gap-4">
+                                    @foreach (var badge in meritBadges)
+                                    {
+                                        <Card Class="text-center">
+                                            <Avatar Shape="@AvatarShape.Square" 
+                                                    Size="large"
+                                                    Src="@badge.IconUrl">
+                                                @badge.Name[0]
+                                            </Avatar>
+                                            <div class="mt-2">
+                                                <h4 class="font-medium">@badge.Name</h4>
+                                                <p class="text-sm text-gray-500">@badge.Description</p>
+                                                <p class="text-xs text-gray-400">Earned on @badge.EarnedAt.ToString("d")</p>
+                                            </div>
+                                        </Card>
+                                    }
+                                </div>
+                            }
+                        </TabPane>
+                    </Tabs>
+                </div>
+            </div>
+        </Card>
+    </div>
+    
+    <div>
+        <h2 class="text-xl font-bold mb-4">Recent Merit Evaluations</h2>
+        
+        <div class="mb-4">
+            <Row Gutter="16">
+                <Col Span="8">
+                    <Select DefaultValue="all" Style="width: 100%" OnChange="HandleFilterTypeChange">
+                        <SelectOption Value="all">All Content Types</SelectOption>
+                        <SelectOption Value="post">Posts</SelectOption>
+                        <SelectOption Value="comment">Comments</SelectOption>
+                    </Select>
+                </Col>
+                <Col Span="8">
+                    <RangePicker Style="width: 100%" OnChange="HandleDateRangeChange" />
+                </Col>
+                <Col Span="8">
+                    <Select DefaultValue="all" Style="width: 100%" OnChange="HandleSortChange">
+                        <SelectOption Value="date-desc">Newest First</SelectOption>
+                        <SelectOption Value="date-asc">Oldest First</SelectOption>
+                        <SelectOption Value="score-desc">Highest Score First</SelectOption>
+                        <SelectOption Value="score-asc">Lowest Score First</SelectOption>
+                    </Select>
+                </Col>
+            </Row>
+        </div>
+        
+        @if (isLoading)
+        {
+            <div>
+                @for (int i = 0; i < 3; i++)
+                {
+                    <Skeleton Active Paragraph="new SkeletonParagraph { Rows = 4 }" Class="mb-4" />
+                }
+            </div>
+        }
+        else if (!meritHistory.Any())
+        {
+            <Empty Description="No merit evaluations found for the selected filters"
+                   Image="Empty.PRESENTED_IMAGE_SIMPLE" />
+        }
+        else
+        {
+            <List DataSource="@meritHistory" ItemLayout="ListItemLayout.Vertical">
+                <ListItem>
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0">
+                            <MeritScoreBadge Score="@context.Score" Size="large" ShowDetails="true" />
+                        </div>
+                        
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-gray-500">
+                                    @GetContentTypeLabel(context.ContentType)
+                                </span>
+                                <span class="text-gray-400">•</span>
+                                <span class="text-gray-500">
+                                    @context.EvaluatedAt.ToString("g")
+                                </span>
+                                @if (context.IsRecalculation)
+                                {
+                                    <span class="text-gray-400">•</span>
+                                    <Tag Color="purple">Recalculated</Tag>
+                                    <Tooltip Title="@context.RecalculationReason">
+                                        <Icon Type="info-circle" Class="text-gray-400" />
+                                    </Tooltip>
+                                }
+                            </div>
+                            
+                            <div class="mt-2">
+                                <a href="@GetContentUrl(context)" class="text-lg font-medium hover:text-blue-500">
+                                    @GetContentTitle(context)
+                                </a>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <Card Size="small" Class="bg-gray-50">
+                                    <Descriptions Size="small">
+                                        <DescriptionsItem Title="Clarity">@FormatScore(context.Components["clarity"])</DescriptionsItem>
+                                        <DescriptionsItem Title="Novelty">@FormatScore(context.Components["novelty"])</DescriptionsItem>
+                                        <DescriptionsItem Title="Contribution">@FormatScore(context.Components["contribution"])</DescriptionsItem>
+                                        <DescriptionsItem Title="Civility">@FormatScore(context.Components["civility"])</DescriptionsItem>
+                                        <DescriptionsItem Title="Relevance">@FormatScore(context.Components["relevance"])</DescriptionsItem>
+                                    </Descriptions>
+                                </Card>
+                            </div>
+                        </div>
+                    </div>
+                </ListItem>
+            </List>
+            
+            <div class="flex justify-center mt-4">
+                <Pagination Current="currentPage"
+                            Total="totalItems"
+                            PageSize="pageSize"
+                            OnChange="HandlePageChange" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private bool isLoading = true;
+    private decimal overallMeritScore = 0.75m;
+    private MeritScoreDto meritComponents = new();
+    private List<MeritScoreHistory> meritHistory = new();
+    private List<MeritBadge> meritBadges = new();
+    private MeritStatistics stats = new();
+    
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalItems = 0;
+    
+    // Filters
+    private string contentTypeFilter = "all";
+    private DateTime? startDate;
+    private DateTime? endDate;
+    private string sortOrder = "date-desc";
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            
+            // TODO: Replace with actual API calls
+            /*
+            // Load overall merit score
+            var overallResult = await Http.GetFromJsonAsync<OverallMeritResult>("api/merit/overall");
+            overallMeritScore = overallResult.Score;
+            meritComponents = overallResult.Components;
+            
+            // Load statistics
+            stats = await Http.GetFromJsonAsync<MeritStatistics>("api/merit/statistics");
+            
+            // Load merit badges
+            meritBadges = await Http.GetFromJsonAsync<List<MeritBadge>>("api/merit/badges");
+            
+            // Load merit history with filters
+            var queryParams = new List<string> {
+                $"page={currentPage}",
+                $"pageSize={pageSize}",
+                $"sortOrder={sortOrder}"
+            };
+            
+            if (contentTypeFilter != "all")
+                queryParams.Add($"contentType={contentTypeFilter}");
+                
+            if (startDate.HasValue)
+                queryParams.Add($"startDate={startDate.Value:yyyy-MM-dd}");
+                
+            if (endDate.HasValue)
+                queryParams.Add($"endDate={endDate.Value:yyyy-MM-dd}");
+                
+            var url = $"api/merit/history?{string.Join("&", queryParams)}";
+            var historyResult = await Http.GetFromJsonAsync<PagedResult<MeritScoreHistory>>(url);
+            
+            meritHistory = historyResult.Items;
+            totalItems = historyResult.TotalCount;
+            */
+            
+            // Mock data for development
+            await Task.Delay(500);
+            overallMeritScore = 0.75m;
+            meritComponents = GetMockMeritComponents();
+            stats = GetMockStatistics();
+            meritBadges = new List<MeritBadge>();
+            meritHistory = new List<MeritScoreHistory>();
+            totalItems = 0;
+        }
+        catch (Exception ex)
+        {
+            // TODO: Error handling
+            Console.WriteLine($"Error loading merit data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    
+    private string FormatScore(decimal score)
+    {
+        return (score * 100).ToString("F0");
+    }
+    
+    private string GetOverallStatus()
+    {
+        return overallMeritScore switch {
+            >= 0.80m => "success",
+            >= 0.60m => "normal",
+            >= 0.30m => "exception",
+            _ => "exception"
+        };
+    }
+    
+    private string GetComponentStatus(decimal componentScore)
+    {
+        return componentScore switch {
+            >= 0.80m => "success",
+            >= 0.60m => "normal",
+            >= 0.30m => "exception",
+            _ => "exception"
+        };
+    }
+    
+    private string GetContentTypeLabel(ContentType type)
+    {
+        return type switch {
+            ContentType.Post => "Post",
+            ContentType.Comment => "Comment",
+            _ => "Unknown"
+        };
+    }
+    
+    private string GetContentUrl(MeritScoreHistory history)
+    {
+        return history.ContentType switch {
+            ContentType.Post => $"/posts/{history.ContentId}",
+            ContentType.Comment => $"/posts/{history.PostId}?comment={history.ContentId}",
+            _ => "#"
+        };
+    }
+    
+    private string GetContentTitle(MeritScoreHistory history)
+    {
+        return history.ContentTitle ?? $"{GetContentTypeLabel(history.ContentType)} from {history.EvaluatedAt.ToString("d")}";
+    }
+    
+    private async Task HandleFilterTypeChange(string value)
+    {
+        contentTypeFilter = value;
+        currentPage = 1;
+        await LoadData();
+    }
+    
+    private async Task HandleDateRangeChange(DateRangeChangedEventArgs args)
+    {
+        startDate = args.Dates[0];
+        endDate = args.Dates[1];
+        currentPage = 1;
+        await LoadData();
+    }
+    
+    private async Task HandleSortChange(string value)
+    {
+        sortOrder = value;
+        currentPage = 1;
+        await LoadData();
+    }
+    
+    private async Task HandlePageChange(PaginationEventArgs args)
+    {
+        currentPage = args.Page;
+        await LoadData();
+    }
+    
+    #region Mock Data Methods
+    private MeritScoreDto GetMockMeritComponents()
+    {
+        return new MeritScoreDto
+        {
+            ClarityScore = 0.82m,
+            NoveltyScore = 0.68m,
+            ContributionScore = 0.75m,
+            CivilityScore = 0.91m,
+            RelevanceScore = 0.73m,
+            FinalScore = 0.75m,
+            ModelVersion = "1.0.0"
+        };
+    }
+    
+    private MeritStatistics GetMockStatistics()
+    {
+        return new MeritStatistics
+        {
+            ExceptionalCount = 3,
+            HighestScore = 94,
+            AverageScore = 75,
+            TotalContributions = 27
+        };
+    }
+    #endregion
+    
+    #region Model Classes
+    private class MeritScoreHistory
+    {
+        public Guid Id { get; set; }
+        public Guid ContentId { get; set; }
+        public ContentType ContentType { get; set; }
+        public string ContentTitle { get; set; }
+        public Guid? PostId { get; set; }
+        public decimal Score { get; set; }
+        public Dictionary<string, decimal> Components { get; set; } = new();
+        public string ModelVersion { get; set; } = string.Empty;
+        public DateTime EvaluatedAt { get; set; }
+        public bool IsRecalculation { get; set; }
+        public string RecalculationReason { get; set; } = string.Empty;
+    }
+    
+    private class MeritBadge
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string IconUrl { get; set; } = string.Empty;
+        public DateTime EarnedAt { get; set; }
+    }
+    
+    private class MeritStatistics
+    {
+        public int ExceptionalCount { get; set; }
+        public int HighestScore { get; set; }
+        public int AverageScore { get; set; }
+        public int TotalContributions { get; set; }
+    }
+    
+    private class PagedResult<T>
+    {
+        public List<T> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+    }
+    
+    private class OverallMeritResult
+    {
+        public decimal Score { get; set; }
+        public MeritScoreDto Components { get; set; }
+    }
+    #endregion
+}

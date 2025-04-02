@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.Authorization;
 using Meritocious.Blazor.Data;
+using Meritocious.Blazor.Services.Auth;
+using Meritocious.Blazor.Services.Substacks;
 using Blazored.LocalStorage;
+using AntDesign;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +17,19 @@ builder.Services.AddBlazoredLocalStorage(config =>
 {
     config.JsonSerializerOptions.WriteIndented = true;
 });
+
+// Register HTTP Client
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001") });
+
+// Register Authentication Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
+
+// Register Ant Design
+builder.Services.AddAntDesign();
+
+// Register Application Services
+builder.Services.AddScoped<ISubstackService, SubstackService>();
 
 var app = builder.Build();
 

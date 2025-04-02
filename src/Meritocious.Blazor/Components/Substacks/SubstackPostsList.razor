@@ -1,0 +1,133 @@
+@namespace Meritocious.Blazor.Components.Substacks
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Common.DTOs.Content
+@inject NavigationManager NavigationManager
+
+<Card Class="mb-4">
+    <div class="flex justify-between items-center">
+        <Tabs DefaultActiveKey="@SortBy"
+              OnTabClick="HandleSortChange">
+            <TabPane Key="trending" Tab="Trending" />
+            <TabPane Key="new" Tab="Newest" />
+            <TabPane Key="top" Tab="Top Rated" />
+        </Tabs>
+        
+        <div>
+            <Button Type="primary" OnClick="HandleCreatePost">
+                <Icon Type="edit" /> New Post
+            </Button>
+        </div>
+    </div>
+    
+    @if (IsLoading)
+    {
+        <div class="mt-4">
+            @for (int i = 0; i < 3; i++)
+            {
+                <Skeleton Active Paragraph="new SkeletonParagraph { Rows = 4 }" Class="mb-4" />
+            }
+        </div>
+    }
+    else if (!Posts.Any())
+    {
+        <Empty Description="No posts yet in this substack" 
+               Class="my-8">
+            <Button Type="primary" OnClick="HandleCreatePost">
+                Create the first post
+            </Button>
+        </Empty>
+    }
+    else
+    {
+        <List DataSource="@Posts" ItemLayout="ListItemLayout.Vertical" Class="mt-4">
+            <ListItem>
+                <span class="ant-list-item-meta-title">
+                    <a href="/posts/@context.Id" class="text-lg font-medium hover:text-blue-500">
+                        @context.Title
+                    </a>
+                </span>
+                <div class="flex items-center space-x-2 mb-2 text-sm">
+                    <Avatar Size="small">@context.AuthorUsername[0]</Avatar>
+                    <span class="text-gray-500">@context.AuthorUsername</span>
+                    <span class="text-gray-400">posted @GetTimeAgo(context.CreatedAt)</span>
+                    <div class="flex-grow"></div>
+                    <MeritScoreBadge Score="@context.MeritScore" ShowDetails="true" Size="small" />
+                </div>
+                <div class="text-gray-700 mb-2 line-clamp-2">
+                    @GetPostSummary(context.Content)
+                </div>
+                <div>
+                    @foreach (var tag in context.Tags)
+                    {
+                        <Tag Class="mr-1">@tag</Tag>
+                    }
+                </div>
+            </ListItem>
+        </List>
+        
+        <div class="flex justify-center mt-4">
+            <Pagination Current="CurrentPage"
+                        Total="TotalPosts"
+                        PageSize="PageSize"
+                        OnChange="HandlePageChange" />
+        </div>
+    }
+</Card>
+
+@code {
+    [Parameter] public List<PostDto> Posts { get; set; } = new();
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public int CurrentPage { get; set; } = 1;
+    [Parameter] public int PageSize { get; set; } = 10;
+    [Parameter] public int TotalPosts { get; set; }
+    [Parameter] public string SortBy { get; set; } = "trending";
+    [Parameter] public bool IsAuthenticated { get; set; }
+    [Parameter] public Guid? SubstackId { get; set; }
+    [Parameter] public EventCallback<string> OnSortChange { get; set; }
+    [Parameter] public EventCallback<PaginationEventArgs> OnPageChange { get; set; }
+    
+    private string GetTimeAgo(DateTime date)
+    {
+        var timeSpan = DateTime.Now - date;
+        
+        if (timeSpan.TotalDays > 365)
+            return $"{(int)(timeSpan.TotalDays / 365)} year{((int)(timeSpan.TotalDays / 365) != 1 ? "s" : "")} ago";
+        if (timeSpan.TotalDays > 30)
+            return $"{(int)(timeSpan.TotalDays / 30)} month{((int)(timeSpan.TotalDays / 30) != 1 ? "s" : "")} ago";
+        if (timeSpan.TotalDays > 1)
+            return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays != 1 ? "s" : "")} ago";
+        if (timeSpan.TotalHours > 1)
+            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours != 1 ? "s" : "")} ago";
+        if (timeSpan.TotalMinutes > 1)
+            return $"{(int)timeSpan.TotalMinutes} minute{((int)timeSpan.TotalMinutes != 1 ? "s" : "")} ago";
+        
+        return "just now";
+    }
+    
+    private string GetPostSummary(string content)
+    {
+        // TODO: Implement actual summary generation
+        return content.Length > 200 ? content.Substring(0, 200) + "..." : content;
+    }
+    
+    private async Task HandleSortChange(string key)
+    {
+        await OnSortChange.InvokeAsync(key);
+    }
+    
+    private async Task HandlePageChange(PaginationEventArgs args)
+    {
+        await OnPageChange.InvokeAsync(args);
+    }
+    
+    private void HandleCreatePost()
+    {
+        if (!IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/auth/login");
+            return;
+        }
+        
+        NavigationManager.NavigateTo($"/posts/create?substack={SubstackId}");
+    }
+}

@@ -1,0 +1,57 @@
+@namespace Meritocious.Blazor.Components.Substacks
+
+<Modal Title="Report Substack"
+       Visible="Visible"
+       OnOk="HandleSubmitReport"
+       OnCancel="HandleCancel"
+       OkText="Submit Report"
+       CancelText="Cancel">
+    <Form Model="@reportForm" Layout="FormLayout.Vertical">
+        <FormItem Label="Reason for reporting">
+            <Select Style="width: 100%;" @bind-Value="@reportForm.Reason">
+                <SelectOption Value="spam">Spam or misleading</SelectOption>
+                <SelectOption Value="harmful">Harmful content</SelectOption>
+                <SelectOption Value="hateful">Hate speech</SelectOption>
+                <SelectOption Value="harassment">Harassment</SelectOption>
+                <SelectOption Value="falseInfo">False information</SelectOption>
+                <SelectOption Value="other">Other</SelectOption>
+            </Select>
+        </FormItem>
+        <FormItem Label="Additional details">
+            <TextArea Rows="4" @bind-Value="@reportForm.Details" Placeholder="Please provide specific details about the issue" />
+        </FormItem>
+    </Form>
+</Modal>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<ReportForm> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    
+    private ReportForm reportForm = new();
+    
+    protected override void OnParameterSet()
+    {
+        if (Visible)
+        {
+            // Reset form when dialog becomes visible
+            reportForm = new ReportForm();
+        }
+    }
+    
+    private async Task HandleSubmitReport()
+    {
+        await OnSubmit.InvokeAsync(reportForm);
+    }
+    
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+    
+    public class ReportForm
+    {
+        public string Reason { get; set; } = "spam";
+        public string Details { get; set; } = string.Empty;
+    }
+}
