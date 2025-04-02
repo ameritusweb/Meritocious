@@ -86,11 +86,11 @@
 
                     @if (!notifications.Any())
                     {
-                        <Empty Description="No new notifications" />
+                        <Empty Description="emptyDescription" />
                     }
                     else
                     {
-                        <List DataSource="notifications" Size="small">
+                        <AntList DataSource="notifications" Size="small">
                             <ChildContent Context="notification">
                                 <ListItem Class="@(!notification.IsRead ? "bg-blue-50" : "")">
                                     <div class="w-full">
@@ -115,7 +115,7 @@
                                     </div>
                                 </ListItem>
                             </ChildContent>
-                        </List>
+                        </AntList>
                         
                         <div class="text-center mt-4">
                             <Button Type="link" OnClick="@(() => NavigationManager.NavigateTo("/notifications"))">
@@ -181,6 +181,9 @@
 </style>
 
 @code {
+
+    private readonly string emptyDescription = "No new notifications";
+
     [Parameter]
     public bool Collapsed { get; set; }
 
@@ -324,7 +327,7 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error loading initial notifications");
-            MessageService.Error("Error", "Failed to load notifications");
+            await MessageService.Error("Failed to load notifications");
         }
     }
 
