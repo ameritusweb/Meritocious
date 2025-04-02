@@ -1,0 +1,290 @@
+@using Meritocious.Common.DTOs.Merit
+@using Meritocious.Blazor.Components.Substacks
+
+<div class="discover-step">
+    <Card Class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-medium mb-2">Discover Great Content</h2>
+                <p class="text-gray-600">Find high-quality Substacks and discussions aligned with your interests</p>
+            </div>
+            <Progress Type="circle" 
+                     Percent="@(substackMatches.Count * 10)"
+                     Format="p => $"{substackMatches.Count} Found""
+                     Width="60" />
+        </div>
+    </Card>
+
+    <Row Gutter="[16, 16]">
+        <Col Span="16">
+            <Card Title="Recommended Substacks" Class="h-full">
+                <Alert Message="Matched to Your Interests"
+                       Description="These Substacks have high merit scores and active discussions in your selected topics"
+                       Type="success"
+                       ShowIcon
+                       Class="mb-4" />
+
+                <div class="substack-grid">
+                    @foreach (var substack in substackMatches)
+                    {
+                        <Card Size="small" 
+                              Hoverable
+                              Class="substack-card @(selectedSubstacks.Contains(substack.Id) ? "selected" : "")">
+                            <div class="flex items-start">
+                                <Avatar Size="large" Src="@substack.Icon" />
+                                <div class="ml-3 flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="font-medium">@substack.Name</h4>
+                                        <Button Type="@(selectedSubstacks.Contains(substack.Id) ? "primary" : "default")"
+                                                Size="small"
+                                                OnClick="() => ToggleSubstack(substack.Id)">
+                                            @(selectedSubstacks.Contains(substack.Id) ? "Following" : "Follow")
+                                        </Button>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-1">@substack.Description</p>
+                                    <div class="flex items-center mt-2">
+                                        <Tag Color="blue">@substack.PrimaryTopic</Tag>
+                                        <span class="mx-2 text-gray-300">•</span>
+                                        <Text Type="secondary">@substack.MemberCount members</Text>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="grid grid-cols-3 gap-4">
+                                    <Statistic Title="Merit Score"
+                                              Value="@substack.MeritScore"
+                                              Precision="1"
+                                              ValueStyle="@(new { color = GetMeritColor(substack.MeritScore) })"
+                                              Suffix="%" />
+                                    <Statistic Title="Posts/Week"
+                                              Value="@substack.PostsPerWeek" />
+                                    <Statistic Title="Engagement"
+                                              Value="@substack.EngagementRate"
+                                              Suffix="%" />
+                                </div>
+                            </div>
+                        </Card>
+                    }
+                </div>
+            </Card>
+        </Col>
+
+        <Col Span="8">
+            <div class="space-y-4">
+                <Card Title="Your Interests">
+                    <div class="selected-interests">
+                        @foreach (var interest in SelectedInterests)
+                        {
+                            <Tag Color="blue" Class="mr-2 mb-2">@interest</Tag>
+                        }
+                    </div>
+                    <Divider />
+                    <div class="merit-preferences">
+                        <h4 class="font-medium mb-2">Content Preferences</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span>Minimum Merit Score</span>
+                                    <span>@minMeritScore%</span>
+                                </div>
+                                <Slider @bind-Value="minMeritScore"
+                                       TipFormatter="@(v => $"{v}%")"
+                                       Marks="@(new Dictionary<int, string> {
+                                           { 0, "Any" },
+                                           { 50, "Good" },
+                                           { 75, "Great" },
+                                           { 90, "Outstanding" }
+                                       })" />
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span>Activity Level</span>
+                                    <span>@activityLevel posts/week</span>
+                                </div>
+                                <Slider @bind-Value="activityLevel"
+                                       Min="1"
+                                       Max="20"
+                                       TipFormatter="@(v => $"{v}/week")" />
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                <Card Title="Top Contributors" Size="small">
+                    <List Size="small" DataSource="@topContributors">
+                        <ChildContent Context="contributor">
+                            <ListItem>
+                                <ListItemMeta
+                                    Avatar="@contributor.Avatar"
+                                    Title="@contributor.Name"
+                                    Description="@($"{contributor.Role} • {contributor.PostCount} posts")">
+                                </ListItemMeta>
+                                <Button Type="link" Size="small">Follow</Button>
+                            </ListItem>
+                        </ChildContent>
+                    </List>
+                </Card>
+            </div>
+        </Col>
+    </Row>
+
+    <div class="mt-6 flex justify-between">
+        <Button OnClick="@(() => OnBack.InvokeAsync())">
+            <Icon Type="left" /> Back
+        </Button>
+        <Button Type="primary" 
+                OnClick="@(() => OnComplete.InvokeAsync())"
+                Disabled="@(!selectedSubstacks.Any())">
+            Finish Setup <Icon Type="right" />
+        </Button>
+    </div>
+</div>
+
+<style>
+    .substack-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .substack-card {
+        transition: all 0.2s ease;
+    }
+
+    .substack-card.selected {
+        border-color: var(--ant-primary-color);
+        background: var(--ant-primary-1);
+    }
+
+    .selected-interests {
+        min-height: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .substack-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public HashSet<string> SelectedInterests { get; set; } = new();
+    [Parameter] public EventCallback<HashSet<string>> OnSubstacksSelected { get; set; }
+    [Parameter] public EventCallback OnComplete { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    private HashSet<string> selectedSubstacks = new();
+    private int minMeritScore = 75;
+    private int activityLevel = 5;
+
+    // Sample data - replace with actual API calls
+    private readonly List<SubstackMatch> substackMatches = new()
+    {
+        new SubstackMatch
+        {
+            Id = "tech-insights",
+            Name = "Tech Insights",
+            Description = "Deep dives into emerging technologies and their implications",
+            Icon = "/images/substacks/tech.png",
+            PrimaryTopic = "Technology",
+            MemberCount = 1234,
+            MeritScore = 92.5m,
+            PostsPerWeek = 3,
+            EngagementRate = 85
+        },
+        new SubstackMatch
+        {
+            Id = "ai-ethics",
+            Name = "AI Ethics Forum",
+            Description = "Discussions on responsible AI development and implementation",
+            Icon = "/images/substacks/ai.png",
+            PrimaryTopic = "AI",
+            MemberCount = 856,
+            MeritScore = 88.7m,
+            PostsPerWeek = 4,
+            EngagementRate = 78
+        },
+        new SubstackMatch
+        {
+            Id = "ux-collective",
+            Name = "UX Collective",
+            Description = "User experience insights and best practices",
+            Icon = "/images/substacks/ux.png",
+            PrimaryTopic = "Design",
+            MemberCount = 945,
+            MeritScore = 90.2m,
+            PostsPerWeek = 5,
+            EngagementRate = 82
+        }
+    };
+
+    private readonly List<Contributor> topContributors = new()
+    {
+        new Contributor
+        {
+            Name = "Sarah Chen",
+            Role = "Tech Lead",
+            Avatar = "/images/avatars/sarah.png",
+            PostCount = 45
+        },
+        new Contributor
+        {
+            Name = "Mike Johnson",
+            Role = "AI Researcher",
+            Avatar = "/images/avatars/mike.png",
+            PostCount = 38
+        },
+        new Contributor
+        {
+            Name = "Lisa Park",
+            Role = "UX Designer",
+            Avatar = "/images/avatars/lisa.png",
+            PostCount = 32
+        }
+    };
+
+    private async Task ToggleSubstack(string substackId)
+    {
+        if (selectedSubstacks.Contains(substackId))
+        {
+            selectedSubstacks.Remove(substackId);
+        }
+        else
+        {
+            selectedSubstacks.Add(substackId);
+        }
+
+        await OnSubstacksSelected.InvokeAsync(selectedSubstacks);
+    }
+
+    private string GetMeritColor(decimal score) => score switch
+    {
+        >= 90 => "#52c41a", // Success green
+        >= 80 => "#1890ff", // Primary blue
+        >= 70 => "#faad14", // Warning yellow
+        _ => "#ff4d4f"      // Error red
+    };
+
+    private class SubstackMatch
+    {
+        public string Id { get; init; }
+        public string Name { get; init; }
+        public string Description { get; init; }
+        public string Icon { get; init; }
+        public string PrimaryTopic { get; init; }
+        public int MemberCount { get; init; }
+        public decimal MeritScore { get; init; }
+        public int PostsPerWeek { get; init; }
+        public int EngagementRate { get; init; }
+    }
+
+    private class Contributor
+    {
+        public string Name { get; init; }
+        public string Role { get; init; }
+        public string Avatar { get; init; }
+        public int PostCount { get; init; }
+    }
+}

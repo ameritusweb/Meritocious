@@ -1,0 +1,51 @@
+@using AntDesign.Charts
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+
+<Tabs>
+    <TabPane Key="1">
+        <TabTemplate>示例1</TabTemplate>
+        <ChildContent>
+            <Heatmap @ref="chart1" Config="config1" OnFirstRender="onChart1_FirstRender" />
+        </ChildContent>
+    </TabPane>
+</Tabs>
+
+@code{
+
+    IChartComponent chart1;
+    HeatMapItem[] data1;
+
+    private async Task onChart1_FirstRender(IChartComponent chart)
+    {
+        data1 = await ChartsDemoData.HeadMapDataAsync(NavigationManager, HttpClient);
+        await chart1.ChangeData(data1);
+    }
+
+    #region 示例1
+
+    HeatmapConfig config1 = new HeatmapConfig()
+        {
+            HeatMapType = "density",
+            XField = "g",
+            YField = "l",
+            ColorField = "tmp",
+            Color = new string[] { "#F51D27", "#FA541C", "#FF8C12", "#FFC838", "#FAFFA8", "#80FF73", "#12CCCC", "#1890FF", "#6E32C2" },
+            Legend = new MatrixLegendConfig()
+            {
+                Position = "bottom"
+            },
+            Annotation = new[]
+            {
+            new ImageAnnotation()
+            {
+                Start = new[]{"min","max"},
+                End = new[]{"max","min"},
+                Src = "https://gw.alipayobjects.com/zos/rmsportal/NeUTMwKtPcPxIFNTWZOZ.png"
+            }
+        }
+        };
+
+    #endregion 示例1
+
+}

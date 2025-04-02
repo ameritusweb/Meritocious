@@ -1,43 +1,17 @@
 @using Meritocious.Common.DTOs.Merit
 @using Meritocious.Core.Entities
+@using AntDesign.Charts
+@using Title = AntDesign.Charts.Title
 @inject IHttpClientFactory HttpClientFactory
 
 <div class="merit-trend-chart">
     @if (ChartData != null)
     {
-        <div class="chart-container">
-            <canvas @ref="chartCanvas"></canvas>
-        </div>
-        <div class="chart-legend">
-            <div class="legend-item">
-                <span class="legend-color" style="background-color: #4CAF50"></span>
-                <span>Overall Merit</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background-color: #2196F3"></span>
-                <span>Clarity</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background-color: #FF9800"></span>
-                <span>Novelty</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background-color: #F44336"></span>
-                <span>Contribution</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background-color: #9C27B0"></span>
-                <span>Civility</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background-color: #795548"></span>
-                <span>Relevance</span>
-            </div>
-        </div>
+        <AntDesign.Charts.Line @ref="chart" Data="chartItems" Config="config" />
     }
     else
     {
-        <div class="loading">Loading merit score history...</div>
+        <Spin Tip="Loading merit score history..." />
     }
 </div>
 
@@ -47,10 +21,64 @@
     [Parameter] public DateTime? StartDate { get; set; }
     [Parameter] public DateTime? EndDate { get; set; }
 
-    private ElementReference chartCanvas;
+    private IChartComponent chart;
     private List<ReputationSnapshot> ChartData;
-    private IJSObjectReference? chartModule;
-    private DotNetObjectReference<MeritScoreTrendChart>? objRef;
+    private List<object> chartItems = new();
+
+    private readonly LineConfig config = new()
+    {
+        Title = new Title
+        {
+            Visible = true,
+            Text = "Merit Score Trend"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "Track the evolution of merit scores across different dimensions"
+        },
+        ForceFit = true,
+        Padding = "auto",
+        XField = "date",
+        YField = "value",
+        SeriesField = "category",
+        Color = new[] { "#4CAF50", "#2196F3", "#FF9800", "#F44336", "#9C27B0", "#795548" },
+        Point = new LineViewConfigPoint
+        {
+            Visible = true,
+            Size = 5,
+            Shape = "circle",
+            Style = new GraphicStyle
+            {
+                Fill = "white",
+                LineWidth = 2
+            }
+        },
+        Label = new Label
+        {
+            Visible = false
+        },
+        Smooth = true,
+        Legend = new Legend
+        {
+            Visible = true,
+            Position = "top-right"
+        },
+        YAxis = new ValueAxis
+        {
+            Min = 0,
+            Max = 100,
+            Label = new BaseAxisLabel
+            {
+                Formatter = "value => `${value}%`"
+            }
+        },
+        Interactions = new[] 
+        {
+            new Interaction { Type = "slider", Cfg = new { start = 0, end = 1 } },
+            new Interaction { Type = "tooltip", Cfg = new { shared = true } }
+        }
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,103 +88,48 @@
         await LoadChartData();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            chartModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/meritChart.js");
-            objRef = DotNetObjectReference.Create(this);
-            await InitializeChart();
-        }
-    }
-
     private async Task LoadChartData()
     {
         var client = HttpClientFactory.CreateClient("MeritociousAPI");
-        var response = await client.GetFromJsonAsync<List<ReputationSnapshot>>(
+        ChartData = await client.GetFromJsonAsync<List<ReputationSnapshot>>(
             $"api/users/{UserId}/merit-history?timeFrame={TimeFrame}&start={StartDate:yyyy-MM-dd}&end={EndDate:yyyy-MM-dd}");
-        
-        ChartData = response;
-        StateHasChanged();
-        
-        if (chartModule != null)
-        {
-            await UpdateChart();
-        }
-    }
 
-    private async Task InitializeChart()
-    {
-        if (ChartData != null && chartModule != null)
+        if (ChartData != null)
         {
-            await chartModule.InvokeVoidAsync("initializeChart", chartCanvas, objRef);
-            await UpdateChart();
-        }
-    }
-
-    private async Task UpdateChart()
-    {
-        if (ChartData != null && chartModule != null)
-        {
-            var labels = ChartData.Select(d => d.StartDate.ToString("MMM dd")).ToArray();
-            var datasets = new[]
-            {
-                new {
-                    label = "Overall Merit",
-                    data = ChartData.Select(d => d.OverallMeritScore).ToArray(),
-                    borderColor = "#4CAF50",
-                    backgroundColor = "#4CAF5022"
-                },
-                new {
-                    label = "Clarity",
-                    data = ChartData.Select(d => d.MetricSnapshots["Clarity"]).ToArray(),
-                    borderColor = "#2196F3",
-                    backgroundColor = "#2196F322"
-                },
-                new {
-                    label = "Novelty",
-                    data = ChartData.Select(d => d.MetricSnapshots["Novelty"]).ToArray(),
-                    borderColor = "#FF9800",
-                    backgroundColor = "#FF980022"
-                },
-                new {
-                    label = "Contribution",
-                    data = ChartData.Select(d => d.MetricSnapshots["Contribution"]).ToArray(),
-                    borderColor = "#F44336",
-                    backgroundColor = "#F4433622"
-                },
-                new {
-                    label = "Civility",
-                    data = ChartData.Select(d => d.MetricSnapshots["Civility"]).ToArray(),
-                    borderColor = "#9C27B0",
-                    backgroundColor = "#9C27B022"
-                },
-                new {
-                    label = "Relevance",
-                    data = ChartData.Select(d => d.MetricSnapshots["Relevance"]).ToArray(),
-                    borderColor = "#795548",
-                    backgroundColor = "#79554822"
-                }
-            };
-
-            await chartModule.InvokeVoidAsync("updateChartData", chartCanvas, labels, datasets);
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            if (chartModule != null)
-            {
-                await chartModule.DisposeAsync();
-            }
+            var items = new List<object>();
             
-            objRef?.Dispose();
+            foreach (var snapshot in ChartData)
+            {
+                // Overall Merit
+                items.Add(new { 
+                    date = snapshot.StartDate.ToString("MMM dd"),
+                    category = "Overall Merit",
+                    value = snapshot.OverallMeritScore
+                });
+
+                // Individual metrics
+                foreach (var metric in snapshot.MetricSnapshots)
+                {
+                    items.Add(new {
+                        date = snapshot.StartDate.ToString("MMM dd"),
+                        category = metric.Key,
+                        value = metric.Value
+                    });
+                }
+            }
+
+            chartItems = items;
+            await InvokeAsync(StateHasChanged);
+
+            if (chart != null)
+            {
+                await chart.ChangeData(chartItems);
+            }
         }
-        catch (JSDisconnectedException)
-        {
-            // Handle JSRuntime disposal
-        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadChartData();
     }
 }

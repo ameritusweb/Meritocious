@@ -1,0 +1,110 @@
+@using Meritocious.Common.DTOs.Merit
+
+<div class="welcome-step">
+    <Result
+        Icon="@(() => <img src="/images/welcome-illustration.svg" style="max-width: 200px;" />)"
+        Title="Welcome to Meritocious"
+        SubTitle="A new kind of discussion platform where quality thinking is the only currency"
+        Class="mb-8">
+        <Extra>
+            <div class="mt-4">
+                <Alert
+                    Message="🎯 Your Profile is Ready"
+                    Description="We'll help you customize your experience in just a few steps"
+                    Type="success"
+                    ShowIcon />
+            </div>
+        </Extra>
+    </Result>
+
+    <div class="feature-grid">
+        <Card Class="feature-card" Bordered>
+            <Icon Type="trophy" Theme="outline" Class="text-2xl text-primary mb-3" />
+            <h3 class="text-lg font-medium mb-2">Merit-Based Platform</h3>
+            <p class="text-gray-600">Content rises based on its insight, originality, and value - not just popularity</p>
+        </Card>
+
+        <Card Class="feature-card" Bordered>
+            <Icon Type="bulb" Theme="outline" Class="text-2xl text-warning mb-3" />
+            <p class="text-lg font-medium mb-2">Thoughtful Discussion</p>
+            <p class="text-gray-600">AI helps curate meaningful conversations and surface valuable insights</p>
+        </Card>
+
+        <Card Class="feature-card" Bordered>
+            <Icon Type="branches" Theme="outline" Class="text-2xl text-success mb-3" />
+            <h3 class="text-lg font-medium mb-2">Evolving Ideas</h3>
+            <p class="text-gray-600">Fork discussions, remix ideas, and build on others' contributions</p>
+        </Card>
+
+        <Card Class="feature-card" Bordered>
+            <Icon Type="compass" Theme="outline" Class="text-2xl text-error mb-3" />
+            <h3 class="text-lg font-medium mb-2">Topic-Based Communities</h3>
+            <p class="text-gray-600">Join Substacks aligned with your interests and expertise</p>
+        </Card>
+    </div>
+
+    <div class="mt-8 stats-preview">
+        <Card>
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-lg font-medium mb-4">Platform Overview</h3>
+                    <div class="grid grid-cols-3 gap-8">
+                        <Statistic Title="Active Substacks" Value="50+" />
+                        <Statistic Title="Contributors" Value="1000+" />
+                        <Statistic Title="Quality Posts" Value="5000+" />
+                    </div>
+                </div>
+                <div class="ml-8">
+                    <Button Type="primary" Size="large" OnClick="OnComplete">
+                        <template>
+                            Get Started <Icon Type="arrow-right" />
+                        </template>
+                    </Button>
+                    <br />
+                    <Button Type="link" Class="mt-2" OnClick="OnSkip">
+                        Skip for now
+                    </Button>
+                </div>
+            </div>
+        </Card>
+    </div>
+</div>
+
+<style>
+    .welcome-step {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .feature-card {
+        height: 100%;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .feature-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnComplete { get; set; }
+    [Parameter] public EventCallback OnSkip { get; set; }
+}

@@ -1,0 +1,217 @@
+@using Meritocious.Common.DTOs.Merit
+@inject NavigationManager NavigationManager
+@inject ISubstackService SubstackService
+@inject MessageService MessageService
+
+<div class="onboarding-flow">
+    <Steps Current="@currentStep" Direction="@(isSmallScreen ? "vertical" : "horizontal")" Class="mb-8">
+        <Step Title="Welcome"
+              Icon="@(() => 
+                  <Icon Type="smile" Class="text-primary" />)" 
+              Description="Let's get started" />
+        <Step Title="Merit System"
+              Icon="@(() => 
+                  <Icon Type="trophy" Class="text-warning" />)"
+              Description="Understanding merit" />
+        <Step Title="Interests"
+              Icon="@(() => 
+                  <Icon Type="compass" Class="text-success" />)"
+              Description="Pick your topics" />
+        <Step Title="Discover"
+              Icon="@(() => 
+                  <Icon Type="bulb" Class="text-primary" />)"
+              Description="Find great content" />
+        <Step Title="Ready"
+              Icon="@(() => 
+                  <Icon Type="rocket" Class="text-success" />)"
+              Description="Start contributing" />
+    </Steps>
+
+    <div class="step-content">
+        @switch (currentStep)
+        {
+            case 0:
+                <WelcomeStep 
+                    OnComplete="NextStep"
+                    OnSkip="HandleSkip" />
+                break;
+
+            case 1:
+                <MeritSystemStep 
+                    OnComplete="NextStep"
+                    OnBack="PreviousStep"
+                    OnDemoComplete="HandleMeritDemo" />
+                break;
+
+            case 2:
+                <InterestsStep 
+                    SelectedInterests="@selectedInterests"
+                    OnInterestsSelected="HandleInterestsSelected"
+                    OnComplete="NextStep"
+                    OnBack="PreviousStep" />
+                break;
+
+            case 3:
+                <DiscoverStep 
+                    SelectedInterests="@selectedInterests"
+                    OnSubstacksSelected="HandleSubstacksSelected"
+                    OnComplete="NextStep"
+                    OnBack="PreviousStep" />
+                break;
+
+            case 4:
+                <ReadyStep 
+                    OnComplete="CompleteOnboarding"
+                    OnBack="PreviousStep" />
+                break;
+        }
+    </div>
+
+    <!-- Interactive Demo Modal -->
+    <Modal Title="Try the Merit System"
+           Visible="@isInteractiveDemoVisible"
+           Width="800"
+           Footer="null"
+           OnCancel="@(() => isInteractiveDemoVisible = false)">
+        <MeritSystemDemo OnComplete="HandleDemoComplete" />
+    </Modal>
+</div>
+
+<style>
+    .onboarding-flow {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .step-content {
+        min-height: 400px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+
+    /* Subcomponent styles */
+    ::deep .feature-card {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    ::deep .feature-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    ::deep .demo-highlight {
+        background: #f6ffed;
+        border: 1px solid #b7eb8f;
+        border-radius: 4px;
+        padding: 0.5rem;
+        margin: 1rem 0;
+    }
+
+    ::deep .merit-example {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    @media (max-width: 768px) {
+        .onboarding-flow {
+            padding: 1rem;
+        }
+
+        .step-content {
+            padding: 1rem;
+        }
+    }
+</style>
+
+@code {
+    private int currentStep = 0;
+    private bool isSmallScreen => JS.InvokeAsync<bool>("window.innerWidth < 768").Result;
+    private bool isInteractiveDemoVisible;
+    private HashSet<string> selectedInterests = new();
+    private HashSet<string> selectedSubstacks = new();
+    private bool hasDemoCompleted;
+
+    private async Task NextStep()
+    {
+        if (currentStep < 4)
+        {
+            currentStep++;
+            await ScrollToTop();
+        }
+    }
+
+    private async Task PreviousStep()
+    {
+        if (currentStep > 0)
+        {
+            currentStep--;
+            await ScrollToTop();
+        }
+    }
+
+    private async Task ScrollToTop()
+    {
+        await JS.InvokeVoidAsync("window.scrollTo", 0, 0);
+    }
+
+    private void HandleSkip()
+    {
+        NavigationManager.NavigateTo("/dashboard");
+    }
+
+    private async Task HandleMeritDemo()
+    {
+        isInteractiveDemoVisible = true;
+    }
+
+    private async Task HandleDemoComplete(bool success)
+    {
+        isInteractiveDemoVisible = false;
+        hasDemoCompleted = success;
+
+        if (success)
+        {
+            await MessageService.Success("Great job! You've got the hang of it!");
+            await NextStep();
+        }
+    }
+
+    private async Task HandleInterestsSelected(HashSet<string> interests)
+    {
+        selectedInterests = interests;
+        StateHasChanged();
+    }
+
+    private async Task HandleSubstacksSelected(HashSet<string> substacks)
+    {
+        selectedSubstacks = substacks;
+        StateHasChanged();
+    }
+
+    private async Task CompleteOnboarding()
+    {
+        try
+        {
+            // Save user preferences
+            await SubstackService.FollowSubstacksAsync(selectedSubstacks.ToList());
+            
+            // Show success message
+            await MessageService.Success("Welcome to Meritocious!");
+            
+            // Redirect to dashboard
+            NavigationManager.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Something went wrong. Please try again.");
+        }
+    }
+}

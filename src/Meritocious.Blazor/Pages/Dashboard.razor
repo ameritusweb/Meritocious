@@ -1,14 +1,14 @@
 @page "/"
-@using AntDesign.JsInterop
 @using Meritocious.Core.Features.Discovery.Queries
-@using Meritocious.Blazor.Components.Substacks
+@using Meritocious.Blazor.Components.Dashboard
+@using Meritocious.Common.DTOs.Merit
 @inject IMediator Mediator
-@inject ISubstackService SubstackService
 @inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
 
 <PageHeader
-    Title="Welcome back!"
-    Subtitle="Here's what's happening in your world"
+    Title="@($"Welcome back, {userName}!")"
+    Subtitle="Your merit insights and analytics"
     Class="mb-6"
     Extra="@(
         <Space>
@@ -19,349 +19,38 @@
     )">
 </PageHeader>
 
-<Row Gutter="16">
-    <Col Span="16">
-        <Card Title="Recommended for You" Class="mb-6 fade-in">
-            @if (isLoading)
-            {
-                @for (var i = 0; i < 3; i++)
-                {
-                    <Skeleton Active />
-                }
-            }
-            else if (!recommendedPosts.Any())
-            {
-                <Empty Description="No recommendations yet. Follow some substacks to get started!" />
-            }
-            else
-            {
-                <List DataSource="@recommendedPosts" Size="large">
-                    <ChildContent Context="post">
-                        <ListItem Actions="@(new[]
-                        {
-                            BuildAction(@<Icon Type="star" />, "Save for later"),
-                            BuildAction(@<Icon Type="share-alt" />, "Share")
-                        })">
-                            <ListItemMeta
-                                Avatar="@post.AuthorAvatar"
-                                Title="@(
-                                    <Space>
-                                        <a href="@($"/posts/{post.PostId}")">@post.Title</a>
-                                        <MeritScoreBadge Score="@post.MeritScore" Size="small" />
-                                    </Space>
-                                )"
-                                Description="@($"Posted by {post.AuthorUsername} • {post.RecommendationReason}")">
-                            </ListItemMeta>
-                        </ListItem>
-                    </ChildContent>
-                </List>
-                
-                <div class="text-center mt-4">
-                    <Button Type="link" OnClick="ViewMoreRecommendations">
-                        View More Recommendations
-                    </Button>
-                </div>
-            }
-        </Card>
+<DashboardLayout 
+    UserId="@userId"
+    OnMetricChange="HandleMetricChange"
+    OnDateRangeChange="HandleDateRangeChange" />
 
-        <Row Gutter="16">
-            <Col Span="12">
-                <Card Title="Your Contributions" Extra="@ViewAllContributions" Class="stat-card slide-up">
-                    <div class="flex items-center justify-between">
-                        <Statistic Title="Merit Score" Value="@userMeritScore" Prefix="@<Icon Type="trophy" />" />
-                        <div>
-                            <Progress Type="circle" 
-                                     Percent="@((int)(userMeritScore * 100 / 100))" 
-                                     Width="80"
-                                     Class="merit-progress" />
-                        </div>
-                    </div>
-                    
-                    <Divider />
-                    
-                    <div class="flex justify-between mb-4">
-                        <div>
-                            <Statistic Title="Posts" Value="@postCount" />
-                        </div>
-                        <div>
-                            <Statistic Title="Comments" Value="@commentCount" />
-                        </div>
-                        <div>
-                            <Statistic Title="Followers" Value="@followerCount" />
-                        </div>
-                    </div>
+<style>
+    :root {
+        --primary-color: #1890ff;
+        --success-color: #52c41a;
+        --warning-color: #faad14;
+        --error-color: #f5222d;
+    }
 
-                    <Text>Recent Activity</Text>
-                    <Timeline Class="mt-4 activity-timeline">
-                        @foreach (var activity in recentActivity)
-                        {
-                            <TimelineItem>@activity</TimelineItem>
-                        }
-                    </Timeline>
-                </Card>
-            </Col>
-            
-            <Col Span="12">
-                <Card Title="Next Achievement" Class="achievement-card mb-4 scale-in">
-                    <div class="flex items-center">
-                        <div class="mr-4">
-                            <Icon Type="@nextAchievement.Icon" Class="text-4xl" />
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="text 
-                            -lg font-medium mb-2">@nextAchievement.Title</h4>
-                            <p class="opacity-90 mb-3">@nextAchievement.Description</p>
-                            <Progress Percent="@nextAchievement.Progress" 
-                                    ShowInfo="false"
-                                    StrokeColor="white"
-                                    TrailColor="rgba(255,255,255,0.3)" />
-                        </div>
-                    </div>
-                </Card>
+    .fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+    }
 
-                <Card Title="Topics You Follow" Extra="@ManageTopics" Class="slide-up">
-                    @if (!userTopics.Any())
-                    {
-                        <Empty Description="You're not following any topics yet!" />
-                    }
-                    else
-                    {
-                        <div class="mb-4">
-                            <Text Type="secondary">Contribution Trend</Text>
-                            <div class="contribution-spark">
-                                <SparkLine 
-                                    Data="@topicTrends"
-                                    Height="30"
-                                    Stroke="#1890ff"
-                                    Fill="rgba(24,144,255,0.2)" />
-                            </div>
-                        </div>
-                        <div class="tag-cloud">
-                            @foreach (var topic in userTopics)
-                            {
-                                <Tag Color="@GetRandomColor()" Class="mr-2 mb-2">
-                                    <span class="flex items-center">
-                                        @topic
-                                        <span class="ml-1 @GetTrendClass(topicGrowth[topic])">
-                                            @FormatTrend(topicGrowth[topic])
-                                        </span>
-                                    </span>
-                                </Tag>
-                            }
-                        </div>
-                    }
-                </Card>
-            </Col>
-        </Row>
-    </Col>
-
-    <Col Span="8">
-        <Card Title="Content Impact" Class="mb-6 scale-in">
-            <Row Gutter="[16, 16]">
-                <Col Span="12">
-                    <Statistic 
-                        Title="Most Viewed"
-                        Value="@topPost.ViewCount"
-                        Prefix="@<Icon Type="eye" />"
-                        Class="stat-card">
-                        <ValueStyle Color="@GetTrendColor(topPost.ViewTrend)" />
-                    </Statistic>
-                </Col>
-                <Col Span="12">
-                    <Statistic 
-                        Title="Highest Merit"
-                        Value="@topPost.MeritScore"
-                        Prefix="@<Icon Type="star" />"
-                        Class="stat-card">
-                        <ValueStyle Color="#722ED1" />
-                    </Statistic>
-                </Col>
-            </Row>
-            <Divider />
-            <div class="mb-4">
-                <Text Type="secondary">Top Post</Text>
-                <div class="flex items-center mt-2">
-                    <Avatar Size="small" Src="@topPost.Avatar" Class="mr-2" />
-                    <div class="flex-1 min-w-0">
-                        <a href="@($"/posts/{topPost.Id}")" class="font-medium truncate block">
-                            @topPost.Title
-                        </a>
-                        <Text Type="secondary" Class="text-sm">
-                            @FormatDate(topPost.Date)
-                        </Text>
-                    </div>
-                </div>
-            </div>
-        </Card>
-
-        <TrendingSubstacks Period="day" Compact="true" MaxItems="3" Class="slide-up" />
-        
-        <Card Title="Recent Interactions" Class="mt-6 fade-in">
-            <Tabs DefaultActiveKey="1">
-                <TabPane Key="1" Tab="Comments">
-                    <List Size="small" DataSource="@recentComments">
-                        <ChildContent Context="comment">
-                            <ListItem>
-                                <ListItemMeta
-                                    Avatar="@comment.Avatar"
-                                    Title="@(
-                                        <div class="flex items-center">
-                                            <span class="truncate flex-1">@comment.Author</span>
-                                            <span class="text-sm text-gray-400 ml-2">
-                                                @FormatTimeAgo(comment.Date)
-                                            </span>
-                                        </div>
-                                    )"
-                                    Description="@($"\"{comment.Preview}\"")">
-                                </ListItemMeta>
-                            </ListItem>
-                        </ChildContent>
-                    </List>
-                </TabPane>
-                <TabPane Key="2" Tab="Mentions">
-                    <List Size="small" DataSource="@recentMentions">
-                        <ChildContent Context="mention">
-                            <ListItem>
-                                <ListItemMeta
-                                    Avatar="@mention.Avatar"
-                                    Title="@(
-                                        <div class="flex items-center">
-                                            <span class="truncate flex-1">@mention.Author</span>
-                                            <span class="text-sm text-gray-400 ml-2">
-                                                @FormatTimeAgo(mention.Date)
-                                            </span>
-                                        </div>
-                                    )"
-                                    Description="@mention.Preview">
-                                </ListItemMeta>
-                            </ListItem>
-                        </ChildContent>
-                    </List>
-                </TabPane>
-            </Tabs>
-        </Card>
-    </Col>
-</Row>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 
 @code {
-    private bool isLoading = true;
-    private List<PostRecommendationDto> recommendedPosts = new();
-    
-    private TopPostInfo topPost = new()
-    {
-        Id = Guid.NewGuid(),
-        Title = "Understanding Merit in Open Source",
-        ViewCount = 1234,
-        MeritScore = 92.5m,
-        ViewTrend = 0.25m,
-        Avatar = "/images/default-avatar.png",
-        Date = DateTime.Now.AddDays(-2)
-    };
-    
-    private List<CommentInfo> recentComments = new()
-    {
-        new() {
-            Author = "Alice Chen",
-            Avatar = "/images/avatars/alice.png",
-            Preview = "Great insights on merit-based contribution systems!",
-            Date = DateTime.Now.AddHours(-3)
-        },
-        new() {
-            Author = "Bob Smith",
-            Avatar = "/images/avatars/bob.png",
-            Preview = "Have you considered integrating with GitHub's contribution graph?",
-            Date = DateTime.Now.AddHours(-5)
-        },
-        new() {
-            Author = "Carol Davis",
-            Avatar = "/images/avatars/carol.png",
-            Preview = "The merit scoring algorithm looks promising.",
-            Date = DateTime.Now.AddHours(-8)
-        }
-    };
-    
-    private List<MentionInfo> recentMentions = new()
-    {
-        new() {
-            Author = "David Wilson",
-            Avatar = "/images/avatars/david.png",
-            Preview = "Thanks @user for the thoughtful analysis",
-            Date = DateTime.Now.AddHours(-2)
-        },
-        new() {
-            Author = "Eva Brown",
-            Avatar = "/images/avatars/eva.png",
-            Preview = "@user Your merit scoring approach inspired our team",
-            Date = DateTime.Now.AddHours(-6)
-        }
-    };
-
-    private record TopPostInfo
-    {
-        public Guid Id { get; init; }
-        public string Title { get; init; }
-        public int ViewCount { get; init; }
-        public decimal MeritScore { get; init; }
-        public decimal ViewTrend { get; init; }
-        public string Avatar { get; init; }
-        public DateTime Date { get; init; }
-    }
-
-    private record CommentInfo
-    {
-        public string Author { get; init; }
-        public string Avatar { get; init; }
-        public string Preview { get; init; }
-        public DateTime Date { get; init; }
-    }
-
-    private record MentionInfo
-    {
-        public string Author { get; init; }
-        public string Avatar { get; init; }
-        public string Preview { get; init; }
-        public DateTime Date { get; init; }
-    }
-    private decimal userMeritScore = 0;
-    private List<string> recentActivity = new();
-    private List<string> userTopics = new();
-    private List<SubstackDto> followedSubstacks = new();
-    private List<TopicDto> followedTopics = new();
-    
-    // New fields for enhanced widgets
-    private int postCount = 42;
-    private int commentCount = 156;
-    private int followerCount = 23;
-    private decimal[] topicTrends = new[] { 30m, 50m, 45m, 60m, 70m, 65m, 80m };
-    private Dictionary<string, decimal> topicGrowth = new()
-    {
-        { "Technology", 0.15m },
-        { "Programming", -0.05m },
-        { "AI", 0.25m },
-        { "Open Source", 0.1m }
-    };
-    private AchievementInfo nextAchievement = new()
-    {
-        Icon = "crown",
-        Title = "Top Contributor",
-        Description = "Make 100 valuable contributions to earn this badge",
-        Progress = 85
-    };
-
-    private record AchievementInfo
-    {
-        public string Icon { get; init; }
-        public string Title { get; init; }
-        public string Description { get; init; }
-        public int Progress { get; init; }
-    }
-
-    private static readonly string[] Colors = new[]
-    {
-        "blue", "cyan", "geekblue", "gold", "green", 
-        "lime", "magenta", "orange", "purple", "red", "volcano"
-    };
-    private static readonly Random Random = new();
+    private string userId;
+    private string userName = "User";
 
     protected override async Task OnInitializedAsync()
     {
@@ -370,148 +59,20 @@
 
         if (user.Identity.IsAuthenticated)
         {
-            var userId = Guid.Parse(user.FindFirst(c => c.Type == "sub")?.Value);
-            await LoadDashboardData(userId);
+            userId = user.FindFirst(c => c.Type == "sub")?.Value;
+            userName = user.FindFirst(c => c.Type == "name")?.Value ?? "User";
         }
     }
 
-    private async Task LoadDashboardData(Guid userId)
+    private async Task HandleMetricChange(string metric)
     {
-        try
-        {
-            var tasks = new[]
-            {
-                LoadRecommendedPosts(userId),
-                LoadUserData(userId),
-                LoadSubstacks(),
-                LoadTopics()
-            };
-
-            await Task.WhenAll(tasks);
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        // Handle metric change event from dashboard
+        // This could update other components or trigger additional data loads
     }
 
-    private async Task LoadRecommendedPosts(Guid userId)
+    private async Task HandleDateRangeChange((DateTime Start, DateTime End) range)
     {
-        var query = new GetRecommendedPostsQuery
-        {
-            UserId = userId,
-            Count = 5
-        };
-
-        recommendedPosts = await Mediator.Send(query);
-    }
-
-    private async Task LoadUserData(Guid userId)
-    {
-        // Mock data - replace with actual service calls
-        userMeritScore = 85.5m;
-        recentActivity = new()
-        {
-            "Posted 'Introduction to Meritocious' (2h ago)",
-            "Earned Contributor Badge (1d ago)",
-            "Joined Technology substack (2d ago)"
-        };
-        userTopics = new() { "Technology", "Programming", "AI", "Open Source" };
-    }
-
-    private async Task LoadSubstacks()
-    {
-        followedSubstacks = await SubstackService.GetFollowedSubstacksAsync();
-    }
-
-    private async Task LoadTopics()
-    {
-        // Mock data - replace with actual service calls
-        followedTopics = new()
-        {
-            new() { Name = "Technology", PostCount = 5 },
-            new() { Name = "Programming", PostCount = 3 },
-            new() { Name = "AI", PostCount = 2 }
-        };
-    }
-
-    private record TopicDto
-    {
-        public string Name { get; init; }
-        public int PostCount { get; init; }
-    }
-
-    private RenderFragment ViewAllContributions => @<a href="/profile/contributions">View All</a>;
-    private RenderFragment ManageTopics => @<a href="/topics/manage">Manage</a>;
-
-    private void ViewMoreRecommendations()
-    {
-        NavigationManager.NavigateTo("/recommended");
-    }
-
-    private RenderFragment BuildAction(RenderFragment icon, string tooltip) =>
-        @<Tooltip Title="@tooltip">
-            <Button Type="link">@icon</Button>
-        </Tooltip>;
-
-    private string GetRandomColor()
-    {
-        return Colors[Random.Next(Colors.Length)];
-    }
-
-    private string GetTrendClass(decimal growth)
-    {
-        return growth switch
-        {
-            > 0.1m => "trend-arrow-up",
-            > 0 => "trend-arrow-up opacity-75",
-            < -0.1m => "trend-arrow-down",
-            < 0 => "trend-arrow-down opacity-75",
-            _ => "text-gray-500"
-        };
-    }
-
-    private string FormatTrend(decimal trend)
-    {
-        var icon = trend > 0 ? "↑" : trend < 0 ? "↓" : "→";
-        var sign = trend > 0 ? "+" : "";
-        return $"{icon} {sign}{trend:P0}";
-    }
-
-    private string GetTrendColor(decimal trend)
-    {
-        return trend switch
-        {
-            > 0.1m => "#52c41a",  // Success green
-            > 0 => "#95de64",     // Light green
-            < -0.1m => "#ff4d4f", // Error red
-            < 0 => "#ffa39e",     // Light red
-            _ => "#8c8c8c"        // Neutral gray
-        };
-    }
-
-    private string FormatDate(DateTime date)
-    {
-        return date.ToString("MMM d, yyyy");
-    }
-
-    private string FormatTimeAgo(DateTime date)
-    {
-        var diff = DateTime.Now - date;
-        return diff.TotalDays switch
-        {
-            > 365 => $"{(int)(diff.TotalDays / 365)}y ago",
-            > 30 => $"{(int)(diff.TotalDays / 30)}mo ago",
-            > 1 => $"{(int)diff.TotalDays}d ago",
-            _ => diff.TotalHours switch
-            {
-                > 1 => $"{(int)diff.TotalHours}h ago",
-                _ => diff.TotalMinutes switch
-                {
-                    > 1 => $"{(int)diff.TotalMinutes}m ago",
-                    _ => "Just now"
-                }
-            }
-        };
+        // Handle date range change event from dashboard
+        // This could update other components or trigger additional data loads
     }
 }

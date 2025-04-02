@@ -1,0 +1,150 @@
+@using AntDesign.Charts
+@using Title = AntDesign.Charts.Title
+@using Meritocious.Common.DTOs.Merit
+
+<div class="merit-score-gauge">
+    <Gauge @ref="chart" Config="config" />
+</div>
+
+@code {
+    [Parameter] public MeritScoreDto Score { get; set; }
+    [Parameter] public string Title { get; set; } = "Merit Score";
+    [Parameter] public bool ShowBreakdown { get; set; } = true;
+    [Parameter] public EventCallback<string> OnExplanationClick { get; set; }
+
+    private IChartComponent chart;
+    private GaugeConfig config;
+
+    protected override void OnInitialized()
+    {
+        UpdateConfig();
+    }
+
+    protected override void OnParametersSet()
+    {
+        UpdateConfig();
+    }
+
+    private void UpdateConfig()
+    {
+        if (Score == null) return;
+
+        var finalScore = Score.FinalScore / 100m; // Convert to decimal between 0-1
+        var rating = GetRating(Score.FinalScore);
+        var color = GetColorForScore(Score.FinalScore);
+
+        config = new GaugeConfig
+        {
+            Title = new Title
+            {
+                Visible = true,
+                Text = Title
+            },
+            Percent = finalScore,
+            Min = 0,
+            Max = 100,
+            Range = ShowBreakdown 
+                ? new double[] { 0, 20, 40, 60, 80, 100 }
+                : new double[] { 0, 100 },
+            Color = ShowBreakdown
+                ? new[] { "#FF5252", "#FF7F50", "#FFC107", "#4CAF50", "#2196F3" }
+                : new[] { "#E8F5E9", color },
+            Width = 300,
+            Height = 300,
+            StartAngle = 0.75,
+            EndAngle = 0.25,
+            Axis = new GaugeAxis
+            {
+                Offset = -30,
+                TickLine = new GaugeAxisTickLine
+                {
+                    Visible = true,
+                    Length = 10
+                },
+                Label = new GaugeAxisLabel
+                {
+                    Visible = true,
+                    Formatter = "(v) => `${v}%`"
+                }
+            },
+            Statistic = new GaugeStatistic
+            {
+                Visible = true,
+                Text = rating,
+                Color = color,
+                Style = new TextStyle
+                {
+                    FontSize = 30,
+                    FontWeight = "bold"
+                }
+            },
+            Indicator = new GaugeIndicator
+            {
+                Pointer = new GaugeIndicatorPointer
+                {
+                    Style = new GraphicStyle
+                    {
+                        Fill = color
+                    }
+                },
+                Pin = new GaugeIndicatorPin
+                {
+                    Style = new GraphicStyle
+                    {
+                        Fill = color
+                    }
+                }
+            },
+            Animation = new Animation
+            {
+                Appear = new AnimationAppear
+                {
+                    Animation = "wave-in",
+                    Duration = 2000
+                }
+            }
+        };
+    }
+
+    private string GetRating(decimal score) => score switch
+    {
+        >= 90 => "Outstanding",
+        >= 80 => "Excellent",
+        >= 70 => "Great",
+        >= 60 => "Good",
+        >= 40 => "Fair",
+        _ => "Needs Work"
+    };
+
+    private string GetColorForScore(decimal score) => score switch
+    {
+        >= 90 => "#2196F3", // Blue
+        >= 80 => "#4CAF50", // Green
+        >= 70 => "#8BC34A", // Light Green
+        >= 60 => "#FFC107", // Amber
+        >= 40 => "#FF7F50", // Coral
+        _ => "#FF5252"      // Red
+    };
+
+    private string GetBreakdownText()
+    {
+        if (Score == null) return string.Empty;
+
+        return $"""
+            Merit Score Breakdown:
+            - Clarity: {Score.ClarityScore:F1}%
+            - Novelty: {Score.NoveltyScore:F1}%
+            - Contribution: {Score.ContributionScore:F1}%
+            - Civility: {Score.CivilityScore:F1}%
+            - Relevance: {Score.RelevanceScore:F1}%
+            """;
+    }
+
+    private async Task ShowExplanation()
+    {
+        if (OnExplanationClick.HasDelegate)
+        {
+            await OnExplanationClick.InvokeAsync(GetBreakdownText());
+        }
+    }
+}

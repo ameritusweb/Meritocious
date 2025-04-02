@@ -1,0 +1,279 @@
+@using Meritocious.Common.DTOs.Merit
+
+<div class="interests-step">
+    <Card Class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-medium mb-2">Pick Your Interests</h2>
+                <p class="text-gray-600">Select topics that interest you to personalize your experience</p>
+            </div>
+            <div class="text-right">
+                <Text Type="secondary">Selected</Text>
+                <h3 class="text-xl font-medium">@SelectedInterests.Count</h3>
+            </div>
+        </div>
+    </Card>
+
+    <Row Gutter="[16, 16]">
+        <Col Span="16">
+            <Card Title="Topic Categories" Class="h-full">
+                <div class="topic-grid">
+                    @foreach (var category in topicCategories)
+                    {
+                        <Card Size="small" 
+                              Hoverable
+                              Class="category-card @(selectedCategory?.Key == category.Key ? "selected" : "")"
+                              @onclick="() => SelectCategory(category)">
+                            <div class="flex items-center">
+                                <Icon Type="@category.Icon" 
+                                      Theme="outline" 
+                                      Class="text-2xl @category.ColorClass mr-3" />
+                                <div>
+                                    <h4 class="font-medium">@category.Title</h4>
+                                    <p class="text-sm text-gray-500">@category.Description</p>
+                                </div>
+                            </div>
+                        </Card>
+                    }
+                </div>
+            </Card>
+        </Col>
+
+        <Col Span="8">
+            <div class="space-y-4">
+                @if (selectedCategory != null)
+                {
+                    <Card Title="@selectedCategory.Title">
+                        <Alert Message="Topic Distribution"
+                               Description="The most active subtopics in this category"
+                               Type="info"
+                               ShowIcon
+                               Class="mb-4" />
+
+                        <div class="selected-topics-preview">
+                            @foreach (var topic in selectedCategory.Topics)
+                            {
+                                <div class="topic-item">
+                                    <Checkbox Checked="@SelectedInterests.Contains(topic.Key)"
+                                            OnChange="@(e => ToggleTopic(topic.Key))">
+                                        <div class="ml-2">
+                                            <div class="flex items-center">
+                                                <span>@topic.Title</span>
+                                                @if (topic.IsPopular)
+                                                {
+                                                    <Tag Color="blue" Class="ml-2">Popular</Tag>
+                                                }
+                                            </div>
+                                            <Progress Percent="@topic.ActivityLevel" 
+                                                     Size="small"
+                                                     ShowInfo="false"
+                                                     StrokeColor="@GetActivityColor(topic.ActivityLevel)" />
+                                        </div>
+                                    </Checkbox>
+                                </div>
+                            }
+                        </div>
+                    </Card>
+
+                    <Card Title="Suggested Topics" Size="small">
+                        <Text Type="secondary">Based on your selections</Text>
+                        <div class="suggested-topics mt-2">
+                            @foreach (var topic in GetSuggestedTopics())
+                            {
+                                <Tag Class="mr-2 mb-2 cursor-pointer hover:bg-blue-50"
+                                     @onclick="() => ToggleTopic(topic.Key)">
+                                    @if (SelectedInterests.Contains(topic.Key))
+                                    {
+                                        <Icon Type="check" Class="mr-1" />
+                                    }
+                                    @topic.Title
+                                </Tag>
+                            }
+                        </div>
+                    </Card>
+                }
+                else
+                {
+                    <Empty Description="Select a category to see topics" />
+                }
+            </div>
+        </Col>
+    </Row>
+
+    <div class="mt-6 flex justify-between">
+        <Button OnClick="@(() => OnBack.InvokeAsync())">
+            <Icon Type="left" /> Back
+        </Button>
+        <Button Type="primary" 
+                OnClick="@(() => OnComplete.InvokeAsync())"
+                Disabled="@(!SelectedInterests.Any())">
+            Next <Icon Type="right" />
+        </Button>
+    </div>
+</div>
+
+<style>
+    .topic-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .category-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .category-card.selected {
+        border-color: var(--ant-primary-color);
+        background: var(--ant-primary-1);
+    }
+
+    .topic-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .topic-item:last-child {
+        border-bottom: none;
+    }
+
+    @media (max-width: 768px) {
+        .topic-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public HashSet<string> SelectedInterests { get; set; } = new();
+    [Parameter] public EventCallback<HashSet<string>> OnInterestsSelected { get; set; }
+    [Parameter] public EventCallback OnComplete { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    private TopicCategory selectedCategory;
+
+    private readonly List<TopicCategory> topicCategories = new()
+    {
+        new TopicCategory
+        {
+            Key = "tech",
+            Title = "Technology",
+            Description = "Software, AI, Hardware, and Innovation",
+            Icon = "code",
+            ColorClass = "text-blue-500",
+            Topics = new[]
+            {
+                new Topic { Key = "ai", Title = "Artificial Intelligence", ActivityLevel = 85, IsPopular = true },
+                new Topic { Key = "webdev", Title = "Web Development", ActivityLevel = 75, IsPopular = true },
+                new Topic { Key = "cloud", Title = "Cloud Computing", ActivityLevel = 70 },
+                new Topic { Key = "security", Title = "Cybersecurity", ActivityLevel = 65 },
+                new Topic { Key = "mobile", Title = "Mobile Development", ActivityLevel = 60 }
+            }
+        },
+        new TopicCategory
+        {
+            Key = "science",
+            Title = "Science",
+            Description = "Research, Discoveries, and Breakthroughs",
+            Icon = "experiment",
+            ColorClass = "text-green-500",
+            Topics = new[]
+            {
+                new Topic { Key = "physics", Title = "Physics", ActivityLevel = 70, IsPopular = true },
+                new Topic { Key = "biotech", Title = "Biotechnology", ActivityLevel = 80, IsPopular = true },
+                new Topic { Key = "space", Title = "Space Exploration", ActivityLevel = 75 },
+                new Topic { Key = "climate", Title = "Climate Science", ActivityLevel = 65 },
+                new Topic { Key = "neuroscience", Title = "Neuroscience", ActivityLevel = 60 }
+            }
+        },
+        new TopicCategory
+        {
+            Key = "business",
+            Title = "Business",
+            Description = "Startups, Strategy, and Innovation",
+            Icon = "fund",
+            ColorClass = "text-orange-500",
+            Topics = new[]
+            {
+                new Topic { Key = "startups", Title = "Startups", ActivityLevel = 80, IsPopular = true },
+                new Topic { Key = "strategy", Title = "Business Strategy", ActivityLevel = 70 },
+                new Topic { Key = "product", Title = "Product Management", ActivityLevel = 75, IsPopular = true },
+                new Topic { Key = "fintech", Title = "FinTech", ActivityLevel = 65 },
+                new Topic { Key = "leadership", Title = "Leadership", ActivityLevel = 60 }
+            }
+        },
+        new TopicCategory
+        {
+            Key = "design",
+            Title = "Design",
+            Description = "UX, Visual Design, and Creativity",
+            Icon = "ant-design",
+            ColorClass = "text-purple-500",
+            Topics = new[]
+            {
+                new Topic { Key = "ux", Title = "User Experience", ActivityLevel = 85, IsPopular = true },
+                new Topic { Key = "ui", Title = "User Interface", ActivityLevel = 80, IsPopular = true },
+                new Topic { Key = "graphics", Title = "Graphic Design", ActivityLevel = 70 },
+                new Topic { Key = "motion", Title = "Motion Design", ActivityLevel = 65 },
+                new Topic { Key = "typography", Title = "Typography", ActivityLevel = 60 }
+            }
+        }
+    };
+
+    private void SelectCategory(TopicCategory category)
+    {
+        selectedCategory = category;
+    }
+
+    private async Task ToggleTopic(string topicKey)
+    {
+        if (SelectedInterests.Contains(topicKey))
+        {
+            SelectedInterests.Remove(topicKey);
+        }
+        else
+        {
+            SelectedInterests.Add(topicKey);
+        }
+
+        await OnInterestsSelected.InvokeAsync(SelectedInterests);
+    }
+
+    private IEnumerable<Topic> GetSuggestedTopics()
+    {
+        if (selectedCategory == null) return Array.Empty<Topic>();
+
+        // Simple suggestion algorithm based on activity level
+        return selectedCategory.Topics
+            .Where(t => t.ActivityLevel > 70)
+            .OrderByDescending(t => t.ActivityLevel)
+            .Take(3);
+    }
+
+    private string GetActivityColor(int level) => level switch
+    {
+        >= 80 => "#52c41a", // Success green
+        >= 60 => "#1890ff", // Primary blue
+        >= 40 => "#faad14", // Warning yellow
+        _ => "#ff4d4f"      // Error red
+    };
+
+    private class TopicCategory
+    {
+        public string Key { get; init; }
+        public string Title { get; init; }
+        public string Description { get; init; }
+        public string Icon { get; init; }
+        public string ColorClass { get; init; }
+        public Topic[] Topics { get; init; }
+    }
+
+    private class Topic
+    {
+        public string Key { get; init; }
+        public string Title { get; init; }
+        public int ActivityLevel { get; init; }
+        public bool IsPopular { get; init; }
+    }
+}

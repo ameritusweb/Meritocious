@@ -1,0 +1,162 @@
+@using AntDesign.Charts
+@using Meritocious.Common.DTOs.Content
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="topic-evolution-treemap">
+    @if (TopicData != null)
+    {
+        <Treemap @ref="chart" Data="chartData" Config="config" />
+    }
+    else
+    {
+        <Spin Tip="Loading topic data..." />
+    }
+</div>
+
+@code {
+    [Parameter] public string ContextId { get; set; } // Can be SubstackId or null for global view
+    [Parameter] public string TimeFrame { get; set; } = "monthly";
+    [Parameter] public DateTime? StartDate { get; set; }
+    [Parameter] public DateTime? EndDate { get; set; }
+    [Parameter] public string MetricType { get; set; } = "posts"; // posts, merit, engagement
+
+    private IChartComponent chart;
+    private List<PostSummaryDto> TopicData;
+    private Data chartData;
+
+    private readonly TreemapConfig config = new()
+    {
+        ColorField = "name",
+        Title = new Title
+        {
+            Visible = true,
+            Text = "Topic Distribution & Evolution"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "Visualize how ideas and discussions are distributed across topics"
+        },
+        Tooltip = new Tooltip
+        {
+            Visible = true,
+            Fields = new[] { "name", "value", "percentageStr", "avgMerit" }
+        },
+        Label = new TreemapViewConfigLabel
+        {
+            Visible = true,
+            Style = new TextStyle
+            {
+                FontSize = 12,
+                FontWeight = "bold"
+            }
+        },
+        Interactions = new[]
+        {
+            new Interaction { Type = "drilldown" }
+        },
+        Color = new[] { 
+            "#E8F5E9", "#C8E6C9", "#A5D6A7", "#81C784", 
+            "#66BB6A", "#4CAF50", "#43A047", "#388E3C", 
+            "#2E7D32", "#1B5E20" 
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        StartDate ??= DateTime.UtcNow.AddMonths(-1);
+        EndDate ??= DateTime.UtcNow;
+        
+        await LoadTopicData();
+    }
+
+    private async Task LoadTopicData()
+    {
+        var client = HttpClientFactory.CreateClient("MeritociousAPI");
+        var endpoint = string.IsNullOrEmpty(ContextId) 
+            ? "api/analytics/topics"
+            : $"api/substacks/{ContextId}/topics";
+            
+        TopicData = await client.GetFromJsonAsync<List<PostSummaryDto>>(
+            $"{endpoint}?timeFrame={TimeFrame}&start={StartDate:yyyy-MM-dd}&end={EndDate:yyyy-MM-dd}&metric={MetricType}");
+
+        if (TopicData != null)
+        {
+            var topicGroups = TopicData
+                .GroupBy(p => p.PrimaryTopic)
+                .Select(g => new
+                {
+                    Topic = g.Key,
+                    Posts = g.ToList(),
+                    SubTopics = g.GroupBy(p => p.SecondaryTopics.FirstOrDefault() ?? "Other")
+                        .Select(sg => new
+                        {
+                            Topic = sg.Key,
+                            Posts = sg.ToList()
+                        })
+                });
+
+            var children = topicGroups.Select(g => new TreemapDataItem
+            {
+                Name = g.Topic,
+                Value = CalculateMetricValue(g.Posts),
+                Children = g.SubTopics.Select(st => new TreemapDataItem
+                {
+                    Name = st.Topic,
+                    Value = CalculateMetricValue(st.Posts),
+                    PercentageStr = $"{(double)CalculateMetricValue(st.Posts) / CalculateMetricValue(g.Posts) * 100:F1}%",
+                    AvgMerit = $"{st.Posts.Average(p => p.MeritScore):F1}%"
+                }).ToList(),
+                PercentageStr = $"{(double)CalculateMetricValue(g.Posts) / TopicData.Count * 100:F1}%",
+                AvgMerit = $"{g.Posts.Average(p => p.MeritScore):F1}%"
+            });
+
+            chartData = new Data
+            {
+                Name = "Topics",
+                Children = children,
+                Value = TopicData.Count
+            };
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private decimal CalculateMetricValue(List<PostSummaryDto> posts)
+    {
+        return MetricType switch
+        {
+            "posts" => posts.Count,
+            "merit" => posts.Sum(p => p.MeritScore),
+            "engagement" => posts.Sum(p => p.CommentCount + p.RemixCount),
+            _ => posts.Count
+        };
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadTopicData();
+    }
+
+    public async Task UpdateMetricType(string newMetricType)
+    {
+        MetricType = newMetricType;
+        await LoadTopicData();
+    }
+
+    public class Data : ITreemapData<TreemapDataItem>
+    {
+        public string Name { get; set; }
+        public IEnumerable<TreemapDataItem> Children { get; set; }
+        public decimal Value { get; set; }
+    }
+
+    public class TreemapDataItem
+    {
+        public string Name { get; set; }
+        public decimal Value { get; set; }
+        public string PercentageStr { get; set; }
+        public string AvgMerit { get; set; }
+        public List<TreemapDataItem> Children { get; set; }
+    }
+}

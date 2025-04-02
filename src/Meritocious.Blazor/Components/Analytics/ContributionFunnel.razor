@@ -1,0 +1,188 @@
+@using AntDesign.Charts
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Common.DTOs.Contributions
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="contribution-funnel">
+    @if (ContributionData != null)
+    {
+        <Funnel @ref="chart" Data="chartItems" Config="config" />
+    }
+    else
+    {
+        <Spin Tip="Loading contribution data..." />
+    }
+</div>
+
+@code {
+    [Parameter] public string ContextId { get; set; } // Can be SubstackId or UserId
+    [Parameter] public string TimeFrame { get; set; } = "monthly";
+    [Parameter] public DateTime? StartDate { get; set; }
+    [Parameter] public DateTime? EndDate { get; set; }
+    [Parameter] public bool ShowComparison { get; set; } = false;
+    [Parameter] public string ComparisonTimeFrame { get; set; }
+
+    private IChartComponent chart;
+    private List<ContributionSummaryDto> ContributionData;
+    private List<object> chartItems = new();
+
+    private readonly FunnelConfig config = new()
+    {
+        Title = new Title
+        {
+            Visible = true,
+            Text = "Contribution Flow"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "Track how ideas evolve from initial posts to remixes and syntheses"
+        },
+        XField = "stage",
+        YField = "count",
+        CompareField = "period",
+        DynamicHeight = true,
+        Label = new FunnelViewConfigLabel
+        {
+            Visible = true,
+            Formatter = @"(datum) => { 
+                return `${datum.stage}\n${datum.count} (${datum.percentage}%)\n${datum.avgMerit}% Merit`; 
+            }"
+        },
+        Tooltip = new Tooltip
+        {
+            Visible = true,
+            Fields = new[] { "stage", "count", "percentage", "avgMerit", "details" }
+        },
+        Color = new[] { "#4CAF50", "#81C784", "#A5D6A7", "#C8E6C9" },
+        Conversion = new FunnelConversion
+        {
+            Visible = true,
+            Decorator = @"(datum) => { return `${datum.percentage}%`; }"
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        StartDate ??= DateTime.UtcNow.AddMonths(-1);
+        EndDate ??= DateTime.UtcNow;
+        
+        await LoadContributionData();
+    }
+
+    private async Task LoadContributionData()
+    {
+        var client = HttpClientFactory.CreateClient("MeritociousAPI");
+        var endpoint = string.IsNullOrEmpty(ContextId) 
+            ? "api/analytics/contributions"
+            : $"api/substacks/{ContextId}/contributions";
+            
+        ContributionData = await client.GetFromJsonAsync<List<ContributionSummaryDto>>(
+            $"{endpoint}?timeFrame={TimeFrame}&start={StartDate:yyyy-MM-dd}&end={EndDate:yyyy-MM-dd}");
+        
+        if (ShowComparison)
+        {
+            var comparisonData = await client.GetFromJsonAsync<List<ContributionSummaryDto>>(
+                $"{endpoint}?timeFrame={ComparisonTimeFrame}&start={StartDate:yyyy-MM-dd}&end={EndDate:yyyy-MM-dd}");
+            
+            await ProcessComparisonData(ContributionData, comparisonData);
+        }
+        else
+        {
+            await ProcessSinglePeriodData(ContributionData);
+        }
+    }
+
+    private Task ProcessSinglePeriodData(List<ContributionSummaryDto> data)
+    {
+        var total = data.Count;
+        var initialPosts = data.Count(c => c.Type == "post");
+        var remixes = data.Count(c => c.Type == "remix");
+        var discussions = data.Count(c => c.Type == "discussion");
+        var syntheses = data.Count(c => c.Type == "synthesis");
+
+        chartItems = new List<object>
+        {
+            new {
+                stage = "Initial Posts",
+                count = initialPosts,
+                percentage = (100 * initialPosts / (float)total).ToString("F1"),
+                avgMerit = data.Where(c => c.Type == "post").Average(c => c.MeritScore).ToString("F1"),
+                details = $"{initialPosts} original posts"
+            },
+            new {
+                stage = "Remixes",
+                count = remixes,
+                percentage = (100 * remixes / (float)total).ToString("F1"),
+                avgMerit = data.Where(c => c.Type == "remix").Average(c => c.MeritScore).ToString("F1"),
+                details = $"{remixes} remixed ideas"
+            },
+            new {
+                stage = "Discussions",
+                count = discussions,
+                percentage = (100 * discussions / (float)total).ToString("F1"),
+                avgMerit = data.Where(c => c.Type == "discussion").Average(c => c.MeritScore).ToString("F1"),
+                details = $"{discussions} discussion threads"
+            },
+            new {
+                stage = "Syntheses",
+                count = syntheses,
+                percentage = (100 * syntheses / (float)total).ToString("F1"),
+                avgMerit = data.Where(c => c.Type == "synthesis").Average(c => c.MeritScore).ToString("F1"),
+                details = $"{syntheses} synthesized ideas"
+            }
+        };
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task ProcessComparisonData(List<ContributionSummaryDto> currentData, List<ContributionSummaryDto> previousData)
+    {
+        var combinedItems = new List<object>();
+
+        void AddPeriodData(List<ContributionSummaryDto> data, string period)
+        {
+            var total = data.Count;
+            var stages = new[] { "post", "remix", "discussion", "synthesis" };
+            var stageNames = new[] { "Initial Posts", "Remixes", "Discussions", "Syntheses" };
+
+            for (var i = 0; i < stages.Length; i++)
+            {
+                var count = data.Count(c => c.Type == stages[i]);
+                combinedItems.Add(new
+                {
+                    stage = stageNames[i],
+                    count = count,
+                    percentage = (100 * count / (float)total).ToString("F1"),
+                    avgMerit = data.Where(c => c.Type == stages[i]).Average(c => c.MeritScore).ToString("F1"),
+                    details = $"{count} {stages[i]}s",
+                    period = period
+                });
+            }
+        }
+
+        AddPeriodData(currentData, "Current Period");
+        AddPeriodData(previousData, "Previous Period");
+
+        chartItems = combinedItems;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadContributionData();
+    }
+
+    public async Task UpdateTimeFrame(string newTimeFrame)
+    {
+        TimeFrame = newTimeFrame;
+        await LoadContributionData();
+    }
+
+    public async Task ToggleComparison(bool showComparison, string comparisonTimeFrame = null)
+    {
+        ShowComparison = showComparison;
+        ComparisonTimeFrame = comparisonTimeFrame;
+        await LoadContributionData();
+    }
+}

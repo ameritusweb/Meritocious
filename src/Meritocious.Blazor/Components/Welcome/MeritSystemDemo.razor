@@ -1,0 +1,265 @@
+@using Meritocious.Common.DTOs.Merit
+
+<div class="merit-system-demo">
+    <Steps Current="@currentStep" Direction="horizontal" Class="mb-8">
+        <Step Title="Review Content" />
+        <Step Title="Score & Explain" />
+        <Step Title="Compare Results" />
+    </Steps>
+
+    @switch (currentStep)
+    {
+        case 0:
+            <Card Title="Sample Discussion Thread">
+                <Alert Message="Topic: AI Development Best Practices"
+                       Type="info"
+                       ShowIcon
+                       Class="mb-4" />
+
+                <div class="thread-container">
+                    <div class="thread-post">
+                        <div class="post-header">
+                            <Avatar Size="small" Src="/images/avatars/alice.png" />
+                            <span class="ml-2 font-medium">Alice Chen</span>
+                            <Tag Class="ml-2">Original Post</Tag>
+                        </div>
+                        <div class="post-content">
+                            <p>We need to establish better practices for AI model deployment. Current approaches often prioritize speed over safety, leading to potential risks.</p>
+                        </div>
+                    </div>
+
+                    <div class="thread-post">
+                        <div class="post-header">
+                            <Avatar Size="small" Src="/images/avatars/bob.png" />
+                            <span class="ml-2 font-medium">Bob Smith</span>
+                            <Tag Class="ml-2">Response</Tag>
+                        </div>
+                        <div class="post-content">
+                            <p>@demoResponse</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h4 class="font-medium mb-2">Rate this Response</h4>
+                    <p class="text-gray-600 mb-4">Consider the merit dimensions we just learned about.</p>
+
+                    <div class="space-y-4">
+                        @foreach (var component in meritComponents)
+                        {
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span>@component.Title</span>
+                                    <span>@(userScores[component.Key])%</span>
+                                </div>
+                                <Slider @bind-Value="@userScores[component.Key]"
+                                       TipFormatter="@(v => $"{v}%")"
+                                       Marks="@sliderMarks"
+                                       Step="5" />
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <Button Type="primary" 
+                                OnClick="SubmitScores"
+                                Disabled="@(!HasScoredAll())">
+                            Submit Scores
+                        </Button>
+                    </div>
+                </div>
+            </Card>
+            break;
+
+        case 1:
+            <Card Title="Your Analysis">
+                <Form Layout="vertical" Model="@analysisForm">
+                    @foreach (var component in meritComponents)
+                    {
+                        <FormItem Label="@($"Why did you give {component.Title} a {userScores[component.Key]}% score?")">
+                            <TextArea @bind-Value="@analysisForm[component.Key]"
+                                    MaxLength="200"
+                                    AutoSize="true"
+                                    Placeholder="Explain your reasoning..." />
+                        </FormItem>
+                    }
+
+                    <div class="mt-6 flex justify-end">
+                        <Button Type="primary" 
+                                OnClick="SubmitAnalysis"
+                                Disabled="@(!HasCompletedAnalysis())">
+                            See AI Analysis
+                        </Button>
+                    </div>
+                </Form>
+            </Card>
+            break;
+
+        case 2:
+            <Card Title="Comparison with AI Analysis">
+                <Alert Message="Great work! Let's compare your analysis with the AI's evaluation."
+                       Type="success"
+                       ShowIcon
+                       Class="mb-4" />
+
+                <Row Gutter="16">
+                    @foreach (var component in meritComponents)
+                    {
+                        <Col Span="12" Class="mb-4">
+                            <Card Size="small" Title="@component.Title">
+                                <div class="comparison-scores mb-2">
+                                    <div>
+                                        <Text Type="secondary">Your Score:</Text>
+                                        <span class="ml-2 font-medium">@userScores[component.Key]%</span>
+                                    </div>
+                                    <div>
+                                        <Text Type="secondary">AI Score:</Text>
+                                        <span class="ml-2 font-medium">@aiScores[component.Key]%</span>
+                                    </div>
+                                </div>
+
+                                <Collapse>
+                                    <Panel Header="View Analysis">
+                                        <div class="mb-2">
+                                            <Text Type="secondary">Your Analysis:</Text>
+                                            <p>@analysisForm[component.Key]</p>
+                                        </div>
+                                        <Divider />
+                                        <div>
+                                            <Text Type="secondary">AI Analysis:</Text>
+                                            <p>@aiAnalysis[component.Key]</p>
+                                        </div>
+                                    </Panel>
+                                </Collapse>
+                            </Card>
+                        </Col>
+                    }
+                </Row>
+
+                <div class="mt-6 flex justify-end">
+                    <Button Type="primary" OnClick="@(() => OnComplete.InvokeAsync(true))">
+                        Complete Tutorial
+                    </Button>
+                </div>
+            </Card>
+            break;
+    }
+</div>
+
+<style>
+    .thread-container {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .thread-post {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .thread-post:last-child {
+        border-bottom: none;
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .comparison-scores {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem;
+        background: #fafafa;
+        border-radius: 4px;
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<bool> OnComplete { get; set; }
+
+    private int currentStep = 0;
+    private readonly string demoResponse = "While speed is important, we can't ignore safety. Here's my perspective: we should implement a staged deployment process with rigorous testing at each phase. This allows us to catch potential issues early while maintaining reasonable deployment velocity.";
+
+    private readonly Dictionary<string, int> userScores = new()
+    {
+        { "clarity", 0 },
+        { "novelty", 0 },
+        { "contribution", 0 },
+        { "civility", 0 },
+        { "relevance", 0 }
+    };
+
+    private readonly Dictionary<string, int> aiScores = new()
+    {
+        { "clarity", 85 },
+        { "novelty", 70 },
+        { "contribution", 80 },
+        { "civility", 90 },
+        { "relevance", 85 }
+    };
+
+    private readonly Dictionary<string, string> aiAnalysis = new()
+    {
+        { "clarity", "The response clearly outlines a specific approach (staged deployment) and explains its benefits. The language is precise and the structure is logical." },
+        { "novelty", "While the concept of staged deployment isn't new, the response connects it well to AI safety concerns." },
+        { "contribution", "Provides a concrete solution that balances competing needs (speed vs. safety) and explains the benefits." },
+        { "civility", "Acknowledges the importance of speed while respectfully presenting an alternative approach. Uses constructive language." },
+        { "relevance", "Directly addresses the concern raised in the original post about balancing speed and safety in AI deployment." }
+    };
+
+    private readonly Dictionary<string, string> analysisForm = new()
+    {
+        { "clarity", "" },
+        { "novelty", "" },
+        { "contribution", "" },
+        { "civility", "" },
+        { "relevance", "" }
+    };
+
+    private readonly Dictionary<int, string> sliderMarks = new()
+    {
+        { 0, "Poor" },
+        { 25, "Fair" },
+        { 50, "Good" },
+        { 75, "Great" },
+        { 100, "Excellent" }
+    };
+
+    private readonly List<MeritComponent> meritComponents = new()
+    {
+        new() { Key = "clarity", Title = "Clarity" },
+        new() { Key = "novelty", Title = "Novelty" },
+        new() { Key = "contribution", Title = "Contribution" },
+        new() { Key = "civility", Title = "Civility" },
+        new() { Key = "relevance", Title = "Relevance" }
+    };
+
+    private bool HasScoredAll()
+    {
+        return userScores.Values.All(score => score > 0);
+    }
+
+    private bool HasCompletedAnalysis()
+    {
+        return analysisForm.Values.All(analysis => !string.IsNullOrWhiteSpace(analysis));
+    }
+
+    private void SubmitScores()
+    {
+        currentStep++;
+    }
+
+    private void SubmitAnalysis()
+    {
+        currentStep++;
+    }
+
+    private class MeritComponent
+    {
+        public string Key { get; init; }
+        public string Title { get; init; }
+    }
+}

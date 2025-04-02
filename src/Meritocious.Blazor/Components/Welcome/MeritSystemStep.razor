@@ -1,0 +1,244 @@
+@using Meritocious.Common.DTOs.Merit
+
+<div class="merit-system-step">
+    <Card Class="mb-6">
+        <div class="flex items-start">
+            <div class="flex-1">
+                <h2 class="text-xl font-medium mb-2">Understanding Merit Scores</h2>
+                <p class="text-gray-600">Learn how our AI evaluates content quality across five key dimensions</p>
+            </div>
+            <Button Type="primary" OnClick="@(() => OnDemoComplete.InvokeAsync())">
+                Try It Out
+            </Button>
+        </div>
+    </Card>
+
+    <Row Gutter="16">
+        <Col Span="12">
+            <Card Title="Merit Score Components" Class="h-full">
+                <div class="space-y-6">
+                    @foreach (var component in meritComponents)
+                    {
+                        <div class="merit-component @(selectedComponent == component.Key ? "selected" : "")"
+                             @onclick="() => SelectComponent(component.Key)">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium">@component.Title</h4>
+                                    <p class="text-sm text-gray-500">@component.Description</p>
+                                </div>
+                                <Progress Type="circle" 
+                                         Percent="@component.Example" 
+                                         Width="40"
+                                         Format="p => $"{p}%"" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            </Card>
+        </Col>
+
+        <Col Span="12">
+            <Card Title="Example Analysis" Class="h-full">
+                @if (selectedComponent != null)
+                {
+                    var component = meritComponents.First(c => c.Key == selectedComponent);
+                    <div class="example-content">
+                        <Alert Message="Sample Content"
+                               Description="@component.SampleContent"
+                               Type="info"
+                               ShowIcon
+                               Class="mb-4" />
+
+                        <div class="mb-4">
+                            <Text Type="secondary">AI Analysis</Text>
+                            <div class="demo-highlight">
+                                @component.Analysis
+                            </div>
+                        </div>
+
+                        <div class="tips-section">
+                            <Text Type="secondary">Tips for High Scores</Text>
+                            <ul class="mt-2 space-y-2">
+                                @foreach (var tip in component.Tips)
+                                {
+                                    <li class="flex items-start">
+                                        <Icon Type="check-circle" Theme="filled" 
+                                              Class="text-success mt-1 mr-2" />
+                                        <span>@tip</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <Empty Description="Select a component to see examples" />
+                }
+            </Card>
+        </Col>
+    </Row>
+
+    <div class="mt-6 flex justify-between">
+        <Button OnClick="@(() => OnBack.InvokeAsync())">
+            <Icon Type="left" /> Back
+        </Button>
+        <Button Type="primary" OnClick="@(() => OnComplete.InvokeAsync())">
+            Next <Icon Type="right" />
+        </Button>
+    </div>
+</div>
+
+<style>
+    .merit-component {
+        padding: 1rem;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .merit-component:hover {
+        background: #fafafa;
+        border-color: #d9d9d9;
+    }
+
+    .merit-component.selected {
+        background: #e6f7ff;
+        border-color: #91d5ff;
+    }
+
+    .example-content {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .tips-section {
+        background: #fafafa;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnComplete { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public EventCallback OnDemoComplete { get; set; }
+
+    private string selectedComponent;
+    private readonly List<MeritComponent> meritComponents = new()
+    {
+        new()
+        {
+            Key = "clarity",
+            Title = "Clarity",
+            Description = "How well-expressed and easy to understand is the content?",
+            Example = 85,
+            SampleContent = "The key challenge in distributed systems is maintaining consistency across nodes while optimizing for performance and fault tolerance.",
+            Analysis = "This explanation is concise, uses precise technical terms, and clearly states the core trade-off.",
+            Tips = new[]
+            {
+                "Use clear, precise language",
+                "Structure your thoughts logically",
+                "Define technical terms when needed",
+                "Use examples to illustrate complex points"
+            }
+        },
+        new()
+        {
+            Key = "novelty",
+            Title = "Novelty",
+            Description = "Does the content bring new insights or perspectives?",
+            Example = 75,
+            SampleContent = "Rather than viewing blockchain solely as a cryptocurrency platform, we can apply its consensus mechanisms to democratize content curation.",
+            Analysis = "This post offers a fresh application of blockchain technology beyond its common use case.",
+            Tips = new[]
+            {
+                "Connect ideas from different domains",
+                "Challenge conventional wisdom",
+                "Propose new solutions",
+                "Build on existing ideas in novel ways"
+            }
+        },
+        new()
+        {
+            Key = "contribution",
+            Title = "Contribution",
+            Description = "How much value does this add to the discussion?",
+            Example = 90,
+            SampleContent = "Here's a practical implementation guide with performance benchmarks and common pitfalls to avoid...",
+            Analysis = "Provides actionable insights backed by data and experience.",
+            Tips = new[]
+            {
+                "Share practical experiences",
+                "Include relevant data or evidence",
+                "Address common challenges",
+                "Offer actionable solutions"
+            }
+        },
+        new()
+        {
+            Key = "civility",
+            Title = "Civility",
+            Description = "Does the content maintain a constructive tone?",
+            Example = 95,
+            SampleContent = "While I see the merit in your approach, my experience suggests that...",
+            Analysis = "Respectfully presents an alternative view while acknowledging others' perspectives.",
+            Tips = new[]
+            {
+                "Remain respectful in disagreements",
+                "Focus on ideas, not individuals",
+                "Acknowledge valid points",
+                "Use constructive language"
+            }
+        },
+        new()
+        {
+            Key = "relevance",
+            Title = "Relevance",
+            Description = "How well does it fit the current discussion context?",
+            Example = 80,
+            SampleContent = "Building on the previous point about scalability, here's how this pattern addresses the bottleneck...",
+            Analysis = "Directly addresses and extends the ongoing discussion thread.",
+            Tips = new[]
+            {
+                "Stay on topic",
+                "Reference relevant points",
+                "Build on previous contributions",
+                "Add meaningful context"
+            }
+        }
+    };
+
+    private void SelectComponent(string key)
+    {
+        selectedComponent = key;
+    }
+
+    protected override void OnInitialized()
+    {
+        // Start with clarity selected
+        selectedComponent = "clarity";
+    }
+
+    private class MeritComponent
+    {
+        public string Key { get; init; }
+        public string Title { get; init; }
+        public string Description { get; init; }
+        public int Example { get; init; }
+        public string SampleContent { get; init; }
+        public string Analysis { get; init; }
+        public string[] Tips { get; init; }
+    }
+}

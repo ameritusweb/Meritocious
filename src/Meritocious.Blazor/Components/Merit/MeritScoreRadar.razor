@@ -1,0 +1,111 @@
+@using AntDesign.Charts
+@using Title = AntDesign.Charts.Title
+@using Meritocious.Common.DTOs.Merit
+
+<div class="merit-score-radar">
+    @if (MeritScore != null)
+    {
+        <Radar @ref="chart" Data="chartData" Config="config" />
+    }
+    else
+    {
+        <Spin Tip="Loading merit score data..." />
+    }
+</div>
+
+@code {
+    [Parameter] public MeritScoreDto MeritScore { get; set; }
+    [Parameter] public string Title { get; set; } = "Merit Score Dimensions";
+    [Parameter] public bool ShowComparison { get; set; } = false;
+    [Parameter] public MeritScoreDto ComparisonScore { get; set; }
+
+    private IChartComponent chart;
+    private List<object> chartData = new();
+
+    private readonly RadarConfig config = new()
+    {
+        Title = new Title
+        {
+            Visible = true,
+            Text = "Merit Score Analysis"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "Breakdown of merit score across key dimensions"
+        },
+        XField = "dimension",
+        YField = "score",
+        SeriesField = "type",
+        RadiusAxis = new ValueAxis
+        {
+            Min = 0,
+            Max = 100,
+            Grid = new BaseAxisGrid
+            {
+                AlternateColor = new[] { "rgba(0, 0, 0, 0.04)", null },
+                Line = new BaseAxisGridLine
+                {
+                    Type = "line"
+                }
+            }
+        },
+        Line = new RadarViewConfigLine
+        {
+            Visible = true
+        },
+        Point = new RadarViewConfigPoint
+        {
+            Visible = true,
+            Shape = "circle"
+        },
+        Area = new RadarViewConfigArea
+        {
+            Visible = true,
+            Style = new GraphicStyle
+            {
+                FillOpacity = 0.3
+            }
+        },
+        Legend = new Legend
+        {
+            Visible = true,
+            Position = "bottom"
+        },
+        Color = new[] { "#4CAF50", "#2196F3" }
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await UpdateChartData();
+    }
+
+    private Task UpdateChartData()
+    {
+        if (MeritScore == null) return Task.CompletedTask;
+
+        var items = new List<object>
+        {
+            new { dimension = "Clarity", score = MeritScore.ClarityScore, type = "Current Score" },
+            new { dimension = "Novelty", score = MeritScore.NoveltyScore, type = "Current Score" },
+            new { dimension = "Contribution", score = MeritScore.ContributionScore, type = "Current Score" },
+            new { dimension = "Civility", score = MeritScore.CivilityScore, type = "Current Score" },
+            new { dimension = "Relevance", score = MeritScore.RelevanceScore, type = "Current Score" }
+        };
+
+        if (ShowComparison && ComparisonScore != null)
+        {
+            items.AddRange(new[]
+            {
+                new { dimension = "Clarity", score = ComparisonScore.ClarityScore, type = "Comparison" },
+                new { dimension = "Novelty", score = ComparisonScore.NoveltyScore, type = "Comparison" },
+                new { dimension = "Contribution", score = ComparisonScore.ContributionScore, type = "Comparison" },
+                new { dimension = "Civility", score = ComparisonScore.CivilityScore, type = "Comparison" },
+                new { dimension = "Relevance", score = ComparisonScore.RelevanceScore, type = "Comparison" }
+            });
+        }
+
+        chartData = items;
+        return InvokeAsync(StateHasChanged);
+    }
+}

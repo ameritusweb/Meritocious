@@ -1,0 +1,280 @@
+@using AntDesign.Charts
+@using Meritocious.Common.DTOs.Merit
+@using Meritocious.Blazor.Components.Merit
+@using Meritocious.Blazor.Components.Analytics
+
+<div class="dashboard-container">
+    <!-- Time Range Controls -->
+    <div class="mb-6 flex justify-between items-center">
+        <div class="flex items-center">
+            <RangePicker 
+                Value="@dateRange"
+                OnChange="HandleDateRangeChange"
+                DisabledDate="date => date > DateTime.Now"
+                Class="mr-4" />
+            <Select 
+                DefaultValue="@selectedTimeFrame"
+                OnSelectedItemChanged="HandleTimeFrameChange"
+                Style="width: 120px">
+                <SelectOption Value="hourly">Hourly</SelectOption>
+                <SelectOption Value="daily">Daily</SelectOption>
+                <SelectOption Value="weekly">Weekly</SelectOption>
+                <SelectOption Value="monthly">Monthly</SelectOption>
+            </Select>
+        </div>
+        <div>
+            <Button Type="default" OnClick="RefreshData" Class="mr-2">
+                <Icon Type="reload" /> Refresh
+            </Button>
+            <Button Type="primary" OnClick="ExportDashboard">
+                <Icon Type="download" /> Export
+            </Button>
+        </div>
+    </div>
+
+    <!-- Merit Score Overview -->
+    <Row Gutter="16" Class="mb-6">
+        <Col Span="8">
+            <Card Class="h-full" Loading="@isLoading">
+                <MeritScoreGauge Score="@currentScore" 
+                               OnExplanationClick="ShowMeritExplanation" />
+            </Card>
+        </Col>
+        <Col Span="16">
+            <Card Class="h-full" Loading="@isLoading">
+                <MeritScoreRadar Score="@currentScore" 
+                                ShowComparison="true"
+                                ComparisonScore="@previousScore" />
+            </Card>
+        </Col>
+    </Row>
+
+    <!-- Activity Trends -->
+    <Row Gutter="16" Class="mb-6">
+        <Col Span="16">
+            <Card Title="Merit Score Evolution" 
+                  Loading="@isLoading"
+                  Extra="@(
+                      <Space>
+                          <Select DefaultValue="@selectedMetric"
+                                 OnSelectedItemChanged="HandleMetricChange"
+                                 Style="width: 120px">
+                              <SelectOption Value="overall">Overall</SelectOption>
+                              <SelectOption Value="clarity">Clarity</SelectOption>
+                              <SelectOption Value="novelty">Novelty</SelectOption>
+                              <SelectOption Value="contribution">Contribution</SelectOption>
+                          </Select>
+                          <Button Type="link" OnClick="@(() => ShowChartSettings())">
+                              <Icon Type="setting" />
+                          </Button>
+                      </Space>
+                  )">
+                <MeritScoreTrendChart UserId="@UserId"
+                                    TimeFrame="@selectedTimeFrame"
+                                    StartDate="@dateRange.Item1"
+                                    EndDate="@dateRange.Item2" />
+            </Card>
+        </Col>
+        <Col Span="8">
+            <Card Title="Contribution Impact" Loading="@isLoading">
+                <ContributionFunnel ContextId="@UserId"
+                                  TimeFrame="@selectedTimeFrame"
+                                  StartDate="@dateRange.Item1"
+                                  EndDate="@dateRange.Item2" />
+            </Card>
+        </Col>
+    </Row>
+
+    <!-- Topic Analysis -->
+    <Row Gutter="16" Class="mb-6">
+        <Col Span="12">
+            <Card Title="Topic Distribution" 
+                  Loading="@isLoading"
+                  Extra="@(
+                      <Button Type="link" OnClick="@(() => ShowTopicDetails())">
+                          <Icon Type="info-circle" />
+                      </Button>
+                  )">
+                <TopicEvolutionTreemap ContextId="@UserId"
+                                     TimeFrame="@selectedTimeFrame"
+                                     StartDate="@dateRange.Item1"
+                                     EndDate="@dateRange.Item2" />
+            </Card>
+        </Col>
+        <Col Span="12">
+            <Card Title="Activity Patterns" 
+                  Loading="@isLoading"
+                  Extra="@(
+                      <Button Type="link" OnClick="@(() => ShowActivityDetails())">
+                          <Icon Type="info-circle" />
+                      </Button>
+                  )">
+                <SubstackActivityHeatmap ContextId="@UserId"
+                                       TimeFrame="@selectedTimeFrame"
+                                       StartDate="@dateRange.Item1"
+                                       EndDate="@dateRange.Item2" />
+            </Card>
+        </Col>
+    </Row>
+</div>
+
+<!-- Modals -->
+<Modal Title="Merit Score Explanation"
+       Visible="@isMeritExplanationVisible"
+       OnOk="@(() => isMeritExplanationVisible = false)"
+       OnCancel="@(() => isMeritExplanationVisible = false)">
+    <MeritScoreBreakdown Score="@currentScore" />
+</Modal>
+
+<Modal Title="Chart Settings"
+       Visible="@isChartSettingsVisible"
+       OnOk="SaveChartSettings"
+       OnCancel="@(() => isChartSettingsVisible = false)">
+    <Form Model="@chartSettings" Layout="vertical">
+        <FormItem Label="Chart Style">
+            <Select @bind-Value="@chartSettings.Style">
+                <SelectOption Value="line">Line</SelectOption>
+                <SelectOption Value="area">Area</SelectOption>
+                <SelectOption Value="column">Column</SelectOption>
+            </Select>
+        </FormItem>
+        <FormItem Label="Show Data Labels">
+            <Switch @bind-Value="@chartSettings.ShowLabels" />
+        </FormItem>
+        <FormItem Label="Enable Animations">
+            <Switch @bind-Value="@chartSettings.EnableAnimations" />
+        </FormItem>
+    </Form>
+</Modal>
+
+<style>
+    .dashboard-container {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .h-full {
+        height: 100%;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public string UserId { get; set; }
+    [Parameter] public EventCallback<string> OnMetricChange { get; set; }
+    [Parameter] public EventCallback<(DateTime, DateTime)> OnDateRangeChange { get; set; }
+
+    private bool isLoading = true;
+    private MeritScoreDto currentScore;
+    private MeritScoreDto previousScore;
+    private (DateTime, DateTime) dateRange = (DateTime.Now.AddMonths(-1), DateTime.Now);
+    private string selectedTimeFrame = "monthly";
+    private string selectedMetric = "overall";
+    private bool isMeritExplanationVisible;
+    private bool isChartSettingsVisible;
+
+    private ChartSettings chartSettings = new()
+    {
+        Style = "line",
+        ShowLabels = true,
+        EnableAnimations = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            isLoading = true;
+            var (start, end) = dateRange;
+
+            // Load current period data
+            var currentData = await LoadMeritData(UserId, start, end);
+            currentScore = currentData;
+
+            // Load previous period data for comparison
+            var previousStart = start.AddDays(-(end - start).Days);
+            var previousEnd = start;
+            var previousData = await LoadMeritData(UserId, previousStart, previousEnd);
+            previousScore = previousData;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task<MeritScoreDto> LoadMeritData(string userId, DateTime start, DateTime end)
+    {
+        // Implement API call to fetch merit data
+        var client = HttpClientFactory.CreateClient("MeritociousAPI");
+        return await client.GetFromJsonAsync<MeritScoreDto>(
+            $"api/users/{userId}/merit?start={start:yyyy-MM-dd}&end={end:yyyy-MM-dd}");
+    }
+
+    private async Task HandleDateRangeChange(DateRangeChangedEventArgs args)
+    {
+        dateRange = (args.Dates[0], args.Dates[1]);
+        await LoadDashboardData();
+        await OnDateRangeChange.InvokeAsync(dateRange);
+    }
+
+    private async Task HandleTimeFrameChange(string timeFrame)
+    {
+        selectedTimeFrame = timeFrame;
+        await LoadDashboardData();
+    }
+
+    private async Task HandleMetricChange(string metric)
+    {
+        selectedMetric = metric;
+        await OnMetricChange.InvokeAsync(metric);
+    }
+
+    private async Task RefreshData()
+    {
+        await LoadDashboardData();
+    }
+
+    private void ShowMeritExplanation()
+    {
+        isMeritExplanationVisible = true;
+    }
+
+    private void ShowChartSettings()
+    {
+        isChartSettingsVisible = true;
+    }
+
+    private async Task SaveChartSettings()
+    {
+        isChartSettingsVisible = false;
+        await LoadDashboardData(); // Refresh with new settings
+    }
+
+    private async Task ExportDashboard()
+    {
+        // Implement dashboard export functionality
+        // This could export to PDF, Excel, or generate a shareable link
+    }
+
+    private class ChartSettings
+    {
+        public string Style { get; set; }
+        public bool ShowLabels { get; set; }
+        public bool EnableAnimations { get; set; }
+    }
+}

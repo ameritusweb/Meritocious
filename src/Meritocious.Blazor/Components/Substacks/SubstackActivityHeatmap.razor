@@ -1,0 +1,141 @@
+@using AntDesign.Charts
+@using Meritocious.Common.DTOs.Content
+@inject IHttpClientFactory HttpClientFactory
+
+<div class="substack-activity-heatmap">
+    @if (ActivityData != null)
+    {
+        <Heatmap @ref="chart" Data="chartItems" Config="config" />
+    }
+    else
+    {
+        <Spin Tip="Loading activity data..." />
+    }
+</div>
+
+@code {
+    [Parameter] public string SubstackId { get; set; }
+    [Parameter] public string TimeFrame { get; set; } = "weekly";
+    [Parameter] public DateTime? StartDate { get; set; }
+    [Parameter] public DateTime? EndDate { get; set; }
+    [Parameter] public string MetricType { get; set; } = "activity"; // activity, quality, engagement
+
+    private IChartComponent chart;
+    private List<PostSummaryDto> ActivityData;
+    private List<object> chartItems = new();
+
+    private readonly HeatmapConfig config = new()
+    {
+        Title = new Title
+        {
+            Visible = true,
+            Text = "Activity & Quality Distribution"
+        },
+        Description = new Description
+        {
+            Visible = true,
+            Text = "Visualize activity patterns and content quality across time and topics"
+        },
+        XField = "timeSlot",
+        YField = "topic",
+        ColorField = "value",
+        SizeField = "value",
+        ShapeType = "circle",
+        Color = new[] { "#dddddd", "#9ec8e0", "#5fa4cd", "#2e7ab6", "#114d90" },
+        XAxis = new ValueCatTimeAxis
+        {
+            Title = new BaseAxisTitle { Text = "Time" },
+            Label = new BaseAxisLabel { AutoRotate = true }
+        },
+        YAxis = new ValueAxis
+        {
+            Title = new BaseAxisTitle { Text = "Topics" }
+        },
+        Legend = new Legend
+        {
+            Visible = true,
+            Position = "right"
+        },
+        Tooltip = new Tooltip
+        {
+            Visible = true,
+            Fields = new[] { "timeSlot", "topic", "value", "quality" }
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        StartDate ??= DateTime.UtcNow.AddDays(-7);
+        EndDate ??= DateTime.UtcNow;
+        
+        await LoadActivityData();
+    }
+
+    private async Task LoadActivityData()
+    {
+        var client = HttpClientFactory.CreateClient("MeritociousAPI");
+        var response = await client.GetFromJsonAsync<List<PostSummaryDto>>(
+            $"api/substacks/{SubstackId}/activity?timeFrame={TimeFrame}&start={StartDate:yyyy-MM-dd}&end={EndDate:yyyy-MM-dd}&metric={MetricType}");
+        
+        ActivityData = response;
+
+        if (ActivityData != null)
+        {
+            var items = ActivityData
+                .GroupBy(p => new { TimeSlot = GetTimeSlot(p.CreatedAt), Topic = p.PrimaryTopic })
+                .Select(g => new
+                {
+                    timeSlot = g.Key.TimeSlot,
+                    topic = g.Key.Topic,
+                    value = MetricType switch
+                    {
+                        "activity" => g.Count(),
+                        "quality" => g.Average(p => p.MeritScore),
+                        "engagement" => g.Sum(p => p.CommentCount + p.RemixCount),
+                        _ => g.Count()
+                    },
+                    quality = g.Average(p => p.MeritScore).ToString("F1") + "%"
+                })
+                .OrderBy(x => x.timeSlot)
+                .ThenBy(x => x.topic)
+                .ToList<object>();
+
+            chartItems = items;
+            await InvokeAsync(StateHasChanged);
+
+            if (chart != null)
+            {
+                await chart.ChangeData(chartItems);
+            }
+        }
+    }
+
+    private string GetTimeSlot(DateTime date)
+    {
+        return TimeFrame switch
+        {
+            "hourly" => date.ToString("HH:00"),
+            "daily" => date.ToString("MMM dd"),
+            "weekly" => $"Week {GetIso8601WeekOfYear(date)}",
+            "monthly" => date.ToString("MMM yyyy"),
+            _ => date.ToString("MMM dd")
+        };
+    }
+
+    private int GetIso8601WeekOfYear(DateTime date)
+    {
+        var thursday = date.AddDays(3 - ((int)date.DayOfWeek + 6) % 7);
+        return (thursday.DayOfYear - 1) / 7 + 1;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadActivityData();
+    }
+
+    public async Task UpdateMetricType(string newMetricType)
+    {
+        MetricType = newMetricType;
+        await LoadActivityData();
+    }
+}
