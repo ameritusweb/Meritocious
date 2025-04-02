@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Meritocious.Core.Results;
 
 namespace Meritocious.Web.Controllers;
@@ -7,6 +8,14 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public abstract class ApiControllerBase : ControllerBase
 {
+    protected string GetUserId()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            throw new UnauthorizedAccessException("User not authenticated");
+        return userId;
+    }
+
     protected ActionResult<T> HandleResult<T>(Result<T> result)
     {
         if (result.IsFailure)
