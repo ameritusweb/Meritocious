@@ -1,0 +1,26 @@
+window.getBoundingClientRect = function (element) {
+    return element.getBoundingClientRect();
+};
+
+window.initTabDragDrop = function (dotNetHelper) {
+    document.addEventListener('mousemove', function (e) {
+        if (window.isDraggingTab) {
+            dotNetHelper.invokeMethodAsync('OnDragMove', {
+                clientX: e.clientX,
+                clientY: e.clientY
+            });
+        }
+    });
+
+    document.addEventListener('mouseup', function () {
+        if (window.isDraggingTab) {
+            window.isDraggingTab = false;
+            dotNetHelper.invokeMethodAsync('OnDragEnd');
+        }
+    });
+};
+
+window.startTabDrag = function (tabKey) {
+    window.isDraggingTab = true;
+    window.draggedTabKey = tabKey;
+};

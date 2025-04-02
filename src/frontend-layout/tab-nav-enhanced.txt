@@ -1,0 +1,246 @@
+@namespace Meritocious.Web.Components
+@implements IDisposable
+
+<div class="tab-nav-container" @ref="contextMenuTarget">
+    <Tabs ActiveKey="@TabService.ActiveKey"
+          Type="@TabType.EditableCard"
+          HideAdd="true"
+          OnTabClick="HandleTabClick"
+          OnEdit="HandleTabEdit">
+        @foreach (var tab in TabService.Tabs)
+        {
+            <TabPane Key="@tab.Key" 
+                    Tab="@GetTabTitle(tab)" 
+                    Closable="@tab.Closable"
+                    Class="@(isRefreshing && tab.Key == refreshingTabKey ? "tab-refreshing" : "")"
+                    Context="@tab.Key"
+                    OnContextMenu="@(args => ShowContextMenu(args, tab))">
+                <TabContent Key="@tab.Key" 
+                           Path="@tab.Path" 
+                           Parameters="@tab.Parameters"
+                           @key="@($"{tab.Key}-{refreshCount[tab.Key]}")" />
+            </TabPane>
+        }
+    </Tabs>
+
+    <Dropdown Visible="contextMenuVisible" 
+              OnVisibleChange="@(visible => contextMenuVisible = visible)"
+              Trigger="@(new Trigger[] { Trigger.ContextMenu })"
+              GetPopupContainer="() => contextMenuTarget">
+        <Overlay>
+            <Menu>
+                <MenuItem OnClick="@(() => RefreshTab(contextMenuTab?.Key))">
+                    <Icon Type="reload" Theme="outline" />
+                    <span>Refresh</span>
+                </MenuItem>
+                @if (contextMenuTab?.Closable == true)
+                {
+                    <MenuItem OnClick="@(() => CloseTab(contextMenuTab?.Key))">
+                        <Icon Type="close" Theme="outline" />
+                        <span>Close</span>
+                    </MenuItem>
+                }
+                <MenuItem OnClick="@CloseOtherTabs">
+                    <Icon Type="close-circle" Theme="outline" />
+                    <span>Close Others</span>
+                </MenuItem>
+                <MenuItem OnClick="@CloseAllClosableTabs">
+                    <Icon Type="close-square" Theme="outline" />
+                    <span>Close All</span>
+                </MenuItem>
+                <MenuDivider />
+                <SubMenu Title="@("Open New")">
+                    <MenuItem OnClick="@(() => OpenNewTab("right"))">
+                        <Icon Type="right-square" Theme="outline" />
+                        <span>Right</span>
+                    </MenuItem>
+                    <MenuItem OnClick="@(() => OpenNewTab("background"))">
+                        <Icon Type="file-add" Theme="outline" />
+                        <span>Background</span>
+                    </MenuItem>
+                </SubMenu>
+            </Menu>
+        </Overlay>
+    </Dropdown>
+</div>
+
+<style>
+    .tab-nav-container :deep(.ant-tabs-nav) {
+        margin: 0;
+        padding: 8px 8px 0;
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .tab-title {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .tab-refreshing :deep(.ant-tabs-tab-btn) {
+        animation: tab-refresh-spin 1s linear infinite;
+    }
+
+    @keyframes tab-refresh-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private MessageService MessageService { get; set; } = default!;
+
+    private ElementReference contextMenuTarget;
+    private bool contextMenuVisible;
+    private TabItem? contextMenuTab;
+    private bool isRefreshing;
+    private string? refreshingTabKey;
+    private Dictionary<string, int> refreshCount = new();
+
+    protected override void OnInitialized()
+    {
+        TabService.OnChange += StateHasChanged;
+        
+        // Initialize refresh count for each tab
+        foreach (var tab in TabService.Tabs)
+        {
+            if (!refreshCount.ContainsKey(tab.Key))
+            {
+                refreshCount[tab.Key] = 0;
+            }
+        }
+    }
+
+    private RenderFragment GetTabTitle(TabItem tab) => builder =>
+    {
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", "tab-title");
+        
+        if (!string.IsNullOrEmpty(tab.Icon))
+        {
+            builder.OpenComponent<Icon>(2);
+            builder.AddAttribute(3, "Type", tab.Icon);
+            builder.AddAttribute(4, "Spin", isRefreshing && tab.Key == refreshingTabKey);
+            builder.CloseComponent();
+            builder.AddMarkupContent(5, "&nbsp;");
+        }
+        
+        builder.AddContent(6, tab.Title);
+        builder.CloseElement();
+    };
+
+    private void HandleTabClick(string key)
+    {
+        TabService.ActivateTab(key);
+        var tab = TabService.Tabs.FirstOrDefault(t => t.Key == key);
+        if (tab != null)
+        {
+            NavigationManager.NavigateTo(tab.Path);
+        }
+    }
+
+    private void HandleTabEdit(string key, TabAction action)
+    {
+        if (action == TabAction.Remove)
+        {
+            CloseTab(key);
+        }
+    }
+
+    private async Task ShowContextMenu(MouseEventArgs args, TabItem tab)
+    {
+        contextMenuTab = tab;
+        contextMenuVisible = true;
+        StateHasChanged();
+    }
+
+    private async Task RefreshTab(string? key)
+    {
+        if (string.IsNullOrEmpty(key)) return;
+
+        isRefreshing = true;
+        refreshingTabKey = key;
+        
+        // Increment refresh count to force component reload
+        if (!refreshCount.ContainsKey(key))
+        {
+            refreshCount[key] = 0;
+        }
+        refreshCount[key]++;
+
+        // Simulate refresh delay
+        await Task.Delay(1000);
+
+        isRefreshing = false;
+        refreshingTabKey = null;
+        StateHasChanged();
+
+        await MessageService.Success("Tab refreshed");
+    }
+
+    private void CloseTab(string? key)
+    {
+        if (!string.IsNullOrEmpty(key))
+        {
+            TabService.RemoveTab(key);
+        }
+    }
+
+    private void CloseOtherTabs()
+    {
+        if (contextMenuTab == null) return;
+
+        var tabsToClose = TabService.Tabs
+            .Where(t => t.Closable && t.Key != contextMenuTab.Key)
+            .Select(t => t.Key)
+            .ToList();
+
+        foreach (var key in tabsToClose)
+        {
+            TabService.RemoveTab(key);
+        }
+    }
+
+    private void CloseAllClosableTabs()
+    {
+        var tabsToClose = TabService.Tabs
+            .Where(t => t.Closable)
+            .Select(t => t.Key)
+            .ToList();
+
+        foreach (var key in tabsToClose)
+        {
+            TabService.RemoveTab(key);
+        }
+    }
+
+    private void OpenNewTab(string mode)
+    {
+        if (contextMenuTab == null) return;
+
+        var newTab = new TabItem
+        {
+            Key = $"{contextMenuTab.Key}-{DateTime.Now.Ticks}",
+            Title = $"{contextMenuTab.Title} (New)",
+            Path = contextMenuTab.Path,
+            Icon = contextMenuTab.Icon,
+            Parameters = new Dictionary<string, object>(contextMenuTab.Parameters ?? new Dictionary<string, object>())
+        };
+
+        if (mode == "background")
+        {
+            TabService.AddTab(newTab, activateTab: false);
+        }
+        else // "right"
+        {
+            TabService.AddTabAfter(contextMenuTab.Key, newTab);
+        }
+    }
+
+    public void Dispose()
+    {
+        TabService.OnChange -= StateHasChanged;
+    }
+}

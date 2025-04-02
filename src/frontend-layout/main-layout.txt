@@ -1,0 +1,133 @@
+@inherits LayoutComponentBase
+
+<Layout Class="min-h-screen">
+    <Sider Collapsible 
+           Collapsed=@collapsed 
+           OnCollapse=@(collapsed => { this.collapsed = collapsed; })>
+        <div class="logo p-4">
+            <h1 class="text-white text-xl">Meritocious</h1>
+        </div>
+        <Menu Theme="MenuTheme.Dark" 
+              Mode="MenuMode.Inline" 
+              DefaultSelectedKeys=@(new[] { "1" })>
+            <MenuItem Key="1">
+                <Icon Type="dashboard" Theme="outline"/>
+                <span>Dashboard</span>
+            </MenuItem>
+            <MenuItem Key="2">
+                <Icon Type="experiment" Theme="outline"/>
+                <span>Analysis Page</span>
+            </MenuItem>
+            <MenuItem Key="3">
+                <Icon Type="monitor" Theme="outline"/>
+                <span>Monitoring Page</span>
+            </MenuItem>
+            <SubMenu Key="sub1" Title=@("Form Pages")>
+                <MenuItem Key="4">Basic Form</MenuItem>
+                <MenuItem Key="5">Step Form</MenuItem>
+                <MenuItem Key="6">Advanced Form</MenuItem>
+            </SubMenu>
+        </Menu>
+    </Sider>
+    <Layout>
+        <Header Class="bg-white px-4 flex justify-between items-center">
+            <Icon Type="menu-fold" 
+                  Class="text-lg cursor-pointer" 
+                  OnClick="ToggleCollapsed"/>
+            <div class="flex items-center space-x-4">
+                <Badge Count="12">
+                    <Icon Type="bell" Class="text-lg"/>
+                </Badge>
+                <Avatar Src="/api/placeholder/32/32"/>
+            </div>
+        </Header>
+        <PageTab>
+            @* Ant Design Blazor's TabSet for page tabs *@
+            <TabSet ActiveKey=@activeKey 
+                    Type="@TabType.EditableCard" 
+                    HideAdd
+                    OnTabClick="OnTabClick"
+                    OnEdit="OnTabEdit">
+                @foreach (var tab in tabs)
+                {
+                    <TabPane Key="@tab.Key" Tab="@tab.Title" Closable="@tab.Closable">
+                    </TabPane>
+                }
+            </TabSet>
+            <Breadcrumb Class="px-4 py-2">
+                <BreadcrumbItem>Home</BreadcrumbItem>
+                <BreadcrumbItem>Dashboard</BreadcrumbItem>
+                <BreadcrumbItem>Workplace</BreadcrumbItem>
+            </Breadcrumb>
+        </PageTab>
+        <Content Class="p-6">
+            <Card>
+                <div class="flex items-center space-x-4">
+                    <Avatar Size="large" Src="/api/placeholder/48/48"/>
+                    <div>
+                        <h2 class="text-xl">Good Morning, User! Have a great day!</h2>
+                        <p class="text-gray-500">Software Engineer | Engineering Department</p>
+                    </div>
+                </div>
+            </Card>
+            <div class="mt-6 grid grid-cols-3 gap-6">
+                @* Project Cards *@
+                <Card>
+                    <CardMeta Title="Alipay"
+                             Description="It's an inner thing, which they can't reach and can't reach"
+                             Avatar="alipay">
+                    </CardMeta>
+                </Card>
+                <Card>
+                    <CardMeta Title="Angular"
+                             Description="Hope is a good thing, maybe the best, good things will not die out"
+                             Avatar="angular">
+                    </CardMeta>
+                </Card>
+                <Card>
+                    <CardMeta Title="Ant Design"
+                             Description="There are so many pubs in the town, but she just walked into my pub"
+                             Avatar="ant-design">
+                    </CardMeta>
+                </Card>
+            </div>
+        </Content>
+    </Layout>
+</Layout>
+
+@code {
+    bool collapsed = false;
+    string activeKey = "1";
+    List<TabItem> tabs = new List<TabItem>
+    {
+        new TabItem { Key = "1", Title = "Analysis Page", Closable = false },
+        new TabItem { Key = "2", Title = "Workbench", Closable = true },
+        new TabItem { Key = "3", Title = "Monitoring Page", Closable = true }
+    };
+
+    class TabItem
+    {
+        public string Key { get; set; }
+        public string Title { get; set; }
+        public bool Closable { get; set; }
+    }
+
+    void ToggleCollapsed()
+    {
+        collapsed = !collapsed;
+    }
+
+    void OnTabClick(string key)
+    {
+        activeKey = key;
+    }
+
+    void OnTabEdit(string key, TabAction action)
+    {
+        if (action == TabAction.Remove)
+        {
+            tabs.RemoveAll(t => t.Key == key);
+            // Handle tab removal and navigation
+        }
+    }
+}

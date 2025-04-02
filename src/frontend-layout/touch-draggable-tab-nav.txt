@@ -1,0 +1,333 @@
+@namespace Meritocious.Web.Components
+@implements IDisposable
+@inject IJSRuntime JS
+
+<div class="tab-nav-container" @ref="containerRef">
+    <CascadingValue Value="this">
+        <Tabs ActiveKey="@TabService.ActiveKey"
+              Type="@TabType.EditableCard"
+              HideAdd="true"
+              OnTabClick="HandleTabClick"
+              OnEdit="HandleTabEdit">
+            @foreach (var tab in TabService.Tabs)
+            {
+                <TabPane Key="@tab.Key" 
+                        Tab="@GetTabTitle(tab)" 
+                        Closable="@tab.Closable"
+                        Class="@GetTabClass(tab)">
+                    <TabContent Key="@tab.Key" 
+                               Path="@tab.Path" 
+                               Parameters="@tab.Parameters"
+                               @key="@($"{tab.Key}-{refreshCount[tab.Key]}")" />
+                </TabPane>
+            }
+        </Tabs>
+    </CascadingValue>
+
+    @* Touch Drag Preview *@
+    @if (isTouchDragging && draggedTab != null)
+    {
+        <div class="touch-drag-preview @(isValidDropTarget ? "" : "invalid")"
+             style="@GetTouchPreviewStyle()">
+            <div class="touch-preview-content">
+                @if (!string.IsNullOrEmpty(draggedTab.Icon))
+                {
+                    <Icon Type="@draggedTab.Icon" Class="mr-2" />
+                }
+                <span>@draggedTab.Title</span>
+                @if (!isValidDropTarget)
+                {
+                    <Icon Type="stop" Class="ml-2 text-red-500" />
+                }
+            </div>
+            <div class="touch-preview-feedback">
+                @if (isValidDropTarget)
+                {
+                    <span class="text-blue-500">Release to drop</span>
+                }
+                else
+                {
+                    <span class="text-red-500">Invalid position</span>
+                }
+            </div>
+        </div>
+    }
+
+    @* Drop Zone Indicator *@
+    <div class="drop-zone-indicator @(isTouchDragging ? "visible" : "")"
+         style="left: @dropZoneLeft; width: @dropZoneWidth">
+        <div class="drop-zone-line"></div>
+    </div>
+</div>
+
+<style>
+    .tab-nav-container {
+        position: relative;
+        touch-action: none; /* Prevent browser handling of touch events */
+    }
+
+    .touch-drag-preview {
+        position: fixed;
+        z-index: 1000;
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        max-width: 80vw;
+        pointer-events: none;
+        transform-origin: center center;
+        transition: transform 0.1s ease;
+    }
+
+    .touch-preview-content {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .touch-preview-feedback {
+        font-size: 12px;
+        text-align: center;
+        padding-top: 4px;
+        border-top: 1px solid #f0f0f0;
+    }
+
+    .touch-drag-preview.invalid {
+        background: #fff1f0;
+        border: 1px solid #ff4d4f;
+    }
+
+    .drop-zone-indicator {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.2s ease;
+    }
+
+    .drop-zone-indicator.visible {
+        opacity: 1;
+    }
+
+    .drop-zone-line {
+        position: absolute;
+        top: 8px;
+        bottom: 8px;
+        left: 50%;
+        width: 2px;
+        background: #1890ff;
+        transform: translateX(-50%);
+    }
+
+    /* Touch-specific styles */
+    .tab-nav-container :deep(.ant-tabs-tab) {
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.touch-dragging) {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+        .tab-nav-container :deep(.ant-tabs-tab) {
+            padding: 12px 16px; /* Larger touch targets */
+        }
+
+        .touch-drag-preview {
+            padding: 16px;
+            font-size: 16px;
+        }
+    }
+
+    /* Visual feedback for long press */
+    @keyframes longpress-feedback {
+        0% { transform: scale(1); }
+        100% { transform: scale(0.95); }
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.long-press) {
+        animation: longpress-feedback 0.2s ease forwards;
+    }
+</style>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    private ElementReference containerRef;
+    private DotNetObjectReference<TouchDraggableTabNav>? selfReference;
+
+    private bool isTouchDragging;
+    private TabItem? draggedTab;
+    private string dropZoneLeft = "0px";
+    private string dropZoneWidth = "0px";
+    private bool isValidDropTarget = true;
+
+    // Touch state
+    private double touchX;
+    private double touchY;
+    private bool isLongPress;
+    private System.Timers.Timer? longPressTimer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            selfReference = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("initTouchDragDrop", selfReference, containerRef);
+        }
+    }
+
+    private RenderFragment GetTabTitle(TabItem tab) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "tab-title");
+        builder.AddAttribute(2, "data-tab-key", tab.Key);
+        
+        // Touch event handlers
+        builder.AddAttribute(3, "ontouchstart", 
+            EventCallback.Factory.Create<TouchEventArgs>(this, e => HandleTouchStart(e, tab)));
+        builder.AddAttribute(4, "ontouchmove", 
+            EventCallback.Factory.Create<TouchEventArgs>(this, HandleTouchMove));
+        builder.AddAttribute(5, "ontouchend", 
+            EventCallback.Factory.Create<TouchEventArgs>(this, HandleTouchEnd));
+        
+        if (!string.IsNullOrEmpty(tab.Icon))
+        {
+            builder.OpenComponent<Icon>(6);
+            builder.AddAttribute(7, "Type", tab.Icon);
+            builder.CloseComponent();
+            builder.AddMarkupContent(8, "&nbsp;");
+        }
+        
+        builder.AddContent(9, tab.Title);
+        builder.CloseElement();
+    };
+
+    private string GetTouchPreviewStyle()
+    {
+        var x = touchX - 50; // Center preview horizontally
+        var y = touchY - 30; // Position above finger
+        return $"transform: translate({x}px, {y}px)";
+    }
+
+    private async Task HandleTouchStart(TouchEventArgs e, TabItem tab)
+    {
+        if (tab.IsPinned) return;
+
+        // Store initial touch position
+        var touch = e.TargetTouches[0];
+        touchX = touch.ClientX;
+        touchY = touch.ClientY;
+
+        // Start long press timer
+        longPressTimer = new System.Timers.Timer(500); // 500ms for long press
+        longPressTimer.Elapsed += async (sender, args) =>
+        {
+            await InvokeAsync(() =>
+            {
+                isLongPress = true;
+                StartTouchDrag(tab);
+                StateHasChanged();
+            });
+        };
+        longPressTimer.Start();
+    }
+
+    private async Task HandleTouchMove(TouchEventArgs e)
+    {
+        if (!isTouchDragging) return;
+
+        var touch = e.TargetTouches[0];
+        touchX = touch.ClientX;
+        touchY = touch.ClientY;
+
+        // Get the tab element under the touch point
+        var targetElement = await JS.InvokeAsync<string>(
+            "getElementFromPoint", touchX, touchY);
+
+        if (!string.IsNullOrEmpty(targetElement))
+        {
+            await UpdateDropZone(targetElement);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandleTouchEnd(TouchEventArgs e)
+    {
+        longPressTimer?.Stop();
+        
+        if (!isTouchDragging) return;
+
+        // Handle drop
+        if (isValidDropTarget)
+        {
+            var targetElement = await JS.InvokeAsync<string>(
+                "getElementFromPoint", touchX, touchY);
+            
+            if (!string.IsNullOrEmpty(targetElement))
+            {
+                await FinalizeDrop(targetElement);
+            }
+        }
+
+        // Reset state
+        isTouchDragging = false;
+        draggedTab = null;
+        isLongPress = false;
+        StateHasChanged();
+    }
+
+    private void StartTouchDrag(TabItem tab)
+    {
+        isTouchDragging = true;
+        draggedTab = tab;
+        longPressTimer?.Dispose();
+        longPressTimer = null;
+    }
+
+    private async Task UpdateDropZone(string targetTabKey)
+    {
+        if (draggedTab == null) return;
+
+        var targetTab = TabService.GetTab(targetTabKey);
+        if (targetTab == null) return;
+
+        // Check if drop is valid
+        isValidDropTarget = !targetTab.IsPinned && 
+                           targetTab.Key != draggedTab.Key;
+
+        // Update drop zone position
+        if (isValidDropTarget)
+        {
+            var targetRect = await JS.InvokeAsync<DOMRect>(
+                "getTabRect", targetTabKey);
+            
+            dropZoneLeft = $"{targetRect.Left}px";
+            dropZoneWidth = $"{targetRect.Width}px";
+        }
+    }
+
+    private async Task FinalizeDrop(string targetTabKey)
+    {
+        if (draggedTab == null) return;
+
+        var sourceIndex = TabService.GetTabIndex(draggedTab.Key);
+        var targetIndex = TabService.GetTabIndex(targetTabKey);
+
+        if (sourceIndex != targetIndex)
+        {
+            TabService.MoveTab(draggedTab.Key, targetIndex);
+        }
+    }
+
+    public void Dispose()
+    {
+        longPressTimer?.Dispose();
+        selfReference?.Dispose();
+    }
+}

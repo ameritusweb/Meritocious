@@ -1,0 +1,292 @@
+// Touch support for tab dragging
+let touchScrollTimeout;
+let lastTouchY = 0;
+let scrollSpeed = 0;
+let isAutoScrolling = false;
+
+window.initTouchDragDrop = function (dotNetHelper, containerElement) {
+    // Prevent default touch behaviors
+    containerElement.addEventListener('touchmove', function(e) {
+        if (e.target.closest('.tab-title')) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // Handle auto-scrolling near edges
+    document.addEventListener('touchmove', function(e) {
+        if (!e.target.closest('.tab-nav-container')) return;
+
+        const touch = e.touches[0];
+        const container = e.target.closest('.tab-nav-container');
+        const rect = container.getBoundingClientRect();
+        
+        // Calculate distance from edges
+        const topEdge = touch.clientY - rect.top;
+        const bottomEdge = rect.bottom - touch.clientY;
+        
+        // Determine scroll speed based on distance from edge
+        if (topEdge < 40) {
+            scrollSpeed = -Math.pow((40 - topEdge) / 10, 2);
+            startAutoScroll(container);
+        } else if (bottomEdge < 40) {
+            scrollSpeed = Math.pow((40 - bottomEdge) / 10, 2);
+            startAutoScroll(container);
+        } else {
+            stopAutoScroll();
+        }
+        
+        lastTouchY = touch.clientY;
+    });
+};
+
+function startAutoScroll(container) {
+    if (isAutoScrolling) return;
+    isAutoScrolling = true;
+
+    function scroll() {
+        if (!isAutoScrolling) return;
+        
+        container.scrollTop += scrollSpeed;
+        requestAnimationFrame(scroll);
+    }
+
+    requestAnimationFrame(scroll);
+}
+
+function stopAutoScroll() {
+    isAutoScrolling = false;
+    scrollSpeed = 0;
+}
+
+window.getElementFromPoint = function(x, y) {
+    const element = document.elementFromPoint(x, y);
+    const tabTitle = element?.closest('.tab-title');
+    return tabTitle?.dataset.tabKey || null;
+};
+
+window.getTabRect = function(tabKey) {
+    const tabElement = document.querySelector(`[data-tab-key="${tabKey}"]`);
+    return tabElement?.getBoundingClientRect() || null;
+};
+
+// Touch feedback helpers
+let touchFeedbackTimeout;
+
+window.addTouchFeedback = function(element) {
+    clearTimeout(touchFeedbackTimeout);
+    element.classList.add('touch-active');
+    
+    touchFeedbackTimeout = setTimeout(() => {
+        element.classList.remove('touch-active');
+    }, 100);
+};
+
+// Velocity tracking for momentum scrolling
+let lastTouchTime = 0;
+let lastTouchX = 0;
+let velocityX = 0;
+
+function updateVelocity(touch) {
+    const now = Date.now();
+    const dt = now - lastTouchTime;
+    
+    if (dt > 0) {
+        const dx = touch.clientX - lastTouchX;
+        velocityX = dx / dt;
+    }
+    
+    lastTouchTime = now;
+    lastTouchX = touch.clientX;
+}
+
+window.applyMomentumScroll = function(container) {
+    if (Math.abs(velocityX) < 0.1) return;
+    
+    const momentum = velocityX * 100; // Adjust this multiplier to control momentum
+    
+    container.scrollLeft += momentum;
+    velocityX *= 0.95; // Decay factor
+    
+    if (Math.abs(velocityX) > 0.1) {
+        requestAnimationFrame(() => applyMomentumScroll(container));
+    }
+};
+
+// Add touch-specific styles
+const style = document.createElement('style');
+style.textContent = `
+    .touch-active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+        .tab-nav-container .ant-tabs-nav {
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab-nav-container .ant-tabs-nav-wrap {
+            margin-bottom: 0;
+            padding: 4px 0;
+        }
+
+        .tab-nav-container .ant-tabs-tab {
+            margin: 0 4px;
+            padding: 12px 16px;
+            min-height: 44px; /* iOS minimum touch target */
+        }
+
+        .tab-nav-container .ant-tabs-tab-remove {
+            padding: 12px 8px;
+            margin-left: 8px;
+        }
+
+        .touch-scroll-shadow {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .touch-scroll-shadow.left {
+            left: 0;
+            background: linear-gradient(90deg, rgba(0,0,0,0.1), transparent);
+        }
+
+        .touch-scroll-shadow.right {
+            right: 0;
+            background: linear-gradient(-90deg, rgba(0,0,0,0.1), transparent);
+        }
+
+        .touch-scroll-shadow.visible {
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Touch scroll handling with momentum
+let touchScrollState = {
+    isScrolling: false,
+    startX: 0,
+    startScrollLeft: 0,
+    timeStamp: 0,
+    lastX: 0,
+    velocity: 0
+};
+
+function handleTouchStart(e, container) {
+    const touch = e.touches[0];
+    touchScrollState = {
+        isScrolling: true,
+        startX: touch.clientX,
+        startScrollLeft: container.scrollLeft,
+        timeStamp: e.timeStamp,
+        lastX: touch.clientX,
+        velocity: 0
+    };
+}
+
+function handleTouchMove(e, container) {
+    if (!touchScrollState.isScrolling) return;
+
+    const touch = e.touches[0];
+    const delta = touch.clientX - touchScrollState.startX;
+    container.scrollLeft = touchScrollState.startScrollLeft - delta;
+
+    // Update velocity
+    const timeDelta = e.timeStamp - touchScrollState.timeStamp;
+    const moveDelta = touch.clientX - touchScrollState.lastX;
+    touchScrollState.velocity = moveDelta / timeDelta;
+    touchScrollState.lastX = touch.clientX;
+    touchScrollState.timeStamp = e.timeStamp;
+
+    updateScrollShadows(container);
+}
+
+function handleTouchEnd(container) {
+    if (!touchScrollState.isScrolling) return;
+
+    const velocity = touchScrollState.velocity;
+    touchScrollState.isScrolling = false;
+
+    if (Math.abs(velocity) > 0.5) {
+        applyScrollMomentum(container, velocity);
+    }
+}
+
+function applyScrollMomentum(container, initialVelocity) {
+    let velocity = initialVelocity * 100; // Scale factor for momentum
+    let lastTimestamp = performance.now();
+
+    function momentumStep(timestamp) {
+        const delta = timestamp - lastTimestamp;
+        lastTimestamp = timestamp;
+
+        velocity *= 0.95; // Decay factor
+        container.scrollLeft -= velocity * delta;
+
+        updateScrollShadows(container);
+
+        if (Math.abs(velocity) > 0.1) {
+            requestAnimationFrame(momentumStep);
+        }
+    }
+
+    requestAnimationFrame(momentumStep);
+}
+
+function updateScrollShadows(container) {
+    const leftShadow = container.querySelector('.touch-scroll-shadow.left');
+    const rightShadow = container.querySelector('.touch-scroll-shadow.right');
+
+    if (leftShadow) {
+        leftShadow.classList.toggle('visible', container.scrollLeft > 0);
+    }
+
+    if (rightShadow) {
+        const hasMoreContent = container.scrollLeft < (container.scrollWidth - container.clientWidth);
+        rightShadow.classList.toggle('visible', hasMoreContent);
+    }
+}
+
+// Initialize touch scroll handling
+window.initTouchScroll = function(container) {
+    // Add scroll shadows
+    const leftShadow = document.createElement('div');
+    leftShadow.className = 'touch-scroll-shadow left';
+    container.appendChild(leftShadow);
+
+    const rightShadow = document.createElement('div');
+    rightShadow.className = 'touch-scroll-shadow right';
+    container.appendChild(rightShadow);
+
+    // Add touch event listeners
+    container.addEventListener('touchstart', (e) => handleTouchStart(e, container), { passive: true });
+    container.addEventListener('touchmove', (e) => handleTouchMove(e, container), { passive: true });
+    container.addEventListener('touchend', () => handleTouchEnd(container), { passive: true });
+
+    // Initial shadow state
+    updateScrollShadows(container);
+};
+
+// Haptic feedback helper (if supported)
+window.provideHapticFeedback = function(type = 'light') {
+    if (!window.navigator.vibrate) return;
+
+    switch (type) {
+        case 'light':
+            navigator.vibrate(10);
+            break;
+        case 'medium':
+            navigator.vibrate(20);
+            break;
+        case 'heavy':
+            navigator.vibrate([30, 30, 30]);
+            break;
+    }
+};

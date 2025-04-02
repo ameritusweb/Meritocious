@@ -1,0 +1,259 @@
+@namespace Meritocious.Web.Components
+@implements IDisposable
+
+<div class="tab-nav-container" @ref="contextMenuTarget">
+    <CascadingValue Value="this">
+        <Tabs ActiveKey="@TabService.ActiveKey"
+              Type="@TabType.EditableCard"
+              HideAdd="true"
+              OnTabClick="HandleTabClick"
+              OnEdit="HandleTabEdit">
+            @foreach (var tab in TabService.Tabs)
+            {
+                <TabPane Key="@tab.Key" 
+                        Tab="@GetTabTitle(tab)" 
+                        Closable="@tab.Closable"
+                        Class="@GetTabClass(tab)">
+                    <TabContent Key="@tab.Key" 
+                               Path="@tab.Path" 
+                               Parameters="@tab.Parameters"
+                               @key="@($"{tab.Key}-{refreshCount[tab.Key]}")" />
+                </TabPane>
+            }
+        </Tabs>
+    </CascadingValue>
+
+    @if (isDragging && draggedTab != null)
+    {
+        <div class="drag-indicator @(isDragging ? "visible" : "")"
+             style="left: @(dropIndicatorLeft)px;">
+            <div class="drag-indicator-label">
+                @if (!isValidDropTarget)
+                {
+                    <Icon Type="stop" Class="text-red-500" />
+                    <span class="ml-1">Cannot move pinned tab</span>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .tab-nav-container {
+        position: relative;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab) {
+        transition: transform 0.2s, opacity 0.2s, background-color 0.2s;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.pinned) {
+        background-color: #fafafa;
+        border-bottom-color: #f0f0f0;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.pinned::before) {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 8px;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        background-color: #1890ff;
+        border-radius: 50%;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.dragging) {
+        opacity: 0.6;
+        transform: scale(0.98);
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.dragging.invalid) {
+        cursor: not-allowed;
+        border-color: #ff4d4f;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.non-draggable) {
+        cursor: default;
+    }
+
+    .drag-indicator {
+        position: absolute;
+        top: 0;
+        width: 2px;
+        height: 40px;
+        background-color: #1890ff;
+        transition: left 0.2s, background-color 0.2s;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .drag-indicator.visible {
+        opacity: 1;
+    }
+
+    .drag-indicator.invalid {
+        background-color: #ff4d4f;
+    }
+
+    .drag-indicator-label {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        padding: 4px 8px;
+        background-color: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 4px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private MessageService MessageService { get; set; } = default!;
+
+    private ElementReference contextMenuTarget;
+    private bool isDragging;
+    private TabItem? draggedTab;
+    private double dropIndicatorLeft;
+    private bool isValidDropTarget;
+    private Dictionary<string, int> refreshCount = new();
+
+    private RenderFragment GetTabTitle(TabItem tab) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", $"tab-title {(tab.IsPinned ? "non-draggable" : "")}");
+        
+        if (!tab.IsPinned)
+        {
+            builder.AddAttribute(2, "draggable", "true");
+            builder.AddAttribute(3, "ondragstart", EventCallback.Factory.Create<DragEventArgs>(this, 
+                e => HandleDragStart(e, tab)));
+            builder.AddAttribute(4, "ondragend", EventCallback.Factory.Create<DragEventArgs>(this, 
+                HandleDragEnd));
+            builder.AddAttribute(5, "ondragover", EventCallback.Factory.Create<DragEventArgs>(this, 
+                e => HandleDragOver(e, tab)));
+        }
+
+        if (tab.IsPinned)
+        {
+            builder.OpenComponent<Icon>(6);
+            builder.AddAttribute(7, "Type", "pin");
+            builder.AddAttribute(8, "Class", "mr-2 text-blue-500");
+            builder.CloseComponent();
+        }
+        
+        if (!string.IsNullOrEmpty(tab.Icon))
+        {
+            builder.OpenComponent<Icon>(9);
+            builder.AddAttribute(10, "Type", tab.Icon);
+            builder.CloseComponent();
+            builder.AddMarkupContent(11, "&nbsp;");
+        }
+        
+        builder.AddContent(12, tab.Title);
+        builder.CloseElement();
+    };
+
+    private async Task HandleDragStart(DragEventArgs e, TabItem tab)
+    {
+        if (tab.IsPinned)
+        {
+            e.PreventDefault();
+            await MessageService.Error("Pinned tabs cannot be moved");
+            return;
+        }
+
+        isDragging = true;
+        draggedTab = tab;
+        StateHasChanged();
+    }
+
+    private void HandleDragEnd(DragEventArgs e)
+    {
+        isDragging = false;
+        draggedTab = null;
+        dropIndicatorLeft = 0;
+        isValidDropTarget = true;
+        StateHasChanged();
+    }
+
+    private async Task HandleDragOver(DragEventArgs e, TabItem targetTab)
+    {
+        if (draggedTab == null || draggedTab.Key == targetTab.Key)
+            return;
+
+        e.PreventDefault();
+
+        // Check constraints
+        if (draggedTab.IsPinned)
+        {
+            isValidDropTarget = false;
+            return;
+        }
+
+        // Don't allow dragging non-pinned tabs before pinned tabs
+        var targetIndex = TabService.GetTabIndex(targetTab.Key);
+        var pinnedTabs = TabService.Tabs.Take(targetIndex + 1).Count(t => t.IsPinned);
+        
+        if (pinnedTabs > 0 && !draggedTab.IsPinned)
+        {
+            isValidDropTarget = false;
+            dropIndicatorLeft = TabService.GetFirstNonPinnedTabPosition();
+            StateHasChanged();
+            return;
+        }
+
+        isValidDropTarget = true;
+
+        var tabElement = e.CurrentTarget as ElementReference;
+        var rect = await JS.InvokeAsync<DOMRect>("getBoundingClientRect", tabElement);
+        
+        var mouseX = e.ClientX;
+        var tabCenter = rect.Left + rect.Width / 2;
+        var isAfter = mouseX > tabCenter;
+
+        dropIndicatorLeft = isAfter ? rect.Right : rect.Left;
+        
+        if (isValidDropTarget)
+        {
+            var sourceIndex = TabService.GetTabIndex(draggedTab.Key);
+            var targetIndex = TabService.GetTabIndex(targetTab.Key);
+            
+            if (sourceIndex != targetIndex)
+            {
+                if (isAfter)
+                    targetIndex++;
+                    
+                TabService.MoveTab(draggedTab.Key, targetIndex);
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private string GetTabClass(TabItem tab)
+    {
+        var classes = new List<string>();
+        
+        if (tab.IsPinned)
+            classes.Add("pinned");
+            
+        if (draggedTab?.Key == tab.Key)
+        {
+            classes.Add("dragging");
+            if (!isValidDropTarget)
+                classes.Add("invalid");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    // Rest of the existing code...
+}

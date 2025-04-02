@@ -1,0 +1,124 @@
+.gesture-feedback {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform-origin: center;
+}
+
+.gesture-feedback.visible {
+    opacity: 1;
+}
+
+/* Pinch feedback */
+.gesture-feedback.pinch {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+}
+
+.gesture-feedback.pinch::before,
+.gesture-feedback.pinch::after {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 2px solid white;
+    border-radius: 50%;
+    animation: pinch-pulse 1s ease-in-out infinite;
+}
+
+@keyframes pinch-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Swipe feedback */
+.gesture-feedback.swipe {
+    width: 80px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.gesture-feedback.swipe::after {
+    content: '→';
+    font-size: 24px;
+    animation: swipe-arrow 1s ease-in-out infinite;
+}
+
+@keyframes swipe-arrow {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(10px); }
+}
+
+/* Rotation feedback */
+.gesture-feedback.rotate {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+
+.gesture-feedback.rotate::before {
+    content: '↻';
+    font-size: 32px;
+    animation: rotate-icon 2s linear infinite;
+}
+
+@keyframes rotate-icon {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Two-finger tap feedback */
+.gesture-feedback.two-finger-tap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gesture-feedback.two-finger-tap::before {
+    content: '👆👆';
+    font-size: 24px;
+    animation: tap-fingers 0.5s ease-in-out infinite;
+}
+
+@keyframes tap-fingers {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Touch target sizes */
+@media (hover: none) and (pointer: coarse) {
+    .tab-nav-container :deep(.ant-tabs-tab) {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 12px 16px;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab-btn) {
+        font-size: 16px;
+    }
+}

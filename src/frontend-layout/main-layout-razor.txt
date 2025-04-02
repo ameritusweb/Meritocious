@@ -1,0 +1,30 @@
+.logo {
+    height: 64px;
+    margin: 0;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.ant-layout {
+    min-height: 100vh;
+}
+
+.ant-layout-sider {
+    box-shadow: 2px 0 6px rgba(0,21,41,.35);
+}
+
+.ant-layout-header {
+    padding: 0;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,21,41,.08);
+}
+
+.page-tab {
+    background: #fff;
+    padding: 8px 24px;
+}
+
+.content-container {
+    margin: 24px;
+    padding: 24px;
+    background: #fff;
+}

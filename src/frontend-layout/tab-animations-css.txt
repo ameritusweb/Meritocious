@@ -1,0 +1,78 @@
+.ant-tabs-nav-list {
+    transition: transform 0.2s ease;
+}
+
+.ant-tabs-tab {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.ant-tabs-tab.dragging {
+    opacity: 0.6;
+    transform: scale(0.98);
+    background: #f0f0f0;
+    border-radius: 4px;
+}
+
+.drag-indicator {
+    position: absolute;
+    width: 2px;
+    height: 20px;
+    background: #1890ff;
+    transition: left 0.1s ease, opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.drag-indicator::before,
+.drag-indicator::after {
+    content: '';
+    position: absolute;
+    left: -3px;
+    width: 8px;
+    height: 8px;
+    background: #1890ff;
+    border-radius: 50%;
+}
+
+.drag-indicator::before {
+    top: -4px;
+}
+
+.drag-indicator::after {
+    bottom: -4px;
+}
+
+.ant-tabs-tab-btn {
+    cursor: move;
+}
+
+.ant-tabs-tab:hover .ant-tabs-tab-remove {
+    opacity: 1;
+}
+
+/* Smooth tab insertion/removal animation */
+.ant-tabs-nav-list {
+    position: relative;
+}
+
+.ant-tabs-tab-enter {
+    opacity: 0;
+    transform: scale(0.9);
+}
+
+.ant-tabs-tab-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ant-tabs-tab-exit {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ant-tabs-tab-exit-active {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}

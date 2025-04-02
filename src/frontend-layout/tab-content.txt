@@ -1,0 +1,24 @@
+@namespace Meritocious.Web.Components
+
+<DynamicComponent Type="@ComponentType" Parameters="@Parameters" />
+
+@code {
+    [Parameter] public string Key { get; set; } = "";
+    [Parameter] public string Path { get; set; } = "";
+    [Parameter] public Dictionary<string, object>? Parameters { get; set; }
+
+    private Type? ComponentType => ResolveComponentType();
+
+    private Type? ResolveComponentType()
+    {
+        // Map routes to component types
+        return Path switch
+        {
+            "/" => typeof(Dashboard),
+            "/analysis" => typeof(AnalysisPage),
+            "/workbench" => typeof(Workbench),
+            "/monitoring" => typeof(MonitoringPage),
+            _ => typeof(NotFound)
+        };
+    }
+}

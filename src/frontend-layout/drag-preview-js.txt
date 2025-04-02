@@ -1,0 +1,116 @@
+let dragPreviewElement = null;
+let dragOffset = { x: 0, y: 0 };
+
+window.initTabDragDrop = function (dotNetHelper) {
+    document.addEventListener('mousemove', function (e) {
+        if (dragPreviewElement) {
+            const x = e.clientX - dragOffset.x;
+            const y = e.clientY - dragOffset.y;
+            dotNetHelper.invokeMethodAsync('UpdateDragPosition', x, y);
+        }
+    });
+};
+
+window.createDragImage = function (e, title, icon) {
+    // Remove any existing preview
+    removeDragImage();
+
+    // Create preview element
+    dragPreviewElement = document.createElement('div');
+    dragPreviewElement.className = 'custom-drag-preview';
+    
+    // Add content
+    const content = document.createElement('div');
+    content.className = 'drag-preview-content';
+    
+    if (icon) {
+        const iconElement = document.createElement('i');
+        iconElement.className = `anticon anticon-${icon}`;
+        content.appendChild(iconElement);
+    }
+    
+    const titleElement = document.createElement('span');
+    titleElement.textContent = title;
+    content.appendChild(titleElement);
+    
+    dragPreviewElement.appendChild(content);
+    
+    // Calculate offset from mouse position
+    const rect = e.target.getBoundingClientRect();
+    dragOffset.x = e.clientX - rect.left;
+    dragOffset.y = e.clientY - rect.top;
+    
+    // Add to document
+    document.body.appendChild(dragPreviewElement);
+    
+    // Hide default preview
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(emptyImg, 0, 0);
+    
+    return dragPreviewElement;
+};
+
+window.updateDragPreviewPosition = function (x, y) {
+    if (dragPreviewElement) {
+        dragPreviewElement.style.transform = `translate(${x}px, ${y}px)`;
+    }
+};
+
+window.removeDragImage = function () {
+    if (dragPreviewElement && dragPreviewElement.parentNode) {
+        dragPreviewElement.parentNode.removeChild(dragPreviewElement);
+        dragPreviewElement = null;
+    }
+};
+
+// Helper function to get element bounds
+window.getBoundingClientRect = function (element) {
+    return element.getBoundingClientRect();
+};
+
+// Add styles for drag preview
+const style = document.createElement('style');
+style.textContent = `
+    .custom-drag-preview {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        pointer-events: none;
+        background: white;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        padding: 4px 12px;
+        box-shadow: 0 3px 6px -4px rgba(0,0,0,.12), 
+                    0 6px 16px 0 rgba(0,0,0,.08), 
+                    0 9px 28px 8px rgba(0,0,0,.05);
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        color: rgba(0,0,0,.85);
+        transform-origin: center center;
+        transition: transform 0.1s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .custom-drag-preview .drag-preview-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .custom-drag-preview .anticon {
+        font-size: 14px;
+        color: #1890ff;
+    }
+
+    .custom-drag-preview.invalid {
+        background: #fff1f0;
+        border-color: #ff4d4f;
+    }
+
+    .custom-drag-preview.invalid .anticon {
+        color: #ff4d4f;
+    }
+`;
+document.head.appendChild(style);

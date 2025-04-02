@@ -1,0 +1,109 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+
+<Layout Class="min-h-screen">
+    <Sider Collapsible 
+           Collapsed=@collapsed 
+           OnCollapse=@(collapsed => { this.collapsed = collapsed; })>
+        <div class="logo p-4">
+            <h1 class="text-white text-xl">Meritocious</h1>
+        </div>
+        <Menu Theme="MenuTheme.Dark" 
+              Mode="MenuMode.Inline" 
+              OnMenuItemClick="OnMenuClick">
+            <MenuItem Key="dashboard" Icon="dashboard">Dashboard</MenuItem>
+            <MenuItem Key="analysis" Icon="experiment">Analysis Page</MenuItem>
+            <MenuItem Key="monitoring" Icon="monitor">Monitoring Page</MenuItem>
+            <SubMenu Key="forms" Title="Form Pages" Icon="form">
+                <MenuItem Key="basic-form">Basic Form</MenuItem>
+                <MenuItem Key="step-form">Step Form</MenuItem>
+                <MenuItem Key="advanced-form">Advanced Form</MenuItem>
+            </SubMenu>
+        </Menu>
+    </Sider>
+    
+    <Layout>
+        <Header Class="bg-white px-4 flex justify-between items-center">
+            <Icon Type="@(collapsed ? "menu-unfold" : "menu-fold")" 
+                  Class="text-lg cursor-pointer" 
+                  OnClick="ToggleCollapsed"/>
+            <div class="flex items-center space-x-4">
+                <Badge Count="12">
+                    <Icon Type="bell" Class="text-lg"/>
+                </Badge>
+                <Avatar Src="/api/placeholder/32/32"/>
+            </div>
+        </Header>
+
+        <TabNav />
+        
+        <Content Class="m-6 p-6 bg-white">
+            @Body
+        </Content>
+    </Layout>
+</Layout>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    
+    private bool collapsed;
+
+    private readonly Dictionary<string, (string Title, string Path)> _menuMapping = new()
+    {
+        ["dashboard"] = ("Dashboard", "/"),
+        ["analysis"] = ("Analysis Page", "/analysis"),
+        ["monitoring"] = ("Monitoring Page", "/monitoring"),
+        ["basic-form"] = ("Basic Form", "/form/basic"),
+        ["step-form"] = ("Step Form", "/form/step"),
+        ["advanced-form"] = ("Advanced Form", "/form/advanced")
+    };
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void ToggleCollapsed()
+    {
+        collapsed = !collapsed;
+    }
+
+    private void OnMenuClick(MenuItem item)
+    {
+        if (_menuMapping.TryGetValue(item.Key, out var mapping))
+        {
+            TabService.AddTab(new TabItem
+            {
+                Key = item.Key,
+                Title = mapping.Title,
+                Path = mapping.Path,
+                Icon = item.Icon
+            });
+            
+            NavigationManager.NavigateTo(mapping.Path);
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        // Handle direct navigation
+        var path = new Uri(e.Location).PathAndQuery;
+        var menuItem = _menuMapping.FirstOrDefault(x => x.Value.Path == path);
+        
+        if (!string.IsNullOrEmpty(menuItem.Key))
+        {
+            TabService.AddTab(new TabItem
+            {
+                Key = menuItem.Key,
+                Title = menuItem.Value.Title,
+                Path = menuItem.Value.Path
+            });
+        }
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

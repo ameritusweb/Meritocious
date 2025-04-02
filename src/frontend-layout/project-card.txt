@@ -1,0 +1,101 @@
+@namespace Meritocious.Web.Components
+
+<Card Class="project-card" Bordered>
+    <div class="flex items-start">
+        <div class="project-logo @LogoClass">
+            <Icon Type="@IconName" Theme="outline" Class="text-lg" />
+        </div>
+        <div class="ml-3 flex-1">
+            <div class="flex items-center justify-between">
+                <h4 class="text-base font-medium m-0">@Title</h4>
+                @if (ShowMore)
+                {
+                    <Dropdown>
+                        <Overlay>
+                            <Menu>
+                                <MenuItem Key="1">
+                                    <Icon Type="edit" Theme="outline" />
+                                    <span>Edit</span>
+                                </MenuItem>
+                                <MenuItem Key="2">
+                                    <Icon Type="delete" Theme="outline" />
+                                    <span>Delete</span>
+                                </MenuItem>
+                            </Menu>
+                        </Overlay>
+                        <ChildContent>
+                            <Icon Type="ellipsis" Class="text-gray-400 cursor-pointer" />
+                        </ChildContent>
+                    </Dropdown>
+                }
+            </div>
+            <p class="text-gray-500 mt-2 mb-3 text-sm">@Description</p>
+            <div class="text-gray-400 text-sm">@GroupName</div>
+        </div>
+    </div>
+</Card>
+
+<style>
+    .project-card :deep(.ant-card-body) {
+        padding: 16px;
+    }
+
+    .project-logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .logo-alipay {
+        background-color: rgb(230, 247, 255);
+        color: rgb(24, 144, 255);
+    }
+
+    .logo-angular {
+        background-color: rgb(255, 241, 240);
+        color: rgb(245, 34, 45);
+    }
+
+    .logo-ant {
+        background-color: rgb(240, 255, 244);
+        color: rgb(82, 196, 26);
+    }
+
+    .logo-bootstrap {
+        background-color: rgb(245, 240, 255);
+        color: rgb(114, 46, 209);
+    }
+
+    .logo-react {
+        background-color: rgb(231, 247, 255);
+        color: rgb(51, 151, 231);
+    }
+
+    .logo-pro {
+        background-color: rgb(255, 248, 230);
+        color: rgb(250, 173, 20);
+    }
+</style>
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Description { get; set; }
+
+    [Parameter]
+    public string GroupName { get; set; }
+
+    [Parameter]
+    public string IconName { get; set; }
+
+    [Parameter]
+    public string LogoClass { get; set; }
+
+    [Parameter]
+    public bool ShowMore { get; set; } = true;
+}

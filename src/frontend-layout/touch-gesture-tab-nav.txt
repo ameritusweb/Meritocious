@@ -1,0 +1,340 @@
+@namespace Meritocious.Web.Components
+@implements IDisposable
+@inject IJSRuntime JS
+
+<div class="tab-nav-container" 
+     @ref="containerRef"
+     @ontouchstart="HandleTouchStart"
+     @ontouchmove="HandleTouchMove"
+     @ontouchend="HandleTouchEnd">
+    
+    <CascadingValue Value="this">
+        <Tabs ActiveKey="@TabService.ActiveKey"
+              Type="@TabType.EditableCard"
+              HideAdd="true"
+              OnTabClick="HandleTabClick"
+              OnEdit="HandleTabEdit">
+            <TabNavigation>
+                <div class="tab-navigation-wrapper"
+                     style="transform: scale(@currentScale);">
+                    @foreach (var tab in TabService.Tabs)
+                    {
+                        <TabPane Key="@tab.Key" 
+                                Tab="@GetTabTitle(tab)" 
+                                Closable="@tab.Closable"
+                                Class="@GetTabClass(tab)">
+                            <TabContent Key="@tab.Key" 
+                                       Path="@tab.Path" 
+                                       Parameters="@tab.Parameters"
+                                       @key="@($"{tab.Key}-{refreshCount[tab.Key]}")" />
+                        </TabPane>
+                    }
+                </div>
+            </TabNavigation>
+        </Tabs>
+    </CascadingValue>
+
+    @* Gesture Feedback Indicators *@
+    @if (showGestureFeedback)
+    {
+        <div class="gesture-feedback @gestureFeedbackType">
+            <Icon Type="@GetGestureIcon()" />
+            <span>@gestureFeedbackText</span>
+        </div>
+    }
+
+    @* Quick Actions Menu (shown on two-finger tap) *@
+    @if (showQuickActions)
+    {
+        <div class="quick-actions-menu" style="@GetQuickActionsPosition()">
+            <div class="quick-actions-content">
+                <button class="quick-action" @onclick="() => HandleQuickAction("refresh")">
+                    <Icon Type="reload" /> Refresh
+                </button>
+                <button class="quick-action" @onclick="() => HandleQuickAction("close")">
+                    <Icon Type="close" /> Close
+                </button>
+                <button class="quick-action" @onclick="() => HandleQuickAction("duplicate")">
+                    <Icon Type="copy" /> Duplicate
+                </button>
+                <button class="quick-action" @onclick="() => HandleQuickAction("pin")">
+                    <Icon Type="pushpin" /> @(activeTab?.IsPinned == true ? "Unpin" : "Pin")
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .tab-nav-container {
+        position: relative;
+        touch-action: none;
+        overflow: hidden;
+    }
+
+    .tab-navigation-wrapper {
+        transition: transform 0.1s ease;
+        transform-origin: center;
+        will-change: transform;
+    }
+
+    /* Gesture Feedback */
+    .gesture-feedback {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 1000;
+    }
+
+    .gesture-feedback.visible {
+        opacity: 1;
+    }
+
+    .gesture-feedback :deep(.anticon) {
+        font-size: 24px;
+    }
+
+    /* Quick Actions Menu */
+    .quick-actions-menu {
+        position: fixed;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 8px;
+        z-index: 1000;
+    }
+
+    .quick-actions-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        border-radius: 8px;
+        transition: background-color 0.2s ease;
+    }
+
+    .quick-action:hover {
+        background-color: #f5f5f5;
+    }
+
+    /* Swipe Animations */
+    @keyframes swipe-right {
+        from { transform: translateX(-100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes swipe-left {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    .swipe-enter {
+        animation: swipe-right 0.3s ease forwards;
+    }
+
+    .swipe-exit {
+        animation: swipe-left 0.3s ease forwards;
+    }
+</style>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    private ElementReference containerRef;
+    private double currentScale = 1.0;
+    private bool showGestureFeedback;
+    private string gestureFeedbackType = "";
+    private string gestureFeedbackText = "";
+    private bool showQuickActions;
+    private TabItem? activeTab;
+
+    // Touch gesture state
+    private TouchPoint[]? initialTouches;
+    private double initialDistance;
+    private double initialScale;
+    private (double X, double Y) quickActionPosition;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initGestureSupport", containerRef);
+        }
+    }
+
+    private async Task HandleTouchStart(TouchEventArgs e)
+    {
+        if (e.TargetTouches.Length == 2)
+        {
+            // Handle pinch start
+            initialTouches = e.TargetTouches;
+            initialDistance = GetTouchDistance(e.TargetTouches);
+            initialScale = currentScale;
+
+            // Show pinch feedback
+            ShowGestureFeedback("zoom", "Pinch to zoom");
+        }
+        else if (e.TargetTouches.Length == 1)
+        {
+            // Handle potential swipe
+            var touch = e.TargetTouches[0];
+            await JS.InvokeVoidAsync("startSwipeTracking", touch.ClientX);
+        }
+    }
+
+    private async Task HandleTouchMove(TouchEventArgs e)
+    {
+        if (e.TargetTouches.Length == 2)
+        {
+            // Handle pinch zoom
+            var currentDistance = GetTouchDistance(e.TargetTouches);
+            var scaleFactor = currentDistance / initialDistance;
+            currentScale = Math.Clamp(initialScale * scaleFactor, 0.5, 2.0);
+            StateHasChanged();
+        }
+        else if (e.TargetTouches.Length == 1)
+        {
+            // Handle swipe
+            var touch = e.TargetTouches[0];
+            var swipeData = await JS.InvokeAsync<SwipeData>("updateSwipeTracking", touch.ClientX);
+            
+            if (swipeData.IsValid)
+            {
+                ShowGestureFeedback(
+                    swipeData.Direction == "left" ? "swipe-left" : "swipe-right",
+                    swipeData.Direction == "left" ? "Swipe to close" : "Swipe to switch"
+                );
+            }
+        }
+    }
+
+    private async Task HandleTouchEnd(TouchEventArgs e)
+    {
+        if (initialTouches?.Length == 2)
+        {
+            // Reset pinch state
+            initialTouches = null;
+            initialDistance = 0;
+            HideGestureFeedback();
+        }
+        else
+        {
+            // Handle swipe completion
+            var swipeData = await JS.InvokeAsync<SwipeData>("endSwipeTracking");
+            if (swipeData.IsValid)
+            {
+                await HandleSwipeGesture(swipeData.Direction);
+            }
+        }
+    }
+
+    private async Task HandleSwipeGesture(string direction)
+    {
+        if (direction == "left")
+        {
+            // Close current tab
+            if (activeTab?.Closable == true)
+            {
+                await CloseTab(activeTab.Key);
+            }
+        }
+        else if (direction == "right")
+        {
+            // Switch to previous tab
+            var currentIndex = TabService.GetTabIndex(TabService.ActiveKey);
+            if (currentIndex > 0)
+            {
+                var previousTab = TabService.Tabs[currentIndex - 1];
+                await ActivateTab(previousTab.Key);
+            }
+        }
+    }
+
+    private double GetTouchDistance(TouchPoint[] touches)
+    {
+        var dx = touches[1].ClientX - touches[0].ClientX;
+        var dy = touches[1].ClientY - touches[0].ClientY;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    private void ShowGestureFeedback(string type, string text)
+    {
+        gestureFeedbackType = type;
+        gestureFeedbackText = text;
+        showGestureFeedback = true;
+        StateHasChanged();
+    }
+
+    private void HideGestureFeedback()
+    {
+        showGestureFeedback = false;
+        StateHasChanged();
+    }
+
+    private string GetQuickActionsPosition()
+    {
+        return $"left: {quickActionPosition.X}px; top: {quickActionPosition.Y}px;";
+    }
+
+    private async Task HandleQuickAction(string action)
+    {
+        if (activeTab == null) return;
+
+        switch (action)
+        {
+            case "refresh":
+                await RefreshTab(activeTab.Key);
+                break;
+            case "close":
+                if (activeTab.Closable)
+                {
+                    await CloseTab(activeTab.Key);
+                }
+                break;
+            case "duplicate":
+                await DuplicateTab(activeTab);
+                break;
+            case "pin":
+                if (activeTab.IsPinned)
+                {
+                    TabService.UnpinTab(activeTab.Key);
+                }
+                else
+                {
+                    TabService.PinTab(activeTab.Key);
+                }
+                break;
+        }
+
+        showQuickActions = false;
+        StateHasChanged();
+    }
+
+    private class SwipeData
+    {
+        public bool IsValid { get; set; }
+        public string Direction { get; set; } = "";
+        public double Distance { get; set; }
+    }
+}

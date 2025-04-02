@@ -1,0 +1,150 @@
+using System.Collections.ObjectModel;
+using Microsoft.AspNetCore.Components;
+
+namespace Meritocious.Web.Services
+{
+    public class TabService
+    {
+        private readonly NavigationManager _navigationManager;
+        private readonly List<TabItem> _tabs = new();
+        public event Action? OnChange;
+
+        public IReadOnlyList<TabItem> Tabs => _tabs.AsReadOnly();
+        public string ActiveKey { get; private set; } = "";
+
+        public TabService(NavigationManager navigationManager)
+        {
+            _navigationManager = navigationManager;
+        }
+
+        public void AddTab(TabItem tab, bool activateTab = true)
+        {
+            if (!_tabs.Any(t => t.Key == tab.Key))
+            {
+                _tabs.Add(tab);
+                if (activateTab)
+                {
+                    ActiveKey = tab.Key;
+                }
+                NotifyStateChanged();
+            }
+            else if (activateTab)
+            {
+                ActiveKey = tab.Key;
+                NotifyStateChanged();
+            }
+        }
+
+        public void AddTabAfter(string afterKey, TabItem newTab)
+        {
+            var index = _tabs.FindIndex(t => t.Key == afterKey);
+            if (index >= 0)
+            {
+                _tabs.Insert(index + 1, newTab);
+                ActiveKey = newTab.Key;
+                NotifyStateChanged();
+            }
+            else
+            {
+                AddTab(newTab);
+            }
+        }
+
+        public void RemoveTab(string key)
+        {
+            var tab = _tabs.FirstOrDefault(t => t.Key == key);
+            if (tab != null && tab.Closable)
+            {
+                var index = _tabs.IndexOf(tab);
+                _tabs.Remove(tab);
+                
+                // If we removed the active tab, activate the nearest remaining tab
+                if (ActiveKey == key && _tabs.Any())
+                {
+                    var newIndex = Math.Min(index, _tabs.Count - 1);
+                    ActiveKey = _tabs[newIndex].Key;
+                    _navigationManager.NavigateTo(_tabs[newIndex].Path);
+                }
+                
+                NotifyStateChanged();
+            }
+        }
+
+        public void ActivateTab(string key)
+        {
+            if (_tabs.Any(t => t.Key == key))
+            {
+                ActiveKey = key;
+                NotifyStateChanged();
+            }
+        }
+
+        public TabItem? GetTab(string key)
+        {
+            return _tabs.FirstOrDefault(t => t.Key == key);
+        }
+
+        public void UpdateTab(string key, Action<TabItem> updateAction)
+        {
+            var tab = _tabs.FirstOrDefault(t => t.Key == key);
+            if (tab != null)
+            {
+                updateAction(tab);
+                NotifyStateChanged();
+            }
+        }
+
+        public void MoveTab(string key, int newIndex)
+        {
+            var tab = _tabs.FirstOrDefault(t => t.Key == key);
+            if (tab != null)
+            {
+                _tabs.Remove(tab);
+                _tabs.Insert(Math.Min(newIndex, _tabs.Count), tab);
+                NotifyStateChanged();
+            }
+        }
+
+        public int GetTabIndex(string key)
+        {
+            return _tabs.FindIndex(t => t.Key == key);
+        }
+
+        public void SaveState()
+        {
+            var state = new TabState
+            {
+                Tabs = _tabs,
+                ActiveKey = ActiveKey
+            };
+            
+            // Save to local storage or other persistence
+        }
+
+        public void LoadState()
+        {
+            // Load from local storage or other persistence
+            // Update _tabs and ActiveKey
+            NotifyStateChanged();
+        }
+
+        private void NotifyStateChanged() => OnChange?.Invoke();
+    }
+
+    public class TabItem
+    {
+        public string Key { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Path { get; set; } = "";
+        public bool Closable { get; set; } = true;
+        public string? Icon { get; set; }
+        public Dictionary<string, object>? Parameters { get; set; }
+        public DateTime LastRefreshed { get; set; } = DateTime.Now;
+    }
+
+    public class TabState
+    {
+        public List<TabItem> Tabs { get; set; } = new();
+        public string ActiveKey { get; set; } = "";
+    }
+}

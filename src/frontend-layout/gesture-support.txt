@@ -1,0 +1,271 @@
+// Gesture tracking state
+let swipeState = {
+    startX: 0,
+    startTime: 0,
+    isTracking: false
+};
+
+const SWIPE_THRESHOLD = 100; // Minimum distance for a swipe
+const SWIPE_VELOCITY_THRESHOLD = 0.5; // Minimum velocity for a swipe
+
+window.initGestureSupport = function(container) {
+    // Prevent default gestures
+    container.addEventListener('gesturestart', (e) => e.preventDefault());
+    container.addEventListener('gesturechange', (e) => e.preventDefault());
+    container.addEventListener('gestureend', (e) => e.preventDefault());
+
+    // Enable smooth scrolling
+    if ('scrollBehavior' in document.documentElement.style) {
+        container.style.scrollBehavior = 'smooth';
+    }
+};
+
+window.startSwipeTracking = function(clientX) {
+    swipeState = {
+        startX: clientX,
+        startTime: Date.now(),
+        isTracking: true
+    };
+};
+
+window.updateSwipeTracking = function(clientX) {
+    if (!swipeState.isTracking) return { isValid: false };
+
+    const distance = clientX - swipeState.startX;
+    const direction = distance > 0 ? 'right' : 'left';
+    const isValid = Math.abs(distance) > SWIPE_THRESHOLD / 2;
+
+    return {
+        isValid,
+        direction,
+        distance: Math.abs(distance)
+    };
+};
+
+window.endSwipeTracking = function() {
+    if (!swipeState.isTracking) return { isValid: false };
+
+    const endTime = Date.now();
+    const duration = endTime - swipeState.startTime;
+    const velocity = Math.abs(distance) / duration;
+
+    const isValid = Math.abs(distance) > SWIPE_THRESHOLD && 
+                   velocity > SWIPE_VELOCITY_THRESHOLD;
+
+    swipeState.isTracking = false;
+
+    return {
+        isValid,
+        direction,
+        distance: Math.abs(distance),
+        velocity
+    };
+};
+
+// Pinch zoom support with inertia
+let zoomState = {
+    scale: 1,
+    velocity: 0,
+    isAnimating: false
+};
+
+function applyZoomInertia() {
+    if (!zoomState.isAnimating) return;
+
+    zoomState.scale += zoomState.velocity;
+    zoomState.velocity *= 0.95; // Decay factor
+
+    if (Math.abs(zoomState.velocity) < 0.001) {
+        zoomState.isAnimating = false;
+        return;
+    }
+
+    requestAnimationFrame(applyZoomInertia);
+}
+
+window.startZoomInertia = function(velocity) {
+    zoomState.velocity = velocity;
+    zoomState.isAnimating = true;
+    requestAnimationFrame(applyZoomInertia);
+};
+
+// Two-finger tap detection
+let twoFingerTapState = {
+    startTime: 0,
+    touches: []
+};
+
+window.startTwoFingerTap = function(touches) {
+    if (touches.length !== 2) return;
+
+    twoFingerTapState = {
+        startTime: Date.now(),
+        touches: Array.from(touches).map(t => ({
+            x: t.clientX,
+            y: t.clientY
+        }))
+    };
+};
+
+window.endTwoFingerTap = function(touches) {
+    if (!twoFingerTapState.startTime || touches.length !== 2) return false;
+
+    const duration = Date.now() - twoFingerTapState.startTime;
+    const endTouches = Array.from(touches).map(t => ({
+        x: t.clientX,
+        y: t.clientY
+    }));
+
+    // Check if fingers haven't moved much
+    const hasntMoved = twoFingerTapState.touches.every((startTouch, i) => {
+        const endTouch = endTouches[i];
+        const dx = startTouch.x - endTouch.x;
+        const dy = startTouch.y - endTouch.y;
+        return Math.sqrt(dx * dx + dy * dy) < 10; // 10px threshold
+    });
+
+    // Reset state
+    const wasValid = duration < 300 && hasntMoved; // 300ms threshold
+    twoFingerTapState = { startTime: 0, touches: [] };
+
+    return wasValid;
+};
+
+// Rotation gesture support
+let rotationState = {
+    startAngle: 0,
+    currentAngle: 0,
+    isRotating: false
+};
+
+window.startRotation = function(touches) {
+    if (touches.length !== 2) return;
+
+    const angle = getTouchesAngle(touches[0], touches[1]);
+    rotationState = {
+        startAngle: angle,
+        currentAngle: angle,
+        isRotating: true
+    };
+};
+
+window.updateRotation = function(touches) {
+    if (!rotationState.isRotating || touches.length !== 2) return 0;
+
+    const newAngle = getTouchesAngle(touches[0], touches[1]);
+    const delta = newAngle - rotationState.startAngle;
+    rotationState.currentAngle = newAngle;
+
+    return delta;
+};
+
+function getTouchesAngle(touch1, touch2) {
+    return Math.atan2(
+        touch2.clientY - touch1.clientY,
+        touch2.clientX - touch1.clientX
+    ) * 180 / Math.PI;
+}
+
+// Multi-touch gesture coordination
+const GESTURE_STATES = {
+    NONE: 'none',
+    PINCH: 'pinch',
+    ROTATE: 'rotate',
+    TWO_FINGER_TAP: 'twoFingerTap',
+    SWIPE: 'swipe'
+};
+
+let currentGestureState = GESTURE_STATES.NONE;
+
+// Smooth animation support
+function animate({
+    from,
+    to,
+    duration = 300,
+    easing = t => t * (2 - t), // Ease out quad
+    onUpdate,
+    onComplete
+}) {
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const easedProgress = easing(progress);
+        const current = from + (to - from) * easedProgress;
+        
+        onUpdate(current);
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            onComplete?.();
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+// Gesture feedback
+const feedbackElements = new Map();
+
+function showGestureFeedback(type, position) {
+    let element = feedbackElements.get(type);
+    
+    if (!element) {
+        element = document.createElement('div');
+        element.className = `gesture-feedback ${type}`;
+        document.body.appendChild(element);
+        feedbackElements.set(type, element);
+    }
+    
+    element.style.transform = `translate(${position.x}px, ${position.y}px)`;
+    element.classList.add('visible');
+    
+    // Hide after delay
+    setTimeout(() => {
+        element.classList.remove('visible');
+    }, 1000);
+}
+
+// Touch event helpers
+function getTouchCenter(touches) {
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    
+    return {
+        x: (touch1.clientX + touch2.clientX) / 2,
+        y: (touch1.clientY + touch2.clientY) / 2
+    };
+}
+
+function getTouchDistance(touch1, touch2) {
+    const dx = touch2.clientX - touch1.clientX;
+    const dy = touch2.clientY - touch1.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Accessibility support
+function announceGesture(description) {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.className = 'sr-only';
+    announcement.textContent = description;
+    
+    document.body.appendChild(announcement);
+    setTimeout(() => {
+        document.body.removeChild(announcement);
+    }, 1000);
+}
+
+// Export gesture utilities
+window.GestureUtils = {
+    STATES: GESTURE_STATES,
+    animate,
+    showFeedback: showGestureFeedback,
+    announce: announceGesture,
+    getTouchCenter,
+    getTouchDistance
+};

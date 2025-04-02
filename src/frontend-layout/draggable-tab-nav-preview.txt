@@ -1,0 +1,231 @@
+@namespace Meritocious.Web.Components
+@implements IDisposable
+@inject IJSRuntime JS
+
+<div class="tab-nav-container" @ref="contextMenuTarget">
+    <CascadingValue Value="this">
+        <Tabs ActiveKey="@TabService.ActiveKey"
+              Type="@TabType.EditableCard"
+              HideAdd="true"
+              OnTabClick="HandleTabClick"
+              OnEdit="HandleTabEdit">
+            @foreach (var tab in TabService.Tabs)
+            {
+                <TabPane Key="@tab.Key" 
+                        Tab="@GetTabTitle(tab)" 
+                        Closable="@tab.Closable"
+                        Class="@GetTabClass(tab)">
+                    <TabContent Key="@tab.Key" 
+                               Path="@tab.Path" 
+                               Parameters="@tab.Parameters"
+                               @key="@($"{tab.Key}-{refreshCount[tab.Key]}")" />
+                </TabPane>
+            }
+        </Tabs>
+    </CascadingValue>
+
+    @* Custom Drag Preview *@
+    @if (isDragging && draggedTab != null)
+    {
+        <div class="drag-preview @(isValidDropTarget ? "" : "invalid")"
+             style="@GetDragPreviewStyle()">
+            <div class="drag-preview-content">
+                @if (!string.IsNullOrEmpty(draggedTab.Icon))
+                {
+                    <Icon Type="@draggedTab.Icon" Class="mr-2" />
+                }
+                <span>@draggedTab.Title</span>
+                @if (!isValidDropTarget)
+                {
+                    <Icon Type="stop" Class="ml-2 text-red-500" />
+                }
+            </div>
+        </div>
+    }
+
+    @* Drop Indicator *@
+    <div class="drop-indicator @(isDragging && isValidDropTarget ? "visible" : "")"
+         style="left: @(dropIndicatorLeft)px;">
+        <div class="drop-indicator-dot top"></div>
+        <div class="drop-indicator-line"></div>
+        <div class="drop-indicator-dot bottom"></div>
+    </div>
+</div>
+
+<style>
+    .tab-nav-container {
+        position: relative;
+    }
+
+    /* Drag Preview Styles */
+    .drag-preview {
+        position: fixed;
+        pointer-events: none;
+        z-index: 1000;
+        background: white;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        padding: 4px 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        transition: transform 0.1s ease, opacity 0.1s ease;
+    }
+
+    .drag-preview.invalid {
+        border-color: #ff4d4f;
+        background: #fff1f0;
+    }
+
+    .drag-preview-content {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Drop Indicator Styles */
+    .drop-indicator {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, left 0.1s ease;
+    }
+
+    .drop-indicator.visible {
+        opacity: 1;
+    }
+
+    .drop-indicator-line {
+        position: absolute;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: #1890ff;
+    }
+
+    .drop-indicator-dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #1890ff;
+        left: -2px;
+    }
+
+    .drop-indicator-dot.top {
+        top: 4px;
+    }
+
+    .drop-indicator-dot.bottom {
+        bottom: 4px;
+    }
+
+    /* Tab Styles */
+    .tab-nav-container :deep(.ant-tabs-tab) {
+        transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.dragging) {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.drag-over) {
+        background-color: #f0f7ff;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.non-draggable) {
+        cursor: not-allowed;
+    }
+
+    /* Animation keyframes */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .drag-preview {
+        animation: pulse 1s ease infinite;
+    }
+</style>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    private DotNetObjectReference<DraggableTabNav>? selfReference;
+    private double dragX;
+    private double dragY;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            selfReference = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("initTabDragDrop", selfReference);
+        }
+    }
+
+    private string GetDragPreviewStyle()
+    {
+        return $"transform: translate({dragX}px, {dragY}px)";
+    }
+
+    [JSInvokable]
+    public void UpdateDragPosition(double x, double y)
+    {
+        dragX = x;
+        dragY = y;
+        StateHasChanged();
+    }
+
+    private async Task HandleDragStart(DragEventArgs e, TabItem tab)
+    {
+        if (tab.IsPinned)
+        {
+            e.PreventDefault();
+            return;
+        }
+
+        isDragging = true;
+        draggedTab = tab;
+        
+        // Create and set custom drag image
+        await JS.InvokeVoidAsync("createDragImage", e, tab.Title, tab.Icon);
+        
+        // Hide the default drag image
+        e.DataTransfer.EffectAllowed = "move";
+        
+        // Store initial mouse position
+        dragX = e.ClientX;
+        dragY = e.ClientY;
+        
+        StateHasChanged();
+    }
+
+    private async Task HandleDragEnd(DragEventArgs e)
+    {
+        isDragging = false;
+        draggedTab = null;
+        dropIndicatorLeft = 0;
+        isValidDropTarget = true;
+        
+        // Clean up custom drag image
+        await JS.InvokeVoidAsync("removeDragImage");
+        
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        selfReference?.Dispose();
+    }
+
+    // Rest of the existing code...
+}

@@ -1,0 +1,62 @@
+@namespace Meritocious.Web.Components
+
+<div class="projects-section">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium">Project in Progress</h3>
+        <a href="#" class="text-blue-500 text-sm">All Items</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ProjectCard 
+            Title="Alipay"
+            Description="It's an inner thing, which they can't reach and can't reach"
+            GroupName="Scientific Moving Brick Group"
+            IconName="alipay"
+            LogoClass="logo-alipay" />
+
+        <ProjectCard 
+            Title="Angular"
+            Description="Hope is a good thing, maybe the best, good things will not die out"
+            GroupName="The whole group is Wu Yanzu"
+            IconName="html5"
+            LogoClass="logo-angular" />
+
+        <ProjectCard 
+            Title="Ant Design"
+            Description="There are so many pubs in the town, but she just walked into my pub"
+            GroupName="Second Girl Group"
+            IconName="ant-design"
+            LogoClass="logo-ant" />
+
+        <ProjectCard 
+            Title="Ant Design Pro"
+            Description="At that time I only thought about what I wanted, never wanted what I had"
+            GroupName="Programmer's Daily"
+            IconName="code"
+            LogoClass="logo-pro" />
+
+        <ProjectCard 
+            Title="Bootstrap"
+            Description="Shiver"
+            GroupName="Highly Compelling Design Sky Mission"
+            IconName="layout"
+            LogoClass="logo-bootstrap" />
+
+        <ProjectCard 
+            Title="React"
+            Description="Life is like a box of chocolates, the results are often unexpected"
+            GroupName="Lie to you to learn computer"
+            IconName="react"
+            LogoClass="logo-react" />
+    </div>
+</div>
+
+<style>
+    .projects-section {
+        margin-top: 24px;
+    }
+</style>
+
+@code {
+    // Add any required logic here
+}

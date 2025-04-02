@@ -1,0 +1,124 @@
+public class TabService
+{
+    private readonly NavigationManager _navigationManager;
+    private readonly List<TabItem> _tabs = new();
+    public event Action? OnChange;
+
+    public IReadOnlyList<TabItem> Tabs => _tabs.AsReadOnly();
+    public string ActiveKey { get; private set; } = "";
+
+    public TabService(NavigationManager navigationManager)
+    {
+        _navigationManager = navigationManager;
+    }
+
+    public void AddTab(TabItem tab, bool activateTab = true)
+    {
+        if (!_tabs.Any(t => t.Key == tab.Key))
+        {
+            // Insert after last pinned tab if this is not a pinned tab
+            if (!tab.IsPinned)
+            {
+                var lastPinnedIndex = _tabs.FindLastIndex(t => t.IsPinned);
+                _tabs.Insert(lastPinnedIndex + 1, tab);
+            }
+            else
+            {
+                // Insert at the beginning for pinned tabs
+                _tabs.Insert(0, tab);
+            }
+
+            if (activateTab)
+            {
+                ActiveKey = tab.Key;
+            }
+            NotifyStateChanged();
+        }
+        else if (activateTab)
+        {
+            ActiveKey = tab.Key;
+            NotifyStateChanged();
+        }
+    }
+
+    public void PinTab(string key)
+    {
+        var tab = _tabs.FirstOrDefault(t => t.Key == key);
+        if (tab != null && !tab.IsPinned)
+        {
+            _tabs.Remove(tab);
+            tab.IsPinned = true;
+            
+            // Insert at the end of pinned tabs
+            var lastPinnedIndex = _tabs.FindLastIndex(t => t.IsPinned);
+            _tabs.Insert(lastPinnedIndex + 1, tab);
+            
+            NotifyStateChanged();
+        }
+    }
+
+    public void UnpinTab(string key)
+    {
+        var tab = _tabs.FirstOrDefault(t => t.Key == key);
+        if (tab != null && tab.IsPinned)
+        {
+            _tabs.Remove(tab);
+            tab.IsPinned = false;
+            
+            // Insert at the beginning of non-pinned tabs
+            var lastPinnedIndex = _tabs.FindLastIndex(t => t.IsPinned);
+            _tabs.Insert(lastPinnedIndex + 1, tab);
+            
+            NotifyStateChanged();
+        }
+    }
+
+    public void MoveTab(string key, int newIndex)
+    {
+        var tab = _tabs.FirstOrDefault(t => t.Key == key);
+        if (tab != null)
+        {
+            // Don't allow moving pinned tabs
+            if (tab.IsPinned)
+                return;
+
+            // Don't allow moving before pinned tabs
+            var pinnedCount = _tabs.Count(t => t.IsPinned);
+            if (newIndex < pinnedCount)
+                newIndex = pinnedCount;
+
+            _tabs.Remove(tab);
+            _tabs.Insert(Math.Min(newIndex, _tabs.Count), tab);
+            NotifyStateChanged();
+        }
+    }
+
+    public int GetFirstNonPinnedTabPosition()
+    {
+        var lastPinnedTab = _tabs.FindLastIndex(t => t.IsPinned);
+        return lastPinnedTab + 1;
+    }
+
+    public TabItem? GetTab(string key)
+    {
+        return _tabs.FirstOrDefault(t => t.Key == key);
+    }
+
+    public int GetTabIndex(string key)
+    {
+        return _tabs.FindIndex(t => t.Key == key);
+    }
+
+    // Rest of the existing code...
+}
+
+public class TabItem
+{
+    public string Key { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Path { get; set; } = "";
+    public bool Closable { get; set; } = true;
+    public bool IsPinned { get; set; }
+    public string? Icon { get; set; }
+    public Dictionary<string, object>? Parameters { get; set; }
+}

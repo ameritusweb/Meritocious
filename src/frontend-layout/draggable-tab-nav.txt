@@ -1,0 +1,245 @@
+@namespace Meritocious.Web.Components
+@implements IDisposable
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="tab-nav-container" @ref="contextMenuTarget">
+    <CascadingValue Value="this">
+        <Tabs ActiveKey="@TabService.ActiveKey"
+              Type="@TabType.EditableCard"
+              HideAdd="true"
+              OnTabClick="HandleTabClick"
+              OnEdit="HandleTabEdit">
+            @foreach (var tab in TabService.Tabs)
+            {
+                <TabPane Key="@tab.Key" 
+                        Tab="@GetTabTitle(tab)" 
+                        Closable="@tab.Closable"
+                        Class="@GetTabClass(tab)">
+                    <TabContent Key="@tab.Key" 
+                               Path="@tab.Path" 
+                               Parameters="@tab.Parameters"
+                               @key="@($"{tab.Key}-{refreshCount[tab.Key]}")" />
+                </TabPane>
+            }
+        </Tabs>
+    </CascadingValue>
+
+    <div class="drag-indicator @(isDragging ? "visible" : "")"
+         style="left: @(dropIndicatorLeft)px;">
+    </div>
+
+    <Dropdown Visible="contextMenuVisible" 
+              OnVisibleChange="@(visible => contextMenuVisible = visible)"
+              Trigger="@(new Trigger[] { Trigger.ContextMenu })"
+              GetPopupContainer="() => contextMenuTarget">
+        <Overlay>
+            <Menu>
+                <MenuItem OnClick="@(() => RefreshTab(contextMenuTab?.Key))">
+                    <Icon Type="reload" Theme="outline" />
+                    <span>Refresh</span>
+                </MenuItem>
+                @if (contextMenuTab?.Closable == true)
+                {
+                    <MenuItem OnClick="@(() => CloseTab(contextMenuTab?.Key))">
+                        <Icon Type="close" Theme="outline" />
+                        <span>Close</span>
+                    </MenuItem>
+                }
+                <MenuItem OnClick="@CloseOtherTabs">
+                    <Icon Type="close-circle" Theme="outline" />
+                    <span>Close Others</span>
+                </MenuItem>
+            </Menu>
+        </Overlay>
+    </Dropdown>
+</div>
+
+<style>
+    .tab-nav-container {
+        position: relative;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-nav) {
+        margin: 0;
+        padding: 8px 8px 0;
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab) {
+        cursor: move;
+        user-select: none;
+        transition: background-color 0.3s;
+    }
+
+    .tab-nav-container :deep(.ant-tabs-tab.dragging) {
+        background-color: #f5f5f5;
+        opacity: 0.8;
+    }
+
+    .drag-indicator {
+        position: absolute;
+        top: 0;
+        width: 2px;
+        height: 40px;
+        background-color: #1890ff;
+        transition: left 0.2s;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .drag-indicator.visible {
+        opacity: 1;
+    }
+
+    .tab-title {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .tab-refreshing :deep(.ant-tabs-tab-btn) {
+        animation: tab-refresh-spin 1s linear infinite;
+    }
+
+    @keyframes tab-refresh-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private MessageService MessageService { get; set; } = default!;
+
+    private ElementReference contextMenuTarget;
+    private bool contextMenuVisible;
+    private TabItem? contextMenuTab;
+    private bool isRefreshing;
+    private string? refreshingTabKey;
+    private Dictionary<string, int> refreshCount = new();
+
+    // Drag and drop state
+    private bool isDragging;
+    private TabItem? draggedTab;
+    private double dropIndicatorLeft;
+    private DotNetObjectReference<DraggableTabNav>? selfReference;
+
+    protected override void OnInitialized()
+    {
+        TabService.OnChange += StateHasChanged;
+        selfReference = DotNetObjectReference.Create(this);
+        
+        foreach (var tab in TabService.Tabs)
+        {
+            if (!refreshCount.ContainsKey(tab.Key))
+            {
+                refreshCount[tab.Key] = 0;
+            }
+        }
+    }
+
+    private string GetTabClass(TabItem tab)
+    {
+        var classes = new List<string>();
+        
+        if (isRefreshing && tab.Key == refreshingTabKey)
+            classes.Add("tab-refreshing");
+        
+        if (draggedTab?.Key == tab.Key)
+            classes.Add("dragging");
+
+        return string.Join(" ", classes);
+    }
+
+    private RenderFragment GetTabTitle(TabItem tab) => builder =>
+    {
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", "tab-title");
+        builder.AddAttribute(2, "draggable", "true");
+        builder.AddAttribute(3, "ondragstart", EventCallback.Factory.Create<DragEventArgs>(this, 
+            e => HandleDragStart(e, tab)));
+        builder.AddAttribute(4, "ondragend", EventCallback.Factory.Create<DragEventArgs>(this, 
+            HandleDragEnd));
+        builder.AddAttribute(5, "ondragover", EventCallback.Factory.Create<DragEventArgs>(this, 
+            e => HandleDragOver(e, tab)));
+        
+        if (!string.IsNullOrEmpty(tab.Icon))
+        {
+            builder.OpenComponent<Icon>(6);
+            builder.AddAttribute(7, "Type", tab.Icon);
+            builder.AddAttribute(8, "Spin", isRefreshing && tab.Key == refreshingTabKey);
+            builder.CloseComponent();
+            builder.AddMarkupContent(9, "&nbsp;");
+        }
+        
+        builder.AddContent(10, tab.Title);
+        builder.CloseElement();
+    };
+
+    private void HandleDragStart(DragEventArgs e, TabItem tab)
+    {
+        isDragging = true;
+        draggedTab = tab;
+        StateHasChanged();
+    }
+
+    private void HandleDragEnd(DragEventArgs e)
+    {
+        isDragging = false;
+        draggedTab = null;
+        dropIndicatorLeft = 0;
+        StateHasChanged();
+    }
+
+    private void HandleDragOver(DragEventArgs e, TabItem targetTab)
+    {
+        if (draggedTab == null || draggedTab.Key == targetTab.Key)
+            return;
+
+        e.PreventDefault();
+
+        var tabElement = e.CurrentTarget as ElementReference;
+        var rect = await JS.InvokeAsync<DOMRect>("getBoundingClientRect", tabElement);
+        
+        // Calculate if we're on the left or right half of the tab
+        var mouseX = e.ClientX;
+        var tabCenter = rect.Left + rect.Width / 2;
+        var isAfter = mouseX > tabCenter;
+
+        // Update drop indicator position
+        dropIndicatorLeft = isAfter ? rect.Right : rect.Left;
+        
+        // Move the tab
+        var sourceIndex = TabService.GetTabIndex(draggedTab.Key);
+        var targetIndex = TabService.GetTabIndex(targetTab.Key);
+        
+        if (sourceIndex != targetIndex)
+        {
+            if (isAfter)
+                targetIndex++;
+                
+            TabService.MoveTab(draggedTab.Key, targetIndex);
+        }
+
+        StateHasChanged();
+    }
+
+    // Rest of the existing code (HandleTabClick, RefreshTab, etc.)...
+
+    public void Dispose()
+    {
+        TabService.OnChange -= StateHasChanged;
+        selfReference?.Dispose();
+    }
+}
+
+public class DOMRect
+{
+    public double Left { get; set; }
+    public double Right { get; set; }
+    public double Top { get; set; }
+    public double Bottom { get; set; }
+    public double Width { get; set; }
+    public double Height { get; set; }
+}

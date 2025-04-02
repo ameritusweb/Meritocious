@@ -1,0 +1,94 @@
+@namespace Meritocious.Web.Components
+@implements IDisposable
+
+<div class="tab-nav-container">
+    <Tabs ActiveKey="@TabService.ActiveKey"
+          Type="@TabType.EditableCard"
+          HideAdd="true"
+          OnTabClick="HandleTabClick"
+          OnEdit="HandleTabEdit">
+        @foreach (var tab in TabService.Tabs)
+        {
+            <TabPane Key="@tab.Key" Tab="@GetTabTitle(tab)" Closable="@tab.Closable">
+                <TabContent Key="@tab.Key" Path="@tab.Path" Parameters="@tab.Parameters" />
+            </TabPane>
+        }
+    </Tabs>
+</div>
+
+@code {
+    [Inject] private TabService TabService { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        TabService.OnChange += StateHasChanged;
+        
+        // Add default tab if none exist
+        if (!TabService.Tabs.Any())
+        {
+            TabService.AddTab(new TabItem
+            {
+                Key = "home",
+                Title = "Dashboard",
+                Path = "/",
+                Closable = false,
+                Icon = "home"
+            });
+        }
+    }
+
+    private RenderFragment GetTabTitle(TabItem tab) => builder =>
+    {
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", "tab-title");
+        
+        if (!string.IsNullOrEmpty(tab.Icon))
+        {
+            builder.OpenComponent<Icon>(2);
+            builder.AddAttribute(3, "Type", tab.Icon);
+            builder.CloseComponent();
+            builder.AddMarkupContent(4, "&nbsp;");
+        }
+        
+        builder.AddContent(5, tab.Title);
+        builder.CloseElement();
+    };
+
+    private void HandleTabClick(string key)
+    {
+        TabService.ActivateTab(key);
+        var tab = TabService.Tabs.FirstOrDefault(t => t.Key == key);
+        if (tab != null)
+        {
+            NavigationManager.NavigateTo(tab.Path);
+        }
+    }
+
+    private void HandleTabEdit(string key, TabAction action)
+    {
+        if (action == TabAction.Remove)
+        {
+            TabService.RemoveTab(key);
+        }
+    }
+
+    public void Dispose()
+    {
+        TabService.OnChange -= StateHasChanged;
+    }
+}
+
+<style>
+    .tab-nav-container :deep(.ant-tabs-nav) {
+        margin: 0;
+        padding: 8px 8px 0;
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .tab-title {
+        display: inline-flex;
+        align-items: center;
+    }
+</style>

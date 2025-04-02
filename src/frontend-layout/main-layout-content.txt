@@ -1,0 +1,72 @@
+<Content Class="p-6">
+            @* Welcome Card *@
+            <Card>
+                <div class="flex items-center space-x-4">
+                    <Avatar Size="large" Src="/api/placeholder/48/48"/>
+                    <div>
+                        <h2 class="text-xl">Good Morning, @UserName! Have a great day!</h2>
+                        <p class="text-gray-500">@UserTitle</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-8 mt-6 text-center">
+                    <div>
+                        <div class="text-2xl font-semibold">@NumberOfItems</div>
+                        <div class="text-gray-500">Number of Items</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-semibold">@($"{TeamRank} / {TeamTotal}")</div>
+                        <div class="text-gray-500">Rank within the Team</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-semibold">@ProjectVisits</div>
+                        <div class="text-gray-500">Project Visit</div>
+                    </div>
+                </div>
+            </Card>
+
+            @* Project Grid *@
+            <ProjectGrid />
+
+            @* Quick Start Section *@
+            <Card Class="mt-6">
+                <CardTabs>
+                    <TabPane Key="1" Tab="Quick Start">
+                        <div class="grid grid-cols-3 gap-4">
+                            @foreach (var operation in QuickStartOperations)
+                            {
+                                <Button Type="@operation.Type">@operation.Name</Button>
+                            }
+                        </div>
+                    </TabPane>
+                </CardTabs>
+            </Card>
+        </Content>
+
+@code {
+    [Parameter]
+    public string UserName { get; set; } = "Serati Ma";
+    
+    [Parameter]
+    public string UserTitle { get; set; } = "Interaction Expert | Ant Financial Service";
+    
+    public int NumberOfItems { get; set; } = 56;
+    public int TeamRank { get; set; } = 8;
+    public int TeamTotal { get; set; } = 24;
+    public int ProjectVisits { get; set; } = 2223;
+
+    public List<QuickStartOperation> QuickStartOperations { get; set; } = new()
+    {
+        new() { Name = "Operation 1", Type = ButtonType.Default },
+        new() { Name = "Operation 2", Type = ButtonType.Default },
+        new() { Name = "Operation 3", Type = ButtonType.Default },
+        new() { Name = "Operation 4", Type = ButtonType.Default },
+        new() { Name = "Operation 5", Type = ButtonType.Default },
+        new() { Name = "Operation 6", Type = ButtonType.Default }
+    };
+
+    public class QuickStartOperation
+    {
+        public string Name { get; set; }
+        public ButtonType Type { get; set; }
+    }
+}
