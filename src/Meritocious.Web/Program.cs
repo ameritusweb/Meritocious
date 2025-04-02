@@ -89,12 +89,21 @@ builder.Services.AddCors(options =>
     options.AddPolicy("DefaultPolicy", builder =>
     {
         builder
-            .WithOrigins("http://localhost:3000") // Add your frontend origin
+            .WithOrigins("http://localhost:3000", "http://localhost:5001") // Added mock API origin
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
     });
 });
+
+// Configure HttpClient for mock API in development
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHttpClient("MockApi", client =>
+    {
+        client.BaseAddress = new Uri("http://localhost:5001/");
+    });
+}
 
 var app = builder.Build();
 

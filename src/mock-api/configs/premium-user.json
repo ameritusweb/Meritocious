@@ -1,0 +1,130 @@
+{
+  "id": "premium-user",
+  "description": "Premium user with advanced features and capabilities",
+  "responses": {
+    "GET:/api/user/profile": {
+      "id": 1,
+      "name": "Premium User",
+      "email": "premium@example.com",
+      "meritScore": 88,
+      "contributions": 250,
+      "subscription": {
+        "type": "premium",
+        "status": "active",
+        "since": "2024-01-01T00:00:00Z",
+        "features": [
+          "advanced_analytics",
+          "priority_support",
+          "early_access",
+          "custom_themes"
+        ]
+      },
+      "customization": {
+        "theme": "custom",
+        "colors": {
+          "primary": "#6200EA",
+          "secondary": "#00BFA5"
+        },
+        "layout": "advanced"
+      }
+    },
+    "GET:/api/analytics/user/:userId": {
+      "contentMetrics": {
+        "totalPosts": 75,
+        "totalComments": 500,
+        "avgMeritScore": 88,
+        "topTags": ["technology", "community", "merit"]
+      },
+      "advancedMetrics": {
+        "contentQuality": {
+          "readability": 92,
+          "originality": 88,
+          "techDepth": 85
+        },
+        "reachAnalysis": {
+          "globalRank": 150,
+          "fieldRank": 25,
+          "influence": 82
+        },
+        "engagementPatterns": {
+          "peakHours": ["9:00", "14:00", "20:00"],
+          "bestDays": ["Monday", "Wednesday"],
+          "audienceTimezones": ["UTC-8", "UTC+1"]
+        }
+      },
+      "predictions": {
+        "nextMilestone": {
+          "type": "merit_90",
+          "probability": 0.85,
+          "estimatedDate": "2024-05-01"
+        },
+        "growthTrajectory": {
+          "30days": "+5",
+          "90days": "+12"
+        }
+      }
+    },
+    "GET:/api/posts/recommended": [
+      {
+        "id": 1,
+        "title": "Premium Content: Advanced Merit Strategies",
+        "author": "Expert Author",
+        "meritScore": 94,
+        "tags": ["premium", "advanced"],
+        "exclusiveContent": true,
+        "earlyAccess": true
+      },
+      {
+        "id": 2,
+        "title": "Premium Workshop: Community Building",
+        "author": "Community Lead",
+        "meritScore": 92,
+        "tags": ["premium", "workshop"],
+        "exclusiveContent": true,
+        "earlyAccess": true
+      }
+    ],
+    "GET:/api/notifications": [
+      {
+        "id": 1,
+        "type": "premium",
+        "message": "New premium feature available: Advanced Analytics",
+        "isRead": false,
+        "createdAt": "2024-04-01T00:00:00Z",
+        "priority": "high"
+      },
+      {
+        "id": 2,
+        "type": "early_access",
+        "message": "Early access granted to upcoming feature",
+        "isRead": false,
+        "createdAt": "2024-04-01T00:00:00Z",
+        "priority": "medium"
+      }
+    ],
+    "GET:/api/support/tickets": [
+      {
+        "id": 1,
+        "status": "open",
+        "priority": "high",
+        "subject": "Custom theme request",
+        "createdAt": "2024-04-01T00:00:00Z",
+        "isPremium": true
+      }
+    ],
+    "GET:/api/features/beta": [
+      {
+        "id": "advanced_search",
+        "name": "Advanced Search",
+        "status": "beta",
+        "access": "granted"
+      },
+      {
+        "id": "ai_assistant",
+        "name": "AI Writing Assistant",
+        "status": "alpha",
+        "access": "granted"
+      }
+    ]
+  }
+}

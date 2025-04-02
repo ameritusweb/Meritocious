@@ -1,0 +1,49 @@
+{
+  "id": "admin",
+  "description": "Admin user responses",
+  "responses": {
+    "GET:/api/user/profile": {
+      "id": 1,
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "meritScore": 95,
+      "contributions": 150,
+      "role": "admin",
+      "permissions": ["moderate", "manage_users", "manage_content"]
+    },
+    "POST:/api/auth/login": {
+      "success": {
+        "token": "mock-admin-jwt-token",
+        "user": { 
+          "id": 1, 
+          "name": "Admin User",
+          "role": "admin"
+        }
+      },
+      "error": {
+        "status": 401,
+        "body": { "error": "Invalid credentials" }
+      },
+      "condition": "(body) => body.username === 'admin' && body.password === 'admin'"
+    },
+    "GET:/api/moderation/queue": {
+      "items": [
+        {
+          "id": 1,
+          "type": "post",
+          "content": "Reported post content",
+          "reportCount": 3,
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "type": "comment",
+          "content": "Reported comment content",
+          "reportCount": 5,
+          "status": "pending"
+        }
+      ],
+      "total": 2
+    }
+  }
+}

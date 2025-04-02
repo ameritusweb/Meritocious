@@ -1,0 +1,108 @@
+{
+  "id": "high-merit",
+  "description": "High merit user with significant contributions",
+  "responses": {
+    "GET:/api/user/profile": {
+      "id": 1,
+      "name": "Top Contributor",
+      "email": "expert@example.com",
+      "meritScore": 98,
+      "contributions": 500,
+      "badges": [
+        "Top Contributor",
+        "Thought Leader",
+        "Community Champion"
+      ],
+      "achievements": [
+        {
+          "name": "100 Quality Posts",
+          "date": "2024-03-15"
+        },
+        {
+          "name": "1000 Helpful Comments",
+          "date": "2024-03-20"
+        }
+      ]
+    },
+    "GET:/api/posts/recommended": [
+      {
+        "id": 1,
+        "title": "Advanced Merit Strategy",
+        "author": "Another Expert",
+        "meritScore": 96,
+        "tags": ["advanced", "strategy"],
+        "matchReason": "Similar expertise level"
+      },
+      {
+        "id": 2,
+        "title": "Community Leadership",
+        "author": "Top Mentor",
+        "meritScore": 95,
+        "tags": ["leadership", "community"],
+        "matchReason": "Aligned interests"
+      }
+    ],
+    "GET:/api/merit/score/:userId": {
+      "userId": "param:userId",
+      "totalScore": 98,
+      "components": {
+        "contentQuality": 99,
+        "communityEngagement": 97,
+        "contributionFrequency": 98,
+        "peerRecognition": 98
+      },
+      "history": [
+        { "date": "2024-01-01", "score": 90 },
+        { "date": "2024-02-01", "score": 94 },
+        { "date": "2024-03-01", "score": 96 },
+        { "date": "2024-04-01", "score": 98 }
+      ],
+      "achievements": [
+        {
+          "name": "Top 1% Merit Score",
+          "date": "2024-03-01"
+        }
+      ]
+    },
+    "GET:/api/analytics/user/:userId": {
+      "contentMetrics": {
+        "totalPosts": 120,
+        "totalComments": 1500,
+        "avgMeritScore": 95,
+        "topTags": ["technology", "leadership", "community"]
+      },
+      "engagementMetrics": {
+        "views": 50000,
+        "reactions": 7500,
+        "comments": 2500,
+        "shares": 1000
+      },
+      "influence": {
+        "followers": 2500,
+        "citations": 150,
+        "mentorships": 25
+      },
+      "impactMetrics": {
+        "helpfulVotes": 4500,
+        "contentReuse": 250,
+        "communityGrowth": 180
+      }
+    },
+    "GET:/api/notifications": [
+      {
+        "id": 1,
+        "type": "achievement",
+        "message": "Congratulations! You're in the top 1% of contributors!",
+        "isRead": false,
+        "createdAt": "2024-04-01T00:00:00Z"
+      },
+      {
+        "id": 2,
+        "type": "recognition",
+        "message": "Your post was featured in the weekly highlights!",
+        "isRead": false,
+        "createdAt": "2024-04-01T00:00:00Z"
+      }
+    ]
+  }
+}

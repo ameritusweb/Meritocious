@@ -1,0 +1,107 @@
+{
+  "id": "error-states",
+  "description": "Various error scenarios for testing error handling",
+  "responses": {
+    "POST:/api/auth/login": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 401,
+        "body": {
+          "error": "Authentication failed",
+          "message": "Invalid credentials",
+          "code": "AUTH_001"
+        }
+      }
+    },
+    "GET:/api/user/profile": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 404,
+        "body": {
+          "error": "Profile not found",
+          "message": "User profile could not be found",
+          "code": "PROF_001"
+        }
+      }
+    },
+    "GET:/api/posts/:id": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 404,
+        "body": {
+          "error": "Post not found",
+          "message": "The requested post does not exist",
+          "code": "POST_001"
+        }
+      }
+    },
+    "POST:/api/posts": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 422,
+        "body": {
+          "error": "Validation failed",
+          "message": "Post content does not meet quality standards",
+          "code": "POST_002",
+          "details": [
+            {
+              "field": "content",
+              "error": "Content is too short",
+              "minLength": 100
+            },
+            {
+              "field": "tags",
+              "error": "At least one tag is required"
+            }
+          ]
+        }
+      }
+    },
+    "GET:/api/merit/score/:userId": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 503,
+        "body": {
+          "error": "Service unavailable",
+          "message": "Merit score calculation service is temporarily unavailable",
+          "code": "MERIT_001",
+          "retryAfter": 300
+        }
+      }
+    },
+    "POST:/api/moderation/report": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 429,
+        "body": {
+          "error": "Too many requests",
+          "message": "Rate limit exceeded for content reporting",
+          "code": "RATE_001",
+          "retryAfter": 3600
+        }
+      }
+    },
+    "GET:/api/search": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 400,
+        "body": {
+          "error": "Invalid request",
+          "message": "Search query is required",
+          "code": "SEARCH_001"
+        }
+      }
+    },
+    "GET:/api/analytics/user/:userId": {
+      "condition": "(body) => true",
+      "error": {
+        "status": 403,
+        "body": {
+          "error": "Access denied",
+          "message": "Insufficient permissions to view analytics",
+          "code": "PERM_001"
+        }
+      }
+    }
+  }
+}

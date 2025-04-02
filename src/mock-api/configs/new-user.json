@@ -1,0 +1,90 @@
+{
+  "id": "new-user",
+  "description": "New user onboarding experience",
+  "responses": {
+    "GET:/api/user/profile": {
+      "id": 1,
+      "name": "New User",
+      "email": "new@example.com",
+      "meritScore": 50,
+      "contributions": 0,
+      "isNewUser": true,
+      "onboardingCompleted": false,
+      "dateJoined": "2024-04-01T00:00:00Z"
+    },
+    "GET:/api/posts/recommended": [
+      {
+        "id": 1,
+        "title": "Welcome to Meritocious",
+        "author": "System",
+        "meritScore": 95,
+        "tags": ["getting-started", "tutorial"],
+        "isOnboarding": true
+      },
+      {
+        "id": 2,
+        "title": "Understanding Merit Scores",
+        "author": "System",
+        "meritScore": 92,
+        "tags": ["tutorial", "merit"],
+        "isOnboarding": true
+      }
+    ],
+    "GET:/api/substacks/recommended": [
+      {
+        "id": 1,
+        "name": "Beginner's Guide",
+        "description": "Start your journey here",
+        "followers": 5000,
+        "meritScore": 95,
+        "isOfficial": true,
+        "isRecommendedForNewUsers": true
+      },
+      {
+        "id": 2,
+        "name": "Community Basics",
+        "description": "Learn community guidelines",
+        "followers": 3000,
+        "meritScore": 90,
+        "isOfficial": true,
+        "isRecommendedForNewUsers": true
+      }
+    ],
+    "GET:/api/merit/score/:userId": {
+      "userId": "param:userId",
+      "totalScore": 50,
+      "components": {
+        "contentQuality": 50,
+        "communityEngagement": 50,
+        "contributionFrequency": 50,
+        "peerRecognition": 50
+      },
+      "history": [
+        { "date": "2024-04-01", "score": 50 }
+      ],
+      "tips": [
+        "Create your first post to increase your merit score",
+        "Engage with the community by commenting",
+        "Follow recommended substacks"
+      ]
+    },
+    "GET:/api/notifications": [
+      {
+        "id": 1,
+        "type": "welcome",
+        "message": "Welcome to Meritocious! Complete your profile to get started.",
+        "isRead": false,
+        "createdAt": "2024-04-01T00:00:00Z",
+        "priority": "high"
+      },
+      {
+        "id": 2,
+        "type": "onboarding",
+        "message": "Check out the getting started guide!",
+        "isRead": false,
+        "createdAt": "2024-04-01T00:00:00Z",
+        "priority": "high"
+      }
+    ]
+  }
+}

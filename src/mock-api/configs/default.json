@@ -1,0 +1,55 @@
+{
+  "id": "default",
+  "description": "Default mock responses",
+  "responses": {
+    "GET:/api/user/profile": {
+      "id": 1,
+      "name": "Default User",
+      "email": "default@example.com",
+      "meritScore": 85,
+      "contributions": 42
+    },
+    "POST:/api/auth/login": {
+      "success": {
+        "token": "mock-jwt-token",
+        "user": { "id": 1, "name": "Default User" }
+      },
+      "error": {
+        "status": 401,
+        "body": { "error": "Invalid credentials" }
+      },
+      "condition": "(body) => body.username === 'test' && body.password === 'test'"
+    },
+    "GET:/api/posts/recommended": [
+      {
+        "id": 1,
+        "title": "Understanding Merit Scores",
+        "author": "Default Author",
+        "meritScore": 92,
+        "tags": ["tutorial", "merit"]
+      },
+      {
+        "id": 2,
+        "title": "Building Better Communities",
+        "author": "Another Author",
+        "meritScore": 88,
+        "tags": ["community", "growth"]
+      }
+    ],
+    "GET:/api/merit/score/:userId": {
+      "userId": "param:userId",
+      "totalScore": 85,
+      "components": {
+        "contentQuality": 90,
+        "communityEngagement": 85,
+        "contributionFrequency": 80,
+        "peerRecognition": 85
+      },
+      "history": [
+        { "date": "2024-03-01", "score": 82 },
+        { "date": "2024-03-15", "score": 84 },
+        { "date": "2024-04-01", "score": 85 }
+      ]
+    }
+  }
+}
