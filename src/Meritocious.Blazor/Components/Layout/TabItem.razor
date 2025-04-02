@@ -1,0 +1,19 @@
+@using AntDesign
+
+<TabPane Key="@Key" Tab="@Title" Closable="@Closable">
+    @ChildContent
+</TabPane>
+
+@code {
+    [Parameter]
+    public string Key { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public bool Closable { get; set; } = true;
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

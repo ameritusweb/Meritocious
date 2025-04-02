@@ -1,0 +1,32 @@
+@inject TabService TabService
+
+@if (ChildContent != null)
+{
+    <div @onclick="OpenTab" style="cursor: pointer;">
+        @ChildContent
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Url { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public bool Closable { get; set; } = true;
+
+    private void OpenTab()
+    {
+        TabService.OpenTab(
+            key: Guid.NewGuid().ToString(),
+            title: Title,
+            url: Url,
+            closable: Closable
+        );
+    }
+}

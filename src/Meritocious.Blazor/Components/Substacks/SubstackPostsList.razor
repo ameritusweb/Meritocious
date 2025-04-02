@@ -1,5 +1,6 @@
 @namespace Meritocious.Blazor.Components.Substacks
 @using Meritocious.Blazor.Components.Merit
+@using Meritocious.Blazor.Components.Layout
 @using Meritocious.Common.DTOs.Content
 @inject NavigationManager NavigationManager
 
@@ -42,9 +43,9 @@
         <List DataSource="@Posts" ItemLayout="ListItemLayout.Vertical" Class="mt-4">
             <ListItem>
                 <span class="ant-list-item-meta-title">
-                    <a href="/posts/@context.Id" class="text-lg font-medium hover:text-blue-500">
-                        @context.Title
-                    </a>
+                    <OpenInTab Title="@context.Title" Url="@($"/posts/{context.Id}")">
+                        <a class="text-lg font-medium hover:text-blue-500">@context.Title</a>
+                    </OpenInTab>
                 </span>
                 <div class="flex items-center space-x-2 mb-2 text-sm">
                     <Avatar Size="small">@context.AuthorUsername[0]</Avatar>

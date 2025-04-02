@@ -1,19 +1,54 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@using AntDesign
+@using Meritocious.Blazor.Components.Layout
+@inject TabService TabService
 
-<PageTitle>Meritocious.Blazor</PageTitle>
+<PageTitle>Meritocious</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<Layout Class="min-h-screen">
+    <SideNavigation 
+        Collapsed="@sidebarCollapsed"
+        OnCollapse="@(collapsed => sidebarCollapsed = collapsed)" />
+    
+    <Layout>
+        <HeaderNav 
+            Collapsed="@sidebarCollapsed"
+            NotificationCount="@notificationCount"
+            AvatarUrl="@currentUserAvatar"
+            OnToggleClick="@(() => sidebarCollapsed = !sidebarCollapsed)"
+            OnNotificationClick="@HandleNotificationClick"
+            OnAvatarClick="@HandleAvatarClick" />
+        
+        <PageTabs />
+    </Layout>
+</Layout>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
+@code {
+    private bool sidebarCollapsed;
+    private int notificationCount;
+    private string currentUserAvatar = "/images/default-avatar.png";
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    protected override void OnInitialized()
+    {
+        // Open dashboard as default tab
+        if (!TabService.Tabs.Any())
+        {
+            TabService.OpenTab(
+                key: "dashboard",
+                title: "Dashboard",
+                url: "/",
+                closable: false
+            );
+        }
+    }
+
+    private void HandleNotificationClick(MouseEventArgs args)
+    {
+        // TODO: Show notifications dropdown
+    }
+
+    private void HandleAvatarClick(MouseEventArgs args)
+    {
+        // TODO: Show user menu
+    }
+}

@@ -107,9 +107,9 @@
                             <ListItem>
                                 <div>
                                     <div class="text-sm font-medium">
-                                        <a href="/posts/@context.Id" class="hover:text-blue-500">
-                                            @context.Title
-                                        </a>
+                                        <OpenInTab Title="@context.Title" Url="@($"/posts/{context.Id}")">
+                                            <a class="hover:text-blue-500">@context.Title</a>
+                                        </OpenInTab>
                                     </div>
                                     <div class="text-xs text-gray-500">
                                         by @context.AuthorUsername • @context.CreatedAt.ToString("MMM d, yyyy")
@@ -135,9 +135,9 @@
                                 </Avatar>
                                 <div>
                                     <h3 class="font-medium">
-                                        <a href="/s/@substack.Slug" class="hover:text-blue-500">
-                                            @substack.Name
-                                        </a>
+                                        <OpenInTab Title="@substack.Name" Url="@($"/s/{substack.Slug}")">
+                                            <a class="hover:text-blue-500">@substack.Name</a>
+                                        </OpenInTab>
                                     </h3>
                                     <p class="text-gray-500 text-xs">@substack.FollowerCount followers</p>
                                 </div>

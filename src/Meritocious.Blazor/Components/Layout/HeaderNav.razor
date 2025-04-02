@@ -1,0 +1,33 @@
+@using AntDesign
+
+<Header Class="bg-white px-4 flex justify-between items-center">
+    <Icon Type=@(Collapsed ? "menu-unfold" : "menu-fold")
+          Class="text-lg cursor-pointer" 
+          OnClick="OnToggleClick"/>
+    <div class="flex items-center space-x-4">
+        <Badge Count="@NotificationCount">
+            <Icon Type="bell" Class="text-lg cursor-pointer" OnClick="OnNotificationClick"/>
+        </Badge>
+        <Avatar Src="@AvatarUrl" OnClick="OnAvatarClick"/>
+    </div>
+</Header>
+
+@code {
+    [Parameter]
+    public bool Collapsed { get; set; }
+
+    [Parameter]
+    public string AvatarUrl { get; set; } = "/images/default-avatar.png";
+
+    [Parameter]
+    public int NotificationCount { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnToggleClick { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnNotificationClick { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> OnAvatarClick { get; set; }
+}

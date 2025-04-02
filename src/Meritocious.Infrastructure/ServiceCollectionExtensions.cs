@@ -38,6 +38,9 @@ namespace Meritocious.Infrastructure
             services.AddScoped<PostRepository>();
             services.AddScoped<CommentRepository>();
             services.AddScoped<TagRepository>();
+            services.AddScoped<RemixRepository>();
+            services.AddScoped<RemixSourceRepository>();
+            services.AddScoped<RemixNoteRepository>();
 
             // Register Core Services
             services.AddScoped<IUserService, UserService>();
@@ -50,6 +53,7 @@ namespace Meritocious.Infrastructure
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IReportingService, ReportingService>();
             services.AddScoped<ISearchService, SearchService>();
+            services.AddScoped<IRemixService, RemixService>();
 
             // Add domain validators
             services.AddDomainValidators();

@@ -1,0 +1,15 @@
+@using AntDesign
+
+<Content Class="p-6">
+    <div class="@ContentClass">
+        @ChildContent
+    </div>
+</Content>
+
+@code {
+    [Parameter]
+    public string ContentClass { get; set; } = "content-container";
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

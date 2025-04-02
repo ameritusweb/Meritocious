@@ -30,6 +30,8 @@ builder.Services.AddAntDesign();
 
 // Register Application Services
 builder.Services.AddScoped<ISubstackService, SubstackService>();
+builder.Services.AddScoped<TabService>();
+builder.Services.AddScoped<DragDropService>();
 
 var app = builder.Build();
 

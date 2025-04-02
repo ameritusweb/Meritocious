@@ -1,0 +1,370 @@
+@using AntDesign
+@using Meritocious.Blazor.Services
+@inject TabService TabService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="page-tabs" @ref="containerRef">
+    <div class="tab-list @(isGesturing ? "gesturing" : "")"
+         @ontouchstart="HandleTouchStart"
+         @ontouchmove="HandleTouchMove"
+         @ontouchend="HandleTouchEnd">
+        @foreach (var tab in TabService.Tabs)
+        {
+            <div class="tab @GetTabClass(tab)"
+                 draggable="true"
+                 @key="tab.Key"
+                 @ondragstart="@(() => HandleDragStart(tab.Key))"
+                 @ondragover="@(e => HandleDragOver(e, tab.Key))"
+                 @ondrop="@(() => HandleDrop(tab.Key))"
+                 @onclick="@(() => TabService.ActivateTab(tab.Key))">
+                <span class="tab-title">@tab.Title</span>
+                @if (tab.Closable)
+                {
+                    <span class="tab-close" @onclick:stopPropagation @onclick="@(() => TabService.CloseTab(tab.Key))">
+                        <Icon Type="close" />
+                    </span>
+                }
+            </div>
+        }
+        @if (showDropIndicator)
+        {
+            <div class="drag-indicator" style="@GetDropIndicatorStyle()"></div>
+        }
+    </div>
+
+    <div class="tab-content">
+        @if (TabService.Tabs.Any())
+        {
+            <Router AppAssembly="@typeof(Program).Assembly">
+                <Found Context="routeData">
+                    <RouteView RouteData="@routeData" />
+                </Found>
+                <NotFound>
+                    <p>Sorry, there's nothing at this address.</p>
+                </NotFound>
+            </Router>
+        }
+    </div>
+
+    @if (showGestureFeedback)
+    {
+        <div class="gesture-feedback @gestureFeedbackType">
+            <Icon Type="@GetGestureIcon()" />
+            <span>@gestureFeedbackText</span>
+        </div>
+    }
+</div>
+
+<style>
+    .page-tabs {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tab-list {
+        display: flex;
+        background: #f0f2f5;
+        border-bottom: 1px solid #d9d9d9;
+        padding: 4px 4px 0;
+        user-select: none;
+        position: relative;
+        transition: transform 0.2s ease;
+    }
+
+    .tab-list.gesturing {
+        will-change: transform;
+    }
+
+    .tab {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        background: white;
+        border: 1px solid #d9d9d9;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        margin-right: 2px;
+        cursor: move;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .tab.active {
+        background: #1890ff;
+        color: white;
+        border-color: #1890ff;
+        cursor: default;
+    }
+
+    .tab.dragging {
+        opacity: 0.6;
+        transform: scale(0.98);
+        background: #f0f0f0;
+    }
+
+    .tab-close {
+        margin-left: 8px;
+        display: flex;
+        align-items: center;
+        opacity: 0.5;
+        transition: opacity 0.2s ease;
+    }
+
+    .tab:hover .tab-close {
+        opacity: 1;
+    }
+
+    .tab-content {
+        flex: 1;
+        overflow: auto;
+        padding: 16px;
+    }
+
+    .drag-indicator {
+        position: absolute;
+        width: 2px;
+        height: 20px;
+        background: #1890ff;
+        transition: left 0.1s ease;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    .drag-indicator::before,
+    .drag-indicator::after {
+        content: '';
+        position: absolute;
+        left: -3px;
+        width: 8px;
+        height: 8px;
+        background: #1890ff;
+        border-radius: 50%;
+    }
+
+    .drag-indicator::before {
+        top: -4px;
+    }
+
+    .drag-indicator::after {
+        bottom: -4px;
+    }
+
+    .gesture-feedback {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 1000;
+    }
+
+    .gesture-feedback.visible {
+        opacity: 1;
+    }
+
+    :deep(.anticon) {
+        font-size: 24px;
+    }
+
+    @keyframes tab-enter {
+        from { 
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes tab-exit {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+
+    .tab-enter {
+        animation: tab-enter 0.2s ease forwards;
+    }
+
+    .tab-exit {
+        animation: tab-exit 0.2s ease forwards;
+    }
+</style>
+
+@code {
+    private ElementReference containerRef;
+    private string draggedTabKey;
+    private bool showDropIndicator;
+    private double dropIndicatorLeft;
+    private bool isGesturing;
+    
+    // Gesture feedback
+    private bool showGestureFeedback;
+    private string gestureFeedbackType = "";
+    private string gestureFeedbackText = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initTabGestures", containerRef);
+            TabService.TabChanged += async (sender, args) => await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetTabClass(TabInfo tab)
+    {
+        var classes = new List<string>();
+        if (tab.Key == TabService.ActiveTabKey) classes.Add("active");
+        if (tab.Key == draggedTabKey) classes.Add("dragging");
+        if (tab.Key == TabService.Tabs.LastOrDefault()?.Key) classes.Add("tab-enter");
+        return string.Join(" ", classes);
+    }
+
+    private string GetDropIndicatorStyle()
+    {
+        return $"left: {dropIndicatorLeft}px; top: 50%; transform: translateY(-50%);";
+    }
+
+    private void HandleDragStart(string key)
+    {
+        draggedTabKey = key;
+        showDropIndicator = true;
+    }
+
+    private void HandleDragOver(DragEventArgs e, string key)
+    {
+        e.PreventDefault();
+        var tabElement = e.CurrentTarget as HTMLElement;
+        if (tabElement != null)
+        {
+            dropIndicatorLeft = tabElement.OffsetLeft;
+        }
+    }
+
+    private void HandleDrop(string targetKey)
+    {
+        if (!string.IsNullOrEmpty(draggedTabKey) && draggedTabKey != targetKey)
+        {
+            TabService.ReorderTabs(draggedTabKey, targetKey);
+        }
+        draggedTabKey = null;
+        showDropIndicator = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleTouchStart(TouchEventArgs e)
+    {
+        if (e.TargetTouches.Length == 1)
+        {
+            isGesturing = true;
+            await JS.InvokeVoidAsync("startSwipeTracking", e.TargetTouches[0].ClientX);
+        }
+    }
+
+    private async Task HandleTouchMove(TouchEventArgs e)
+    {
+        if (e.TargetTouches.Length == 1)
+        {
+            var swipeData = await JS.InvokeAsync<SwipeData>("updateSwipeTracking", e.TargetTouches[0].ClientX);
+            
+            if (swipeData.IsValid)
+            {
+                ShowGestureFeedback(
+                    swipeData.Direction == "left" ? "swipe-left" : "swipe-right",
+                    swipeData.Direction == "left" ? "Swipe to close" : "Switch tab"
+                );
+            }
+        }
+    }
+
+    private async Task HandleTouchEnd(TouchEventArgs e)
+    {
+        isGesturing = false;
+        HideGestureFeedback();
+
+        var swipeData = await JS.InvokeAsync<SwipeData>("endSwipeTracking");
+        if (swipeData.IsValid)
+        {
+            await HandleSwipeGesture(swipeData.Direction);
+        }
+    }
+
+    private async Task HandleSwipeGesture(string direction)
+    {
+        var currentTab = TabService.Tabs.FirstOrDefault(t => t.Key == TabService.ActiveTabKey);
+        if (currentTab == null) return;
+
+        if (direction == "left" && currentTab.Closable)
+        {
+            TabService.CloseTab(currentTab.Key);
+        }
+        else if (direction == "right")
+        {
+            var currentIndex = TabService.Tabs.IndexOf(currentTab);
+            if (currentIndex > 0)
+            {
+                var previousTab = TabService.Tabs[currentIndex - 1];
+                TabService.ActivateTab(previousTab.Key);
+            }
+        }
+    }
+
+    private void ShowGestureFeedback(string type, string text)
+    {
+        gestureFeedbackType = type;
+        gestureFeedbackText = text;
+        showGestureFeedback = true;
+        StateHasChanged();
+    }
+
+    private void HideGestureFeedback()
+    {
+        showGestureFeedback = false;
+        StateHasChanged();
+    }
+
+    private string GetGestureIcon()
+    {
+        return gestureFeedbackType switch
+        {
+            "swipe-left" => "close",
+            "swipe-right" => "swap-right",
+            _ => "info"
+        };
+    }
+
+    private class SwipeData
+    {
+        public bool IsValid { get; set; }
+        public string Direction { get; set; }
+        public double Distance { get; set; }
+        public double Velocity { get; set; }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        TabService.TabChanged -= async (sender, args) => await InvokeAsync(StateHasChanged);
+    }
+}

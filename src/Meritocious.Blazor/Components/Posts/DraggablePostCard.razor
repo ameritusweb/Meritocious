@@ -1,0 +1,78 @@
+@using AntDesign
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Blazor.Services
+@inject DragDropService DragDropService
+
+<div class="post-card @(isDragging ? "dragging" : "")"
+     draggable="true"
+     @ondragstart="HandleDragStart"
+     @ondragend="HandleDragEnd">
+    <Card Bordered>
+        <div class="flex items-start space-x-3">
+            <div class="flex-grow">
+                <h3 class="text-base font-medium">@Post.Title</h3>
+                <p class="text-sm text-gray-500 mt-1 line-clamp-2">
+                    @Post.Content
+                </p>
+                <div class="flex items-center space-x-2 mt-2">
+                    @foreach (var tag in Post.Tags)
+                    {
+                        <Tag>@tag</Tag>
+                    }
+                </div>
+            </div>
+            <div class="flex-shrink-0">
+                <Tag Color="blue">
+                    Merit: @Post.MeritScore.ToString("P0")
+                </Tag>
+            </div>
+        </div>
+    </Card>
+</div>
+
+<style>
+    .post-card {
+        margin-bottom: 12px;
+        cursor: move;
+        transition: all 0.2s ease;
+    }
+
+    .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-card.dragging {
+        opacity: 0.5;
+        transform: scale(0.98);
+    }
+
+    .post-card :deep(.ant-card-body) {
+        padding: 12px;
+    }
+</style>
+
+@code {
+    [Parameter] public PostDto Post { get; set; }
+    private bool isDragging;
+
+    private async Task HandleDragStart(DragEventArgs e)
+    {
+        isDragging = true;
+        await Task.Delay(1); // Allow state to update
+
+        // Set drag data
+        e.DataTransfer.EffectAllowed = "move";
+        e.DataTransfer.Types.Add(DragDropService.PostDragType);
+        e.DataTransfer.SetData(DragDropService.PostDragType, DragDropService.SerializePost(Post));
+
+        // Update service state
+        DragDropService.StartPostDrag(Post);
+    }
+
+    private void HandleDragEnd()
+    {
+        isDragging = false;
+        DragDropService.EndDrag();
+    }
+}

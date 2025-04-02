@@ -1,0 +1,324 @@
+@page "/posts/remix"
+@using AntDesign
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Blazor.Services
+@using Meritocious.Blazor.Components.Posts
+@inject DragDropService DragDropService
+
+<PageTitle>Remix Ideas - Meritocious</PageTitle>
+
+<div class="remix-builder">
+    <div class="remix-header">
+        <div class="flex items-center justify-between px-6 py-4 bg-white border-b">
+            <div class="flex items-center space-x-4">
+                <Button Type="link" OnClick="@HandleBack">
+                    <Icon Type="arrow-left" /> Back
+                </Button>
+                <Input @bind-Value="remixTitle" 
+                       Placeholder="Enter remix title..."
+                       Size="large"
+                       Style="width: 400px;" />
+            </div>
+            <div class="flex items-center space-x-2">
+                <Button Type="default" OnClick="@HandleSaveDraft">
+                    <Icon Type="save" /> Save Draft
+                </Button>
+                <Button Type="primary" OnClick="@HandlePublish">
+                    <Icon Type="share-alt" /> Publish Remix
+                </Button>
+            </div>
+        </div>
+    </div>
+
+    <div class="remix-container">
+        <!-- Left: Explorer -->
+        <div class="remix-explorer">
+            <div class="p-4">
+                <Search Placeholder="Search posts to remix..."
+                        Size="large"
+                        OnChange="@HandleSearch"
+                        AllowClear />
+            </div>
+
+            <Tabs DefaultActiveKey="recommended" 
+                  TabPosition="TabPosition.Top"
+                  Class="explorer-tabs">
+                <TabPane Key="recommended" Tab=@("🧠 Recommended")>
+                    <div class="post-list">
+                        @foreach (var post in recommendedPosts)
+                        {
+                            <DraggablePostCard Post="@post" />
+                        }
+                    </div>
+                </TabPane>
+                <TabPane Key="starred" Tab=@("⭐ Starred")>
+                    <!-- Similar structure for starred posts -->
+                </TabPane>
+                <TabPane Key="recent" Tab=@("🕒 Recent")>
+                    <!-- Similar structure for recent posts -->
+                </TabPane>
+                <TabPane Key="search" Tab=@("🔍 Search Results")>
+                    <!-- Similar structure for search results -->
+                </TabPane>
+            </Tabs>
+        </div>
+
+        <!-- Right: Canvas -->
+        <div class="remix-canvas">
+            <div class="canvas-container">
+                <div class="sources-sidebar">
+                    <div class="p-4">
+                        <h3 class="text-lg font-medium mb-3">Sources</h3>
+                        @foreach (var source in remixSources)
+                        {
+                            <div class="source-item">
+                                <div class="flex items-center justify-between p-2 bg-gray-50 rounded mb-2">
+                                    <span class="text-sm truncate">@source.Title</span>
+                                    <div class="flex items-center space-x-1">
+                                        <Select DefaultValue="@source.Type" 
+                                                Style="width: 120px;"
+                                                Size="small">
+                                            <SelectOption Value="support">Support</SelectOption>
+                                            <SelectOption Value="contrast">Contrast</SelectOption>
+                                            <SelectOption Value="example">Example</SelectOption>
+                                            <SelectOption Value="question">Question</SelectOption>
+                                        </Select>
+                                        <Button Type="link" 
+                                                Danger
+                                                Size="small"
+                                                OnClick="@(() => RemoveSource(source))">
+                                            <Icon Type="close" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="editor-container"
+                     @ondragover:preventDefault
+                     @ondragover="HandleDragOver"
+                     @ondrop="HandleDrop">
+                    <div class="editor-dropzone @(isDraggedOver ? "active" : "")">
+                        <TextArea Rows="20" 
+                                 @bind-Value="remixContent"
+                                 Placeholder="Start composing your remix... Drag posts here to quote them" />
+                    </div>
+                </div>
+
+                <div class="ai-assist-sidebar">
+                    <div class="p-4">
+                        <h3 class="text-lg font-medium mb-3">AI Assist</h3>
+                        <div class="space-y-2">
+                            <Button Block OnClick="@(() => HandleAiAssist("summarize"))">
+                                <Icon Type="robot" /> Summarize Sources
+                            </Button>
+                            <Button Block OnClick="@(() => HandleAiAssist("differences"))">
+                                <Icon Type="interaction" /> Show Core Differences
+                            </Button>
+                            <Button Block OnClick="@(() => HandleAiAssist("synthesis"))">
+                                <Icon Type="bulb" /> Suggest Synthesis
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .remix-builder {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #f0f2f5;
+    }
+
+    .remix-container {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+    }
+
+    .remix-explorer {
+        width: 400px;
+        background: white;
+        border-right: 1px solid #e8e8e8;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .explorer-tabs {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .explorer-tabs :deep(.ant-tabs-content) {
+        flex: 1;
+        overflow: auto;
+    }
+
+    .post-list {
+        padding: 16px;
+    }
+
+    .post-card {
+        margin-bottom: 12px;
+        cursor: move;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .remix-canvas {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .canvas-container {
+        height: 100%;
+        display: flex;
+    }
+
+    .sources-sidebar {
+        width: 300px;
+        background: white;
+        border-right: 1px solid #e8e8e8;
+        overflow-y: auto;
+    }
+
+    .editor-container {
+        flex: 1;
+        background: white;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .editor-dropzone {
+        min-height: 100%;
+        padding: 16px;
+        transition: all 0.2s ease;
+    }
+
+    .editor-dropzone.active {
+        background: rgba(24, 144, 255, 0.1);
+        box-shadow: inset 0 0 0 2px #1890ff;
+    }
+
+    .editor-dropzone :deep(.ant-input) {
+        min-height: 400px;
+        resize: vertical;
+    }
+
+    .ai-assist-sidebar {
+        width: 250px;
+        background: white;
+        border-left: 1px solid #e8e8e8;
+        overflow-y: auto;
+    }
+</style>
+
+@code {
+    private string remixTitle = "";
+    private string remixContent = "";
+    private List<PostDto> recommendedPosts = new();
+    private List<RemixSource> remixSources = new();
+    private bool isDraggedOver;
+
+    protected override void OnInitialized()
+    {
+        // Mock data for demonstration
+        recommendedPosts = new List<PostDto>
+        {
+            new() {
+                Title = "The Evolution of Online Discourse",
+                Content = "An analysis of how online discussions have evolved...",
+                Tags = new[] { "Communication", "Social Media" },
+                MeritScore = 0.92m
+            },
+            new() {
+                Title = "Building Better Arguments",
+                Content = "A framework for constructing compelling arguments...",
+                Tags = new[] { "Logic", "Debate" },
+                MeritScore = 0.88m
+            }
+        };
+    }
+
+    private void HandleBack()
+    {
+        // Handle navigation back
+    }
+
+    private void HandleSaveDraft()
+    {
+        // Save draft logic
+    }
+
+    private void HandlePublish()
+    {
+        // Publish logic
+    }
+
+    private void HandleSearch(string value)
+    {
+        // Search logic
+    }
+
+    private void RemoveSource(RemixSource source)
+    {
+        remixSources.Remove(source);
+    }
+
+    private void HandleDragOver(DragEventArgs e)
+    {
+        if (e.DataTransfer.Types.Contains(DragDropService.PostDragType))
+        {
+            isDraggedOver = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleDrop(DragEventArgs e)
+    {
+        isDraggedOver = false;
+
+        if (e.DataTransfer.Types.Contains(DragDropService.PostDragType))
+        {
+            var data = await e.DataTransfer.GetDataAsync(DragDropService.PostDragType);
+            var post = DragDropService.DeserializePost(data.ToString());
+            
+            if (post != null)
+            {
+                // Add to sources
+                remixSources.Add(new RemixSource { Title = post.Title });
+
+                // Insert a quote at cursor position or append to content
+                var quote = $"\n> {post.Content.Split('\n').First()}...\n\n";
+                remixContent = string.IsNullOrEmpty(remixContent) 
+                    ? quote 
+                    : remixContent + quote;
+                
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task HandleAiAssist(string action)
+    {
+        // AI assistance logic
+    }
+
+    private class RemixSource
+    {
+        public string Title { get; set; }
+        public string Type { get; set; } = "support";
+    }
+}

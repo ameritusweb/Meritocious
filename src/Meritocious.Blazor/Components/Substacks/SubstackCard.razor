@@ -1,7 +1,9 @@
 ﻿@namespace Meritocious.Web.Components.Substacks
+@using Meritocious.Blazor.Components.Layout
 
-<Card Bordered
-      Class="substack-card @(IsFollowing ? "following" : "")">
+<OpenInTab Title="@Substack.Name" Url="@($"/substacks/{Substack.Id}")">
+    <Card Bordered
+          Class="substack-card @(IsFollowing ? "following" : "")"
     <div class="flex items-start space-x-4">
         <div class="flex-shrink-0">
             @if (string.IsNullOrEmpty(Substack.AvatarUrl))
@@ -94,6 +96,7 @@
         </div>
     </div>
 </Card>
+</OpenInTab>
 
 <style>
     .substack-card {

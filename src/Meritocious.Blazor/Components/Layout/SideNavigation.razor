@@ -1,0 +1,39 @@
+@using AntDesign
+@using Meritocious.Blazor.Services
+@inject TabService TabService
+
+<Sider Collapsible 
+       Collapsed=@Collapsed 
+       OnCollapse=@OnCollapse>
+    <div class="logo p-4">
+        <h1 class="text-white text-xl">Meritocious</h1>
+    </div>
+    <Menu Theme="MenuTheme.Dark" 
+          Mode="MenuMode.Inline" 
+          DefaultSelectedKeys=@(new[] { "1" })>
+        <MenuItem Key="1" OnClick="@(() => TabService.OpenTab("dashboard", "Dashboard", "/", false))">
+            <Icon Type="dashboard" Theme="outline"/>
+            <span>Dashboard</span>
+        </MenuItem>
+        <MenuItem Key="2" OnClick="@(() => TabService.OpenTab("posts", "Posts", "/posts", false))">
+            <Icon Type="read" Theme="outline"/>
+            <span>Posts</span>
+        </MenuItem>
+        <MenuItem Key="3" OnClick="@(() => TabService.OpenTab("substacks", "Substacks", "/substacks", false))">
+            <Icon Type="profile" Theme="outline"/>
+            <span>Substacks</span>
+        </MenuItem>
+        <SubMenu Key="sub1" Title=@("Profile")>
+            <MenuItem Key="4" OnClick="@(() => TabService.OpenTab("profile", "Profile Settings", "/profile", false))">Settings</MenuItem>
+            <MenuItem Key="5" OnClick="@(() => TabService.OpenTab("merit-history", "Merit History", "/profile/merit-history", false))">Merit History</MenuItem>
+        </SubMenu>
+    </Menu>
+</Sider>
+
+@code {
+    [Parameter]
+    public bool Collapsed { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnCollapse { get; set; }
+}
