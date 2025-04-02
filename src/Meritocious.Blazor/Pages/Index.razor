@@ -1,9 +1,51 @@
 ﻿@page "/"
+@attribute [AllowAnonymous]
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Meritocious - Where ideas meet impact</PageTitle>
 
-<h1>Hello, world!</h1>
+<AuthorizeView>
+    <Authorized>
+        <Dashboard />
+    </Authorized>
+    <NotAuthorized>
+        <Row Class="min-h-screen items-center justify-center">
+            <Col Span="16" Class="text-center">
+                <h1 class="text-4xl font-bold mb-6">Welcome to Meritocious</h1>
+                <p class="text-xl text-gray-600 mb-8">Where ideas meet impact. Join our community of thinkers, builders, and innovators.</p>
+                
+                <Space Size="large">
+                    <Button Type="primary" Size="large" OnClick="@(() => NavigationManager.NavigateTo("/register"))">
+                        Get Started
+                    </Button>
+                    <Button Size="large" OnClick="@(() => NavigationManager.NavigateTo("/login"))">
+                        Sign In
+                    </Button>
+                </Space>
 
-Welcome to your new app.
-
-<SurveyPrompt Title="How is Blazor working for you?" />
+                <Row Gutter="16" Class="mt-16">
+                    <Col Span="8">
+                        <Card>
+                            <Icon Type="thunderbolt" Class="text-3xl text-blue-500 mb-4" />
+                            <h3 class="text-lg font-medium mb-2">Share Ideas</h3>
+                            <p class="text-gray-600">Write and share your thoughts with a community that values quality content.</p>
+                        </Card>
+                    </Col>
+                    <Col Span="8">
+                        <Card>
+                            <Icon Type="trophy" Class="text-3xl text-yellow-500 mb-4" />
+                            <h3 class="text-lg font-medium mb-2">Earn Merit</h3>
+                            <p class="text-gray-600">Get recognized for your valuable contributions to the community.</p>
+                        </Card>
+                    </Col>
+                    <Col Span="8">
+                        <Card>
+                            <Icon Type="branches" Class="text-3xl text-green-500 mb-4" />
+                            <h3 class="text-lg font-medium mb-2">Build Together</h3>
+                            <p class="text-gray-600">Collaborate on ideas and create something greater than the sum of its parts.</p>
+                        </Card>
+                    </Col>
+                </Row>
+            </Col>
+        </Row>
+    </NotAuthorized>
+</AuthorizeView>

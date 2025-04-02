@@ -62,7 +62,10 @@ builder.Services.AddMeritociousAI(builder.Configuration);
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
-// Add CORS with proper configuration for Google Sign-In
+// Add SignalR
+builder.Services.AddSignalR();
+
+// Add CORS with proper configuration for Google Sign-In and SignalR
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DefaultPolicy", builder =>
@@ -89,6 +92,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Initialize the database
 await Meritocious.Infrastructure.Data.DbInitializer.InitializeAsync(app.Services);

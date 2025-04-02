@@ -1,16 +1,182 @@
 @using AntDesign
+@using Meritocious.Common.DTOs.Notifications
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+@inject IMediator Mediator
+@inject ILogger<HeaderNav> Logger
+@inject AuthenticationStateProvider AuthStateProvider
+@implements IAsyncDisposable
 
-<Header Class="bg-white px-4 flex justify-between items-center">
-    <Icon Type=@(Collapsed ? "menu-unfold" : "menu-fold")
-          Class="text-lg cursor-pointer" 
-          OnClick="OnToggleClick"/>
-    <div class="flex items-center space-x-4">
-        <Badge Count="@NotificationCount">
-            <Icon Type="bell" Class="text-lg cursor-pointer" OnClick="OnNotificationClick"/>
-        </Badge>
-        <Avatar Src="@AvatarUrl" OnClick="OnAvatarClick"/>
+<Header Class="bg-white px-4 flex justify-between items-center border-b">
+    <div class="flex items-center flex-1">
+        <Icon Type=@(Collapsed ? "menu-unfold" : "menu-fold")
+              Class="text-lg cursor-pointer mr-6" 
+              OnClick="OnToggleClick"/>
+              
+        <AutoComplete 
+            Class="max-w-lg flex-1"
+            Placeholder="Search posts, topics, or users..."
+            OnSelectionChange="HandleSearch"
+            @bind-Value="searchText"
+            Options="searchOptions">
+            <Prefix>
+                <Icon Type="search" />
+            </Prefix>
+            <SuffixTemplate>
+                @if (!string.IsNullOrEmpty(searchText))
+                {
+                    <Icon Type="close-circle" 
+                          Class="cursor-pointer text-gray-400 hover:text-gray-600"
+                          OnClick="@(() => searchText = string.Empty)" />
+                }
+            </SuffixTemplate>
+        </AutoComplete>
+    </div>
+
+    <div class="flex items-center space-x-6">
+        <Button Type="primary" OnClick="@(() => NavigationManager.NavigateTo("/posts/create"))">
+            <Icon Type="edit" /> New Post
+        </Button>
+
+        <Dropdown Trigger="hover" Placement="bottomRight">
+            <Overlay>
+                <Menu OnMenuItemClicked="HandleTopicClick">
+                    @foreach (var topic in trendingTopics)
+                    {
+                        <MenuItem Key="@topic.Key">
+                            <Space>
+                                <span>@topic.Name</span>
+                                @if (topic.IsHot)
+                                {
+                                    <Tag Color="orange">Hot</Tag>
+                                }
+                            </Space>
+                        </MenuItem>
+                    }
+                    <MenuDivider />
+                    <MenuItem Key="more">
+                        <Icon Type="ellipsis" /> View More Topics
+                    </MenuItem>
+                </Menu>
+            </Overlay>
+            <ChildContent>
+                <span class="cursor-pointer hover:text-blue-500 flex items-center">
+                    <Icon Type="compass" Class="text-lg mr-1" /> Explore
+                </span>
+            </ChildContent>
+        </Dropdown>
+
+        <Dropdown Visible="notificationsVisible" 
+                 OnVisibleChange="@(visible => notificationsVisible = visible)"
+                 Placement="bottomRight" 
+                 Class="w-80">
+            <Overlay>
+                <Card Bordered="false" Class="notifications-dropdown">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-medium m-0">Notifications</h4>
+                        @if (notifications.Any())
+                        {
+                            <Button Type="link" Size="small" OnClick="MarkAllRead">
+                                Mark all read
+                            </Button>
+                        }
+                    </div>
+
+                    @if (!notifications.Any())
+                    {
+                        <Empty Description="No new notifications" />
+                    }
+                    else
+                    {
+                        <List DataSource="notifications" Size="small">
+                            <ChildContent Context="notification">
+                                <ListItem Class="@(!notification.IsRead ? "bg-blue-50" : "")">
+                                    <div class="w-full">
+                                        <div class="flex items-start">
+                                            <Avatar Size="small" Src="@notification.Avatar" />
+                                            <div class="ml-3 flex-1">
+                                                <div class="text-sm">
+                                                    <span class="font-medium">@notification.Title</span>
+                                                </div>
+                                                <div class="text-gray-500 text-xs mt-1">
+                                                    @notification.Message
+                                                </div>
+                                                <div class="text-gray-400 text-xs mt-1">
+                                                    @FormatTimeAgo(notification.Date)
+                                                </div>
+                                            </div>
+                                            @if (!notification.IsRead)
+                                            {
+                                                <Badge Status="success" />
+                                            }
+                                        </div>
+                                    </div>
+                                </ListItem>
+                            </ChildContent>
+                        </List>
+                        
+                        <div class="text-center mt-4">
+                            <Button Type="link" OnClick="@(() => NavigationManager.NavigateTo("/notifications"))">
+                                View All
+                            </Button>
+                        </div>
+                    }
+                </Card>
+            </Overlay>
+            <ChildContent>
+                <Badge Count="@NotificationCount" Dot>
+                    <Icon Type="bell" Class="text-lg cursor-pointer" />
+                </Badge>
+            </ChildContent>
+        </Dropdown>
+
+        <Dropdown Trigger="click" Placement="bottomRight">
+            <Overlay>
+                <Menu>
+                    <MenuItemGroup Title="@UserName">
+                        <MenuItem Key="profile">
+                            <Icon Type="user" /> Profile
+                        </MenuItem>
+                        <MenuItem Key="settings">
+                            <Icon Type="setting" /> Settings
+                        </MenuItem>
+                    </MenuItemGroup>
+                    <MenuDivider />
+                    <MenuItem Key="feedback">
+                        <Icon Type="message" /> Send Feedback
+                    </MenuItem>
+                    <MenuItem Key="logout" Danger>
+                        <Icon Type="logout" /> Sign Out
+                    </MenuItem>
+                </Menu>
+            </Overlay>
+            <ChildContent>
+                <Avatar Src="@AvatarUrl" />
+            </ChildContent>
+        </Dropdown>
     </div>
 </Header>
+
+<style>
+.notifications-dropdown {
+    width: 360px;
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.notifications-dropdown ::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notifications-dropdown ::-webkit-scrollbar-thumb {
+    background-color: #d9d9d9;
+    border-radius: 3px;
+}
+
+.notifications-dropdown ::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+</style>
 
 @code {
     [Parameter]
@@ -20,14 +186,235 @@
     public string AvatarUrl { get; set; } = "/images/default-avatar.png";
 
     [Parameter]
+    public string UserName { get; set; } = "John Doe";
+
+    [Parameter]
     public int NotificationCount { get; set; }
 
     [Parameter]
     public EventCallback<MouseEventArgs> OnToggleClick { get; set; }
 
-    [Parameter]
-    public EventCallback<MouseEventArgs> OnNotificationClick { get; set; }
+    private bool notificationsVisible;
+    private string searchText = "";
+    private List<AutoCompleteDataItem<string>> searchOptions = new();
+    
+    private List<NotificationDto> notifications = new()
+    {
+        new()
+        {
+            Title = "New Comment",
+            Message = "Alice commented on your post 'Understanding Merit'",
+            Avatar = "/images/avatars/alice.png",
+            Date = DateTime.Now.AddMinutes(-30),
+            IsRead = false
+        },
+        new()
+        {
+            Title = "Achievement Unlocked",
+            Message = "You've earned the 'Thought Leader' badge!",
+            Avatar = "/images/badges/thought-leader.png",
+            Date = DateTime.Now.AddHours(-2),
+            IsRead = false
+        },
+        new()
+        {
+            Title = "Post Trending",
+            Message = "Your post is gaining traction in Technology",
+            Avatar = "/images/badges/trending.png",
+            Date = DateTime.Now.AddHours(-5),
+            IsRead = true
+        }
+    };
 
-    [Parameter]
-    public EventCallback<MouseEventArgs> OnAvatarClick { get; set; }
+    private List<TrendingTopic> trendingTopics = new()
+    {
+        new() { Key = "tech", Name = "Technology", IsHot = true },
+        new() { Key = "ai", Name = "Artificial Intelligence", IsHot = true },
+        new() { Key = "programming", Name = "Programming" },
+        new() { Key = "opensource", Name = "Open Source" },
+        new() { Key = "design", Name = "Design Patterns" }
+    };
+
+    private record TrendingTopic
+    {
+        public string Key { get; init; }
+        public string Name { get; init; }
+        public bool IsHot { get; init; }
+    }
+
+    private async Task HandleSearch(AutoCompleteOption option)
+    {
+        if (option?.Value != null)
+        {
+            NavigationManager.NavigateTo($"/search?q={Uri.EscapeDataString(option.Value.ToString())}");
+        }
+    }
+
+    private void HandleTopicClick(MenuItem item)
+    {
+        if (item.Key == "more")
+        {
+            NavigationManager.NavigateTo("/topics");
+        }
+        else
+        {
+            NavigationManager.NavigateTo($"/topics/{item.Key}");
+        }
+    }
+
+    private HubConnection hubConnection;
+    private bool isConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await InitializeSignalRConnection();
+        await LoadInitialNotifications();
+    }
+
+    private async Task InitializeSignalRConnection()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(NavigationManager.ToAbsoluteUri("/hubs/notifications"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            hubConnection.On<NotificationDto>("ReceiveNotification", HandleNewNotification);
+            hubConnection.On<string>("NotificationRead", HandleNotificationRead);
+
+            hubConnection.Reconnecting += error =>
+            {
+                Logger.LogWarning(error, "Reconnecting to notification hub");
+                return Task.CompletedTask;
+            };
+
+            hubConnection.Reconnected += connectionId =>
+            {
+                Logger.LogInformation("Reconnected to notification hub");
+                return Task.CompletedTask;
+            };
+
+            hubConnection.Closed += error =>
+            {
+                Logger.LogError(error, "Connection closed");
+                return Task.CompletedTask;
+            };
+
+            await hubConnection.StartAsync();
+            Logger.LogInformation("Connected to notification hub");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error connecting to notification hub");
+        }
+    }
+
+    private async Task LoadInitialNotifications()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User?.FindFirst("sub")?.Value;
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var response = await Mediator.Send(new GetUserNotificationsQuery 
+                { 
+                    UserId = Guid.Parse(userId) 
+                });
+                
+                notifications = response.ToList();
+                NotificationCount = notifications.Count(n => !n.IsRead);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading initial notifications");
+        }
+    }
+
+    private void HandleNewNotification(NotificationDto notification)
+    {
+        notifications.Insert(0, notification);
+        if (!notification.IsRead)
+        {
+            NotificationCount++;
+        }
+        StateHasChanged();
+
+        // Show toast notification
+        MessageService.Info(notification.Title, notification.Message);
+    }
+
+    private void HandleNotificationRead(string notificationId)
+    {
+        var notification = notifications.FirstOrDefault(n => n.Id.ToString() == notificationId);
+        if (notification != null && !notification.IsRead)
+        {
+            notification.IsRead = true;
+            NotificationCount--;
+            StateHasChanged();
+        }
+    }
+
+    private async Task MarkAllRead()
+    {
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User?.FindFirst("sub")?.Value;
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                foreach (var notification in notifications.Where(n => !n.IsRead))
+                {
+                    await Mediator.Send(new MarkNotificationAsReadCommand 
+                    { 
+                        UserId = Guid.Parse(userId),
+                        NotificationId = notification.Id
+                    });
+                }
+
+                notifications.ForEach(n => n.IsRead = true);
+                NotificationCount = 0;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error marking all notifications as read");
+            MessageService.Error("Error", "Failed to mark notifications as read");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    private string FormatTimeAgo(DateTime date)
+    {
+        var diff = DateTime.Now - date;
+        return diff.TotalDays switch
+        {
+            > 365 => $"{(int)(diff.TotalDays / 365)}y ago",
+            > 30 => $"{(int)(diff.TotalDays / 30)}mo ago",
+            > 1 => $"{(int)diff.TotalDays}d ago",
+            _ => diff.TotalHours switch
+            {
+                > 1 => $"{(int)diff.TotalHours}h ago",
+                _ => diff.TotalMinutes switch
+                {
+                    > 1 => $"{(int)diff.TotalMinutes}m ago",
+                    _ => "Just now"
+                }
+            }
+        };
+    }
 }

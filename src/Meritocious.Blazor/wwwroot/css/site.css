@@ -156,3 +156,97 @@ a, .btn-link {
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         transform: translateY(-2px);
     }
+
+/* Dashboard Animations */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+.slide-up {
+    animation: slideUp 0.5s ease-out;
+}
+
+.scale-in {
+    animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Dashboard Widgets */
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.activity-timeline .ant-timeline-item {
+    padding-bottom: 20px;
+}
+
+.activity-timeline .ant-timeline-item-content {
+    margin-left: 28px;
+}
+
+.trend-arrow-up {
+    color: #52c41a;
+}
+
+.trend-arrow-down {
+    color: #ff4d4f;
+}
+
+.merit-progress .ant-progress-text {
+    font-weight: 500;
+}
+
+.achievement-card {
+    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+    color: white;
+}
+
+.achievement-card .ant-card-head-title {
+    color: white;
+}
+
+.contribution-spark {
+    height: 30px;
+    margin-top: 8px;
+}
+
+.tag-cloud .ant-tag {
+    margin: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tag-cloud .ant-tag:hover {
+    transform: scale(1.05);
+}
