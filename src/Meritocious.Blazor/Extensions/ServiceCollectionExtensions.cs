@@ -42,6 +42,10 @@ namespace Meritocious.Blazor.Extensions
             services.AddScoped<TabService>();
             services.AddScoped<DragDropService>();
 
+            // Add form services
+            services.AddScoped<IFormStatusService, FormStatusService>();
+            services.AddScoped<IValidationService, ValidationService>();
+
             // Add security and auth pipeline
             services.AddScoped<AuthHeaderHandler>();
             services.AddScoped<ApiAuthenticationStateProvider>();

@@ -1,7 +1,9 @@
 ﻿@page "/settings"
+@using Meritocious.Blazor.Services.Forms
 @inject IUserService UserService
 @inject MessageService MessageService
 @inject NavigationManager NavigationManager
+@inject IFormStatusService FormStatus
 
 <PageHeader Title="Profile Settings" />
 
@@ -44,27 +46,153 @@
             @switch (activeTab)
             {
                 case "profile":
-                    <ProfileSettings OnSaved="HandleSettingsSaved" />
+                    <BaseFormComponent TModel="ProfileSettingsModel"
+                                     Model="@profileModel"
+                                     OnSubmit="HandleProfileSave"
+                                     SubmitText="Save Profile">
+                        <FormItem Label="Display Name" Required>
+                            <Input @bind-Value="@profileModel.DisplayName"
+                                  Placeholder="How should we call you?" />
+                            @if (FormStatus.FieldErrors.ContainsKey("displayName"))
+                            {
+                                <small class="text-red-500">@FormStatus.FieldErrors["displayName"].First()</small>
+                            }
+                        </FormItem>
+
+                        <FormItem Label="Bio">
+                            <TextArea @bind-Value="@profileModel.Bio"
+                                    Placeholder="Tell us about yourself"
+                                    MaxLength="160"
+                                    ShowCount />
+                            @if (FormStatus.FieldErrors.ContainsKey("bio"))
+                            {
+                                <small class="text-red-500">@FormStatus.FieldErrors["bio"].First()</small>
+                            }
+                        </FormItem>
+
+                        <FormItem Label="Avatar">
+                            <Upload Action="/api/upload"
+                                   ListType="picture-card"
+                                   OnChange="HandleAvatarChange"
+                                   Accept="image/*"
+                                   MaxCount="1">
+                                <div>
+                                    <Icon Type="plus" />
+                                    <div style="margin-top: 8px">Upload</div>
+                                </div>
+                            </Upload>
+                        </FormItem>
+                    </BaseFormComponent>
                     break;
 
                 case "preferences":
-                    <FeedPreferences OnSaved="HandleSettingsSaved" />
+                    <BaseFormComponent TModel="PreferencesModel"
+                                     Model="@preferencesModel"
+                                     OnSubmit="HandlePreferencesSave"
+                                     SubmitText="Save Preferences">
+                        <FormItem Label="Topics">
+                            <Select Mode="multiple"
+                                   @bind-Value="@preferencesModel.Topics"
+                                   Placeholder="Select topics you're interested in">
+                                @foreach (var category in topicCategories)
+                                {
+                                    <SelectOptGroup Label="@category.Name">
+                                        @foreach (var topic in category.Topics)
+                                        {
+                                            <SelectOption Value="@topic.Id">
+                                                @topic.Name
+                                            </SelectOption>
+                                        }
+                                    </SelectOptGroup>
+                                }
+                            </Select>
+                        </FormItem>
+
+                        <FormItem Label="Content Preferences">
+                            <div class="space-y-4">
+                                @foreach (var preference in contentPreferences)
+                                {
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span>@preference.Label</span>
+                                            <span>@preference.Value</span>
+                                        </div>
+                                        <Slider Min="0" 
+                                               Max="1" 
+                                               Step="0.1"
+                                               @bind-Value="@preference.Value" />
+                                    </div>
+                                }
+                            </div>
+                        </FormItem>
+                    </BaseFormComponent>
                     break;
 
                 case "notifications":
-                    <NotificationSettings OnSaved="HandleSettingsSaved" />
+                    <BaseFormComponent TModel="NotificationSettingsModel"
+                                     Model="@notificationModel"
+                                     OnSubmit="HandleNotificationsSave"
+                                     SubmitText="Save Notification Settings">
+                        <FormItem Label="Email Notifications">
+                            <Space Direction="DirectionVHType.Vertical">
+                                <Checkbox @bind-Value="@notificationModel.EmailOnComment">
+                                    Notify me when someone comments on my posts
+                                </Checkbox>
+                                <Checkbox @bind-Value="@notificationModel.EmailOnMention">
+                                    Notify me when I'm mentioned
+                                </Checkbox>
+                                <Checkbox @bind-Value="@notificationModel.EmailOnLike">
+                                    Notify me when someone likes my posts
+                                </Checkbox>
+                                <Checkbox @bind-Value="@notificationModel.EmailDigest">
+                                    Send me weekly digest of activity
+                                </Checkbox>
+                            </Space>
+                        </FormItem>
+                    </BaseFormComponent>
                     break;
 
                 case "privacy":
-                    <PrivacySettings OnSaved="HandleSettingsSaved" />
+                    <BaseFormComponent TModel="PrivacySettingsModel"
+                                     Model="@privacyModel"
+                                     OnSubmit="HandlePrivacySave"
+                                     SubmitText="Save Privacy Settings">
+                        <FormItem Label="Profile Visibility">
+                            <RadioGroup @bind-Value="@privacyModel.ProfileVisibility">
+                                <Radio Value="@VisibilityLevel.Public">
+                                    Public - Anyone can view my profile
+                                </Radio>
+                                <Radio Value="@VisibilityLevel.Friends">
+                                    Friends Only - Only my friends can view my profile
+                                </Radio>
+                                <Radio Value="@VisibilityLevel.Private">
+                                    Private - Only I can view my profile
+                                </Radio>
+                            </RadioGroup>
+                        </FormItem>
+
+                        <FormItem Label="Other Settings">
+                            <Space Direction="DirectionVHType.Vertical">
+                                <Checkbox @bind-Value="@privacyModel.ShowOnlineStatus">
+                                    Show my online status
+                                </Checkbox>
+                                <Checkbox @bind-Value="@privacyModel.AllowMentions">
+                                    Allow others to mention me in posts
+                                </Checkbox>
+                                <Checkbox @bind-Value="@privacyModel.ShowActivity">
+                                    Show my activity in feeds
+                                </Checkbox>
+                            </Space>
+                        </FormItem>
+                    </BaseFormComponent>
                     break;
 
                 case "substacks":
-                    <SubstackSettings OnSaved="HandleSettingsSaved" />
+                    <SubstackSettingsComponent OnSaved="HandleSettingsSaved" />
                     break;
 
                 case "account":
-                    <AccountSettings OnSaved="HandleSettingsSaved" />
+                    <AccountSettingsComponent OnSaved="HandleSettingsSaved" />
                     break;
             }
         </div>
@@ -73,14 +201,92 @@
 
 @code {
     private string activeTab = "profile";
+    private ProfileSettingsModel profileModel = new();
+    private PreferencesModel preferencesModel = new();
+    private NotificationSettingsModel notificationModel = new();
+    private PrivacySettingsModel privacyModel = new();
+    private List<TopicCategory> topicCategories = new();
+    private List<ContentPreference> contentPreferences = new()
+    {
+        new("clarity", "Content Clarity", 0.6m),
+        new("novelty", "Original Ideas", 0.5m),
+        new("relevance", "Topic Relevance", 0.7m)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettings();
+        await LoadTopicCategories();
+    }
+
+    private async Task LoadSettings()
+    {
+        await FormStatus.StartProcessingAsync(async () =>
+        {
+            var settings = await UserService.GetUserSettingsAsync();
+            profileModel = settings.Profile;
+            preferencesModel = settings.Preferences;
+            notificationModel = settings.Notifications;
+            privacyModel = settings.Privacy;
+        });
+    }
+
+    private async Task LoadTopicCategories()
+    {
+        topicCategories = await UserService.GetTopicCategoriesAsync();
+    }
 
     private void HandleTabChange(MenuItem item)
     {
         activeTab = item.Key;
     }
 
+    private async Task HandleProfileSave(ProfileSettingsModel model)
+    {
+        await FormStatus.StartProcessingAsync(async () =>
+        {
+            await UserService.UpdateProfileSettingsAsync(model);
+            await MessageService.Success("Profile settings saved successfully");
+        });
+    }
+
+    private async Task HandlePreferencesSave(PreferencesModel model)
+    {
+        await FormStatus.StartProcessingAsync(async () =>
+        {
+            await UserService.UpdatePreferencesAsync(model);
+            await MessageService.Success("Preferences saved successfully");
+        });
+    }
+
+    private async Task HandleNotificationsSave(NotificationSettingsModel model)
+    {
+        await FormStatus.StartProcessingAsync(async () =>
+        {
+            await UserService.UpdateNotificationSettingsAsync(model);
+            await MessageService.Success("Notification settings saved successfully");
+        });
+    }
+
+    private async Task HandlePrivacySave(PrivacySettingsModel model)
+    {
+        await FormStatus.StartProcessingAsync(async () =>
+        {
+            await UserService.UpdatePrivacySettingsAsync(model);
+            await MessageService.Success("Privacy settings saved successfully");
+        });
+    }
+
     private async Task HandleSettingsSaved()
     {
         await MessageService.Success("Settings saved successfully");
+    }
+
+    private async Task HandleAvatarChange(UploadInfo info)
+    {
+        if (info.File.State == UploadState.Success)
+        {
+            profileModel.AvatarUrl = info.File.Response;
+        }
     }
 }

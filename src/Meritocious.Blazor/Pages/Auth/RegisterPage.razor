@@ -1,8 +1,11 @@
 ﻿@page "/register"
+@using Meritocious.Blazor.Services.Forms
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject MessageService MessageService
+@inject IFormStatusService FormStatus
+@inject IValidationService ValidationService
 
 <div class="register-container">
     <Card Style="width: 400px;">
@@ -20,50 +23,59 @@
         @switch (currentStep)
         {
             case 0:
-                <Form Model="@registerModel"
-                      OnFinish="HandleAccountStep"
-                      Layout="FormLayout.Vertical">
-                    <FormItem Label="Email">
+                <BaseFormComponent TModel="RegisterModel"
+                                 Model="@registerModel"
+                                 OnSubmit="HandleAccountStep"
+                                 SubmitText="Continue">
+                    <FormItem Label="Email" Required>
                         <Input @bind-Value="@registerModel.Email" 
-                               Placeholder="Enter your email" />
+                              Placeholder="Enter your email"
+                              OnChange="@ValidateEmail" />
+                        @if (FormStatus.FieldErrors.ContainsKey("email"))
+                        {
+                            <small class="text-red-500">@FormStatus.FieldErrors["email"].First()</small>
+                        }
                     </FormItem>
 
-                    <FormItem Label="Username">
+                    <FormItem Label="Username" Required>
                         <Input @bind-Value="@registerModel.Username"
-                               Placeholder="Choose a username"
-                               OnChange="@ValidateUsername" />
+                              Placeholder="Choose a username"
+                              OnChange="@ValidateUsername" />
                         @if (isCheckingUsername)
                         {
                             <small class="text-gray-500">
                                 <Icon Type="loading" Spin /> Checking availability...
                             </small>
                         }
-                        else if (usernameAvailable.HasValue)
+                        else if (FormStatus.FieldErrors.ContainsKey("username"))
                         {
-                            <small class="@(usernameAvailable.Value ? "text-green-500" : "text-red-500")">
-                                @(usernameAvailable.Value ? "Username is available" : "Username is taken")
-                            </small>
+                            <small class="text-red-500">@FormStatus.FieldErrors["username"].First()</small>
+                        }
+                        else if (usernameAvailable.HasValue && usernameAvailable.Value)
+                        {
+                            <small class="text-green-500">Username is available</small>
                         }
                     </FormItem>
 
-                    <FormItem Label="Password">
+                    <FormItem Label="Password" Required>
                         <InputPassword @bind-Value="@registerModel.Password"
-                                     Placeholder="Create a password" />
+                                     Placeholder="Create a password"
+                                     OnChange="@ValidatePassword" />
                         <PasswordStrengthIndicator Password="@registerModel.Password" />
+                        @if (FormStatus.FieldErrors.ContainsKey("password"))
+                        {
+                            <small class="text-red-500">@FormStatus.FieldErrors["password"].First()</small>
+                        }
                     </FormItem>
 
-                    <FormItem Label="Confirm Password">
+                    <FormItem Label="Confirm Password" Required>
                         <InputPassword @bind-Value="@registerModel.ConfirmPassword"
-                                     Placeholder="Confirm your password" />
-                    </FormItem>
-
-                    <FormItem>
-                        <Button Type="primary"
-                                HtmlType="submit"
-                                Block
-                                Loading="@isLoading">
-                            Continue
-                        </Button>
+                                     Placeholder="Confirm your password"
+                                     OnChange="@ValidatePasswordMatch" />
+                        @if (FormStatus.FieldErrors.ContainsKey("confirmPassword"))
+                        {
+                            <small class="text-red-500">@FormStatus.FieldErrors["confirmPassword"].First()</small>
+                        }
                     </FormItem>
 
                     <Divider>Or</Divider>
@@ -77,61 +89,54 @@
                             <span>Sign up with Google</span>
                         </Space>
                     </Button>
-                </Form>
+                </BaseFormComponent>
                 break;
 
             case 1:
-                <Form Model="@profileModel"
-                      OnFinish="HandleProfileStep"
-                      Layout="FormLayout.Vertical">
-                    <FormItem Label="Display Name">
+                <BaseFormComponent TModel="ProfileModel"
+                                 Model="@profileModel"
+                                 OnSubmit="HandleProfileStep"
+                                 ShowBackButton="true"
+                                 OnBack="@(() => currentStep--)"
+                                 SubmitText="Continue">
+                    <FormItem Label="Display Name" Required>
                         <Input @bind-Value="@profileModel.DisplayName"
-                               Placeholder="How should we call you?" />
+                              Placeholder="How should we call you?" />
                     </FormItem>
 
                     <FormItem Label="Bio">
                         <TextArea @bind-Value="@profileModel.Bio"
-                                 Placeholder="Tell us about yourself"
-                                 MaxLength="160"
-                                 ShowCount />
+                                Placeholder="Tell us about yourself"
+                                MaxLength="160"
+                                ShowCount />
                     </FormItem>
 
                     <FormItem Label="Avatar">
                         <Upload Action="/api/upload"
-                                ListType="picture-card"
-                                OnChange="HandleAvatarChange"
-                                Accept="image/*"
-                                MaxCount="1">
+                               ListType="picture-card"
+                               OnChange="HandleAvatarChange"
+                               Accept="image/*"
+                               MaxCount="1">
                             <div>
                                 <Icon Type="plus" />
                                 <div style="margin-top: 8px">Upload</div>
                             </div>
                         </Upload>
                     </FormItem>
-
-                    <FormItem>
-                        <Space>
-                            <Button OnClick="@(() => currentStep--)">
-                                Back
-                            </Button>
-                            <Button Type="primary"
-                                    HtmlType="submit"
-                                    Loading="@isLoading">
-                                Continue
-                            </Button>
-                        </Space>
-                    </FormItem>
-                </Form>
+                </BaseFormComponent>
                 break;
 
             case 2:
-                <Form Model="@interestsModel"
-                      OnFinish="HandleInterestsStep"
-                      Layout="FormLayout.Vertical">
-                    <FormItem Label="Select Topics">
+                <BaseFormComponent TModel="InterestsModel"
+                                 Model="@interestsModel"
+                                 OnSubmit="HandleInterestsStep"
+                                 ShowBackButton="true"
+                                 OnBack="@(() => currentStep--)"
+                                 SubmitText="Complete Registration">
+                    <FormItem Label="Select Topics" Required>
                         <Select Mode="multiple"
-                                @bind-Value="@interestsModel.Topics"
-                                Placeholder="Select topics you're interested in">
+                               @bind-Value="@interestsModel.Topics"
+                               Placeholder="Select topics you're interested in">
                             @foreach (var category in topicCategories)
                             {
                                 <SelectOptGroup Label="@category.Name">
@@ -156,37 +161,15 @@
                                         <span>@preference.Value</span>
                                     </div>
                                     <Slider Min="0" 
-                                            Max="1" 
-                                            Step="0.1"
-                                            @bind-Value="@preference.Value" />
+                                           Max="1" 
+                                           Step="0.1"
+                                           @bind-Value="@preference.Value" />
                                 </div>
                             }
                         </div>
                     </FormItem>
-
-                    <FormItem>
-                        <Space>
-                            <Button OnClick="@(() => currentStep--)">
-                                Back
-                            </Button>
-                            <Button Type="primary"
-                                    HtmlType="submit"
-                                    Loading="@isLoading">
-                                Complete Registration
-                            </Button>
-                        </Space>
-                    </FormItem>
-                </Form>
+                </BaseFormComponent>
                 break;
-        }
-
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <Alert Type="error"
-                   Message="@errorMessage"
-                   ShowIcon
-                   Banner
-                   Class="mt-4" />
         }
 
         <div class="mt-4 text-center">

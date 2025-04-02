@@ -1,0 +1,64 @@
+@using Meritocious.Blazor.Services.Forms
+@typeparam TModel
+
+<Form Model="@Model"
+      OnFinish="HandleSubmit"
+      Layout="@Layout">
+    @ChildContent
+
+    @if (ShowErrorSummary && !string.IsNullOrEmpty(FormStatus.ErrorMessage))
+    {
+        <Alert Type="error"
+               Message="@FormStatus.ErrorMessage"
+               ShowIcon
+               Banner
+               Class="mt-4" />
+    }
+
+    <FormItem>
+        @if (ShowBackButton)
+        {
+            <Space>
+                <Button OnClick="OnBack">
+                    Back
+                </Button>
+                <Button Type="primary"
+                        HtmlType="submit"
+                        Loading="@FormStatus.IsLoading">
+                    @SubmitText
+                </Button>
+            </Space>
+        }
+        else
+        {
+            <Button Type="primary"
+                    HtmlType="submit"
+                    Loading="@FormStatus.IsLoading"
+                    Block="@BlockSubmitButton">
+                @SubmitText
+            </Button>
+        }
+    </FormItem>
+</Form>
+
+@code {
+    [Parameter] public TModel Model { get; set; } = default!;
+    [Parameter] public FormLayout Layout { get; set; } = FormLayout.Vertical;
+    [Parameter] public string SubmitText { get; set; } = "Submit";
+    [Parameter] public bool ShowBackButton { get; set; }
+    [Parameter] public bool BlockSubmitButton { get; set; }
+    [Parameter] public bool ShowErrorSummary { get; set; } = true;
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public EventCallback<TModel> OnSubmit { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
+
+    [Inject] public IFormStatusService FormStatus { get; set; } = default!;
+
+    private async Task HandleSubmit()
+    {
+        await FormStatus.StartProcessingAsync(async () =>
+        {
+            await OnSubmit.InvokeAsync(Model);
+        });
+    }
+}

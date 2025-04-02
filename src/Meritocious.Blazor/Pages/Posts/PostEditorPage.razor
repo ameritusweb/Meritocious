@@ -1,10 +1,12 @@
 @page "/s/{SubstackSlug}/new"
 @page "/s/{SubstackSlug}/edit/{PostId}"
+@using Meritocious.Blazor.Services.Forms
 @inject IPostService PostService
 @inject NavigationManager NavigationManager
 @inject MessageService MessageService
 @inject IJSRuntime JSRuntime
 @inject ISubstackService SubstackService
+@inject IFormStatusService FormStatus
 
 <PageHeader
     Title="@(isEditing ? "Edit Post" : "Create Post")"
@@ -12,10 +14,10 @@
     OnBack="NavigateBack"
     Extra="@(
         <Space>
-            <Button OnClick="HandleSaveDraft" Disabled="@isSaving" Loading="@isSavingDraft">
+            <Button OnClick="HandleSaveDraft" Loading="@FormStatus.IsLoading">
                 Save Draft
             </Button>
-            <Button Type="primary" OnClick="HandleSubmit" Loading="@isSubmitting" Disabled="!IsValid">
+            <Button Type="primary" OnClick="HandleSubmit" Loading="@FormStatus.IsLoading" Disabled="!IsValid">
                 @(isEditing ? "Update" : "Publish")
             </Button>
         </Space>
@@ -25,13 +27,19 @@
 <div class="flex space-x-6">
     <div class="w-2/3">
         <Card>
-            <Form Model="@model" Layout="FormLayout.Vertical">
+            <BaseFormComponent TModel="PostModel"
+                             Model="@model"
+                             OnSubmit="HandleSubmit">
                 <FormItem Label="Title" Required>
                     <Input @bind-Value="@model.Title" 
-                           Placeholder="Enter a descriptive title"
-                           MaxLength="200" 
-                           ShowCount
-                           Size="large" />
+                          Placeholder="Enter a descriptive title"
+                          MaxLength="200" 
+                          ShowCount
+                          Size="large" />
+                    @if (FormStatus.FieldErrors.ContainsKey("title"))
+                    {
+                        <small class="text-red-500">@FormStatus.FieldErrors["title"].First()</small>
+                    }
                 </FormItem>
 
                 <FormItem Label="Content" Required>
@@ -39,27 +47,36 @@
                         <MarkdownToolbarComponent OnInsertLink="HandleInsertLink" />
                         
                         <TextArea @bind-Value="@model.Content"
-                                  Placeholder="Write your post content here. Use the formatting tools above to structure your post."
-                                  OnChange="HandleContentChange"
-                                  Class="border-none"
-                                  Rows="12" />
-                                  
+                                Placeholder="Write your post content here. Use the formatting tools above to structure your post."
+                                OnChange="HandleContentChange"
+                                Class="border-none"
+                                Rows="12" />
+                                
                         <WordCountComponent Content="@model.Content" @ref="wordCounter" />
                     </div>
+                    @if (FormStatus.FieldErrors.ContainsKey("content"))
+                    {
+                        <small class="text-red-500">@FormStatus.FieldErrors["content"].First()</small>
+                    }
                 </FormItem>
-            </Form>
+            </BaseFormComponent>
         </Card>
     </div>
 
     <div class="w-1/3 space-y-4">
         <Card Title="Post Settings">
-            <Form Layout="FormLayout.Vertical">
+            <BaseFormComponent TModel="PostModel"
+                             Model="@model">
                 <FormItem Label="Tags">
                     <TagSelectorComponent Tags="@model.Tags"
-                                     AvailableTags="@availableTags"
-                                     Placeholder="Add up to 5 tags"
-                                     MaxTags="5"
-                                     TagsChanged="HandleTagsChanged" />
+                                        AvailableTags="@availableTags"
+                                        Placeholder="Add up to 5 tags"
+                                        MaxTags="5"
+                                        TagsChanged="HandleTagsChanged" />
+                    @if (FormStatus.FieldErrors.ContainsKey("tags"))
+                    {
+                        <small class="text-red-500">@FormStatus.FieldErrors["tags"].First()</small>
+                    }
                 </FormItem>
 
                 <FormItem Label="Visibility">
@@ -95,8 +112,8 @@
                 {
                     <FormItem Label="Fork Settings">
                         <Alert Message="This is a forked post"
-                               Type="info"
-                               ShowIcon />
+                              Type="info"
+                              ShowIcon />
                         <div class="mt-2">
                             <a href="@($"/s/{originalPost?.SubstackSlug}/{originalPost?.Id}")">
                                 View Original Post
@@ -109,12 +126,12 @@
                 {
                     <FormItem Label="Version Notes (optional)">
                         <Input @bind-Value="@versionNotes" 
-                               Placeholder="Briefly describe what changed in this update"
-                               MaxLength="100" 
-                               ShowCount />
+                              Placeholder="Briefly describe what changed in this update"
+                              MaxLength="100" 
+                              ShowCount />
                     </FormItem>
                 }
-            </Form>
+            </BaseFormComponent>
         </Card>
 
         <Card Title="AI Analysis" Loading="@isAnalyzing">
@@ -127,7 +144,7 @@
                             <span class="font-medium">@analysis.EstimatedMeritScore.ToString("N2")</span>
                         </div>
                         <Progress Percent="@((double)(analysis.EstimatedMeritScore * 100))"
-                                 StrokeColor="@GetMeritColor(analysis.EstimatedMeritScore)" />
+                                StrokeColor="@GetMeritColor(analysis.EstimatedMeritScore)" />
                     </div>
 
                     @foreach (var metric in analysis.Metrics)
@@ -138,8 +155,8 @@
                                 <span>@metric.Value.ToString("N2")</span>
                             </div>
                             <Progress Percent="@((double)(metric.Value * 100))"
-                                     ShowInfo="false"
-                                     Size="small" />
+                                    ShowInfo="false"
+                                    Size="small" />
                         </div>
                     }
 
@@ -153,7 +170,7 @@
                                 {
                                     <li class="flex items-start">
                                         <Icon Type="info-circle" 
-                                              Class="text-blue-500 mt-1 mr-2" />
+                                             Class="text-blue-500 mt-1 mr-2" />
                                         <span>@suggestion</span>
                                     </li>
                                 }
@@ -167,9 +184,9 @@
 </div>
 
 <PostPreviewComponent Visible="@isPreviewVisible"
-                   Post="@model"
-                   ReadTime="@(wordCounter?.EstimatedReadTime ?? 1)"
-                   OnClose="ClosePreview" />
+                      Post="@model"
+                      ReadTime="@(wordCounter?.EstimatedReadTime ?? 1)"
+                      OnClose="ClosePreview" />
 
 <style>
     .editor-container {
