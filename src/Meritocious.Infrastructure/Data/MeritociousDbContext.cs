@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Meritocious.Core.Entities;
 
 namespace Meritocious.Infrastructure.Data
 {
-    public class MeritociousDbContext : DbContext
+    public class MeritociousDbContext : IdentityDbContext<User>
     {
         // Original entities
         public DbSet<User> Users { get; set; }

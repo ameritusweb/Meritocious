@@ -4,14 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.AspNetCore.Identity;
 
 namespace Meritocious.Core.Entities
 {
-    public class User : BaseEntity
+    public class User : IdentityUser
     {
-        public string Username { get; private set; }
-        public string Email { get; private set; }
-        public string PasswordHash { get; private set; }
         public decimal MeritScore { get; private set; }
         public DateTime? LastLoginAt { get; private set; }
         public bool IsActive { get; private set; }
