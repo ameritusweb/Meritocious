@@ -1,0 +1,356 @@
+@using AntDesign
+@using Meritocious.Common.DTOs.Content
+@using Meritocious.Blazor.Services
+@inject DragDropService DragDropService
+@inject IPostApiService PostApi
+@inject IMeritScoringService MeritApi
+@inject NotificationService NotificationService
+
+<div class="remix-builder">
+    <div class="remix-header mb-4">
+        <div class="flex items-center space-x-4">
+            <Input @bind-Value="remixTitle" 
+                   Placeholder="Enter remix title..."
+                   Size="large"
+                   Style="width: 400px;" />
+        </div>
+    </div>
+
+    <div class="remix-container">
+        <!-- Left: Sources -->
+        <div class="remix-sources" style="width: 300px;">
+            <Card Size="small" Title="Sources" Style="margin-bottom: 16px;">
+                <div class="space-y-2">
+                    @foreach (var source in remixSources)
+                    {
+                        <div class="source-item">
+                            <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                <span class="text-sm truncate">@source.Title</span>
+                                <div class="flex items-center space-x-1">
+                                    <Select @bind-Value="@source.Type" 
+                                            Style="width: 120px;"
+                                            Size="small">
+                                        <SelectOption Value="@("support")">Support</SelectOption>
+                                        <SelectOption Value="@("contrast")">Contrast</SelectOption>
+                                        <SelectOption Value="@("example")">Example</SelectOption>
+                                        <SelectOption Value="@("question")">Question</SelectOption>
+                                    </Select>
+                                    <Button Type="link"
+                                            Danger
+                                            Size="small"
+                                            OnClick="@(() => RemoveSource(source))">
+                                        <Icon Type="close" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (!remixSources.Any())
+                    {
+                        <Empty Description="No source posts added" />
+                    }
+                </div>
+            </Card>
+
+            <Card Size="small" Title="Add Sources">
+                <Search Placeholder="Search posts..."
+                        Loading="@isSearching"
+                        OnSearch="HandleSearch"
+                        AllowClear />
+
+                <div class="search-results mt-4">
+                    @if (isSearching)
+                    {
+                        <div class="text-center py-4">
+                            <Spin />
+                        </div>
+                    }
+                    else if (searchResults.Any())
+                    {
+                        @foreach (var post in searchResults)
+                        {
+                            <div class="search-result-item p-2 hover:bg-gray-50 cursor-pointer rounded"
+                                 @onclick="@(() => AddSource(post))">
+                                <div class="font-medium text-sm">@post.Title</div>
+                                <div class="text-xs text-gray-500">
+                                    by @post.AuthorUsername • @post.CreatedAt.ToString("MMM d, yyyy")
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </Card>
+        </div>
+
+        <!-- Right: Editor -->
+        <div class="flex-1 ml-4">
+            <Card Size="small" Title="Remix Content" Class="h-full">
+                <TextArea Rows="15"
+                         @bind-Value="remixContent"
+                         Placeholder="Compose your remix...
+
+Start by adding source posts and quoting relevant parts. You can:
+• Quote specific passages
+• Compare and contrast ideas
+• Synthesize new insights
+• Ask thought-provoking questions" />
+
+                <div class="flex justify-between mt-4">
+                    <Button Type="default" OnClick="HandleCancel">
+                        Cancel
+                    </Button>
+                    <Space>
+                        <SpaceItem>
+                            <Button Type="@ButtonType.Default" OnClick="HandlePreview">
+                                <Icon Type="eye" /> Preview
+                            </Button>
+                        </SpaceItem>
+                        <SpaceItem>
+                            <Button Type="primary" OnClick="HandleCreate" Loading="@isCreating">
+                                Create Remix
+                            </Button>
+                        </SpaceItem>
+                    </Space>
+                </div>
+            </Card>
+        </div>
+    </div>
+</div>
+
+@if (showPreview)
+{
+    <Modal Title="Preview Remix"
+           Visible="true"
+           OnCancel="@(() => showPreview = false)"
+           Footer="null"
+           Width="800">
+        <RemixPreviewComponent Title="@remixTitle"
+                              Content="@remixContent"
+                              Sources="@remixSources"
+                              ValidateContent="true" />
+    </Modal>
+}
+
+<style>
+    .remix-builder {
+        min-height: 600px;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        padding: 24px;
+    }
+
+    .remix-container {
+        flex: 1;
+        display: flex;
+    }
+
+    .remix-sources {
+        overflow-y: auto;
+    }
+
+    .search-results {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .search-result-item {
+        transition: background-color 0.2s;
+    }
+
+    .source-item {
+        margin-bottom: 8px;
+    }
+</style>
+
+@code {
+    [Parameter] public List<PostDto> InitialSources { get; set; } = new();
+    [Parameter] public PostDto NewSource { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<RemixCreateModel> OnCreate { get; set; }
+
+    private string remixTitle = "";
+    private string remixContent = "";
+    private List<RemixSource> remixSources = new();
+    private List<PostDto> searchResults = new();
+    private bool isSearching;
+    private bool isCreating;
+    private bool showPreview;
+
+    protected override void OnInitialized()
+    {
+        // Add initial sources
+        foreach (var source in InitialSources)
+        {
+            AddSource(source);
+        }
+
+        // Add new source if provided
+        if (NewSource != null)
+        {
+            AddSource(NewSource);
+        }
+    }
+
+    private class RemixSource
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public string Type { get; set; } = "support";
+        public List<QuoteSelection> Quotes { get; set; } = new();
+    }
+
+    private void AddSource(PostDto post)
+    {
+        if (!remixSources.Any(s => s.Id == post.Id))
+        {
+            remixSources.Add(new RemixSource 
+            { 
+                Id = post.Id,
+                Title = post.Title
+            });
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveSource(RemixSource source)
+    {
+        remixSources.Remove(source);
+        StateHasChanged();
+    }
+
+    private async Task HandleSearch(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return;
+
+        try
+        {
+            isSearching = true;
+            StateHasChanged();
+
+            // Search posts by title/content similarity
+            searchResults = await PostApi.SearchPostsAsync(value, maxResults: 5);
+        }
+        catch (Exception ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Search failed",
+                Description = ex.Message
+            });
+            searchResults.Clear();
+        }
+        finally
+        {
+            isSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task HandleCancel()
+    {
+        return OnCancel.InvokeAsync();
+    }
+
+    private void HandlePreview()
+    {
+        showPreview = true;
+    }
+
+    private async Task HandleCreate()
+    {
+        if (string.IsNullOrWhiteSpace(remixTitle))
+        {
+            await NotificationService.Warning(new NotificationConfig
+            {
+                Message = "Title required",
+                Description = "Please enter a title for your remix"
+            });
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(remixContent))
+        {
+            await NotificationService.Warning(new NotificationConfig
+            {
+                Message = "Content required",
+                Description = "Please add some content to your remix"
+            });
+            return;
+        }
+
+        if (!remixSources.Any())
+        {
+            await NotificationService.Warning(new NotificationConfig
+            {
+                Message = "Sources required",
+                Description = "Please add at least one source post"
+            });
+            return;
+        }
+
+        try
+        {
+            isCreating = true;
+            StateHasChanged();
+
+            // Check content with MeritScorer first
+            var meritCheck = await MeritApi.CheckContentAsync(new ContentCheckRequest
+            {
+                Title = remixTitle,
+                Content = remixContent,
+                Type = "remix"
+            });
+
+            if (!meritCheck.IsValid)
+            {
+                await NotificationService.Warning(new NotificationConfig
+                {
+                    Message = "Content check failed",
+                    Description = meritCheck.Feedback
+                });
+                return;
+            }
+
+            // Create the remix
+            await OnCreate.InvokeAsync(new RemixCreateModel
+            {
+                Title = remixTitle,
+                Content = remixContent,
+                Sources = remixSources.Select(s => new RemixSourceModel
+                {
+                    Id = s.Id,
+                    Type = s.Type,
+                    Quotes = s.Quotes
+                }).ToList()
+            });
+        }
+        finally
+        {
+            isCreating = false;
+            StateHasChanged();
+        }
+    }
+}
+
+public class RemixCreateModel
+{
+    public string Title { get; set; }
+    public string Content { get; set; }
+    public List<RemixSourceModel> Sources { get; set; }
+}
+
+public class RemixSourceModel
+{
+    public Guid Id { get; set; }
+    public string Type { get; set; }
+    public List<QuoteSelection> Quotes { get; set; }
+}
+
+public class QuoteSelection
+{
+    public string Text { get; set; }
+    public int StartIndex { get; set; }
+    public int EndIndex { get; set; }
+}

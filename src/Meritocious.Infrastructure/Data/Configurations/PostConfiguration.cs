@@ -20,14 +20,72 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasColumnType("ntext");
 
+            // Base metrics
             builder.Property(p => p.MeritScore)
                 .HasPrecision(5, 2)
                 .HasDefaultValue(0.00m);
 
-            builder.HasOne(p => p.ParentPost)
-                .WithMany(p => p.Forks)
-                .HasForeignKey(p => p.ParentPostId)
+            builder.Property(p => p.ViewCount)
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.UniqueViewCount)
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.LikeCount)
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.ShareCount)
+                .HasDefaultValue(0);
+
+            builder.Property(p => p.AverageTimeSpentSeconds)
+                .HasPrecision(10, 2)
+                .HasDefaultValue(0.00m);
+
+            // Merit components as JSON
+            builder.Property(p => p.MeritComponents)
+                .HasColumnType("jsonb");
+
+            // Relationships
+            builder.HasMany(p => p.ParentRelations)
+                .WithOne(r => r.Child)
+                .HasForeignKey(r => r.ChildId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(p => p.ChildRelations)
+                .WithOne(r => r.Parent)
+                .HasForeignKey(r => r.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes for common queries
+            builder.HasIndex(p => p.AuthorId);
+            builder.HasIndex(p => p.IsDeleted);
+            builder.HasIndex(p => p.CreatedAt);
+            
+            // Composite indexes for filtered queries
+            builder.HasIndex(p => new { p.AuthorId, p.IsDeleted });
+            builder.HasIndex(p => new { p.IsDeleted, p.MeritScore });
+            builder.HasIndex(p => new { p.IsDeleted, p.CreatedAt });
+            
+            // Full-text search indexes
+            builder.HasIndex(p => p.Title)
+                .HasMethod("GIN") // PostgreSQL GIN index for text search
+                .IsTsVectorExpressionIndex("english");
+            
+            // Metrics indexes for analytics
+            builder.HasIndex(p => new { p.IsDeleted, p.ViewCount });
+            builder.HasIndex(p => new { p.IsDeleted, p.LikeCount });
+            builder.HasIndex(p => new { p.IsDeleted, p.ShareCount });
+            
+            // Engagement search
+            builder.HasIndex(p => new { p.IsDeleted, p.MeritScore, p.ViewCount });
+            
+            // Merit components as JSONB for efficient component queries
+            builder.Property(p => p.MeritComponents)
+                .HasColumnType("jsonb")
+                .HasDefaultValueSql("'{}'::jsonb");
+
+            builder.HasIndex(p => p.MeritComponents)
+                .HasMethod("GIN"); // PostgreSQL GIN index for JSONB
 
             builder.HasMany(p => p.Comments)
                 .WithOne(c => c.Post)

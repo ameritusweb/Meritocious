@@ -1,0 +1,200 @@
+@using Meritocious.Common.DTOs.Content
+
+<div class="preview-container">
+    <h1 class="text-3xl font-bold mb-4">@Title</h1>
+    
+    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+        <span>@ReadTime min read</span>
+        <span>•</span>
+        <span>@DateTime.Now.ToString("MMM d, yyyy")</span>
+    </div>
+
+    @if (Sources?.Any() == true)
+    {
+        <Alert Type="@AlertType.Info"
+               Message="Remix Sources"
+               ShowIcon
+               Class="mb-6">
+            <div class="source-list">
+                @foreach (var source in Sources)
+                {
+                    <div class="source-item flex items-center space-x-2 mt-2">
+                        <Tag Color="@GetSourceColor(source.Type)">@source.Type</Tag>
+                        <span class="text-sm">@source.Title</span>
+                    </div>
+                }
+            </div>
+        </Alert>
+    }
+    
+    <div class="remix-content">
+        <MarkdownPreviewComponent Content="@Content" />
+    </div>
+
+    @if (ValidateContent)
+    {
+        <div class="mt-6">
+            <Alert Type="@GetMeritAlertType()"
+                   Message="Content Analysis"
+                   ShowIcon>
+                <div class="merit-analysis">
+                    @if (isAnalyzing)
+                    {
+                        <div class="text-center py-2">
+                            <Spin /> Analyzing content...
+                        </div>
+                    }
+                    else if (contentAnalysis != null)
+                    {
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <Progress Type="@ProgressType.Circle"
+                                         Percent="@((int)(contentAnalysis.MeritScore * 100))"
+                                         Size="small"
+                                         Status="@GetMeritStatus()"
+                                         Style="margin-right: 12px;" />
+                                <span class="text-sm">Overall Merit Score</span>
+                            </div>
+
+                            <div class="text-sm space-y-1">
+                                @foreach (var component in contentAnalysis.Components)
+                                {
+                                    <div class="flex items-center">
+                                        <Progress Percent="@((int)(component.Score * 100))"
+                                                 Size="small"
+                                                 ShowInfo="false"
+                                                 Style="width: 100px; margin-right: 8px;" />
+                                        <span>@component.Name</span>
+                                    </div>
+                                }
+                            </div>
+
+                            @if (contentAnalysis.Suggestions?.Any() == true)
+                            {
+                                <div class="mt-4">
+                                    <h4 class="text-sm font-medium mb-2">Suggestions</h4>
+                                    <ul class="list-disc list-inside text-sm text-gray-600">
+                                        @foreach (var suggestion in contentAnalysis.Suggestions)
+                                        {
+                                            <li>@suggestion</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </Alert>
+        </div>
+    }
+</div>
+
+<style>
+    .preview-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 24px;
+    }
+
+    .source-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .merit-analysis {
+        min-height: 100px;
+    }
+</style>
+
+@code {
+    [Parameter] public string Title { get; set; }
+    [Parameter] public string Content { get; set; }
+    [Parameter] public List<RemixSource> Sources { get; set; }
+    [Parameter] public bool ValidateContent { get; set; } = true;
+    [Inject] private IMeritScoringService MeritApi { get; set; }
+
+    private int ReadTime => 
+        Math.Max(1, (Content?.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length ?? 0) / 225);
+
+    private bool isAnalyzing;
+    private ContentAnalysis contentAnalysis;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ValidateContent && !string.IsNullOrEmpty(Content))
+        {
+            await AnalyzeContent();
+        }
+    }
+
+    private async Task AnalyzeContent()
+    {
+        try
+        {
+            isAnalyzing = true;
+            StateHasChanged();
+
+            contentAnalysis = await MeritApi.AnalyzeContentAsync(new ContentAnalysisRequest
+            {
+                Title = Title,
+                Content = Content,
+                Type = "remix",
+                SourceCount = Sources?.Count ?? 0
+            });
+        }
+        catch
+        {
+            contentAnalysis = null;
+        }
+        finally
+        {
+            isAnalyzing = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetSourceColor(string type) => type switch
+    {
+        "support" => "success",
+        "contrast" => "warning",
+        "example" => "processing",
+        "question" => "error",
+        _ => "default"
+    };
+
+    private AlertType GetMeritAlertType()
+    {
+        if (contentAnalysis == null) return AlertType.Info;
+        return contentAnalysis.MeritScore switch
+        {
+            >= 0.8m => AlertType.Success,
+            >= 0.6m => AlertType.Info,
+            >= 0.4m => AlertType.Warning,
+            _ => AlertType.Error
+        };
+    }
+
+    private string GetMeritStatus()
+    {
+        if (contentAnalysis == null) return "normal";
+        return contentAnalysis.MeritScore switch
+        {
+            >= 0.8m => "success",
+            >= 0.4m => "normal",
+            _ => "exception"
+        };
+    }
+
+    private class ContentAnalysis
+    {
+        public decimal MeritScore { get; set; }
+        public List<ScoreComponent> Components { get; set; }
+        public List<string> Suggestions { get; set; }
+    }
+
+    private class ScoreComponent
+    {
+        public string Name { get; set; }
+        public decimal Score { get; set; }
+    }
+}

@@ -1,0 +1,11 @@
+@inject IForkGraphService ForkGraphService
+
+<Collapse>
+    <Panel Header="Post Relations">
+        <EnhancedForkGraphViewer InitialPostId="@PostId" />
+    </Panel>
+</Collapse>
+
+@code {
+    [Parameter] public Guid PostId { get; set; }
+}

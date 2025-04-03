@@ -4,6 +4,13 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 @inject IUserApiService UserApi
+@inject IPostApiService PostApi
+@inject IMeritScoringService MeritApi
+@inject ISubstackApiService SubstackApi
+@inject ICommentApiService CommentApi
+@inject IModerationService ModerationService
+@inject NotificationService NotificationService
+@inject ModalService ModalService
 
 <PageTitle>@(post?.Title ?? "Loading...") - Meritocious</PageTitle>
 
@@ -39,8 +46,65 @@
                                   CommentsCount="@commentsCount"
                                   ReadTime="@readTime"
                                   OnLikeChanged="HandleLikeChanged"
-                                  OnDeletePost="HandleDeletePost" />
+                                  OnDeletePost="HandleDeletePost">
+                        <ExtraActions>
+                            <Space>
+                                <SpaceItem>
+                                    <Button Type="default" OnClick="HandleForkPost">
+                                        <Template>
+                                            <Space>
+                                                <SpaceItem><Icon Type="fork" Theme="outline" /></SpaceItem>
+                                                <SpaceItem>Fork</SpaceItem>
+                                                @if (post.ForkCount > 0)
+                                                {
+                                                    <SpaceItem><Badge Count="@post.ForkCount" /></SpaceItem>
+                                                }
+                                            </Space>
+                                        </Template>
+                                    </Button>
+                                </SpaceItem>
+                                <SpaceItem>
+                                    <Button Type="default" OnClick="HandleRemixPost">
+                                        <Template>
+                                            <Space>
+                                                <SpaceItem><Icon Type="api" Theme="outline" /></SpaceItem>
+                                                <SpaceItem>Remix</SpaceItem>
+                                                @if (post.RemixCount > 0)
+                                                {
+                                                    <SpaceItem><Badge Count="@post.RemixCount" /></SpaceItem>
+                                                }
+                                            </Space>
+                                        </Template>
+                                    </Button>
+                                </SpaceItem>
+                                <SpaceItem>
+                                    <Dropdown>
+                                        <Overlay>
+                                            <Menu>
+                                                <MenuItem OnClick="HandleExportMarkdown">
+                                                    <Icon Type="export" Theme="outline" /> Export as Markdown
+                                                </MenuItem>
+                                                <MenuItem OnClick="HandleCopyLink">
+                                                    <Icon Type="link" Theme="outline" /> Copy Link
+                                                </MenuItem>
+                                                <MenuItem OnClick="HandleReportPost">
+                                                    <Icon Type="flag" Theme="outline" /> Report Post
+                                                </MenuItem>
+                                            </Menu>
+                                        </Overlay>
+                                        <ChildContent>
+                                            <Button><Icon Type="more" Theme="outline" /></Button>
+                                        </ChildContent>
+                                    </Dropdown>
+                                </SpaceItem>
+                            </Space>
+                        </ExtraActions>
+                    </PostViewComponent>
                 </Card>
+
+                <div class="mt-6">
+                    <ForkViewerComponent PostId="@PostId" />
+                </div>
                 
                 <div id="comments" class="mt-6">
                     <Card>
@@ -227,91 +291,80 @@
         try
         {
             isLoading = true;
-            
-            // TODO: Replace with actual API call
-            /*
-            post = await Http.GetFromJsonAsync<PostDto>($"api/posts/{PostId}");
-            
-            if (post != null)
-            {
-                // Check if the current user is the author
-                var authState = await AuthState;
-                var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                isOwner = userId == post.AuthorId.ToString();
-                
-                // Get merit score components
-                meritComponents = await Http.GetFromJsonAsync<MeritScoreDto>($"api/posts/{PostId}/merit");
-                
-                // Get like status and count
-                var likeInfo = await Http.GetFromJsonAsync<LikeInfo>($"api/posts/{PostId}/likes");
-                hasLiked = likeInfo.HasLiked;
-                likesCount = likeInfo.Count;
-                
-                // Get comments count
-                commentsCount = await Http.GetFromJsonAsync<int>($"api/posts/{PostId}/comments/count");
-                
-                // Calculate read time
-                var words = post.Content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
-                readTime = Math.Max(1, (int)Math.Ceiling(words / 225.0));
 
-                // Get author details
-                var authorDetails = await UserApi.GetAuthorDetailsAsync(post.AuthorId);
-                if (authorDetails != null)
-                {
-                    authorBio = authorDetails.Bio;
-                    authorTotalPosts = authorDetails.TotalPosts;
-                    authorAvgMeritScore = authorDetails.AverageMeritScore;
-                    authorJoinDate = authorDetails.JoinDate;
-                    isFollowingAuthor = authorDetails.IsFollowing;
-                }
-                
-                await Task.WhenAll(
-                    LoadRelatedPosts(),
-                    LoadSubstack(post.SubstackId)
-                );
+            // Load all initial data in parallel
+            var postTask = PostApi.GetPostAsync(PostId);
+            var meritTask = MeritApi.GetPostMeritScoreAsync(PostId);
+            var likesTask = PostApi.GetPostLikesAsync(PostId);
+            var commentsTask = CommentApi.GetCommentCountAsync(PostId);
+
+            // Wait for the post to load first since other operations depend on it
+            post = await postTask;
+            
+            if (post == null)
+            {
+                return;
             }
-            */
+
+            // Check if current user is the author
+            var authState = await AuthState;
+            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            isOwner = userId == post.AuthorId.ToString();
+
+            // Load author details
+            var authorTask = UserApi.GetAuthorDetailsAsync(post.AuthorId);
+
+            // Wait for all remaining tasks
+            await Task.WhenAll(meritTask, likesTask, commentsTask, authorTask);
+
+            // Process results
+            meritComponents = await meritTask;
             
-            // For now, create a mock post
-            await Task.Delay(500);
-            post = new PostDto
+            var likeInfo = await likesTask;
+            hasLiked = likeInfo.HasLiked;
+            likesCount = likeInfo.Count;
+            
+            commentsCount = await commentsTask;
+
+            // Calculate read time
+            var words = post.Content.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+            readTime = Math.Max(1, (int)Math.Ceiling(words / 225.0));
+
+            // Process author details
+            var authorDetails = await authorTask;
+            if (authorDetails != null)
             {
-                Id = PostId,
-                Title = "Example Post Title That Demonstrates the Power of Meaningful Discourse",
-                Content = "# Introduction\n\nThis is an example post that showcases the formatting capabilities of our markdown editor. It's designed to demonstrate how thoughtful, well-structured content appears on Meritocious.\n\n## Why Discourse Matters\n\nHigh-quality discussion is essential for advancing our collective understanding. When participants engage with genuine curiosity and intellectual rigor, conversations yield insights that wouldn't emerge otherwise.\n\n> The quality of our thinking determines the quality of our future.\n\n## Key Points\n\n- Ideas should be evaluated on their merit, not their source\n- Respectful disagreement is more valuable than enthusiastic agreement\n- Complex topics require nuanced, multi-perspective analysis\n\n### Supporting Evidence\n\nResearch consistently shows that diverse viewpoints, when combined through constructive dialogue, lead to better outcomes. This is true in:\n\n1. Scientific research\n2. Policy development\n3. Business decision-making\n4. Creative collaboration\n\n## Conclusion\n\nBy focusing on merit rather than metrics, we can create spaces where ideas evolve through thoughtful iteration rather than popularity contests.",
-                AuthorUsername = "thoughtleader",
-                CreatedAt = DateTime.Now.AddDays(-3),
-                MeritScore = 0.87m,
-                Tags = new List<string> { "Discourse", "Communication", "Philosophy" }
-            };
-            
-            meritComponents = new MeritScoreDto
-            {
-                ClarityScore = 0.92m,
-                NoveltyScore = 0.85m,
-                ContributionScore = 0.88m,
-                CivilityScore = 0.95m,
-                RelevanceScore = 0.78m,
-                FinalScore = 0.87m,
-                ModelVersion = "1.0.0"
-            };
-            
-            likesCount = 12;
-            commentsCount = 7;
-            readTime = 4;
-            
-            isOwner = true;
-            
+                authorBio = authorDetails.Bio;
+                authorTotalPosts = authorDetails.TotalPosts;
+                authorAvgMeritScore = authorDetails.AverageMeritScore;
+                authorJoinDate = authorDetails.JoinDate;
+                isFollowingAuthor = authorDetails.IsFollowing;
+            }
+
+            // Load related content
             await Task.WhenAll(
                 LoadRelatedPosts(),
-                LoadSubstack(Guid.NewGuid())
+                LoadSubstack(post.SubstackId)
             );
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error loading post",
+                Description = ex.Message
+            });
+            post = null;
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error loading post: {ex.Message}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "An unexpected error occurred while loading the post"
+            });
             post = null;
+            Console.Error.WriteLine($"Unexpected error loading post: {ex}");
         }
         finally
         {
@@ -323,42 +376,45 @@
     {
         try
         {
-            // TODO: Replace with actual API call
-            /*
-            relatedPosts = await Http.GetFromJsonAsync<List<PostDto>>($"api/posts/{PostId}/related");
-            */
+            // Load both semantically related and posts from same author
+            var semanticTask = PostApi.GetRelatedPostsAsync(PostId, maxResults: 3);
+            var authorPostsTask = PostApi.GetAuthorPostsAsync(post.AuthorId, maxResults: 2, excludePostId: PostId);
             
-            // For now, create mock related posts
-            await Task.Delay(200);
-            relatedPosts = new List<PostDto>
+            await Task.WhenAll(semanticTask, authorPostsTask);
+
+            var semanticPosts = await semanticTask;
+            var authorPosts = await authorPostsTask;
+
+            // Combine and deduplicate posts
+            var allRelated = semanticPosts.ToList();
+            foreach (var authorPost in authorPosts)
             {
-                new PostDto
+                if (!allRelated.Any(p => p.Id == authorPost.Id))
                 {
-                    Id = Guid.NewGuid(),
-                    Title = "The Evolution of Online Discourse",
-                    AuthorUsername = "discourse_expert",
-                    CreatedAt = DateTime.Now.AddDays(-12)
-                },
-                new PostDto
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Fostering Productive Disagreement",
-                    AuthorUsername = "dialogue_builder",
-                    CreatedAt = DateTime.Now.AddDays(-5)
-                },
-                new PostDto
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Beyond Echo Chambers: Finding Truth in Diverse Perspectives",
-                    AuthorUsername = "truth_seeker",
-                    CreatedAt = DateTime.Now.AddDays(-1)
+                    allRelated.Add(authorPost);
                 }
-            };
+            }
+
+            // Sort by combination of merit score and recency
+            relatedPosts = allRelated
+                .OrderByDescending(p => (p.MeritScore * 0.7) + 
+                    (0.3 * (1 - (DateTime.UtcNow - p.CreatedAt).TotalDays / 30)))
+                .Take(5)
+                .ToList();
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Warning(new NotificationConfig
+            {
+                Message = "Could not load related posts",
+                Description = ex.Message
+            });
+            relatedPosts = new List<PostDto>();
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error loading related posts: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error loading related posts: {ex}");
+            relatedPosts = new List<PostDto>();
         }
     }
     
@@ -374,26 +430,57 @@
         {
             isLoadingSubstack = true;
             
-            // TODO: Replace with actual API call
-            /*
-            substack = await Http.GetFromJsonAsync<SubstackDto>($"api/substacks/{substackId}");
-            */
+            // Load substack details and follow status in parallel
+            var substackTask = SubstackApi.GetSubstackDetailsAsync(substackId.Value);
+            var followStatusTask = SubstackApi.GetFollowStatusAsync(substackId.Value);
             
-            // For now, create a mock substack
-            await Task.Delay(300);
-            substack = new SubstackDto
+            await Task.WhenAll(substackTask, followStatusTask);
+            
+            substack = await substackTask;
+            
+            if (substack != null)
             {
-                Id = substackId.Value,
-                Name = "Thoughtful Discourse",
-                Slug = "thoughtful-discourse",
-                Description = "A substack dedicated to exploring the art and science of meaningful conversation in the digital age.",
-                FollowerCount = 458
-            };
+                // Load additional substack metrics and user engagement in parallel
+                var metricsTask = SubstackApi.GetSubstackMetricsAsync(substackId.Value);
+                var engagementTask = isLoggedIn ? 
+                    SubstackApi.GetUserEngagementAsync(substackId.Value) : 
+                    Task.FromResult<SubstackEngagementDto>(null);
+                
+                await Task.WhenAll(metricsTask, engagementTask);
+                
+                var metrics = await metricsTask;
+                substack.MetricsSnapshot = metrics;
+                
+                if (isLoggedIn)
+                {
+                    var engagement = await engagementTask;
+                    substack.UserEngagement = engagement;
+                }
+            }
+        }
+        catch (ApiException ex) when (ex.StatusCode == 404)
+        {
+            // Substack might have been deleted
+            await NotificationService.Warning(new NotificationConfig
+            {
+                Message = "Substack not found",
+                Description = "The substack associated with this post no longer exists"
+            });
+            substack = null;
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Warning(new NotificationConfig
+            {
+                Message = "Could not load substack details",
+                Description = ex.Message
+            });
+            substack = null;
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error loading substack: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error loading substack: {ex}");
+            substack = null;
         }
         finally
         {
@@ -403,60 +490,216 @@
     
     private async Task HandleLikeChanged(bool newLikedState)
     {
+        if (!isLoggedIn)
+        {
+            var returnUrl = Uri.EscapeDataString(NavigationManager.Uri);
+            NavigationManager.NavigateTo($"/login?returnUrl={returnUrl}");
+            return;
+        }
+
         try
         {
-            // TODO: Replace with actual API call
-            /*
-            var response = await Http.PostAsJsonAsync($"api/posts/{PostId}/likes", new { liked = newLikedState });
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var likeInfo = await response.Content.ReadFromJsonAsync<LikeInfo>();
-                hasLiked = likeInfo.HasLiked;
-                likesCount = likeInfo.Count;
-            }
-            */
-            
-            // For now, just update the state directly
+            var oldState = hasLiked;
+            var oldCount = likesCount;
+
+            // Optimistically update UI
             hasLiked = newLikedState;
             likesCount += newLikedState ? 1 : -1;
+
+            try
+            {
+                var likeInfo = await PostApi.UpdateLikeStatusAsync(PostId, newLikedState);
+                
+                // Update with actual server state
+                hasLiked = likeInfo.HasLiked;
+                likesCount = likeInfo.Count;
+
+                // Show transient success message
+                if (hasLiked)
+                {
+                    await NotificationService.Success(new NotificationConfig 
+                    { 
+                        Message = "Post liked",
+                        Description = "This post will appear in your liked posts collection",
+                        Duration = 3 // seconds
+                    });
+                }
+            }
+            catch
+            {
+                // Revert optimistic update on failure
+                hasLiked = oldState;
+                likesCount = oldCount;
+                throw;
+            }
+        }
+        catch (ApiException ex) when (ex.StatusCode == 429) // Rate limit
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Please slow down",
+                Description = "You're liking posts too quickly. Please wait a moment and try again."
+            });
+        }
+        catch (ApiException ex) when (ex.StatusCode == 404)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Post not found",
+                Description = "This post may have been deleted"
+            });
+
+            // Refresh the page to show post deleted state
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+        }
+        catch (ApiException ex) when (ex.StatusCode == 403)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Action not allowed",
+                Description = "You don't have permission to like this post"
+            });
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error updating like status",
+                Description = ex.Message
+            });
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error updating like status: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error updating like status: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "An unexpected error occurred while updating like status"
+            });
         }
     }
     
     private async Task HandleDeletePost()
     {
+        if (!isLoggedIn || !isOwner)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Permission denied",
+                Description = "You don't have permission to delete this post"
+            });
+            return;
+        }
+
         try
         {
-            // TODO: Replace with actual API call
-            /*
-            var response = await Http.DeleteAsync($"api/posts/{PostId}");
-            
-            if (response.IsSuccessStatusCode)
+            // Show confirmation dialog with deletion implications
+            var confirmOptions = new ConfirmOptions
             {
-                NavigationManager.NavigateTo("/posts");
-            }
-            */
-            
-            // For now, just navigate back
-            await Task.Delay(500);
-            NavigationManager.NavigateTo("/posts");
+                Title = "Delete Post",
+                Icon = IconType.Outline.ExclamationCircle,
+                Content = @$"Are you sure you want to delete ""{post.Title}""?
+
+This will:
+• Permanently remove the post and its content
+• Remove it from all collections and search results
+• Keep fork relationships for derived posts
+• Notify users who have interacted with this post",
+                OkText = "Delete Post",
+                OkType = "danger",
+                CancelText = "Cancel",
+                Centered = true,
+                Mask = true,
+                MaskClosable = false,
+                OnOk = async (e) =>
+                {
+                    try
+                    {
+                        // Show loading state
+                        await e.UpdateLoadingAsync(true);
+                        
+                        // Perform deletion
+                        await PostApi.DeletePostAsync(PostId);
+
+                        // Show success message
+                        await NotificationService.Success(new NotificationConfig
+                        {
+                            Message = "Post deleted",
+                            Description = "The post has been permanently removed"
+                        });
+
+                        // Navigate to posts listing or user profile
+                        var authState = await AuthState;
+                        var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                        NavigationManager.NavigateTo($"/users/{userId}/posts");
+                    }
+                    catch (ApiException ex) when (ex.StatusCode == 409)
+                    {
+                        await NotificationService.Error(new NotificationConfig
+                        {
+                            Message = "Cannot delete post",
+                            Description = "This post cannot be deleted because it has active forks or remixes"
+                        });
+                    }
+                    catch (ApiException ex) when (ex.StatusCode == 404)
+                    {
+                        await NotificationService.Warning(new NotificationConfig
+                        {
+                            Message = "Post already deleted",
+                            Description = "This post has already been deleted by another user"
+                        });
+                        NavigationManager.NavigateTo("/posts");
+                    }
+                    catch (ApiException ex)
+                    {
+                        await NotificationService.Error(new NotificationConfig
+                        {
+                            Message = "Error deleting post",
+                            Description = ex.Message
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"Unexpected error deleting post: {ex}");
+                        await NotificationService.Error(new NotificationConfig
+                        {
+                            Message = "Error",
+                            Description = "An unexpected error occurred while deleting the post"
+                        });
+                    }
+                }
+            };
+
+            // Show the confirmation dialog
+            await ModalService.ConfirmAsync(confirmOptions);
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error deleting post: {ex.Message}");
+            Console.Error.WriteLine($"Error showing delete confirmation: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not show delete confirmation dialog"
+            });
         }
     }
     
     private async Task HandleCommentSortChange(string value)
     {
-        commentSort = value;
-        await LoadComments();
+        try
+        {
+            commentSort = value;
+            await LoadComments();
+        }
+        catch (Exception ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not change comment sort order"
+            });
+            Console.Error.WriteLine($"Error changing comment sort: {ex}");
+        }
     }
 
     private async Task LoadComments(bool append = false)
@@ -470,7 +713,13 @@
                 comments.Clear();
             }
 
-            var response = await CommentApi.GetPostCommentsAsync(PostId, currentPage, PageSize, commentSort);
+            var response = await CommentApi.GetPostCommentsAsync(
+                PostId, 
+                currentPage, 
+                PageSize, 
+                commentSort
+            );
+
             commentResponse = response;
             commentsCount = response.TotalCount;
 
@@ -479,10 +728,22 @@
             else
                 comments = response.Comments;
         }
+        catch (ApiException ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error loading comments",
+                Description = ex.Message
+            });
+        }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error loading comments: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error loading comments: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not load comments"
+            });
         }
         finally
         {
@@ -492,93 +753,369 @@
 
     private async Task HandleCommentAdded(CommentDto comment)
     {
+        if (!isLoggedIn)
+        {
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+
         try
         {
+            // Run content moderation check first
+            var moderationResult = await ModerationService.CheckContentAsync(comment.Content);
+            if (!moderationResult.IsApproved)
+            {
+                await NotificationService.Error(new NotificationConfig
+                {
+                    Message = "Comment rejected",
+                    Description = moderationResult.RejectionReason
+                });
+                return;
+            }
+
+            // Add the comment
             var newComment = await CommentApi.AddCommentAsync(comment);
+            
+            // Update UI
             comments.Insert(0, newComment);
             commentsCount++;
             StateHasChanged();
+
+            // Show success message
+            await NotificationService.Success(new NotificationConfig
+            {
+                Message = "Comment added",
+                Description = null,
+                Duration = 3
+            });
+        }
+        catch (ApiException ex) when (ex.StatusCode == 429)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Please slow down",
+                Description = "You're commenting too quickly. Please wait a moment."
+            });
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error adding comment",
+                Description = ex.Message
+            });
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error adding comment: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error adding comment: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not add comment"
+            });
         }
     }
 
     private async Task HandleCommentDeleted(Guid commentId)
     {
+        if (!isLoggedIn)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Permission denied",
+                Description = "You must be logged in to delete comments"
+            });
+            return;
+        }
+
         try
         {
-            await CommentApi.DeleteCommentAsync(commentId);
-            comments.RemoveAll(c => c.Id == commentId);
-            commentsCount--;
-            StateHasChanged();
+            var confirmOptions = new ConfirmOptions
+            {
+                Title = "Delete Comment",
+                Icon = IconType.Outline.ExclamationCircle,
+                Content = "Are you sure you want to delete this comment? This action cannot be undone.",
+                OkText = "Delete",
+                OkType = "danger",
+                CancelText = "Cancel",
+                OnOk = async (e) =>
+                {
+                    try
+                    {
+                        await e.UpdateLoadingAsync(true);
+                        await CommentApi.DeleteCommentAsync(commentId);
+                        
+                        comments.RemoveAll(c => c.Id == commentId);
+                        commentsCount--;
+                        StateHasChanged();
+
+                        await NotificationService.Success(new NotificationConfig
+                        {
+                            Message = "Comment deleted",
+                            Duration = 3
+                        });
+                    }
+                    catch (ApiException ex)
+                    {
+                        await NotificationService.Error(new NotificationConfig
+                        {
+                            Message = "Error deleting comment",
+                            Description = ex.Message
+                        });
+                    }
+                }
+            };
+
+            await ModalService.ConfirmAsync(confirmOptions);
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error deleting comment: {ex.Message}");
+            Console.Error.WriteLine($"Error showing delete confirmation: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not delete comment"
+            });
         }
     }
 
     private async Task HandleCommentUpdated(CommentDto comment)
     {
+        if (!isLoggedIn)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Permission denied",
+                Description = "You must be logged in to edit comments"
+            });
+            return;
+        }
+
         try
         {
+            // Run content moderation check first
+            var moderationResult = await ModerationService.CheckContentAsync(comment.Content);
+            if (!moderationResult.IsApproved)
+            {
+                await NotificationService.Error(new NotificationConfig
+                {
+                    Message = "Edit rejected",
+                    Description = moderationResult.RejectionReason
+                });
+                return;
+            }
+
+            // Update the comment
             var updatedComment = await CommentApi.UpdateCommentAsync(comment);
+            
+            // Update UI
             var index = comments.FindIndex(c => c.Id == comment.Id);
             if (index != -1)
             {
                 comments[index] = updatedComment;
                 StateHasChanged();
             }
+
+            await NotificationService.Success(new NotificationConfig
+            {
+                Message = "Comment updated",
+                Duration = 3
+            });
+        }
+        catch (ApiException ex) when (ex.StatusCode == 409)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Edit conflict",
+                Description = "This comment was modified by someone else. Please refresh and try again."
+            });
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error updating comment",
+                Description = ex.Message
+            });
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error updating comment: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error updating comment: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not update comment"
+            });
         }
     }
 
     private async Task HandleCommentLiked(Guid commentId)
     {
+        if (!isLoggedIn)
+        {
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+
         try
         {
-            await CommentApi.LikeCommentAsync(commentId);
             var comment = comments.FirstOrDefault(c => c.Id == commentId);
-            if (comment != null)
+            if (comment == null) return;
+
+            var oldState = comment.HasLiked;
+            var oldCount = comment.LikesCount;
+
+            // Optimistic update
+            comment.HasLiked = !comment.HasLiked;
+            comment.LikesCount += comment.HasLiked ? 1 : -1;
+            StateHasChanged();
+
+            try
             {
-                comment.HasLiked = !comment.HasLiked;
-                comment.LikesCount += comment.HasLiked ? 1 : -1;
+                var result = await CommentApi.UpdateLikeStatusAsync(commentId, comment.HasLiked);
+                
+                // Update with actual server state
+                comment.HasLiked = result.HasLiked;
+                comment.LikesCount = result.LikesCount;
                 StateHasChanged();
             }
+            catch
+            {
+                // Revert optimistic update on failure
+                comment.HasLiked = oldState;
+                comment.LikesCount = oldCount;
+                StateHasChanged();
+                throw;
+            }
+        }
+        catch (ApiException ex) when (ex.StatusCode == 429)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Please slow down",
+                Description = "You're liking comments too quickly. Please wait a moment."
+            });
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error updating like status",
+                Description = ex.Message
+            });
         }
         catch (Exception ex)
         {
-            // TODO: Error handling
-            Console.WriteLine($"Error liking comment: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error liking comment: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not update comment like status"
+            });
         }
     }
 
     private async Task HandleFollowAuthor()
     {
+        if (!isLoggedIn)
+        {
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+
+        if (post.AuthorId == currentUserId)
+        {
+            await NotificationService.Info(new NotificationConfig
+            {
+                Message = "Cannot follow yourself",
+                Description = "You cannot follow your own profile"
+            });
+            return;
+        }
+
         try
         {
-            if (isFollowingAuthor)
-            {
-                await UserApi.UnfollowUserAsync(post.AuthorId);
-            }
-            else
-            {
-                await UserApi.FollowUserAsync(post.AuthorId);
-            }
+            var oldState = isFollowingAuthor;
+
+            // Optimistic update
             isFollowingAuthor = !isFollowingAuthor;
+            StateHasChanged();
+
+            try
+            {
+                if (isFollowingAuthor)
+                {
+                    await UserApi.FollowUserAsync(post.AuthorId);
+                    
+                    await NotificationService.Success(new NotificationConfig
+                    {
+                        Message = $"Following {post.AuthorUsername}",
+                        Description = "You will see their posts in your feed",
+                        Duration = 3
+                    });
+                }
+                else
+                {
+                    await UserApi.UnfollowUserAsync(post.AuthorId);
+                    
+                    await NotificationService.Success(new NotificationConfig
+                    {
+                        Message = $"Unfollowed {post.AuthorUsername}",
+                        Duration = 3
+                    });
+                }
+
+                // Update author metrics
+                var authorDetails = await UserApi.GetAuthorDetailsAsync(post.AuthorId);
+                if (authorDetails != null)
+                {
+                    authorBio = authorDetails.Bio;
+                    authorTotalPosts = authorDetails.TotalPosts;
+                    authorAvgMeritScore = authorDetails.AverageMeritScore;
+                    authorJoinDate = authorDetails.JoinDate;
+                    isFollowingAuthor = authorDetails.IsFollowing;
+                }
+            }
+            catch
+            {
+                // Revert optimistic update on failure
+                isFollowingAuthor = oldState;
+                StateHasChanged();
+                throw;
+            }
+        }
+        catch (ApiException ex) when (ex.StatusCode == 429)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Please slow down",
+                Description = "You're following users too quickly. Please wait a moment."
+            });
+        }
+        catch (ApiException ex) when (ex.StatusCode == 403)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Action not allowed",
+                Description = "You cannot follow this user at this time. They may have blocked you or been suspended."
+            });
+        }
+        catch (ApiException ex)
+        {
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error updating follow status",
+                Description = ex.Message
+            });
         }
         catch (Exception ex)
         {
-            // TODO: Implement proper error handling with user notification
-            Console.WriteLine($"Error updating follow status: {ex.Message}");
+            Console.Error.WriteLine($"Unexpected error following author: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not update follow status"
+            });
         }
     }
 
@@ -592,6 +1129,318 @@
     {
         public bool HasLiked { get; set; }
         public int Count { get; set; }
+    }
+
+    private async Task HandleForkPost()
+    {
+        if (!isLoggedIn)
+        {
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+
+        try
+        {
+            // Show fork dialog with options
+            var forkOptions = new ConfirmOptions
+            {
+                Title = "Fork Post",
+                Icon = IconType.Outline.Fork,
+                Width = 700,
+                Content = @$"You are about to fork ""{post.Title}"".
+
+A fork creates a new independent copy of this post that you can modify. The relationship between the posts will be preserved in the fork graph.
+
+How would you like to proceed?",
+                OkText = "Create Fork",
+                CancelText = "Cancel",
+                OnOk = async (e) =>
+                {
+                    try
+                    {
+                        await e.UpdateLoadingAsync(true);
+
+                        // Create the fork
+                        var fork = await PostApi.CreateForkAsync(post.Id);
+
+                        // Navigate to fork editor
+                        var tabData = TabItemData.Create(
+                            $"Fork: {post.Title}",
+                            $"/posts/{fork.Id}/edit",
+                            new Dictionary<string, object>
+                            {
+                                { "postId", fork.Id },
+                                { "parentId", post.Id },
+                                { "relationship", "fork" }
+                            }
+                        );
+
+                        await TabService.OpenInNewTabAsync(
+                            $"/posts/{fork.Id}/edit",
+                            tabData
+                        );
+
+                        await NotificationService.Success(new NotificationConfig
+                        {
+                            Message = "Fork created",
+                            Description = "You can now edit your fork"
+                        });
+                    }
+                    catch (ApiException ex) when (ex.StatusCode == 403)
+                    {
+                        await NotificationService.Error(new NotificationConfig
+                        {
+                            Message = "Cannot fork post",
+                            Description = "You don't have permission to fork this post"
+                        });
+                    }
+                    catch (ApiException ex)
+                    {
+                        await NotificationService.Error(new NotificationConfig
+                        {
+                            Message = "Error creating fork",
+                            Description = ex.Message
+                        });
+                    }
+                }
+            };
+
+            await ModalService.ConfirmAsync(forkOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error handling fork: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not create fork"
+            });
+        }
+    }
+
+    private async Task HandleRemixPost()
+    {
+        if (!isLoggedIn)
+        {
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+
+        try 
+        {
+            // Get existing remix sources if any
+            var existingSources = new List<PostDto>();
+            if (LocalStorage.ContainKey("remixSources"))
+            {
+                var sourceIds = await LocalStorage.GetItemAsync<List<Guid>>("remixSources");
+                existingSources = await PostApi.GetPostsByIdsAsync(sourceIds);
+            }
+
+            // Show remix dialog
+            var remixOptions = new ModalOptions
+            {
+                Title = "Create Remix",
+                Width = 800,
+                Footer = null,
+                MaskClosable = false,
+                Content = builder =>
+                {
+                    builder.OpenComponent<RemixBuilderComponent>(0);
+                    builder.AddAttribute(1, "InitialSources", existingSources);
+                    builder.AddAttribute(2, "NewSource", post);
+                    builder.AddAttribute(3, "OnCancel", EventCallback.Factory.Create(this, async () =>
+                    {
+                        await ModalService.DestroyAllAsync();
+                    }));
+                    builder.AddAttribute(4, "OnCreate", EventCallback.Factory.Create<RemixCreateModel>(this, async (model) =>
+                    {
+                        try
+                        {
+                            // Create the remix
+                            var remix = await PostApi.CreateRemixAsync(new CreateRemixRequest
+                            {
+                                Title = model.Title,
+                                Description = model.Description,
+                                Sources = model.Sources.Select(s => s.Id).ToList(),
+                                QuoteSelections = model.QuoteSelections
+                            });
+
+                            // Save sources for future remixes
+                            await LocalStorage.SetItemAsync("remixSources", 
+                                model.Sources.Select(s => s.Id).ToList());
+
+                            // Navigate to remix editor
+                            var tabData = TabItemData.Create(
+                                $"Remix: {model.Title}",
+                                $"/posts/{remix.Id}/edit",
+                                new Dictionary<string, object>
+                                {
+                                    { "postId", remix.Id },
+                                    { "parentIds", model.Sources.Select(s => s.Id).ToList() },
+                                    { "relationship", "remix" }
+                                }
+                            );
+
+                            await TabService.OpenInNewTabAsync(
+                                $"/posts/{remix.Id}/edit",
+                                tabData
+                            );
+
+                            await ModalService.DestroyAllAsync();
+
+                            await NotificationService.Success(new NotificationConfig
+                            {
+                                Message = "Remix created",
+                                Description = "You can now edit your remix"
+                            });
+                        }
+                        catch (ApiException ex)
+                        {
+                            await NotificationService.Error(new NotificationConfig
+                            {
+                                Message = "Error creating remix",
+                                Description = ex.Message
+                            });
+                        }
+                    }));
+                    builder.CloseComponent();
+                }
+            };
+
+            await ModalService.CreateAsync(remixOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error handling remix: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not create remix"
+            });
+        }
+    }
+
+    private async Task HandleExportMarkdown()
+    {
+        try
+        {
+            var content = await PostApi.ExportMarkdownAsync(post.Id);
+            await JSRuntime.InvokeVoidAsync("downloadFile", 
+                $"{post.Title.ToLower().Replace(" ", "-")}.md",
+                "text/markdown",
+                content);
+
+            await NotificationService.Success(new NotificationConfig
+            {
+                Message = "Export complete",
+                Description = "Markdown file downloaded",
+                Duration = 3
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error exporting markdown: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Export failed",
+                Description = "Could not export post"
+            });
+        }
+    }
+
+    private async Task HandleCopyLink()
+    {
+        try
+        {
+            var url = NavigationManager.ToAbsoluteUri($"/posts/{post.Id}").ToString();
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+
+            await NotificationService.Success(new NotificationConfig
+            {
+                Message = "Link copied",
+                Duration = 3
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error copying link: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not copy link"
+            });
+        }
+    }
+
+    private async Task HandleReportPost()
+    {
+        if (!isLoggedIn)
+        {
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+
+        try
+        {
+            var reportOptions = new ModalOptions
+            {
+                Title = "Report Post",
+                Width = 600,
+                Footer = null,
+                Content = builder =>
+                {
+                    builder.OpenComponent<ReportContentComponent>(0);
+                    builder.AddAttribute(1, "ContentId", post.Id);
+                    builder.AddAttribute(2, "ContentType", "post");
+                    builder.AddAttribute(3, "OnCancel", EventCallback.Factory.Create(this, async () =>
+                    {
+                        await ModalService.DestroyAllAsync();
+                    }));
+                    builder.AddAttribute(4, "OnSubmit", EventCallback.Factory.Create<ReportContentModel>(this, async (model) =>
+                    {
+                        try
+                        {
+                            await ModerationService.ReportContentAsync(new ReportContentRequest
+                            {
+                                ContentId = post.Id,
+                                ContentType = "post",
+                                ReasonType = model.ReasonType,
+                                ReasonDetails = model.Details
+                            });
+
+                            await ModalService.DestroyAllAsync();
+
+                            await NotificationService.Success(new NotificationConfig
+                            {
+                                Message = "Report submitted",
+                                Description = "Thank you for helping keep the community safe",
+                                Duration = 3
+                            });
+                        }
+                        catch (ApiException ex)
+                        {
+                            await NotificationService.Error(new NotificationConfig
+                            {
+                                Message = "Error submitting report",
+                                Description = ex.Message
+                            });
+                        }
+                    }));
+                    builder.CloseComponent();
+                }
+            };
+
+            await ModalService.CreateAsync(reportOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error showing report dialog: {ex}");
+            await NotificationService.Error(new NotificationConfig
+            {
+                Message = "Error",
+                Description = "Could not show report dialog"
+            });
+        }
     }
 
     private class AuthorDetails

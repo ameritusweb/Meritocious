@@ -17,6 +17,50 @@
     <link id="antd-theme-style" href="_content/AntDesign/css/ant-design-blazor.css" rel="stylesheet" />
     <link id="antd-theme-dark" href="_content/AntDesign/css/ant-design-blazor.dark.css" rel="stylesheet" disabled />
     <script src="js/google-signin.js"></script>
+
+    <style>
+        .fork-graph-container {
+            background: #fff;
+            padding: 24px;
+            margin: 24px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .fork-graph {
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+        }
+
+        .graph-tooltip {
+            position: absolute;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 12px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .node-rect {
+            stroke: #666;
+            fill: #fff;
+        }
+
+        .link {
+            fill: none;
+            stroke: #666;
+            stroke-width: 1.5px;
+        }
+
+        .hull {
+            opacity: 0.1;
+            stroke-width: 1.5px;
+        }
+    </style>
 </head>
 <body>
     <component type="typeof(App)" render-mode="ServerPrerendered" />
@@ -40,6 +84,10 @@
     <script src="js/editor.js"></script>
     <script src="js/tab-gestures.js"></script>
     <script src="js/theme-manager.js"></script>
+    
+    <!-- D3 and Dagre for fork visualization -->
+    <script src="js/lib/d3.min.js"></script>
+    <script src="js/lib/dagre.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="_framework/blazor.server.js"></script>

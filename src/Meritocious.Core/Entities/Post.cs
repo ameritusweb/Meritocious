@@ -26,14 +26,25 @@ namespace Meritocious.Core.Entities
         private readonly List<Tag> _tags;
         public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
 
-        private readonly List<Post> _forks;
-        public IReadOnlyCollection<Post> Forks => _forks.AsReadOnly();
+        private readonly HashSet<PostRelation> _parentRelations = new();
+        private readonly HashSet<PostRelation> _childRelations = new();
+        public IReadOnlyCollection<PostRelation> ParentRelations => _parentRelations;
+        public IReadOnlyCollection<PostRelation> ChildRelations => _childRelations;
+
+        private readonly Dictionary<string, decimal> _meritComponents = new();
+        public IReadOnlyDictionary<string, decimal> MeritComponents => _meritComponents;
+
+        // Engagement metrics (moved from RemixEngagement)
+        public int ViewCount { get; private set; }
+        public int UniqueViewCount { get; private set; }
+        public int LikeCount { get; private set; }
+        public int ShareCount { get; private set; }
+        public decimal AverageTimeSpentSeconds { get; private set; }
 
         private Post()
         {
             _comments = new List<Comment>();
             _tags = new List<Tag>();
-            _forks = new List<Post>();
         }
 
         public static Post Create(string title, string content, User author, Post parent = null, Substack substack = null)
@@ -80,11 +91,74 @@ namespace Meritocious.Core.Entities
             var fork = Create(
                 newTitle ?? $"Fork: {Title}",
                 Content,
-                author,
-                this
+                author
             );
-            _forks.Add(fork);
+            
+            var relation = PostRelation.CreateFork(this, fork);
+            _childRelations.Add(relation);
+            fork._parentRelations.Add(relation);
+            
             return fork;
+        }
+
+        public Post CreateRemix(
+            User author,
+            string title,
+            string content,
+            IEnumerable<(Post source, string role, string context)> sources)
+        {
+            var remix = Create(title, content, author);
+
+            int index = 0;
+            foreach (var (source, role, context) in sources)
+            {
+                var relation = PostRelation.CreateRemixSource(source, remix, role, index++, context);
+                source._childRelations.Add(relation);
+                remix._parentRelations.Add(relation);
+            }
+
+            return remix;
+        }
+
+        public void RecordView(bool isUnique, decimal timeSpentSeconds)
+        {
+            ViewCount++;
+            if (isUnique) UniqueViewCount++;
+
+            // Update average time spent
+            var oldTotal = AverageTimeSpentSeconds * (ViewCount - 1);
+            AverageTimeSpentSeconds = (oldTotal + timeSpentSeconds) / ViewCount;
+
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateMeritScore(decimal score, Dictionary<string, decimal> components)
+        {
+            MeritScore = score;
+            _meritComponents.Clear();
+            foreach (var (component, value) in components)
+            {
+                _meritComponents[component] = value;
+            }
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void IncrementLikes()
+        {
+            LikeCount++;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void DecrementLikes()
+        {
+            if (LikeCount > 0) LikeCount--;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void IncrementShares()
+        {
+            ShareCount++;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public void Delete()

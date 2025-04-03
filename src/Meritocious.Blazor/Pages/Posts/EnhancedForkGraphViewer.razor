@@ -1,0 +1,389 @@
+@inject IJSRuntime JSRuntime
+@inject TabService TabService
+@inject NavigationManager NavigationManager
+@implements IAsyncDisposable
+
+<div class="fork-graph-container">
+    <Card>
+        <Body>
+            <Row>
+                <Col Span="6">
+                    <Card Title="Filters" Size="small">
+                        <div class="filter-section">
+                            <Text>Merit Score Range</Text>
+                            <Slider Range 
+                                   Min="0" 
+                                   Max="100" 
+                                   @bind-Value="@_meritRange"
+                                   OnAfterChange="@HandleFiltersChanged" />
+                            
+                            <Divider />
+                            
+                            <Text>Time Period</Text>
+                            <RangePicker 
+                                @bind-Value="@_dateRange"
+                                OnChange="@HandleFiltersChanged" />
+                            
+                            <Divider />
+                            
+                            <Text>Link Types</Text>
+                            <CheckboxGroup 
+                                Options="@_linkTypeOptions"
+                                @bind-Value="@_selectedLinkTypes"
+                                OnChange="@HandleFiltersChanged" />
+                        </div>
+                    </Card>
+                    
+                    <Card Title="Grouping" Size="small" Class="mt-4">
+                        <RadioGroup @bind-Value="@_groupingMode" OnChange="@HandleGroupingChanged">
+                            <Radio Value="@("none")">No Grouping</Radio>
+                            <Radio Value="@("author")">By Author</Radio>
+                            <Radio Value="@("theme")">By Theme</Radio>
+                            <Radio Value="@("time")">By Time Period</Radio>
+                        </RadioGroup>
+                    </Card>
+                    
+                    <Card Title="Layout" Size="small" Class="mt-4">
+                        <RadioGroup @bind-Value="@_layoutType" OnChange="@HandleLayoutChange">
+                            <Radio Value="@("force")">Force</Radio>
+                            <Radio Value="@("dagre")">Hierarchical</Radio>
+                        </RadioGroup>
+                    </Card>
+                </Col>
+                
+                <Col Span="18">
+                    <div class="relative">
+                        <Spin Spinning="@_loading">
+                            <div id="@_containerId" class="fork-graph" style="width: 100%; height: 600px;"></div>
+                        </Spin>
+
+                        @if (_previewVisible && _hoveredNode != null)
+                        {
+                            <div class="post-preview">
+                                <Spin Spinning="@_loadingPreview">
+                                    <Card Size="small" Style="width: 300px;">
+                                        <div class="post-preview-header">
+                                            <h4 class="text-lg font-medium line-clamp-2">@_hoveredNode.Title</h4>
+                                            <div class="text-sm text-gray-500">
+                                                By @_hoveredNode.AuthorUsername • @_hoveredNode.CreatedAt.ToString("MMM d, yyyy")
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <Tag Color="@GetMeritScoreColor(_hoveredNode.MeritScore)">
+                                                Merit: @(_hoveredNode.MeritScore * 100)%
+                                            </Tag>
+                                            <Tag Color="@(_hoveredNode.Theme != null ? "blue" : "default")">
+                                                @(_hoveredNode.Theme ?? "No theme")
+                                            </Tag>
+                                        </div>
+                                    </Card>
+                                </Spin>
+                            </div>
+                        }
+                    </div>
+                </Col>
+            </Row>
+        </Body>
+        <Extra>
+            <Space>
+                <SpaceItem>
+                    <Button Type="@ButtonType.Primary" OnClick="@CenterView">
+                        <Icon Type="compass" Theme="outline" />
+                        Center View
+                    </Button>
+                </SpaceItem>
+                <SpaceItem>
+                    <Button OnClick="@ResetFilters">
+                        <Icon Type="clear" Theme="outline" />
+                        Reset Filters
+                    </Button>
+                </SpaceItem>
+                <SpaceItem>
+                    <Switch 
+                        Checked="@_showLegend"
+                        CheckedChildren="Hide Legend"
+                        UnCheckedChildren="Show Legend"
+                        OnChange="@(async (checked) => { _showLegend = checked; await UpdateVisualization(); })" />
+                </SpaceItem>
+            </Space>
+        </Extra>
+    </Card>
+</div>
+
+@code {
+    [Parameter] public Guid InitialPostId { get; set; }
+    [Inject] private IForkGraphService ForkGraphService { get; set; }
+
+    private string GetMeritScoreColor(decimal score)
+    {
+        return score switch
+        {
+            >= 0.9m => "green",
+            >= 0.7m => "cyan",
+            >= 0.5m => "blue",
+            >= 0.3m => "orange",
+            _ => "red"
+        };
+    }
+
+    private static readonly string Styles = @"
+        .post-preview {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 300px;
+            overflow: hidden;
+        }
+
+        .post-preview-header {
+            margin-bottom: 8px;
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    ";
+
+    protected override void OnInitialized()
+    {
+        JSRuntime.InvokeVoidAsync("addStyles", Styles);
+        base.OnInitialized();
+    }
+
+    private readonly string _containerId = $"fork-graph-{Guid.NewGuid()}";
+    private IJSObjectReference _module;
+    private DotNetObjectReference<EnhancedForkGraphViewer> _dotNetRef;
+    private bool _loading = false;
+    
+    // Filters
+    private double[] _meritRange = new[] { 0.0, 100.0 };
+    private DateTimeRange? _dateRange;
+    private string[] _selectedLinkTypes = new[] { "fork", "synthesis" };
+    private string _groupingMode = "none";
+    private string _layoutType = "force";
+    private bool _showLegend = true;
+    
+    private ForkGraphDto _currentData;
+    private readonly string[] _linkTypeOptions = new[] { "fork", "synthesis" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            await LoadGraphData();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/enhancedForkGraph.js");
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await InitializeVisualization();
+        }
+    }
+
+    private async Task LoadGraphData()
+    {
+        _currentData = await ForkGraphService.GetForkGraph(
+            InitialPostId,
+            _dateRange?.Start,
+            _dateRange?.End,
+            _meritRange[0] / 100m,
+            _meritRange[1] / 100m,
+            _selectedLinkTypes
+        );
+    }
+
+    private async Task InitializeVisualization()
+    {
+        if (_currentData == null) return;
+        
+        await JSRuntime.InvokeVoidAsync("setDotNetHelper", _dotNetRef);
+        
+        await _module.InvokeVoidAsync("initForkGraph", 
+            _containerId, 
+            _currentData, 
+            _layoutType,
+            _groupingMode,
+            _showLegend,
+            _dotNetRef);
+    }
+
+    private async Task HandleFiltersChanged()
+    {
+        try
+        {
+            _loading = true;
+            await LoadGraphData();
+            await UpdateVisualization();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task UpdateVisualization()
+    {
+        if (_currentData == null) return;
+        await _module.InvokeVoidAsync("updateVisualization",
+            _containerId,
+            _currentData,
+            _layoutType,
+            _groupingMode,
+            _showLegend);
+    }
+
+    private async Task HandleGroupingChanged()
+    {
+        await UpdateVisualization();
+    }
+
+    private async Task HandleLayoutChange()
+    {
+        await UpdateVisualization();
+    }
+
+    private async Task ResetFilters()
+    {
+        _meritRange = new[] { 0.0, 100.0 };
+        _dateRange = null;
+        _selectedLinkTypes = new[] { "fork", "synthesis" };
+        _groupingMode = "none";
+        await UpdateVisualization();
+    }
+
+    private async Task CenterView()
+    {
+        await _module.InvokeVoidAsync("centerGraph", _containerId);
+    }
+
+    [Parameter] public EventCallback<Guid> OnPostSelected { get; set; }
+
+    private PostNodeDto _hoveredNode;
+    private bool _previewVisible;
+    private bool _loadingPreview;
+
+    [JSInvokable]
+    public async Task OnNodeClick(Guid postId)
+    {
+        try
+        {
+            // Get the clicked node data
+            var node = _currentData?.Nodes?.FirstOrDefault(n => n.Id == postId);
+            if (node == null) return;
+
+            // Check if it's the current post
+            if (postId == InitialPostId)
+            {
+                // Just scroll to top of current post
+                await JSRuntime.InvokeVoidAsync("scrollToTop");
+                return;
+            }
+
+            // Determine relationship type for tab title prefix
+            var relationship = _currentData.Links
+                .FirstOrDefault(l => (l.Source == InitialPostId && l.Target == postId) ||
+                                   (l.Target == InitialPostId && l.Source == postId));
+            
+            var prefix = relationship?.Type switch
+            {
+                "fork" => "Fork:",
+                "synthesis" => "Remix:",
+                _ => string.Empty
+            };
+
+            // Create tab data
+            var tabData = TabItemData.Create(
+                $"{prefix} {node.Title}",
+                $"/posts/{postId}",
+                new Dictionary<string, object>
+                {
+                    { "postId", postId },
+                    { "parentId", InitialPostId },
+                    { "relationship", relationship?.Type ?? "related" }
+                }
+            );
+
+            // Open in new tab
+            await TabService.OpenInNewTabAsync(
+                $"/posts/{postId}",
+                tabData
+            );
+
+            // Notify parent if callback provided
+            if (OnPostSelected.HasDelegate)
+            {
+                await OnPostSelected.InvokeAsync(postId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error handling node click: {ex}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnNodeHover(Guid? postId)
+    {
+        try
+        {
+            if (postId == null)
+            {
+                _hoveredNode = null;
+                _previewVisible = false;
+                StateHasChanged();
+                return;
+            }
+
+            _loadingPreview = true;
+            StateHasChanged();
+
+            // Get node data
+            _hoveredNode = _currentData?.Nodes?.FirstOrDefault(n => n.Id == postId);
+            _previewVisible = _hoveredNode != null;
+            
+            _loadingPreview = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error handling node hover: {ex}");
+            _hoveredNode = null;
+            _previewVisible = false;
+            _loadingPreview = false;
+            StateHasChanged();
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        try
+        {
+            if (_module is not null)
+            {
+                await _module.DisposeAsync();
+            }
+            _dotNetRef?.Dispose();
+            await JSRuntime.InvokeVoidAsync("setDotNetHelper", null);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Handle case where JS runtime is already disposed
+        }
+    }
+}

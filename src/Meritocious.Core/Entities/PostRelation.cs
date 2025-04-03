@@ -1,0 +1,64 @@
+namespace Meritocious.Core.Entities;
+
+public class PostRelation : BaseEntity
+{
+    public Guid ParentId { get; private set; }
+    public Guid ChildId { get; private set; }
+    public string RelationType { get; private set; } // "fork" or "remix"
+    public int OrderIndex { get; private set; } // For ordering remix sources
+    public string Role { get; private set; } // For remix: "support", "contrast", "example", "question"
+    public string Context { get; private set; } // How this source is used
+    public List<QuoteLocation> Quotes { get; private set; } = new();
+    public decimal RelevanceScore { get; private set; } // AI-generated relevance metric
+
+    public Post Parent { get; private set; }
+    public Post Child { get; private set; }
+
+    private PostRelation() { } // For EF Core
+
+    public static PostRelation CreateFork(Post parent, Post child)
+    {
+        return new PostRelation
+        {
+            ParentId = parent.Id,
+            ChildId = child.Id,
+            RelationType = "fork",
+            Parent = parent,
+            Child = child,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static PostRelation CreateRemixSource(
+        Post parent, 
+        Post remixPost, 
+        string role,
+        int orderIndex,
+        string context = null)
+    {
+        return new PostRelation
+        {
+            ParentId = parent.Id,
+            ChildId = remixPost.Id,
+            RelationType = "remix",
+            Role = role,
+            OrderIndex = orderIndex,
+            Context = context,
+            Parent = parent,
+            Child = remixPost,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public void AddQuote(QuoteLocation quote)
+    {
+        Quotes.Add(quote);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateRelevanceScore(decimal score)
+    {
+        RelevanceScore = score;
+        UpdatedAt = DateTime.UtcNow;
+    }
+}

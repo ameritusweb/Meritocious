@@ -32,6 +32,7 @@ namespace Meritocious.Blazor.Extensions
             services.AddScoped<IModerationApiService, ModerationApiService>();
             services.AddScoped<IRemixApiService, RemixApiService>();
             services.AddScoped<INotificationApiService, NotificationApiService>();
+            services.AddScoped<IForkGraphService, ForkGraphService>();
 
             // Add application services
             services.AddScoped<IAuthService, AuthService>();
