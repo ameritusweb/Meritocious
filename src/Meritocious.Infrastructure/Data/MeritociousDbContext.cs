@@ -1,8 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Meritocious.Core.Entities;
-using Meritocious.Core.Features.Versioning;
-using Meritocious.Core.Features.Notifications.Models;
-using Meritocious.Core.Features.Recommendations.Models;
 
 namespace Meritocious.Infrastructure.Data
 {
@@ -16,8 +13,7 @@ namespace Meritocious.Infrastructure.Data
 
         // Content versioning
         public DbSet<ContentVersion> ContentVersions { get; set; }
-        public DbSet<ContentDiff> ContentDiffs { get; set; }
-        public DbSet<UserContentInteraction> UserContentInteractions { get; set; }
+        public DbSet<ContentSimilarity> ContentSimilarities { get; set; }
 
         // Moderation
         public DbSet<ModerationAction> ModerationActions { get; set; }
@@ -35,14 +31,28 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<ReputationSnapshot> ReputationSnapshots { get; set; }
         public DbSet<ReputationBadge> ReputationBadges { get; set; }
 
-        // Substacks
-        public DbSet<Substack> Substacks { get; set; }
-
         // Tags
         public DbSet<Tag> Tags { get; set; }
         public DbSet<TagSynonym> TagSynonyms { get; set; }
         public DbSet<TagRelationship> TagRelationships { get; set; }
         public DbSet<TagWiki> TagWikis { get; set; }
+
+        // Remixes
+        public DbSet<Remix> Remixes { get; set; }
+        public DbSet<RemixNote> RemixNotes { get; set; }
+        public DbSet<RemixSource> RemixSources { get; set; }
+        public DbSet<RemixEngagement> RemixEngagements { get; set; }
+        public DbSet<QuoteLocation> QuoteLocations { get; set; }
+
+        // Security
+        public DbSet<SecurityEvent> SecurityEvents { get; set; }
+        public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
+        public DbSet<LoginAttempt> LoginAttempts { get; set; }
+        public DbSet<ApiUsageLog> ApiUsageLogs { get; set; }
+        public DbSet<AdminActionLog> AdminActionLogs { get; set; }
+
+        // Substacks
+        public DbSet<Substack> Substacks { get; set; }
 
         public MeritociousDbContext(DbContextOptions<MeritociousDbContext> options)
             : base(options)

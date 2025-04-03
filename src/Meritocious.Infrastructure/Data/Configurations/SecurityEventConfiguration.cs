@@ -35,11 +35,19 @@ public class SecurityEventConfiguration : IEntityTypeConfiguration<SecurityEvent
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Create indexes
-        builder.HasIndex(e => e.EventType);
-        builder.HasIndex(e => e.CreatedAt);
-        builder.HasIndex(e => e.Severity);
-        builder.HasIndex(e => e.IsResolved);
-        builder.HasIndex(e => e.RequiresAction);
+        // Create indexes for commonly queried fields
+        builder.HasIndex(e => e.EventType);  // Used for filtering by event type
+        builder.HasIndex(e => e.CreatedAt);  // Used for sorting by date
+        builder.HasIndex(e => e.Severity);  // Used for filtering by severity
+        builder.HasIndex(e => e.IsResolved);  // Used for filtering resolved/unresolved events
+        builder.HasIndex(e => e.RequiresAction);  // Used for filtering actionable events
+        builder.HasIndex(e => e.UserId);  // Used for filtering by user
+        builder.HasIndex(e => e.IpAddress);  // Used for IP-based security analysis
+        
+        // Composite indexes for common query patterns
+        builder.HasIndex(e => new { e.IsResolved, e.RequiresAction });  // For finding unresolved actionable events
+        builder.HasIndex(e => new { e.Severity, e.IsResolved });  // For finding unresolved high-severity events
+        builder.HasIndex(e => new { e.UserId, e.EventType });  // For analyzing user's security events
+        builder.HasIndex(e => new { e.IpAddress, e.EventType });  // For analyzing IP-based security patterns
     }
 }

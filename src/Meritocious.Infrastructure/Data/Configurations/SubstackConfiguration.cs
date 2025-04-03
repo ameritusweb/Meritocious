@@ -55,5 +55,19 @@ public class SubstackConfiguration : IEntityTypeConfiguration<Substack>
         builder.HasMany(s => s.Topics)
             .WithMany(t => t.Substacks)
             .UsingEntity(j => j.ToTable("SubstackTopics"));
+
+        // Create indexes for commonly queried fields
+        builder.HasIndex(s => s.CustomDomain);  // Used for lookup by custom domain
+        builder.HasIndex(s => s.AuthorName);  // Used for searching by author
+        builder.HasIndex(s => s.CreatedAt);  // Used for sorting by date
+        builder.HasIndex(s => s.LastPostDate);  // Used for activity-based queries
+        builder.HasIndex(s => s.EngagementRate);  // Used for trending queries
+        builder.HasIndex(s => s.AvgMeritScore);  // Used for quality-based sorting
+        builder.HasIndex(s => s.IsVerified);  // Used for filtering verified substacks
+        
+        // Composite indexes for common query patterns
+        builder.HasIndex(s => new { s.IsVerified, s.EngagementRate });  // For trending verified substacks
+        builder.HasIndex(s => new { s.IsVerified, s.AvgMeritScore });  // For top-rated verified substacks
+        builder.HasIndex(s => new { s.LastPostDate, s.EngagementRate });  // For recently active trending substacks
     }
 }

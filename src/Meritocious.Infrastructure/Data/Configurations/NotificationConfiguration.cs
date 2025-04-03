@@ -32,9 +32,16 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(n => n.ActionUrl)
                 .HasMaxLength(255);
 
-            builder.HasIndex(n => n.UserId);
-            builder.HasIndex(n => n.IsRead);
-            builder.HasIndex(n => n.CreatedAt);
+            // Create indexes for commonly queried fields
+            builder.HasIndex(n => n.UserId);  // Used for getting user's notifications
+            builder.HasIndex(n => n.CreatedAt);  // Used for sorting by date
+            builder.HasIndex(n => n.IsRead);  // Used for filtering unread notifications
+            builder.HasIndex(n => n.Type);  // Used for filtering by notification type
+            
+            // Composite indexes for common query patterns
+            builder.HasIndex(n => new { n.UserId, n.IsRead });  // For getting user's unread notifications
+            builder.HasIndex(n => new { n.UserId, n.CreatedAt });  // For getting user's notifications by date
+            builder.HasIndex(n => new { n.UserId, n.Type });  // For getting user's notifications by type
         }
     }
 }
