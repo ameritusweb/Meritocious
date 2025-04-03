@@ -1,0 +1,46 @@
+using MediatR;
+using Meritocious.Application.Queries;
+
+namespace Meritocious.BlazorServer.Services;
+
+public interface IForkGraphService
+{
+    Task<ForkGraphDto> GetForkGraph(
+        Guid postId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        decimal? minMeritScore = null,
+        decimal? maxMeritScore = null,
+        string[] includedRelationTypes = null);
+}
+
+public class ForkGraphService : IForkGraphService
+{
+    private readonly IMediator _mediator;
+
+    public ForkGraphService(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    public async Task<ForkGraphDto> GetForkGraph(
+        Guid postId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        decimal? minMeritScore = null,
+        decimal? maxMeritScore = null,
+        string[] includedRelationTypes = null)
+    {
+        var query = new GetForkGraphQuery
+        {
+            InitialPostId = postId,
+            StartDate = startDate,
+            EndDate = endDate,
+            MinMeritScore = minMeritScore,
+            MaxMeritScore = maxMeritScore,
+            IncludedRelationTypes = includedRelationTypes
+        };
+
+        return await _mediator.Send(query);
+    }
+}

@@ -1,0 +1,99 @@
+namespace Meritocious.Domain.Entities;
+
+public class Post
+{
+    private readonly HashSet<PostRelation> _parentRelations = new();
+    private readonly HashSet<PostRelation> _childRelations = new();
+
+    public Guid Id { get; private set; }
+    public string Title { get; private set; }
+    public string Content { get; private set; }
+    public Guid AuthorId { get; private set; }
+    public string Theme { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? LastModifiedAt { get; private set; }
+
+    // Merit scores as defined in MERIT_SCORE.md
+    public decimal ClarityScore { get; private set; }
+    public decimal NoveltyScore { get; private set; }
+    public decimal ContributionScore { get; private set; }
+    public decimal CivilityScore { get; private set; }
+    public decimal RelevanceScore { get; private set; }
+    public decimal MeritScore { get; private set; }
+
+    // Navigation properties
+    public IReadOnlyCollection<PostRelation> ParentRelations => _parentRelations;
+    public IReadOnlyCollection<PostRelation> ChildRelations => _childRelations;
+
+    private Post() { } // For EF Core
+
+    public Post(string title, string content, Guid authorId, string theme)
+    {
+        Id = Guid.NewGuid();
+        Title = title;
+        Content = content;
+        AuthorId = authorId;
+        Theme = theme;
+        CreatedAt = DateTime.UtcNow;
+
+        // Initialize scores to 0
+        ClarityScore = 0;
+        NoveltyScore = 0;
+        ContributionScore = 0;
+        CivilityScore = 0;
+        RelevanceScore = 0;
+        MeritScore = 0;
+    }
+
+    public void UpdateMeritScores(
+        decimal clarityScore,
+        decimal noveltyScore,
+        decimal contributionScore,
+        decimal civilityScore,
+        decimal relevanceScore)
+    {
+        ClarityScore = clarityScore;
+        NoveltyScore = noveltyScore;
+        ContributionScore = contributionScore;
+        CivilityScore = civilityScore;
+        RelevanceScore = relevanceScore;
+
+        // Calculate weighted merit score based on MERIT_SCORE.md
+        MeritScore = (ClarityScore * 0.25m) +
+                     (NoveltyScore * 0.25m) +
+                     (ContributionScore * 0.20m) +
+                     (CivilityScore * 0.15m) +
+                     (RelevanceScore * 0.15m);
+
+        LastModifiedAt = DateTime.UtcNow;
+    }
+
+    public void AddParentRelation(Post parent, string relationType)
+    {
+        var relation = new PostRelation(parent, this, relationType);
+        _parentRelations.Add(relation);
+    }
+}
+
+public class PostRelation
+{
+    public Guid ParentId { get; private set; }
+    public Guid ChildId { get; private set; }
+    public string RelationType { get; private set; } // "fork" or "synthesis"
+    public DateTime CreatedAt { get; private set; }
+
+    public Post Parent { get; private set; }
+    public Post Child { get; private set; }
+
+    private PostRelation() { } // For EF Core
+
+    public PostRelation(Post parent, Post child, string relationType)
+    {
+        ParentId = parent.Id;
+        ChildId = child.Id;
+        RelationType = relationType;
+        CreatedAt = DateTime.UtcNow;
+        Parent = parent;
+        Child = child;
+    }
+}

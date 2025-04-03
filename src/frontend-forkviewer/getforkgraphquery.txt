@@ -1,0 +1,85 @@
+using MediatR;
+
+namespace Meritocious.Application.Queries;
+
+public record GetForkGraphQuery : IRequest<ForkGraphDto>
+{
+    public Guid InitialPostId { get; init; }
+    public DateTime? StartDate { get; init; }
+    public DateTime? EndDate { get; init; }
+    public decimal? MinMeritScore { get; init; }
+    public decimal? MaxMeritScore { get; init; }
+    public string[] IncludedRelationTypes { get; init; }
+}
+
+public class GetForkGraphQueryHandler : IRequestHandler<GetForkGraphQuery, ForkGraphDto>
+{
+    private readonly IPostRepository _postRepository;
+
+    public GetForkGraphQueryHandler(IPostRepository postRepository)
+    {
+        _postRepository = postRepository;
+    }
+
+    public async Task<ForkGraphDto> Handle(GetForkGraphQuery request, CancellationToken cancellationToken)
+    {
+        // Get the initial post and all its related posts (both parents and children)
+        var relatedPosts = await _postRepository.GetPostWithRelations(
+            request.InitialPostId,
+            request.StartDate,
+            request.EndDate,
+            request.MinMeritScore,
+            request.MaxMeritScore,
+            request.IncludedRelationTypes,
+            cancellationToken);
+
+        // Convert to graph structure
+        var nodes = relatedPosts.Select(p => new PostNodeDto
+        {
+            Id = p.Id,
+            Title = p.Title,
+            MeritScore = p.MeritScore,
+            AuthorId = p.AuthorId,
+            CreatedAt = p.CreatedAt,
+            Theme = p.Theme
+        }).ToList();
+
+        var links = relatedPosts
+            .SelectMany(p => p.ParentRelations)
+            .Select(r => new ForkLinkDto
+            {
+                Source = r.ParentId,
+                Target = r.ChildId,
+                Type = r.RelationType
+            }).ToList();
+
+        return new ForkGraphDto
+        {
+            Nodes = nodes,
+            Links = links
+        };
+    }
+}
+
+public record ForkGraphDto
+{
+    public List<PostNodeDto> Nodes { get; init; }
+    public List<ForkLinkDto> Links { get; init; }
+}
+
+public record PostNodeDto
+{
+    public Guid Id { get; init; }
+    public string Title { get; init; }
+    public decimal MeritScore { get; init; }
+    public Guid AuthorId { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public string Theme { get; init; }
+}
+
+public record ForkLinkDto
+{
+    public Guid Source { get; init; }
+    public Guid Target { get; init; }
+    public string Type { get; init; }
+}

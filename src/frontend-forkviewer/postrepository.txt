@@ -1,0 +1,62 @@
+using Microsoft.EntityFrameworkCore;
+using Meritocious.Domain.Entities;
+using Meritocious.Domain.Interfaces;
+
+namespace Meritocious.Infrastructure.Repositories;
+
+public interface IPostRepository
+{
+    Task<IList<Post>> GetPostWithRelations(
+        Guid postId,
+        DateTime? startDate,
+        DateTime? endDate,
+        decimal? minMeritScore,
+        decimal? maxMeritScore,
+        string[] includedRelationTypes,
+        CancellationToken cancellationToken);
+}
+
+public class PostRepository : IPostRepository
+{
+    private readonly ApplicationDbContext _context;
+
+    public PostRepository(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IList<Post>> GetPostWithRelations(
+        Guid postId,
+        DateTime? startDate,
+        DateTime? endDate,
+        decimal? minMeritScore,
+        decimal? maxMeritScore,
+        string[] includedRelationTypes,
+        CancellationToken cancellationToken)
+    {
+        // Start with the initial post
+        var query = _context.Posts
+            .Include(p => p.ParentRelations)
+                .ThenInclude(r => r.Parent)
+            .Include(p => p.ChildRelations)
+                .ThenInclude(r => r.Child)
+            .AsQueryable();
+
+        // Get all posts connected to the initial post through relations
+        var connectedPosts = await query
+            .Where(p => p.Id == postId ||
+                       p.ParentRelations.Any(r => r.ParentId == postId) ||
+                       p.ChildRelations.Any(r => r.ChildId == postId))
+            .Where(p => !startDate.HasValue || p.CreatedAt >= startDate)
+            .Where(p => !endDate.HasValue || p.CreatedAt <= endDate)
+            .Where(p => !minMeritScore.HasValue || p.MeritScore >= minMeritScore)
+            .Where(p => !maxMeritScore.HasValue || p.MeritScore <= maxMeritScore)
+            .Where(p => includedRelationTypes == null || 
+                       includedRelationTypes.Length == 0 ||
+                       p.ParentRelations.Any(r => includedRelationTypes.Contains(r.RelationType)) ||
+                       p.ChildRelations.Any(r => includedRelationTypes.Contains(r.RelationType)))
+            .ToListAsync(cancellationToken);
+
+        return connectedPosts;
+    }
+}

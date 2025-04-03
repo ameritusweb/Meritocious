@@ -1,0 +1,186 @@
+@inject IForkGraphService ForkGraphService
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<ErrorBoundary>
+    <ChildContent>
+        <div class="fork-graph-container">
+            <AntDesign.Card>
+                <Body>
+                    <Row>
+                        <Col Span="6">
+                            <Card Title="Filters" Size="small">
+                                <div class="filter-section">
+                                    <Text>Merit Score Range</Text>
+                                    <Slider Range 
+                                           Min="0" 
+                                           Max="100" 
+                                           @bind-Value="@_meritRange"
+                                           OnAfterChange="@HandleFiltersChanged" />
+                                    
+                                    <Divider />
+                                    
+                                    <Text>Time Period</Text>
+                                    <RangePicker 
+                                        @bind-Value="@_dateRange"
+                                        OnChange="@HandleFiltersChanged" />
+                                    
+                                    <Divider />
+                                    
+                                    <Text>Link Types</Text>
+                                    <CheckboxGroup 
+                                        Options="@_linkTypeOptions"
+                                        @bind-Value="@_selectedLinkTypes"
+                                        OnChange="@HandleFiltersChanged" />
+                                </div>
+                            </Card>
+                        </Col>
+                        <Col Span="18">
+                            <Spin Spinning="@_loading">
+                                <div id="@_containerId" class="fork-graph" style="width: 100%; height: 600px;"></div>
+                            </Spin>
+                        </Col>
+                    </Row>
+                </Body>
+            </AntDesign.Card>
+        </div>
+    </ChildContent>
+    <ErrorContent>
+        <Alert Message="Error loading fork graph"
+               Description="@context.Message"
+               Type="error"
+               ShowIcon="true" />
+    </ErrorContent>
+</ErrorBoundary>
+
+@code {
+    [Parameter]
+    public Guid InitialPostId { get; set; }
+
+    private readonly string _containerId = $"fork-graph-{Guid.NewGuid()}";
+    private IJSObjectReference _module;
+    private DotNetObjectReference<EnhancedForkGraphViewer> _dotNetRef;
+    private bool _loading = false;
+    
+    // Filters
+    private double[] _meritRange = new[] { 0.0, 100.0 };
+    private DateTimeRange? _dateRange;
+    private string[] _selectedLinkTypes = new[] { "fork", "synthesis" };
+    private string _groupingMode = "none";
+    private string _layoutType = "force";
+    private bool _showLegend = true;
+    
+    private ForkGraphDto _currentData;
+    private readonly string[] _linkTypeOptions = new[] { "fork", "synthesis" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            await LoadGraphData();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/enhancedForkGraph.js");
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await InitializeVisualization();
+        }
+    }
+
+    private async Task LoadGraphData()
+    {
+        _currentData = await ForkGraphService.GetForkGraph(
+            InitialPostId,
+            _dateRange?.Start,
+            _dateRange?.End,
+            _meritRange[0] / 100m,
+            _meritRange[1] / 100m,
+            _selectedLinkTypes
+        );
+    }
+
+    private async Task InitializeVisualization()
+    {
+        if (_currentData == null) return;
+        
+        // Set the .NET helper reference
+        await JSRuntime.InvokeVoidAsync("setDotNetHelper", _dotNetRef);
+        
+        // Initialize the graph
+        await _module.InvokeVoidAsync("initForkGraph", 
+            _containerId, 
+            _currentData, 
+            _layoutType,
+            _groupingMode,
+            _showLegend,
+            _dotNetRef);
+    }
+
+    private async Task HandleFiltersChanged()
+    {
+        try
+        {
+            _loading = true;
+            await LoadGraphData();
+            await UpdateVisualization();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task UpdateVisualization()
+    {
+        if (_currentData == null) return;
+        await _module.InvokeVoidAsync("updateVisualization",
+            _containerId,
+            _currentData,
+            _layoutType,
+            _groupingMode,
+            _showLegend);
+    }
+
+    private async Task HandleGroupingChanged()
+    {
+        await UpdateVisualization();
+    }
+
+    private async Task HandleLayoutChange()
+    {
+        await UpdateVisualization();
+    }
+
+    [JSInvokable]
+    public async Task OnNodeClick(Guid postId)
+    {
+        // TODO: Handle navigation or modal display
+        await Task.CompletedTask;
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        try
+        {
+            if (_module is not null)
+            {
+                await _module.DisposeAsync();
+            }
+            _dotNetRef?.Dispose();
+            await JSRuntime.InvokeVoidAsync("setDotNetHelper", null);
+        }
+        catch (JSDisconnectedException)
+        {
+            // Handle case where JS runtime is already disposed
+        }
+    }
+}

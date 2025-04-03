@@ -1,0 +1,530 @@
+import * as d3 from 'd3';
+import * as dagre from 'dagre';
+
+let svg;
+let g;
+let zoom;
+let simulation;
+let currentLayout = 'force';
+let currentGrouping = 'none';
+let legend;
+
+const nodeWidth = 240;
+const nodeHeight = 100;
+const margin = { top: 20, right: 90, bottom: 30, left: 90 };
+
+// Color scales for different groupings
+const authorColors = d3.scaleOrdinal(d3.schemeCategory10);
+const themeColors = d3.scaleOrdinal(d3.schemePaired);
+const timeColors = d3.scaleSequential(d3.interpolateViridis);
+
+export function initForkGraph(containerId, data, layoutType, groupingMode, showLegend, dotNetHelper) {
+    currentLayout = layoutType;
+    currentGrouping = groupingMode;
+
+    const container = d3.select(`#${containerId}`);
+    const width = container.node().getBoundingClientRect().width;
+    const height = container.node().getBoundingClientRect().height;
+
+    // Clear existing content
+    container.selectAll("*").remove();
+
+    // Create new SVG
+    svg = container.append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    // Add zoom behavior
+    zoom = d3.zoom()
+        .scaleExtent([0.5, 2])
+        .on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        });
+
+    svg.call(zoom);
+
+    // Create the root group
+    g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Add arrow markers
+    addArrowMarkers();
+
+    // Process data based on grouping
+    const processedData = processDataForGrouping(data, groupingMode);
+
+    // Create the visualization based on layout type
+    if (layoutType === 'force') {
+        createForceLayout(processedData, dotNetHelper);
+    } else {
+        createDagreLayout(processedData, dotNetHelper);
+    }
+
+    if (showLegend) {
+        createLegend(processedData, groupingMode);
+    }
+}
+
+function processDataForGrouping(data, groupingMode) {
+    const processedData = {...data};
+
+    switch (groupingMode) {
+        case 'author':
+            // Group nodes by author
+            const authorGroups = d3.group(data.nodes, d => d.authorId);
+            processedData.groups = Array.from(authorGroups, ([key, nodes]) => ({
+                id: key,
+                type: 'author',
+                nodes: nodes,
+                color: authorColors(key)
+            }));
+            break;
+
+        case 'theme':
+            // Group nodes by theme
+            const themeGroups = d3.group(data.nodes, d => d.theme);
+            processedData.groups = Array.from(themeGroups, ([key, nodes]) => ({
+                id: key,
+                type: 'theme',
+                nodes: nodes,
+                color: themeColors(key)
+            }));
+            break;
+
+        case 'time':
+            // Group nodes by time periods (e.g., weeks)
+            const timeGroups = d3.group(data.nodes, d => 
+                d3.timeWeek.floor(d.createdAt));
+            processedData.groups = Array.from(timeGroups, ([key, nodes]) => ({
+                id: key,
+                type: 'time',
+                nodes: nodes,
+                color: timeColors(key)
+            }));
+            break;
+    }
+
+    return processedData;
+}
+
+function createForceLayout(data, dotNetHelper) {
+    if (simulation) simulation.stop();
+
+    // Create hull shapes for groups if grouping is enabled
+    if (currentGrouping !== 'none' && data.groups) {
+        createGroupHulls(data.groups);
+    }
+
+    // Create the force simulation
+    simulation = d3.forceSimulation(data.nodes)
+        .force("link", d3.forceLink(data.links)
+            .id(d => d.id)
+            .distance(200))
+        .force("charge", d3.forceManyBody().strength(-1000))
+        .force("center", d3.forceCenter(
+            svg.node().getBoundingClientRect().width / 2,
+            svg.node().getBoundingClientRect().height / 2
+        ))
+        .force("collision", d3.forceCollide().radius(nodeWidth / 2));
+
+    // Add group forces if grouping is enabled
+    if (currentGrouping !== 'none' && data.groups) {
+        simulation
+            .force("group", forceGroup(data.groups))
+            .force("groupCollide", forceGroupCollide(data.groups));
+    }
+
+        // Create the graph elements
+    createGraphElements(data, dotNetHelper);
+
+function createGraphElements(data, dotNetHelper) {
+    // Create the links
+    const links = g.selectAll(".link")
+        .data(data.links)
+        .enter()
+        .append("path")  // Using path instead of line for curved links
+        .attr("class", "link")
+        .attr("marker-end", d => `url(#arrow-${d.type})`)
+        .style("stroke", d => d.type === "synthesis" ? "#ff7f0e" : "#666")
+        .style("stroke-width", d => d.type === "synthesis" ? "2px" : "1.5px")
+        .style("stroke-dasharray", d => d.type === "synthesis" ? "5,5" : "none");
+
+    // Create the nodes
+    const node = g.selectAll(".node")
+        .data(data.nodes)
+        .enter()
+        .append("g")
+        .attr("class", "node")
+        .attr("cursor", "pointer")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
+
+    // Node rectangles with special styling for remix forks
+    node.append("rect")
+        .attr("class", "node-rect")
+        .attr("x", -nodeWidth/2)
+        .attr("y", -nodeHeight/2)
+        .attr("width", nodeWidth)
+        .attr("height", nodeHeight)
+        .attr("rx", 10)
+        .attr("ry", 10)
+        .style("fill", d => getMeritColor(d.meritScore))
+        .style("stroke", d => isRemixFork(d, data.links) ? "url(#remix-gradient)" : "#666")
+        .style("stroke-width", d => isRemixFork(d, data.links) ? "3px" : "1px");
+
+    // Node titles
+    node.append("text")
+        .attr("class", "node-title")
+        .attr("y", -nodeHeight/4)
+        .attr("text-anchor", "middle")
+        .text(d => d.title)
+        .style("font-weight", "bold")
+        .style("font-size", "14px")
+        .style("fill", "#000");
+
+    // Merit scores
+    node.append("text")
+        .attr("class", "node-score")
+        .attr("y", nodeHeight/4)
+        .attr("text-anchor", "middle")
+        .text(d => `Merit: ${(d.meritScore * 100).toFixed(1)}%`)
+        .style("font-size", "12px")
+        .style("fill", "#000");
+
+    // Add tooltips
+    addNodeTooltip(node);
+
+    // Add click handler
+    node.on("click", (event, d) => {
+        event.preventDefault();
+        event.stopPropagation();
+        dotNetHelper.invokeMethodAsync("OnNodeClick", d.id);
+    });
+
+    // Define gradient for remix forks
+    const gradient = svg.append("defs")
+        .append("linearGradient")
+        .attr("id", "remix-gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+
+    gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#ff7f0e");
+
+    gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#1f77b4");
+}
+
+    // Update positions on each tick
+    simulation.on("tick", () => {
+        updateGraphPositions();
+        if (currentGrouping !== 'none') {
+            updateHulls(data.groups);
+        }
+    });
+}
+
+function createGroupHulls(groups) {
+    const hulls = g.selectAll(".hull")
+        .data(groups)
+        .enter()
+        .append("path")
+        .attr("class", "hull")
+        .style("fill", d => d.color)
+        .style("opacity", 0.1)
+        .style("stroke", d => d.color)
+        .style("stroke-width", 1.5);
+}
+
+function updateHulls(groups) {
+    g.selectAll(".hull")
+        .attr("d", d => {
+            const points = d.nodes.map(n => [n.x, n.y]);
+            return `M${d3.polygonHull(points).join("L")}Z`;
+        });
+}
+
+function createLegend(data, groupingMode) {
+    if (legend) legend.remove();
+
+    legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", `translate(${margin.right}, ${margin.top})`);
+
+    switch (groupingMode) {
+        case 'author':
+            createAuthorLegend(data.groups);
+            break;
+        case 'theme':
+            createThemeLegend(data.groups);
+            break;
+        case 'time':
+            createTimeLegend(data.groups);
+            break;
+        default:
+            createMeritLegend();
+            break;
+    }
+}
+
+function createAuthorLegend(groups) {
+    const legendItems = legend.selectAll(".legend-item")
+        .data(groups)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(0, ${i * 20})`);
+
+    legendItems.append("rect")
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", d => d.color);
+
+    legendItems.append("text")
+        .attr("x", 15)
+        .attr("y", 9)
+        .text(d => `Author ${d.id.slice(0, 8)}`);
+}
+
+function createThemeLegend(groups) {
+    const legendItems = legend.selectAll(".legend-item")
+        .data(groups)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(0, ${i * 20})`);
+
+    legendItems.append("rect")
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", d => d.color);
+
+    legendItems.append("text")
+        .attr("x", 15)
+        .attr("y", 9)
+        .text(d => d.id);
+}
+
+function createTimeLegend(groups) {
+    const timeFormat = d3.timeFormat("%Y-%m-%d");
+    
+    const legendItems = legend.selectAll(".legend-item")
+        .data(groups)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(0, ${i * 20})`);
+
+    legendItems.append("rect")
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("fill", d => d.color);
+
+    legendItems.append("text")
+        .attr("x", 15)
+        .attr("y", 9)
+        .text(d => timeFormat(d.id));
+}
+
+function createMeritLegend() {
+    const gradientData = [
+        { offset: "0%", merit: 0 },
+        { offset: "25%", merit: 0.25 },
+        { offset: "50%", merit: 0.5 },
+        { offset: "75%", merit: 0.75 },
+        { offset: "100%", merit: 1 }
+    ];
+
+    // Create gradient
+    const gradient = legend.append("defs")
+        .append("linearGradient")
+        .attr("id", "merit-gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+
+    gradient.selectAll("stop")
+        .data(gradientData)
+        .enter()
+        .append("stop")
+        .attr("offset", d => d.offset)
+        .attr("stop-color", d => d3.interpolateBlues(d.merit));
+
+    // Add gradient rectangle
+    legend.append("rect")
+        .attr("width", 150)
+        .attr("height", 10)
+        .style("fill", "url(#merit-gradient)");
+
+    // Add labels
+    legend.append("text")
+        .attr("x", 0)
+        .attr("y", 25)
+        .text("Low Merit");
+
+    legend.append("text")
+        .attr("x", 110)
+        .attr("y", 25)
+        .text("High Merit");
+}
+
+// Force functions for group layouts
+function forceGroup(groups) {
+    const strength = 0.1;
+    const centers = new Map();
+
+    groups.forEach((group, i) => {
+        const angle = (i / groups.length) * 2 * Math.PI;
+        const radius = 200;
+        centers.set(group.id, {
+            x: radius * Math.cos(angle),
+            y: radius * Math.sin(angle)
+        });
+    });
+
+    return (alpha) => {
+        data.nodes.forEach(node => {
+            const group = groups.find(g => g.nodes.includes(node));
+            if (group) {
+                const center = centers.get(group.id);
+                node.vx += (center.x - node.x) * strength * alpha;
+                node.vy += (center.y - node.y) * strength * alpha;
+            }
+        });
+    };
+}
+
+function forceGroupCollide(groups) {
+    const padding = 50;
+    const strength = 0.5;
+
+    return (alpha) => {
+        groups.forEach(groupA => {
+            groups.forEach(groupB => {
+                if (groupA !== groupB) {
+                    const dx = groupB.x - groupA.x;
+                    const dy = groupB.y - groupA.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const minDist = groupA.nodes.length + groupB.nodes.length + padding;
+
+                    if (dist < minDist) {
+                        const moveX = (dx / dist) * (minDist - dist) * strength;
+                        const moveY = (dy / dist) * (minDist - dist) * strength;
+
+                        groupA.nodes.forEach(node => {
+                            node.vx -= moveX * alpha;
+                            node.vy -= moveY * alpha;
+                        });
+
+                        groupB.nodes.forEach(node => {
+                            node.vx += moveX * alpha;
+                            node.vy += moveY * alpha;
+                        });
+                    }
+                }
+            });
+        });
+    };
+}
+
+// Add additional interaction features
+function addSearchHighlight(searchTerm) {
+    if (!searchTerm) {
+        g.selectAll(".node")
+            .style("opacity", 1)
+            .select("rect")
+            .style("stroke-width", "1px");
+        return;
+    }
+
+    g.selectAll(".node").each(function(d) {
+        const node = d3.select(this);
+        const matches = d.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       d.theme.toLowerCase().includes(searchTerm.toLowerCase());
+
+        node.style("opacity", matches ? 1 : 0.3)
+            .select("rect")
+            .style("stroke-width", matches ? "3px" : "1px");
+    });
+}
+
+function addNodeTooltip(node) {
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "graph-tooltip")
+        .style("opacity", 0);
+
+    node.on("mouseover", (event, d) => {
+        tooltip.transition()
+            .duration(200)
+            .style("opacity", .9);
+        
+        tooltip.html(`
+            <strong>${d.title}</strong><br/>
+            Merit: ${(d.meritScore * 100).toFixed(1)}%<br/>
+            Theme: ${d.theme}<br/>
+            Created: ${new Date(d.createdAt).toLocaleDateString()}
+        `)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", () => {
+        tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+    });
+}
+
+export function centerGraph(containerId) {
+    const container = d3.select(`#${containerId}`);
+    const width = container.node().getBoundingClientRect().width;
+    const height = container.node().getBoundingClientRect().height;
+
+    const bounds = g.node().getBBox();
+    const centerX = -bounds.x + (width - bounds.width) / 2;
+    const centerY = -bounds.y + (height - bounds.height) / 2;
+
+    svg.transition()
+        .duration(750)
+        .call(zoom.transform,
+            d3.zoomIdentity
+                .translate(centerX, centerY)
+                .scale(0.8)
+        );
+}
+
+function isRemixFork(node, links) {
+    // Count how many source links point to this node
+    const sourceCount = links.filter(link => link.target === node.id).length;
+    return sourceCount > 1;
+}
+
+// Global dotNetHelper setter
+window.setDotNetHelper = function(helper) {
+    window.dotNetHelper = helper;
+};
+
+export function updateVisualization(containerId, data, layoutType, groupingMode, showLegend) {
+    currentLayout = layoutType;
+    currentGrouping = groupingMode;
+    
+    const processedData = processDataForGrouping(data, groupingMode);
+    
+    if (layoutType === 'force') {
+        createForceLayout(processedData, window.dotNetHelper);
+    } else {
+        createDagreLayout(processedData, window.dotNetHelper);
+    }
+
+    if (showLegend) {
+        createLegend(processedData, groupingMode);
+    } else if (legend) {
+        legend.remove();
+    }
+}
