@@ -1,5 +1,6 @@
 using FluentValidation;
 using Meritocious.Common.DTOs.Auth;
+using Meritocious.Common.DTOs.Security;
 
 namespace Meritocious.Core.Validation
 {

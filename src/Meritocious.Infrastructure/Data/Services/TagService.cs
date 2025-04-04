@@ -105,7 +105,7 @@ namespace Meritocious.Core.Services
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<object>> GetRelatedTagsAsync(string topic)
+        Task<IEnumerable<Tag>> ITagService.GetRelatedTagsAsync(string topic)
         {
             // TODO: Implement this.
             throw new NotImplementedException();
