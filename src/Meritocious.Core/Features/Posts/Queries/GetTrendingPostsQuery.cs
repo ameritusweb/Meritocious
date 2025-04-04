@@ -7,5 +7,6 @@ namespace Meritocious.Core.Features.Posts.Queries
         string TimeFrame = "day",  // day, week, month
         string? Category = null,
         int Limit = 10,
-        decimal MinMeritScore = 0.0m) : IRequest<List<PostSummaryDto>>;
+        decimal MinMeritScore = 0.0m)
+        : IRequest<List<PostSummaryDto>>;
 }

@@ -50,7 +50,7 @@ namespace Meritocious.Core.Entities
                 VersionNumber = versionNumber,
                 Title = title,
                 Content = content,
-                EditorId = editor.Id,
+                EditorId = Guid.Parse(editor.Id),
                 Editor = editor,
                 EditReason = editReason,
                 MeritScore = meritScore,

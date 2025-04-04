@@ -13,7 +13,9 @@ namespace Meritocious.Core.Results
             Func<TIn, TOut> mapper)
         {
             if (result.IsFailure)
+            {
                 return Result.Failure<TOut>(result.Error);
+            }
 
             return Result.Success(mapper(result.Value));
         }
@@ -24,7 +26,9 @@ namespace Meritocious.Core.Results
         {
             var result = await resultTask;
             if (result.IsFailure)
+            {
                 return Result.Failure<TOut>(result.Error);
+            }
 
             var mappedValue = await mapper(result.Value);
             return Result.Success(mappedValue);
@@ -36,7 +40,9 @@ namespace Meritocious.Core.Results
             string errorMessage)
         {
             if (result.IsFailure)
+            {
                 return result;
+            }
 
             return predicate(result.Value)
                 ? result
@@ -48,7 +54,9 @@ namespace Meritocious.Core.Results
             Func<TIn, Result<TOut>> func)
         {
             if (result.IsFailure)
+            {
                 return Result.Failure<TOut>(result.Error);
+            }
 
             return func(result.Value);
         }
@@ -59,7 +67,9 @@ namespace Meritocious.Core.Results
         {
             var result = await resultTask;
             if (result.IsFailure)
+            {
                 return Result.Failure<TOut>(result.Error);
+            }
 
             return await func(result.Value);
         }
@@ -69,7 +79,9 @@ namespace Meritocious.Core.Results
             Action<T> action)
         {
             if (result.IsSuccess)
+            {
                 action(result.Value);
+            }
 
             return result;
         }
@@ -80,7 +92,9 @@ namespace Meritocious.Core.Results
         {
             var result = await resultTask;
             if (result.IsSuccess)
+            {
                 await action(result.Value);
+            }
 
             return result;
         }

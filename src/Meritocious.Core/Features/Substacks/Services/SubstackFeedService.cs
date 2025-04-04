@@ -18,9 +18,9 @@ public interface ISubstackFeedService
 
 public class SubstackFeedService : ISubstackFeedService
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<SubstackFeedService> _logger;
-    private static readonly JsonSerializerOptions _jsonOptions = new()
+    private readonly HttpClient httpClient;
+    private readonly ILogger<SubstackFeedService> logger;
+    private static readonly JsonSerializerOptions jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
@@ -29,8 +29,8 @@ public class SubstackFeedService : ISubstackFeedService
         HttpClient httpClient,
         ILogger<SubstackFeedService> logger)
     {
-        _httpClient = httpClient;
-        _logger = logger;
+        this.httpClient = httpClient;
+        this.logger = logger;
     }
 
     public async Task<SubstackFeedResponse> GetPublicationFeedAsync(string substackUrl)
@@ -40,20 +40,22 @@ public class SubstackFeedService : ISubstackFeedService
             var normalizedUrl = NormalizeSubstackUrl(substackUrl);
             var feedUrl = $"{normalizedUrl}/api/v1/archive?sort=new&search=&offset=0&limit=50";
             
-            var response = await _httpClient.GetAsync(feedUrl);
+            var response = await httpClient.GetAsync(feedUrl);
             response.EnsureSuccessStatusCode();
             
             var content = await response.Content.ReadAsStringAsync();
-            var feed = JsonSerializer.Deserialize<SubstackFeedResponse>(content, _jsonOptions);
-            
+            var feed = JsonSerializer.Deserialize<SubstackFeedResponse>(content, jsonOptions);
+
             if (feed == null || feed.Posts == null)
+            {
                 throw new InvalidOperationException("Failed to parse Substack feed");
+            }
                 
             return feed;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching Substack feed from {Url}", substackUrl);
+            logger.LogError(ex, "Error fetching Substack feed from {Url}", substackUrl);
             throw;
         }
     }
@@ -62,7 +64,7 @@ public class SubstackFeedService : ISubstackFeedService
     {
         try
         {
-            var response = await _httpClient.GetAsync(postUrl);
+            var response = await httpClient.GetAsync(postUrl);
             response.EnsureSuccessStatusCode();
             
             var html = await response.Content.ReadAsStringAsync();
@@ -70,7 +72,7 @@ public class SubstackFeedService : ISubstackFeedService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error fetching Substack post content from {Url}", postUrl);
+            logger.LogError(ex, "Error fetching Substack post content from {Url}", postUrl);
             throw;
         }
     }
@@ -79,23 +81,23 @@ public class SubstackFeedService : ISubstackFeedService
     {
         try
         {
-            _logger.LogInformation("Validating Substack URL: {Url}", url);
+            logger.LogInformation("Validating Substack URL: {Url}", url);
 
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             {
-                _logger.LogWarning("Invalid URL format: {Url}", url);
+                logger.LogWarning("Invalid URL format: {Url}", url);
                 return false;
             }
 
             // Check if it's a standard Substack domain
             if (uri.Host.EndsWith(".substack.com"))
             {
-                var response = await _httpClient.GetAsync(url);
+                var response = await httpClient.GetAsync(url);
                 var isValid = response.IsSuccessStatusCode;
                 
                 if (!isValid)
                 {
-                    _logger.LogWarning("Standard Substack URL not accessible: {Url}", url);
+                    logger.LogWarning("Standard Substack URL not accessible: {Url}", url);
                 }
                 
                 return isValid;
@@ -106,7 +108,7 @@ public class SubstackFeedService : ISubstackFeedService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating Substack URL: {Url}", url);
+            logger.LogError(ex, "Error validating Substack URL: {Url}", url);
             return false;
         }
     }
@@ -119,15 +121,19 @@ public class SubstackFeedService : ISubstackFeedService
             {
                 return uri.Host.Replace(".substack.com", "");
             }
+
             return uri.Host;
         }
+
         throw new ArgumentException("Invalid Substack URL");
     }
 
     public string NormalizeSubstackUrl(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
             throw new ArgumentException("Invalid URL format");
+        }
 
         var scheme = uri.Scheme;
         var host = uri.Host;
@@ -144,10 +150,10 @@ public class SubstackFeedService : ISubstackFeedService
             var url = $"https://{host}";
             
             // Make a request to the potential Substack site
-            var response = await _httpClient.GetAsync(url);
+            var response = await httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogWarning("Failed to access custom domain {Host}", host);
+                logger.LogWarning("Failed to access custom domain {Host}", host);
                 return false;
             }
 
@@ -165,26 +171,26 @@ public class SubstackFeedService : ISubstackFeedService
             {
                 try
                 {
-                    var apiResponse = await _httpClient.GetAsync($"{url}/api/v1/archive");
+                    var apiResponse = await httpClient.GetAsync($"{url}/api/v1/archive");
                     isSubstack &= apiResponse.IsSuccessStatusCode;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to validate Substack API endpoint for {Host}", host);
+                    logger.LogWarning(ex, "Failed to validate Substack API endpoint for {Host}", host);
                     return false;
                 }
             }
 
             if (!isSubstack)
             {
-                _logger.LogWarning("Domain {Host} does not appear to be a valid Substack custom domain", host);
+                logger.LogWarning("Domain {Host} does not appear to be a valid Substack custom domain", host);
             }
 
             return isSubstack;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error validating custom domain {Host}", host);
+            logger.LogError(ex, "Error validating custom domain {Host}", host);
             return false;
         }
     }

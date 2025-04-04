@@ -10,15 +10,24 @@ namespace Meritocious.Core.Entities
     public class ContentModerationEvent : BaseEntity
     {
         public Guid ContentId { get; private set; }
+
         public ContentType ContentType { get; private set; }
+
         public ModerationAction Action { get; private set; }
+
         public string Reason { get; private set; }
+
         public bool IsAutomated { get; private set; }
+
         public Guid? ModeratorId { get; private set; }
+
         public User Moderator { get; private set; }
+
         public DateTime ModeratedAt { get; private set; }
 
-        private ContentModerationEvent() { }
+        private ContentModerationEvent()
+        {
+        }
 
         public static ContentModerationEvent Create(
             Guid contentId,

@@ -6,5 +6,5 @@ namespace Meritocious.Core.Features.Tags.Commands;
 public record AddTagSynonymCommand(
     string SourceTagId,
     string TargetTagId,
-    string CreatedBy
-) : IRequest<TagSynonymDto>;
+    string CreatedBy)
+    : IRequest<TagSynonymDto>;

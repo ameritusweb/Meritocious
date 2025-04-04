@@ -29,7 +29,7 @@ public class UserReputationMetrics : BaseEntity
     {
         return new UserReputationMetrics
         {
-            UserId = user.Id,
+            UserId = Guid.Parse(user.Id),
             User = user,
             OverallMeritScore = 0,
             Level = ReputationLevel.Newcomer,
@@ -71,13 +71,13 @@ public class UserReputationMetrics : BaseEntity
     {
         Level = (OverallMeritScore, TotalContributions) switch
         {
-            ( >= 0.9m, >= 1000) => ReputationLevel.Expert,
-            ( >= 0.8m, >= 500) => ReputationLevel.Master,
-            ( >= 0.7m, >= 250) => ReputationLevel.Senior,
-            ( >= 0.6m, >= 100) => ReputationLevel.Established,
-            ( >= 0.5m, >= 50) => ReputationLevel.Rising,
-            ( >= 0.4m, >= 25) => ReputationLevel.Active,
-            ( >= 0.3m, >= 10) => ReputationLevel.Learning,
+            (>= 0.9m, >= 1000) => ReputationLevel.Expert,
+            (>= 0.8m, >= 500) => ReputationLevel.Master,
+            (>= 0.7m, >= 250) => ReputationLevel.Senior,
+            (>= 0.6m, >= 100) => ReputationLevel.Established,
+            (>= 0.5m, >= 50) => ReputationLevel.Rising,
+            (>= 0.4m, >= 25) => ReputationLevel.Active,
+            (>= 0.3m, >= 10) => ReputationLevel.Learning,
             _ => ReputationLevel.Newcomer
         };
     }

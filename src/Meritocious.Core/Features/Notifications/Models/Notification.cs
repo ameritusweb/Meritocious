@@ -17,7 +17,9 @@ namespace Meritocious.Core.Features.Notifications.Models
         public string? ActionUrl { get; private set; }
         public bool IsRead { get; private set; }
 
-        private Notification() { }
+        private Notification()
+        {
+        }
 
         public static Notification Create(
             Guid userId,

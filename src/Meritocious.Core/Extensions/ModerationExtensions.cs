@@ -13,7 +13,7 @@ namespace Meritocious.Core.Extensions
                 ContentId = action.ContentId,
                 ContentType = action.ContentType,
                 ModeratorId = action.ModeratorId,
-                ModeratorUsername = action.Moderator?.Username ?? "System",
+                ModeratorUsername = action.Moderator?.UserName ?? "System",
                 ActionType = action.ActionType,
                 Reason = action.Reason,
                 ToxicityScores = action.ToxicityScores,
@@ -26,7 +26,7 @@ namespace Meritocious.Core.Extensions
                 AppealId = action.AppealId,
                 ReviewedAt = action.ReviewedAt,
                 ReviewedById = action.ReviewedById,
-                ReviewerUsername = action.ReviewedBy?.Username,
+                ReviewerUsername = action.ReviewedBy?.UserName,
                 ReviewNotes = action.ReviewNotes,
                 CreatedAt = action.CreatedAt
             };

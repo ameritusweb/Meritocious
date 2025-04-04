@@ -48,34 +48,33 @@ public class UpdateRemixRequestValidator : AbstractValidator<UpdateRemixRequest>
 }
 
 // TODO: Move Validator
-//public class AddSourceRequestValidator : AbstractValidator<AddSourceRequest>
-//{
+// public class AddSourceRequestValidator : AbstractValidator<AddSourceRequest>
+// {
 //    private readonly IPostRepository _postRepository;
 
-//    public AddSourceRequestValidator(IPostRepository postRepository)
+// public AddSourceRequestValidator(IPostRepository postRepository)
 //    {
 //        _postRepository = postRepository;
 
-//        RuleFor(x => x.PostId)
+// RuleFor(x => x.PostId)
 //            .NotEmpty()
 //            .MustAsync(async (id, ct) => await _postRepository.ExistsAsync(id))
 //            .WithMessage("Referenced post does not exist");
 
-//        RuleFor(x => x.Relationship)
+// RuleFor(x => x.Relationship)
 //            .NotEmpty()
-//            .Must(r => new[] { "support", "contrast", "example", "question" }.Contains(r.ToLower()))
+//             .Must(r => new[] { "support", "contrast", "example", "question" }.Contains(r.ToLower()))
 //            .WithMessage("Invalid relationship type");
 
-//        RuleFor(x => x.Context)
+// RuleFor(x => x.Context)
 //            .MaximumLength(500)
 //            .WithMessage("Context should be less than 500 characters");
 
-//        RuleFor(x => x.InitialQuotes)
+// RuleFor(x => x.InitialQuotes)
 //            .Must(quotes => quotes == null || quotes.Count <= 5)
 //            .WithMessage("Cannot add more than 5 initial quotes");
 //    }
-//}
-
+// }
 public class AddQuoteRequestValidator : AbstractValidator<AddQuoteRequest>
 {
     public AddQuoteRequestValidator()

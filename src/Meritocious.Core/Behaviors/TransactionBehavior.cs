@@ -14,11 +14,11 @@ namespace Meritocious.Core.Behaviors
     public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
         where TRequest : IRequest<TResponse>
     {
-        private readonly DbContext _dbContext;
+        private readonly DbContext dbContext;
 
         public TransactionBehavior(DbContext dbContext)
         {
-            _dbContext = dbContext;
+            this.dbContext = dbContext;
         }
 
         public async Task<TResponse> Handle(
@@ -26,12 +26,12 @@ namespace Meritocious.Core.Behaviors
             RequestHandlerDelegate<TResponse> next,
             CancellationToken cancellationToken)
         {
-            if (_dbContext.Database.CurrentTransaction != null)
+            if (dbContext.Database.CurrentTransaction != null)
             {
                 return await next();
             }
 
-            using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             try
             {
                 var response = await next();

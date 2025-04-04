@@ -3,19 +3,32 @@ namespace Meritocious.Core.Entities;
 public class SecurityEvent : BaseEntity
 {
     public string EventType { get; private set; }
+
     public string UserId { get; private set; }
+
     public User User { get; private set; }
+
     public string IpAddress { get; private set; }
+
     public string UserAgent { get; private set; }
+
     public string Description { get; private set; }
+
     public int Severity { get; private set; } // 1-5, with 5 being most severe
+
     public bool RequiresAction { get; private set; }
+
     public bool IsResolved { get; private set; }
+
     public DateTime? ResolvedAt { get; private set; }
+
     public string ResolvedBy { get; private set; }
+
     public string ResolutionNotes { get; private set; }
     
-    private SecurityEvent() { }
+    private SecurityEvent()
+    {
+    }
     
     public static SecurityEvent Create(
         string eventType,

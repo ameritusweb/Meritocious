@@ -15,8 +15,8 @@ namespace Meritocious.Core.Extensions
         {
             return new UserProfileDto
             {
-                Id = user.Id,
-                Username = user.Username,
+                Id = Guid.Parse(user.Id),
+                Username = user.UserName,
                 Email = user.Email,
                 MeritScore = user.MeritScore,
                 CreatedAt = user.CreatedAt,

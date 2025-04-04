@@ -18,7 +18,7 @@ namespace Meritocious.Core.Extensions
                 Title = post.Title,
                 Content = post.Content,
                 AuthorId = post.AuthorId,
-                AuthorUsername = post.Author?.Username ?? "Unknown",
+                AuthorUsername = post.Author?.UserName ?? "Unknown",
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
                 ParentPostId = post.ParentPostId,

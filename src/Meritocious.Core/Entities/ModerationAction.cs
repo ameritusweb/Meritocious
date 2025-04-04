@@ -51,7 +51,7 @@ namespace Meritocious.Core.Entities
             {
                 ContentId = contentId,
                 ContentType = contentType,
-                ModeratorId = moderator.Id,
+                ModeratorId = Guid.Parse(moderator.Id),
                 Moderator = moderator,
                 ActionType = actionType,
                 Reason = reason,
@@ -76,7 +76,7 @@ namespace Meritocious.Core.Entities
             ModerationDecisionOutcome outcome,
             string notes)
         {
-            ReviewedById = reviewer.Id;
+            ReviewedById = Guid.Parse(reviewer.Id);
             ReviewedBy = reviewer;
             ReviewedAt = DateTime.UtcNow;
             ReviewNotes = notes;

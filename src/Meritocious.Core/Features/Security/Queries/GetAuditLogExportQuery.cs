@@ -9,5 +9,5 @@ public record GetAuditLogExportQuery(
     bool IncludeAdminActions = true,
     bool IncludeSecurityEvents = true,
     bool IncludeLoginAttempts = true,
-    bool IncludeApiUsage = true
-) : IRequest<byte[]>;
+    bool IncludeApiUsage = true)
+    : IRequest<byte[]>;

@@ -7,5 +7,6 @@ namespace Meritocious.Core.Features.Posts.Queries
         Guid PostId,
         int? StartVersion = null,
         int? EndVersion = null,
-        bool IncludeContent = true) : IRequest<List<PostVersionDto>>;
+        bool IncludeContent = true)
+        : IRequest<List<PostVersionDto>>;
 }

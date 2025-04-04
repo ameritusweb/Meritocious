@@ -9,5 +9,5 @@ public record GetAdminActionsQuery(
     string AdminId = null,
     string ActionType = null,
     int Page = 1,
-    int PageSize = 20
-) : IRequest<IEnumerable<AdminActionDto>>;
+    int PageSize = 20)
+    : IRequest<IEnumerable<AdminActionDto>>;

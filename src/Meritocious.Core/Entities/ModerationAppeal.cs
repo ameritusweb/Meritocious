@@ -22,7 +22,9 @@ namespace Meritocious.Core.Entities
         public AppealDecision? Decision { get; private set; }
         public DateTime? ReviewedAt { get; private set; }
 
-        private ModerationAppeal() { }
+        private ModerationAppeal()
+        {
+        }
 
         public static ModerationAppeal Create(
             ModerationAction action,
@@ -34,7 +36,7 @@ namespace Meritocious.Core.Entities
             {
                 ModerationActionId = action.Id,
                 ModerationAction = action,
-                AppealerId = appealer.Id,
+                AppealerId = Guid.Parse(appealer.Id),
                 Appealer = appealer,
                 Reason = reason,
                 AdditionalContext = additionalContext,
@@ -48,7 +50,7 @@ namespace Meritocious.Core.Entities
             AppealDecision decision,
             string notes)
         {
-            ReviewerId = reviewer.Id;
+            ReviewerId = Guid.Parse(reviewer.Id);
             Reviewer = reviewer;
             Decision = decision;
             ReviewerNotes = notes;

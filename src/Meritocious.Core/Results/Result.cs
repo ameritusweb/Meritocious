@@ -16,10 +16,14 @@ namespace Meritocious.Core.Results
         protected Result(bool isSuccess, string error = null)
         {
             if (isSuccess && !string.IsNullOrEmpty(error))
+            {
                 throw new InvalidOperationException("A successful result cannot have an error");
+            }
 
             if (!isSuccess && string.IsNullOrEmpty(error))
+            {
                 throw new InvalidOperationException("A failure result must have an error");
+            }
 
             IsSuccess = isSuccess;
             Error = error;
@@ -33,23 +37,25 @@ namespace Meritocious.Core.Results
 
     public class Result<T> : Result
     {
-        private readonly T _value;
+        private readonly T value;
 
         public T Value
         {
             get
             {
                 if (!IsSuccess)
+                {
                     throw new InvalidOperationException("Cannot access value of a failed result");
+                }
 
-                return _value;
+                return value;
             }
         }
 
         protected internal Result(T value, bool isSuccess, string error = null)
             : base(isSuccess, error)
         {
-            _value = value;
+            this.value = value;
         }
 
         public static Result<T> Success(T value) => new Result<T>(value, true);

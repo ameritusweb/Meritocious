@@ -4,4 +4,5 @@ using Meritocious.Core.Results;
 
 namespace Meritocious.Core.Features.Substacks.Queries;
 
-public record GetTrendingSubstacksQuery(int Limit = 10, int Skip = 0) : IRequest<Result<List<SubstackDto>>>;
+public record GetTrendingSubstacksQuery(int Limit = 10, int Skip = 0)
+    : IRequest<Result<List<SubstackDto>>>;

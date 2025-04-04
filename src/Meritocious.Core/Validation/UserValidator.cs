@@ -14,7 +14,7 @@ namespace Meritocious.Core.Validation
     {
         public UserValidator()
         {
-            RuleFor(u => u.Username)
+            RuleFor(u => u.UserName)
                 .NotEmpty()
                 .Length(3, 50)
                 .Matches(new Regex("^[a-zA-Z0-9_-]+$"))

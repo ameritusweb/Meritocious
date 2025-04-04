@@ -11,5 +11,5 @@ public record CreateSubstackCommand(
     string Description,
     string LogoUrl,
     string CoverImageUrl,
-    string TwitterHandle
-) : IRequest<SubstackDto>;
+    string TwitterHandle)
+    : IRequest<SubstackDto>;

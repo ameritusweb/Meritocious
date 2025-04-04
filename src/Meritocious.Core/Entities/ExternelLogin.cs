@@ -6,17 +6,28 @@ namespace Meritocious.Core.Entities
     public class ExternalLogin : BaseEntity
     {
         public Guid UserId { get; private set; }
+
         public User User { get; private set; }
+
         public string Provider { get; private set; }
+
         public string ProviderKey { get; private set; }
+
         public string Email { get; private set; }
+
         public string Name { get; private set; }
+
         public string PictureUrl { get; private set; }
+
         public DateTime LastLoginAt { get; private set; }
+
         public string RefreshToken { get; private set; }
+
         public DateTime? RefreshTokenExpiresAt { get; private set; }
 
-        private ExternalLogin() { }
+        private ExternalLogin()
+        {
+        }
 
         public static ExternalLogin Create(
             User user,
@@ -30,7 +41,7 @@ namespace Meritocious.Core.Entities
         {
             return new ExternalLogin
             {
-                UserId = user.Id,
+                UserId = Guid.Parse(user.Id),
                 User = user,
                 Provider = provider,
                 ProviderKey = providerKey,

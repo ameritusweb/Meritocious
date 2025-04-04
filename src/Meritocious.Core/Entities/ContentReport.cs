@@ -10,19 +10,32 @@ namespace Meritocious.Core.Entities
     public class ContentReport : BaseEntity
     {
         public Guid ContentId { get; private set; }
+
         public ContentType ContentType { get; private set; }
+
         public Guid ReporterId { get; private set; }
+
         public User Reporter { get; private set; }
+
         public string ReportType { get; private set; }
+
         public string Description { get; private set; }
+
         public string Status { get; private set; }
+
         public Guid? ModeratorId { get; private set; }
+
         public User Moderator { get; private set; }
+
         public string Resolution { get; private set; }
+
         public string Notes { get; private set; }
+
         public DateTime? ResolvedAt { get; private set; }
 
-        private ContentReport() { }
+        private ContentReport()
+        {
+        }
 
         public static ContentReport Create(
             Guid contentId,

@@ -33,7 +33,7 @@ namespace Meritocious.Core.Entities
         {
             return new ReputationBadge
             {
-                UserId = user.Id,
+                UserId = Guid.Parse(user.Id),
                 User = user,
                 BadgeType = badgeType,
                 Category = category,

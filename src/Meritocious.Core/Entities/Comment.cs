@@ -18,12 +18,12 @@ namespace Meritocious.Core.Entities
         public decimal MeritScore { get; private set; }
         public bool IsDeleted { get; private set; }
 
-        private readonly List<Comment> _replies;
-        public IReadOnlyCollection<Comment> Replies => _replies.AsReadOnly();
+        private readonly List<Comment> replies;
+        public IReadOnlyCollection<Comment> Replies => replies.AsReadOnly();
 
         private Comment()
         {
-            _replies = new List<Comment>();
+            replies = new List<Comment>();
         }
 
         public static Comment Create(string content, Post post, User author, Comment parent = null)
@@ -33,7 +33,7 @@ namespace Meritocious.Core.Entities
                 Content = content,
                 PostId = post.Id,
                 Post = post,
-                AuthorId = author.Id,
+                AuthorId = Guid.Parse(author.Id),
                 Author = author,
                 ParentCommentId = parent?.Id,
                 ParentComment = parent,

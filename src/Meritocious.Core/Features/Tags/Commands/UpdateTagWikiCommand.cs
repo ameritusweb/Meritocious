@@ -7,5 +7,5 @@ public record UpdateTagWikiCommand(
     string TagId,
     string Content,
     string EditedBy,
-    string EditSummary
-) : IRequest<TagWikiDto>;
+    string EditSummary)
+    : IRequest<TagWikiDto>;

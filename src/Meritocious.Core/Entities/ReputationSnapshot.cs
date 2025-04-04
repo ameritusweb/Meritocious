@@ -34,7 +34,7 @@ namespace Meritocious.Core.Entities
         {
             return new ReputationSnapshot
             {
-                UserId = user.Id,
+                UserId = Guid.Parse(user.Id),
                 User = user,
                 OverallMeritScore = overallScore,
                 MetricSnapshots = metrics,

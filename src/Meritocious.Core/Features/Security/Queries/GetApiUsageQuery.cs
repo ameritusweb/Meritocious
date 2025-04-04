@@ -10,5 +10,5 @@ public record GetApiUsageQuery(
     string HttpMethod = null,
     string ClientId = null,
     int Page = 1,
-    int PageSize = 20
-) : IRequest<IEnumerable<ApiUsageDto>>;
+    int PageSize = 20)
+    : IRequest<IEnumerable<ApiUsageDto>>;

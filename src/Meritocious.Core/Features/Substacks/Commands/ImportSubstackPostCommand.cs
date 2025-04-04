@@ -20,18 +20,18 @@ public class ImportSubstackPostCommand : IRequest<Result<Guid>>
 
 public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPostCommand, Result<Guid>>
 {
-    private readonly ISubstackFeedService _substackService;
-    private readonly IMediator _mediator;
-    private readonly ILogger<ImportSubstackPostCommandHandler> _logger;
+    private readonly ISubstackFeedService substackService;
+    private readonly IMediator mediator;
+    private readonly ILogger<ImportSubstackPostCommandHandler> logger;
 
     public ImportSubstackPostCommandHandler(
         ISubstackFeedService substackService,
         IMediator mediator,
         ILogger<ImportSubstackPostCommandHandler> logger)
     {
-        _substackService = substackService;
-        _mediator = mediator;
-        _logger = logger;
+        this.substackService = substackService;
+        this.mediator = mediator;
+        this.logger = logger;
     }
 
     public async Task<Result<Guid>> Handle(ImportSubstackPostCommand request, CancellationToken cancellationToken)
@@ -39,16 +39,16 @@ public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPo
         try
         {
             // Validate the URL
-            if (!await _substackService.ValidateSubstackUrlAsync(request.PostUrl))
+            if (!await substackService.ValidateSubstackUrlAsync(request.PostUrl))
             {
-                return Result<Guid>.Failure(new[] { "Invalid Substack post URL" });
+                return Result<Guid>.Failure("Invalid Substack post URL");
             }
 
             // Get the post content
-            var content = await _substackService.GetPostContentAsync(request.PostUrl);
+            var content = await substackService.GetPostContentAsync(request.PostUrl);
             if (string.IsNullOrEmpty(content))
             {
-                return Result<Guid>.Failure(new[] { "Failed to fetch post content" });
+                return Result<Guid>.Failure("Failed to fetch post content");
             }
 
             // Clean up the HTML content
@@ -67,7 +67,7 @@ public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPo
             //        Notes = request.RemixNotes
             //    };
 
-            //    var remixResult = await _mediator.Send(remixCommand, cancellationToken);
+            // var remixResult = await _mediator.Send(remixCommand, cancellationToken);
             //    return remixResult;
             // }
             // else
@@ -86,9 +86,12 @@ public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPo
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error importing Substack post from {Url}", request.PostUrl);
+            logger.LogError(ex, "Error importing Substack post from {Url}", request.PostUrl);
             return Result<Guid>.Failure("Failed to import Substack post");
         }
+
+        // TODO: Remove this.
+        return Result<Guid>.Success(Guid.NewGuid());
     }
 
     private string CleanHtmlContent(string html)

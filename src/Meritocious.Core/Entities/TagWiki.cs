@@ -9,18 +9,30 @@ namespace Meritocious.Core.Entities
     public class TagWiki : BaseEntity
     {
         public Guid TagId { get; private set; }
+
         public Tag Tag { get; private set; }
+
         public string Content { get; private set; }
+
         public int VersionNumber { get; private set; }
+
         public Guid EditorId { get; private set; }
+
         public User Editor { get; private set; }
+
         public string EditReason { get; private set; }
+
         public bool IsApproved { get; private set; }
+
         public DateTime? ApprovedAt { get; private set; }
+
         public Guid? ApprovedById { get; private set; }
+
         public User ApprovedBy { get; private set; }
 
-        private TagWiki() { }
+        private TagWiki()
+        {
+        }
 
         public static TagWiki Create(
             Tag tag,
@@ -34,7 +46,7 @@ namespace Meritocious.Core.Entities
                 Tag = tag,
                 Content = content,
                 VersionNumber = tag.WikiVersions.Count + 1,
-                EditorId = editor.Id,
+                EditorId = Guid.Parse(editor.Id),
                 Editor = editor,
                 EditReason = editReason,
                 IsApproved = false,
@@ -46,7 +58,7 @@ namespace Meritocious.Core.Entities
         {
             IsApproved = true;
             ApprovedAt = DateTime.UtcNow;
-            ApprovedById = approver.Id;
+            ApprovedById = Guid.Parse(approver.Id);
             ApprovedBy = approver;
             UpdatedAt = DateTime.UtcNow;
         }

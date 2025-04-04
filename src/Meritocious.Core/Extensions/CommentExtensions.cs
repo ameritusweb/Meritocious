@@ -19,13 +19,12 @@ namespace Meritocious.Core.Extensions
                 PostId = comment.PostId,
                 PostTitle = comment.Post?.Title ?? "Unknown Post",
                 AuthorId = comment.AuthorId,
-                AuthorUsername = comment.Author?.Username ?? "Unknown User",
+                AuthorUsername = comment.Author?.UserName ?? "Unknown User",
                 ParentCommentId = comment.ParentCommentId,
                 MeritScore = comment.MeritScore,
                 CreatedAt = comment.CreatedAt,
                 UpdatedAt = comment.UpdatedAt,
-                // Only include immediate replies if they're loaded
-                Replies = comment.Replies?.Select(r => r.ToDto()).ToList() ?? new List<CommentDto>()
+                Replies = comment.Replies?.Select(r => r.ToDto()).ToList() ?? new List<CommentDto>() // Only include immediate replies if they're loaded
             };
         }
 

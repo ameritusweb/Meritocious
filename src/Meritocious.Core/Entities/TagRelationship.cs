@@ -23,7 +23,9 @@ namespace Meritocious.Core.Entities
         public Guid? ApprovedById { get; private set; }
         public User ApprovedBy { get; private set; }
 
-        private TagRelationship() { }
+        private TagRelationship()
+        {
+        }
 
         public static TagRelationship Create(
             Tag sourceTag,
@@ -41,7 +43,7 @@ namespace Meritocious.Core.Entities
                 RelatedTag = relatedTag,
                 RelationType = relationType,
                 Strength = strength,
-                CreatorId = creator.Id,
+                CreatorId = Guid.Parse(creator.Id),
                 Creator = creator,
                 IsBidirectional = isBidirectional,
                 IsApproved = false,
@@ -53,7 +55,7 @@ namespace Meritocious.Core.Entities
         {
             IsApproved = true;
             ApprovedAt = DateTime.UtcNow;
-            ApprovedById = approver.Id;
+            ApprovedById = Guid.Parse(approver.Id);
             ApprovedBy = approver;
             UpdatedAt = DateTime.UtcNow;
         }

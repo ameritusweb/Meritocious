@@ -10,5 +10,5 @@ public record GetLoginAttemptsQuery(
     bool? Success = null,
     bool? IsSuspicious = null,
     int Page = 1,
-    int PageSize = 20
-) : IRequest<IEnumerable<LoginAttemptDto>>;
+    int PageSize = 20)
+    : IRequest<IEnumerable<LoginAttemptDto>>;

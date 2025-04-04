@@ -50,10 +50,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add MediatR
-builder.Services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-    cfg.RegisterServicesFromAssembly(typeof(Meritocious.Core.Class1).Assembly);
-});
+builder.Services.AddMediatR(
+    cfg => 
+    {
+        cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+        cfg.RegisterServicesFromAssembly(typeof(Meritocious.Core.Class1).Assembly);
+    });
 
 // Add infrastructure services
 builder.Services.AddMeritociousInfrastructure(builder.Configuration);

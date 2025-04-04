@@ -14,7 +14,9 @@ namespace Meritocious.Core.Features.Recommendations.Models
         public decimal EngagementScore { get; private set; }
         public DateTime InteractedAt { get; private set; }
 
-        private UserContentInteraction() { }
+        private UserContentInteraction()
+        {
+        }
 
         public static UserContentInteraction Create(
             User user,
@@ -25,7 +27,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         {
             return new UserContentInteraction
             {
-                UserId = user.Id,
+                UserId = Guid.Parse(user.Id),
                 User = user,
                 ContentId = contentId,
                 ContentType = contentType,
@@ -51,7 +53,9 @@ namespace Meritocious.Core.Features.Recommendations.Models
         public decimal Relevance { get; private set; }
         public DateTime ExtractedAt { get; private set; }
 
-        private ContentTopic() { }
+        private ContentTopic()
+        {
+        }
 
         public static ContentTopic Create(
             Guid contentId,
@@ -79,7 +83,9 @@ namespace Meritocious.Core.Features.Recommendations.Models
         public decimal Weight { get; private set; }
         public DateTime LastUpdated { get; private set; }
 
-        private UserTopicPreference() { }
+        private UserTopicPreference()
+        {
+        }
 
         public static UserTopicPreference Create(
             User user,
@@ -88,7 +94,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         {
             return new UserTopicPreference
             {
-                UserId = user.Id,
+                UserId = Guid.Parse(user.Id),
                 User = user,
                 Topic = topic,
                 Weight = weight,
@@ -112,7 +118,9 @@ namespace Meritocious.Core.Features.Recommendations.Models
         public decimal SimilarityScore { get; private set; }
         public DateTime CalculatedAt { get; private set; }
 
-        private ContentSimilarity() { }
+        private ContentSimilarity()
+        {
+        }
 
         public static ContentSimilarity Create(
             Guid contentId1,
@@ -141,7 +149,9 @@ namespace Meritocious.Core.Features.Recommendations.Models
         public DateTime WindowStart { get; private set; }
         public DateTime WindowEnd { get; private set; }
 
-        private TrendingContent() { }
+        private TrendingContent()
+        {
+        }
 
         public static TrendingContent Create(
             Guid contentId,

@@ -10,5 +10,5 @@ public record GetSecurityEventsQuery(
     string EventType = null,
     bool? RequiresAction = null,
     int Page = 1,
-    int PageSize = 20
-) : IRequest<IEnumerable<SecurityEventDto>>;
+    int PageSize = 20)
+    : IRequest<IEnumerable<SecurityEventDto>>;

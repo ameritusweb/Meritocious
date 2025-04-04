@@ -20,7 +20,9 @@ namespace Meritocious.Core.Entities
         public Guid? ApprovedById { get; private set; }
         public User ApprovedBy { get; private set; }
 
-        private TagSynonym() { }
+        private TagSynonym()
+        {
+        }
 
         public static TagSynonym Create(Tag tag, string name, User creator)
         {
@@ -30,11 +32,11 @@ namespace Meritocious.Core.Entities
                 Tag = tag,
                 Name = name,
                 Slug = Tag.GenerateSlug(name),
-                CreatorId = creator.Id,
+                CreatorId = Guid.Parse(creator.Id),
                 Creator = creator,
                 UseCount = 0,
                 IsApproved = false,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
         }
 
@@ -42,7 +44,7 @@ namespace Meritocious.Core.Entities
         {
             IsApproved = true;
             ApprovedAt = DateTime.UtcNow;
-            ApprovedById = approver.Id;
+            ApprovedById = Guid.Parse(approver.Id);
             ApprovedBy = approver;
             UpdatedAt = DateTime.UtcNow;
         }
