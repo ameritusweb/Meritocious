@@ -8,15 +8,17 @@ namespace Meritocious.Core.Entities
 {
     public class MeritScoreType : BaseEntity
     {
-        public string Name { get; private set; }
-        public string Description { get; private set; }
-        public decimal Weight { get; private set; }
-        public bool IsActive { get; private set; }
+        public string Name { get; internal set; }
+        public string Description { get; internal set; }
+        public decimal Weight { get; internal set; }
+        public bool IsActive { get; internal set; }
 
-        private readonly List<MeritScore> _scores = new();
-        public IReadOnlyCollection<MeritScore> Scores => _scores.AsReadOnly();
+        private readonly List<MeritScore> scores = new();
+        public IReadOnlyCollection<MeritScore> Scores => scores.AsReadOnly();
 
-        private MeritScoreType() { } // For EF Core
+        internal MeritScoreType()
+        {
+        } // For EF Core
 
         public static MeritScoreType Create(string name, string description, decimal weight)
         {
