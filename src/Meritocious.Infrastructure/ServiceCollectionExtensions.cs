@@ -63,6 +63,7 @@ namespace Meritocious.Infrastructure
             services.AddScoped<ContentTopicRepository>();
             services.AddScoped<UserTopicPreferenceRepository>();
             services.AddScoped<TrendingContentRepository>();
+            services.AddScoped<MeritScoreHistoryRepository>();
 
             // Register Core Services
             services.AddScoped<IUserService, UserService>();

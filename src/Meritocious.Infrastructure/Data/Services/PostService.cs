@@ -109,5 +109,15 @@ namespace Meritocious.Core.Services
         {
             return await postRepository.GetPostsByTagAsync(tagName);
         }
+
+        public async Task<Post> GetPostByIdAsync(Guid postId)
+        {
+            var post = await postRepository.GetByIdAsync(postId);
+            if (post == null)
+            {
+                throw new KeyNotFoundException("Post not found");
+            }
+            return post;
+        }
     }
 }

@@ -370,8 +370,13 @@ public class RemixService : IRemixService
 
     public async Task AddQuoteToSourceAsync(Guid sourceId, AddQuoteRequest request)
     {
-        var relation = await postRepository.GetByIdWithRelations(sourceId)
-            .FirstOrDefaultAsync(r => r.RelationType == "remix");
+        var relatedPosts = await postRepository.GetPostWithRelations(
+            sourceId,
+            includedRelationTypes: new[] { "remix" });
+
+        var relation = relatedPosts
+            .SelectMany(p => p.ParentRelations.Concat(p.ChildRelations))
+            .FirstOrDefault(r => r.RelationType == "remix");
         if (relation == null)
         {
             throw new ArgumentException("Source relation not found");
@@ -587,26 +592,27 @@ public class RemixService : IRemixService
     public async Task<IEnumerable<RemixDto>> SearchRemixesAsync(RemixSearchRequest request)
     {
         // Use semantic search for better results
-        var searchResults = await semanticSearchService.SearchAsync(
-            request.Query,
-            entityType: "post",
-            filters: new Dictionary<string, object>
-            {
-                { "type", "remix" },
-                { "tags", request.Tags },
-                { "minMeritScore", request.MinMeritScore }
-            });
+        var searchResults = await semanticSearchService.SearchSimilarContentAsync(
+            request.Query, 
+            ContentType.Post,
+            maxResults: request.Limit ?? 20);
 
         var postIds = searchResults.Select(r => Guid.Parse(r.Id)).ToList();
         var posts = await postRepository.GetByIdsAsync(postIds);
 
+        // Filter posts
+        var filteredPosts = posts
+            .Where(p => p.GetPostType() == "remix") // Only include remixes
+            .Where(p => !request.MinMeritScore.HasValue || p.MeritScore >= request.MinMeritScore.Value)
+            .Where(p => !request.Tags.Any() || request.Tags.All(tag => p.Tags.Any(t => t.Name == tag)));
+
         // Sort based on request
         var ordered = request.SortBy switch
         {
-            "merit" => posts.OrderByDescending(p => p.MeritScore),
-            "newest" => posts.OrderByDescending(p => p.CreatedAt),
-            "oldest" => posts.OrderBy(p => p.CreatedAt),
-            _ => posts.OrderBy(p => searchResults.FindIndex(sr => 
+            "merit" => filteredPosts.OrderByDescending(p => p.MeritScore),
+            "newest" => filteredPosts.OrderByDescending(p => p.CreatedAt),
+            "oldest" => filteredPosts.OrderBy(p => p.CreatedAt),
+            _ => filteredPosts.OrderBy(p => searchResults.FindIndex(sr => 
                 sr.Id == p.Id.ToString())) // Maintain semantic search order
         };
 
@@ -648,13 +654,13 @@ public class RemixService : IRemixService
             {
                 foreach (var source2 in sources.Where(s => s.Id != source1.Id))
                 {
-                    var prompt = $"""
+                    var prompt = $$"""
                         Analyze the relationship between these two pieces of content and identify key connections.
-                        Source 1 Title: {source1.Title}
-                        Source 1 Content: {source1.Content}
-                        Source 2 Title: {source2.Title}
-                        Source 2 Content: {source2.Content}
-                        Relationship type: {source1.Relationship} -> {source2.Relationship}
+                        Source 1 Title: {{source1.Title}}
+                        Source 1 Content: {{source1.Content}}
+                        Source 2 Title: {{source2.Title}}
+                        Source 2 Content: {{source2.Content}}
+                        Relationship type: {{source1.Relationship}} -> {{source2.Relationship}}
 
                         Format your response in 1-2 clear, concise sentences that identify a specific connection,
                         common theme, or interesting contrast between these sources. Focus on substance rather
@@ -892,10 +898,10 @@ public class RemixService : IRemixService
         {
             foreach (var source2 in sources.Where(s => s.Id != source1.Id))
             {
-                var relationshipPrompt = $"""
+                var relationshipPrompt = $$"""
                     Analyze the relationship between these two sources:
-                    Source 1: {source1.Content}
-                    Source 2: {source2.Content}
+                    Source 1: {{source1.Content}}
+                    Source 2: {{source2.Content}}
 
                     Describe their relationship in a single keyword:
                     - "supports" if they reinforce each other
@@ -1025,14 +1031,14 @@ public class RemixService : IRemixService
         }));
 
         // 1. Synthesis Score - How well does it combine and build upon sources?
-        var synthesisPrompt = $"""
+        var synthesisPrompt = $$$"""
             Evaluate how well this remix synthesizes its source materials:
 
             Post Content:
-            {post.Content}
+            {{post.Content}}
 
             Source Materials:
-            {string.Join("\n\n", sources.Select(s => $"Source ({s.Source.Role}): {s.Post.Content}"))}
+            {{string.Join("\n\n", sources.Select(s => $"Source ({s.Source.Role}): {s.Post.Content}"))}}
 
             Score these aspects from 0.0 to 1.0:
             1. Integration - How well are sources woven together?
@@ -1040,12 +1046,12 @@ public class RemixService : IRemixService
             3. Balance - Are sources used proportionally and appropriately?
 
             Format response as JSON:
-            {{
+            {
                 "integration": 0.0,
                 "development": 0.0,
                 "balance": 0.0,
                 "explanation": "Brief explanation of scores"
-            }}
+            }
             """;
 
         var synthesisResult = await semanticKernelService.CompleteTextAsync(synthesisPrompt);
@@ -1060,11 +1066,11 @@ public class RemixService : IRemixService
         });
 
         // 2. Cohesion Score - How well-structured and logically connected is it?
-        var cohesionPrompt = $"""
+        var cohesionPrompt = $$"""
             Evaluate the cohesion and structure of this post:
 
             Content:
-            {post.Content}
+            {{post.Content}}
 
             Score these aspects from 0.0 to 1.0:
             1. Flow - How smoothly do ideas connect?
@@ -1072,12 +1078,12 @@ public class RemixService : IRemixService
             3. Clarity - How well are ideas expressed?
 
             Format response as JSON:
-            {{
+            {
                 "flow": 0.0,
                 "structure": 0.0,
                 "clarity": 0.0,
                 "explanation": "Brief explanation of scores"
-            }}
+            }
             """;
 
         var cohesionResult = await semanticKernelService.CompleteTextAsync(cohesionPrompt);
@@ -1092,14 +1098,14 @@ public class RemixService : IRemixService
         });
 
         // 3. Novelty Score - How original and innovative is the synthesis?
-        var originalityPrompt = $"""
+        var originalityPrompt = $$"""
             Evaluate the originality of this post compared to its sources:
 
             Post:
-            {post.Content}
+            {{post.Content}}
 
             Sources:
-            {string.Join("\n\n", sources.Select(s => s.Post.Content))}
+            {{string.Join("\n\n", sources.Select(s => s.Post.Content))}}
 
             Score these aspects from 0.0 to 1.0:
             1. Innovation - Does it present new ideas or perspectives?
@@ -1107,12 +1113,12 @@ public class RemixService : IRemixService
             3. Insight - Does it provide unique insights?
 
             Format response as JSON:
-            {{
+            {
                 "innovation": 0.0,
                 "transformation": 0.0,
                 "insight": 0.0,
                 "explanation": "Brief explanation of scores"
-            }}
+            }
             """;
 
         var noveltyResult = await semanticKernelService.CompleteTextAsync(originalityPrompt);

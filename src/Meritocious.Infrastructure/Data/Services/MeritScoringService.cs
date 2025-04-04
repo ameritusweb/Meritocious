@@ -19,6 +19,7 @@ namespace Meritocious.Core.Services
         private readonly UserRepository userRepository;
         private readonly PostRepository postRepository;
         private readonly CommentRepository commentRepository;
+        private readonly MeritScoreHistoryRepository meritScoreHistoryRepository;
         private readonly ILogger<MeritScoringService> logger;
 
         public MeritScoringService(
@@ -26,26 +27,47 @@ namespace Meritocious.Core.Services
             UserRepository userRepository,
             PostRepository postRepository,
             CommentRepository commentRepository,
+            MeritScoreHistoryRepository meritScoreHistoryRepository,
             ILogger<MeritScoringService> logger)
         {
             this.meritScorer = meritScorer;
             this.userRepository = userRepository;
             this.postRepository = postRepository;
             this.commentRepository = commentRepository;
+            this.meritScoreHistoryRepository = meritScoreHistoryRepository;
             this.logger = logger;
         }
 
         public async Task<MeritScoreDto> CalculateContentScoreAsync(
             string content,
             ContentType type,
-            string context = null)
+            string context = null,
+            Guid? contentId = null,
+            bool isRecalculation = false,
+            string recalculationReason = null)
         {
             try
             {
                 var score = await meritScorer.ScoreContentAsync(content, context);
 
-                // Store the score history (implement in future)
-                // await _meritScoreRepository.AddScoreHistoryAsync(contentId, type, score);
+                // Store score history if contentId is provided
+                if (contentId.HasValue)
+                {
+                    var history = MeritScoreHistory.Create(
+                        contentId.Value,
+                        type,
+                        score.FinalScore,
+                        score.Components,
+                        score.ModelVersion,
+                        score.Explanations,
+                        context,
+                        isRecalculation,
+                        recalculationReason
+                    );
+
+                    await meritScoreHistoryRepository.AddAsync(history);
+                }
+
                 return score;
             }
             catch (Exception ex)
@@ -105,6 +127,33 @@ namespace Meritocious.Core.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error validating content quality");
+                throw;
+            }
+        }
+
+        public async Task<List<MeritScoreDto>> GetContentScoreHistoryAsync(Guid contentId, ContentType type)
+        {
+            try
+            {
+                var history = await meritScoreHistoryRepository.GetContentScoreHistoryAsync(contentId, type);
+                
+                return history.Select(h => new MeritScoreDto
+                {
+                    FinalScore = h.Score,
+                    Components = h.Components,
+                    ModelVersion = h.ModelVersion,
+                    Explanations = h.Explanations,
+                    Timestamp = h.EvaluatedAt,
+                    ContentId = h.ContentId,
+                    ContentType = h.ContentType,
+                    Context = h.Context,
+                    IsRecalculation = h.IsRecalculation,
+                    RecalculationReason = h.RecalculationReason
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving content score history");
                 throw;
             }
         }
