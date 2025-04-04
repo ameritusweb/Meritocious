@@ -14,10 +14,10 @@ namespace Meritocious.Core.Services
 
     public class PostService : IPostService
     {
-        private readonly PostRepository _postRepository;
-        private readonly UserRepository _userRepository;
-        private readonly IMeritScorer _meritScorer;
-        private readonly ILogger<PostService> _logger;
+        private readonly PostRepository postRepository;
+        private readonly UserRepository userRepository;
+        private readonly IMeritScorer meritScorer;
+        private readonly ILogger<PostService> logger;
 
         public PostService(
             PostRepository postRepository,
@@ -25,17 +25,17 @@ namespace Meritocious.Core.Services
             IMeritScorer meritScorer,
             ILogger<PostService> logger)
         {
-            _postRepository = postRepository;
-            _userRepository = userRepository;
-            _meritScorer = meritScorer;
-            _logger = logger;
+            this.postRepository = postRepository;
+            this.userRepository = userRepository;
+            this.meritScorer = meritScorer;
+            this.logger = logger;
         }
 
         public async Task<Post> CreatePostAsync(string title, string content, User author, Post parent = null)
         {
             // Validate content quality using AI
-            var contentScore = await _meritScorer.ScoreContentAsync(content);
-            if (!await _meritScorer.ValidateContentAsync(content))
+            var contentScore = await meritScorer.ScoreContentAsync(content);
+            if (!await meritScorer.ValidateContentAsync(content))
             {
                 throw new InvalidOperationException("Content does not meet quality standards");
             }
@@ -43,19 +43,21 @@ namespace Meritocious.Core.Services
             var post = Post.Create(title, content, author, parent);
             post.UpdateMeritScore(contentScore.FinalScore);
 
-            await _postRepository.AddAsync(post);
+            await postRepository.AddAsync(post);
             return post;
         }
 
         public async Task<Post> UpdatePostAsync(Guid postId, string title, string content)
         {
-            var post = await _postRepository.GetByIdAsync(postId);
+            var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
+            {
                 throw new KeyNotFoundException("Post not found");
+            }
 
             // Validate content quality
-            var contentScore = await _meritScorer.ScoreContentAsync(content);
-            if (!await _meritScorer.ValidateContentAsync(content))
+            var contentScore = await meritScorer.ScoreContentAsync(content);
+            if (!await meritScorer.ValidateContentAsync(content))
             {
                 throw new InvalidOperationException("Content does not meet quality standards");
             }
@@ -63,45 +65,49 @@ namespace Meritocious.Core.Services
             post.UpdateContent(title, content);
             post.UpdateMeritScore(contentScore.FinalScore);
 
-            await _postRepository.UpdateAsync(post);
+            await postRepository.UpdateAsync(post);
             return post;
         }
 
         public async Task<Post> ForkPostAsync(Guid postId, User newAuthor, string newTitle = null)
         {
-            var originalPost = await _postRepository.GetByIdAsync(postId);
+            var originalPost = await postRepository.GetByIdAsync(postId);
             if (originalPost == null)
+            {
                 throw new KeyNotFoundException("Original post not found");
+            }
 
             var forkedPost = originalPost.CreateFork(newAuthor, newTitle);
-            await _postRepository.AddAsync(forkedPost);
+            await postRepository.AddAsync(forkedPost);
 
             return forkedPost;
         }
 
         public async Task DeletePostAsync(Guid postId)
         {
-            var post = await _postRepository.GetByIdAsync(postId);
+            var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
+            {
                 throw new KeyNotFoundException("Post not found");
+            }
 
             post.Delete();
-            await _postRepository.UpdateAsync(post);
+            await postRepository.UpdateAsync(post);
         }
 
         public async Task<List<Post>> GetTopPostsAsync(int count = 10)
         {
-            return await _postRepository.GetTopPostsAsync(count);
+            return await postRepository.GetTopPostsAsync(count);
         }
 
         public async Task<List<Post>> GetPostsByUserAsync(Guid userId)
         {
-            return await _postRepository.GetPostsByUserAsync(userId);
+            return await postRepository.GetPostsByUserAsync(userId);
         }
 
         public async Task<List<Post>> GetPostsByTagAsync(string tagName)
         {
-            return await _postRepository.GetPostsByTagAsync(tagName);
+            return await postRepository.GetPostsByTagAsync(tagName);
         }
     }
 }

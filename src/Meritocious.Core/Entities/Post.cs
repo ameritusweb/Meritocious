@@ -9,15 +9,16 @@ namespace Meritocious.Core.Entities
 {
     public class Post : BaseEntity
     {
-        public string Title { get; private set; }
-        public string Content { get; private set; }
-        public Guid AuthorId { get; private set; }
-        public User Author { get; private set; }
-        public Guid? ParentPostId { get; private set; }
-        public Post ParentPost { get; private set; }
-        public bool IsDeleted { get; private set; }
-        public string SubstackId { get; private set; }
-        public Substack Substack { get; private set; }
+        public string Title { get; internal set; }
+        public string Content { get; internal set; }
+        public Guid AuthorId { get; internal set; }
+        public User Author { get; internal set; }
+        public Guid? ParentPostId { get; internal set; }
+        public Post ParentPost { get; internal set; }
+        public bool IsDeleted { get; internal set; }
+        public bool IsDraft { get; internal set; }
+        public string SubstackId { get; internal set; }
+        public Substack Substack { get; internal set; }
 
         private readonly List<Comment> comments;
         public IReadOnlyCollection<Comment> Comments => comments.AsReadOnly();
@@ -37,11 +38,11 @@ namespace Meritocious.Core.Entities
         public IReadOnlyDictionary<string, decimal> MeritComponents => meritComponents;
 
         // Engagement metrics (moved from RemixEngagement)
-        public int ViewCount { get; private set; }
-        public int UniqueViewCount { get; private set; }
-        public int LikeCount { get; private set; }
-        public int ShareCount { get; private set; }
-        public decimal AverageTimeSpentSeconds { get; private set; }
+        public int ViewCount { get; internal set; }
+        public int UniqueViewCount { get; internal set; }
+        public int LikeCount { get; internal set; }
+        public int ShareCount { get; internal set; }
+        public decimal AverageTimeSpentSeconds { get; internal set; }
 
         private readonly List<MeritScore> meritScores = new();
         public IReadOnlyCollection<MeritScore> MeritScores => meritScores.AsReadOnly();
@@ -78,7 +79,7 @@ namespace Meritocious.Core.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        private Post()
+        internal Post()
         {
             comments = new List<Comment>();
             tags = new List<Tag>();

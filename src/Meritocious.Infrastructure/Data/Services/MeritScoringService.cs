@@ -46,7 +46,6 @@ namespace Meritocious.Core.Services
 
                 // Store the score history (implement in future)
                 // await _meritScoreRepository.AddScoreHistoryAsync(contentId, type, score);
-
                 return score;
             }
             catch (Exception ex)

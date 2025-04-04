@@ -12,7 +12,10 @@ public abstract class ApiControllerBase : ControllerBase
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
+        {
             throw new UnauthorizedAccessException("User not authenticated");
+        }
+
         return userId;
     }
 
@@ -21,7 +24,9 @@ public abstract class ApiControllerBase : ControllerBase
         if (result.IsFailure)
         {
             if (result.Error.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
                 return NotFound(result.Error);
+            }
 
             return BadRequest(result.Error);
         }
@@ -34,7 +39,9 @@ public abstract class ApiControllerBase : ControllerBase
         if (result.IsFailure)
         {
             if (result.Error.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
                 return NotFound(result.Error);
+            }
 
             return BadRequest(result.Error);
         }

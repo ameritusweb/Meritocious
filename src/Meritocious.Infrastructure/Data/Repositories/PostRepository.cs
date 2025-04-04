@@ -405,8 +405,8 @@
                           p.CreatedAt >= thirtyDaysAgo && 
                           p.ParentRelations.Any(r => r.RelationType == "remix"))
                 .OrderByDescending(p => 
-                    (p.MeritScore * 0.4) + 
-                    (EF.Functions.DateDiffDay(p.CreatedAt, DateTime.UtcNow) * -0.01))
+                    (p.MeritScore * 0.4m) + 
+                    (EF.Functions.DateDiffDay(p.CreatedAt, DateTime.UtcNow) * -0.01m))
                 .Take(limit)
                 .Include(p => p.Author)
                 .Include(p => p.Tags)
@@ -583,6 +583,7 @@
                 {
                     relation.AddQuote(new QuoteLocation { Content = quote });
                 }
+
                 await context.SaveChangesAsync();
             }
         }
@@ -596,6 +597,7 @@
                 {
                     relation.UpdateRelevanceScore(score);
                 }
+
                 await context.SaveChangesAsync();
             }
         }
