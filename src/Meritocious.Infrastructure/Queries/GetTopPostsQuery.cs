@@ -19,21 +19,21 @@ namespace Meritocious.Core.Features.Posts.Queries
 
     public class GetTopPostsQueryHandler : IRequestHandler<GetTopPostsQuery, List<Post>>
     {
-        private readonly PostRepository _postRepository;
+        private readonly PostRepository postRepository;
 
         public GetTopPostsQueryHandler(PostRepository postRepository)
         {
-            _postRepository = postRepository;
+            this.postRepository = postRepository;
         }
 
         public async Task<List<Post>> Handle(GetTopPostsQuery request, CancellationToken cancellationToken)
         {
             return request.SortBy switch
             {
-                "merit" => await _postRepository.GetTopPostsByMeritAsync(request.Count),
-                "date" => await _postRepository.GetLatestPostsAsync(request.Count),
-                "activity" => await _postRepository.GetMostActivePostsAsync(request.Count),
-                _ => await _postRepository.GetTopPostsByMeritAsync(request.Count)
+                "merit" => await postRepository.GetTopPostsByMeritAsync(request.Count),
+                "date" => await postRepository.GetLatestPostsAsync(request.Count),
+                "activity" => await postRepository.GetMostActivePostsAsync(request.Count),
+                _ => await postRepository.GetTopPostsByMeritAsync(request.Count)
             };
         }
     }

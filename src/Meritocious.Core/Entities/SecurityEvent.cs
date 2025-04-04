@@ -20,6 +20,8 @@ public class SecurityEvent : BaseEntity
 
     public bool IsResolved { get; private set; }
 
+    public DateTime Timestamp { get; private set; }
+
     public DateTime? ResolvedAt { get; private set; }
 
     public string ResolvedBy { get; private set; }

@@ -58,7 +58,7 @@ namespace Meritocious.Infrastructure.Queries.Security
                     .Take(5)
                     .Select(l => new LoginAttemptDto
                     {
-                        Id = l.Id,
+                        Id = l.Id.ToString(),
                         Username = l.Username,
                         Success = l.Success,
                         IpAddress = l.IpAddress,

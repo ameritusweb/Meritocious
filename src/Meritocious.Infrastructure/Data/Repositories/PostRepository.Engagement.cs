@@ -155,5 +155,11 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
             return engagement;
         }
+
+        internal async Task<IEnumerable<Post>> GetTopPostsByUserAsync(Guid userId, int v)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
+        }
     }
 }

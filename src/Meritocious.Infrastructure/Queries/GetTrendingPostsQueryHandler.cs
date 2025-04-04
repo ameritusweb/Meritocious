@@ -9,15 +9,15 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetTrendingPostsQueryHandler : IRequestHandler<GetTrendingPostsQuery, List<PostSummaryDto>>
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<GetTrendingPostsQueryHandler> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<GetTrendingPostsQueryHandler> logger;
 
         public GetTrendingPostsQueryHandler(
             MeritociousDbContext context,
             ILogger<GetTrendingPostsQueryHandler> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<List<PostSummaryDto>> Handle(
@@ -34,7 +34,7 @@ namespace Meritocious.Infrastructure.Queries
                     _ => DateTime.UtcNow.AddDays(-1)
                 };
 
-                var query = _context.Posts
+                var query = context.Posts
                     .Include(p => p.Author)
                     .Include(p => p.Tags)
                     .Where(p => !p.IsDeleted &&
@@ -55,11 +55,11 @@ namespace Meritocious.Infrastructure.Queries
                     .Select(p => new
                     {
                         Post = p,
-                        TrendingScore = 
-                            (p.MeritScore * 0.4m) +
-                            (p.EngagementScore * 0.3m) +
-                            (p.ViewCount * 0.2m / 1000) + // Normalize views
-                            (0.1m * (1 - ((DateTime.UtcNow - p.CreatedAt).TotalHours / 24))) // Recency factor
+                        TrendingScore = ((double)p.MeritScore * 0.4d) +
+
+                            // (p.EngagementScore * 0.3m) + // TODO: Add engagement score.
+                            (p.ViewCount * 0.2d / 1000) + // Normalize views
+                            (0.1d * (1 - ((DateTime.UtcNow - p.CreatedAt).TotalHours / 24))) // Recency factor
                     })
                     .OrderByDescending(x => x.TrendingScore)
                     .Take(request.Limit)
@@ -68,7 +68,7 @@ namespace Meritocious.Infrastructure.Queries
                         Id = x.Post.Id,
                         Title = x.Post.Title,
                         AuthorId = x.Post.AuthorId,
-                        AuthorName = x.Post.Author.Username,
+                        AuthorName = x.Post.Author.UserName,
                         AuthorAvatar = x.Post.Author.AvatarUrl,
                         CreatedAt = x.Post.CreatedAt,
                         MeritScore = x.Post.MeritScore,
@@ -84,7 +84,7 @@ namespace Meritocious.Infrastructure.Queries
             }
             catch (Exception ex)
             {                
-                _logger.LogError(ex, "Error getting trending posts");
+                logger.LogError(ex, "Error getting trending posts");
                 throw;
             }
         }

@@ -12,6 +12,6 @@ namespace Meritocious.Core.Interfaces
         Task AddTagToPostAsync(Guid postId, string tagName);
         Task RemoveTagFromPostAsync(Guid postId, string tagName);
         Task<IEnumerable<Tag>> GetOrCreateTagsAsync(IEnumerable<string> tagNames);
-        Task<IEnumerable<object>> GetRelatedTagsAsync(string topic);
+        Task<IEnumerable<Tag>> GetRelatedTagsAsync(string topic);
     }
 }

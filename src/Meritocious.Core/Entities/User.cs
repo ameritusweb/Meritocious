@@ -15,6 +15,7 @@ namespace Meritocious.Core.Entities
         public bool IsActive { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
+        public string AvatarUrl { get; set; }
 
         private readonly List<Post> posts;
         public IReadOnlyCollection<Post> Posts => posts.AsReadOnly();

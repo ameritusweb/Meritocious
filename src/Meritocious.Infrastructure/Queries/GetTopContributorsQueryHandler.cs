@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 public class GetTopContributorsQueryHandler : IRequestHandler<GetTopContributorsQuery, List<UserProfileDto>>
 {
-    private readonly UserRepository _userRepository;
+    private readonly UserRepository userRepository;
 
     public GetTopContributorsQueryHandler(UserRepository userRepository)
     {
-        _userRepository = userRepository;
+        this.userRepository = userRepository;
     }
 
     public async Task<List<UserProfileDto>> Handle(GetTopContributorsQuery request, CancellationToken cancellationToken)
@@ -27,12 +27,12 @@ public class GetTopContributorsQueryHandler : IRequestHandler<GetTopContributors
             _ => DateTime.MinValue
         };
 
-        var users = await _userRepository.GetTopContributorsAsync(request.Count, startDate);
+        var users = await userRepository.GetTopContributorsAsync(request.Count, startDate);
 
         return users.Select(u => new UserProfileDto
         {
-            Id = u.Id,
-            Username = u.Username,
+            Id = Guid.Parse(u.Id),
+            Username = u.UserName,
             MeritScore = u.MeritScore,
             CreatedAt = u.CreatedAt,
             LastLoginAt = u.LastLoginAt

@@ -13,18 +13,18 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetUserMeritHistoryQueryHandler : IRequestHandler<GetUserMeritHistoryQuery, Result<List<ReputationSnapshot>>>
     {
-        private readonly ReputationSnapshotRepository _snapshotRepository;
+        private readonly ReputationSnapshotRepository snapshotRepository;
 
         public GetUserMeritHistoryQueryHandler(ReputationSnapshotRepository snapshotRepository)
         {
-            _snapshotRepository = snapshotRepository;
+            this.snapshotRepository = snapshotRepository;
         }
 
         public async Task<Result<List<ReputationSnapshot>>> Handle(GetUserMeritHistoryQuery request, CancellationToken cancellationToken)
         {
             try
             {
-                var snapshots = await _snapshotRepository.GetUserSnapshotsAsync(
+                var snapshots = await snapshotRepository.GetUserSnapshotsAsync(
                     request.UserId,
                     request.TimeFrame,
                     request.StartDate,

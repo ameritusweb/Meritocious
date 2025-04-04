@@ -48,6 +48,7 @@ namespace Meritocious.Core.Services
             {
                 throw new ResourceNotFoundException($"Tag '{name}' not found");
             }
+
             return tag;
         }
 

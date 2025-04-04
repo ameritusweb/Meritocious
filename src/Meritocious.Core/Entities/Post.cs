@@ -21,6 +21,7 @@ namespace Meritocious.Core.Entities
         public bool IsDraft { get; internal set; }
         public string SubstackId { get; internal set; }
         public Substack Substack { get; internal set; }
+        public decimal EngagementScore { get; internal set; }
 
         private readonly List<Comment> comments;
         public IReadOnlyCollection<Comment> Comments => comments.AsReadOnly();

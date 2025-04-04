@@ -1,11 +1,11 @@
 ﻿namespace Meritocious.Core.Features.Search.Queries
 {
-
     using MediatR;
     using Meritocious.Common.DTOs.Auth;
     using Meritocious.Common.DTOs.Contributions;
     using Meritocious.Core.Features.Users.Queries;
     using Meritocious.Core.Results;
+    using Meritocious.Infrastructure.Data.Extensions;
     using Meritocious.Infrastructure.Data.Repositories;
     using System;
     using System.Collections.Generic;
@@ -15,36 +15,36 @@
 
     public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, Result<UserProfileDto>>
     {
-        private readonly UserRepository _userRepository;
-        private readonly PostRepository _postRepository;
-        private readonly CommentRepository _commentRepository;
+        private readonly UserRepository userRepository;
+        private readonly PostRepository postRepository;
+        private readonly CommentRepository commentRepository;
 
         public GetUserProfileQueryHandler(
             UserRepository userRepository,
             PostRepository postRepository,
             CommentRepository commentRepository)
         {
-            _userRepository = userRepository;
-            _postRepository = postRepository;
-            _commentRepository = commentRepository;
+            this.userRepository = userRepository;
+            this.postRepository = postRepository;
+            this.commentRepository = commentRepository;
         }
 
         public async Task<Result<UserProfileDto>> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByIdAsync(request.UserId);
+            var user = await userRepository.GetByIdAsync(request.UserId);
             if (user == null)
             {
                 return Result.Failure<UserProfileDto>($"User {request.UserId} not found");
             }
 
             // Get user's top contributions
-            var topPosts = await _postRepository.GetTopPostsByUserAsync(request.UserId, 5);
-            var topComments = await _commentRepository.GetTopCommentsByUserAsync(request.UserId, 5);
+            var topPosts = await postRepository.GetTopPostsByUserAsync(request.UserId, 5);
+            var topComments = await commentRepository.GetTopCommentsByUserAsync(request.UserId, 5);
 
             var profile = new UserProfileDto
             {
-                Id = user.Id,
-                Username = user.Username,
+                Id = Guid.Parse(user.Id),
+                Username = user.UserName,
                 Email = user.Email,
                 MeritScore = user.MeritScore,
                 CreatedAt = user.CreatedAt,
