@@ -32,6 +32,15 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .FirstOrDefaultAsync(t => t.Slug == slug);
         }
 
+        public async Task<Tag> GetByNameAsync(string name)
+        {
+            return await dbSet
+                .Include(t => t.ParentTag)
+                .Include(t => t.Synonyms)
+                .Include(t => t.RelatedTags)
+                .FirstOrDefaultAsync(t => t.Name.ToLower() == name.ToLower());
+        }
+
         public async Task<List<Tag>> GetPopularTagsAsync(int count = 10)
         {
             return await dbSet

@@ -11,7 +11,7 @@ namespace Meritocious.Core.Features.Users.Commands
     using Meritocious.Core.Entities;
     using Meritocious.Core.Results;
 
-    public record RegisterUserCommand : IRequest<Result<User>>
+    public record RegisterUserCommand : IRequest<Result<UserProfileDto>>
     {
         public string Username { get; init; }
         public string Email { get; init; }

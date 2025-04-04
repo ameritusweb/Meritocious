@@ -22,7 +22,7 @@ public class GetAuditLogExportQueryHandler : IRequestHandler<GetAuditLogExportQu
 
         if (request.IncludeAdminActions)
         {
-            var adminActions = await context.AdminActions
+            var adminActions = await context.AdminActionLogs
                 .Where(a => a.Timestamp >= request.StartDate && a.Timestamp <= request.EndDate)
                 .OrderBy(a => a.Timestamp)
                 .ToListAsync(cancellationToken);
@@ -72,7 +72,7 @@ public class GetAuditLogExportQueryHandler : IRequestHandler<GetAuditLogExportQu
         {
             var apiUsage = await context.ApiUsageLogs
                 .Where(a => a.Timestamp >= request.StartDate && a.Timestamp <= request.EndDate)
-                .OrderBy(a => a.TimeStamp)
+                .OrderBy(a => a.Timestamp)
                 .ToListAsync(cancellationToken);
 
             data.AppendLine("\n=== API Usage ===");

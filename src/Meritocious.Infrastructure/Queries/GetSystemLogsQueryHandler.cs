@@ -28,7 +28,7 @@ namespace Meritocious.Infrastructure.Queries
             GetSystemLogsQuery request,
             CancellationToken cancellationToken)
         {
-            var query = context.SystemLogs.AsQueryable();
+            var query = context.SecurityAuditLogs.AsQueryable();
 
             if (!string.IsNullOrEmpty(request.Level))
             {
@@ -79,7 +79,7 @@ namespace Meritocious.Infrastructure.Queries
             GetRecentLogsQuery request,
             CancellationToken cancellationToken)
         {
-            return await context.SystemLogs
+            return await context.SecurityAuditLogs
                 .OrderByDescending(l => l.Timestamp)
                 .Take(request.Count)
                 .Select(l => new LogEntryDto

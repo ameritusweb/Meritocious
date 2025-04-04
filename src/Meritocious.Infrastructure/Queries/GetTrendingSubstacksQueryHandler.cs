@@ -6,7 +6,7 @@ using Meritocious.Infrastructure.Data;
 
 namespace Meritocious.Infrastructure.Queries;
 
-public class GetTrendingSubstacksQueryHandler : IRequestHandler<GetTrendingSubstacksQuery, List<SubstackDto>>
+public class GetTrendingSubstacksQueryHandler : IRequestHandler<GetTrendingSubstacksQuery, Result<List<SubstackDto>>>
 {
     private readonly MeritociousDbContext context;
 
@@ -15,9 +15,9 @@ public class GetTrendingSubstacksQueryHandler : IRequestHandler<GetTrendingSubst
         this.context = context;
     }
 
-    public async Task<List<SubstackDto>> Handle(GetTrendingSubstacksQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<SubstackDto>>> Handle(GetTrendingSubstacksQuery request, CancellationToken cancellationToken)
     {
-        return await context.Substacks
+        var substacks = await context.Substacks
             .OrderByDescending(s => s.EngagementRate)
             .Skip(request.Skip)
             .Take(request.Limit)
@@ -57,5 +57,7 @@ public class GetTrendingSubstacksQueryHandler : IRequestHandler<GetTrendingSubst
                 }
             })
             .ToListAsync(cancellationToken);
+
+        return Result.Success(substacks);
     }
 }
