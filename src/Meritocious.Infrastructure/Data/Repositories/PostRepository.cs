@@ -10,6 +10,7 @@
         Task AddAsync(Post post);
         Task UpdateAsync(Post post);
         Task DeleteAsync(Post post);
+        Task<Post> GetByIdAsync(Guid id);
         Task<List<Post>> GetByIdsAsync(IEnumerable<Guid> ids);
         Task<List<Post>> GetTopPostsAsync(int count = 10);
         Task<List<Post>> GetPostsByUserAsync(Guid userId);
@@ -66,6 +67,14 @@
     {
         public PostRepository(MeritociousDbContext context) : base(context)
         {
+        }
+
+        public async Task<Post> GetByIdAsync(Guid id)
+        {
+            return await _dbSet
+                .Include(p => p.Author)
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
         }
 
         public async Task AddAsync(Post post)
