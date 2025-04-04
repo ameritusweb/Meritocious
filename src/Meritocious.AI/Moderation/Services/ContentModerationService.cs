@@ -7,6 +7,7 @@ using System.Text.Json;
 using Meritocious.AI.Moderation.Interfaces;
 using Meritocious.Common.DTOs.Moderation;
 using Meritocious.AI.SemanticKernel.Interfaces;
+using Meritocious.Core.Entities;
 
 namespace Meritocious.AI.Moderation.Services
 {
@@ -253,6 +254,12 @@ namespace Meritocious.AI.Moderation.Services
 
             // Return the higher of the two scores
             return Math.Max(maxScore, aiScore);
+        }
+
+        Task<ModerationAction> IContentModerator.EvaluateContentAsync(string content)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
         }
 
         private class ToxicityAnalysis

@@ -27,11 +27,13 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<User>> GetUsersInterestedInTopicAsync(
             string topic,
+            int limit = 10,
             decimal minWeight = 0.1m)
         {
             return await dbSet
                 .Include(p => p.User)
                 .Where(p => p.Topic == topic && p.Weight >= minWeight)
+                .Take(limit)
                 .Select(p => p.User)
                 .ToListAsync();
         }

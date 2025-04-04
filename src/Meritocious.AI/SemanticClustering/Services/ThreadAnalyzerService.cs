@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Embeddings;
 using Meritocious.AI.Shared.Configuration;
 using Meritocious.AI.SemanticClustering.Interfaces;
 using Meritocious.AI.VectorDB;
@@ -26,28 +24,26 @@ namespace Meritocious.AI.SemanticClustering.Services
             this.vectorDbService = vectorDbService;
             this.config = config.Value;
             this.logger = logger;
-            this.logger = logger;
         }
 
         public async Task<List<string>> ExtractKeyTopicsAsync(string content)
         {
             try
             {
-#pragma warning disable SKEXP0001
-
-                // Create a kernel instance
                 // Define the prompt for topic extraction
                 var topicExtractionPrompt = @"Extract key topics from this text.
-            Consider:
-            1. Main themes and concepts
-            2. Important terms and phrases
-            3. Underlying ideas
-            4. Domain-specific terminology
+                Consider:
+                1. Main themes and concepts
+                2. Important terms and phrases
+                3. Underlying ideas
+                4. Domain-specific terminology
 
-            Return topics as a comma-separated list of keywords or short phrases.
-            Text: {{$input}}";
+                Return topics as a comma-separated list of keywords or short phrases.
+                Text: {{$text}}";
 
-                var result = await semanticKernelService.CompleteTextAsync(topicExtractionPrompt, new Dictionary<string, object> { ["input"] = content });
+                var result = await semanticKernelService.CompleteTextAsync(
+                    topicExtractionPrompt,
+                    new Dictionary<string, object> { ["text"] = content });
 
                 // Parse the comma-separated list
                 var topics = result
@@ -61,7 +57,7 @@ namespace Meritocious.AI.SemanticClustering.Services
                 foreach (var topic in topics)
                 {
                     var embedding = await semanticKernelService.GetEmbeddingAsync(topic);
-                    embeddings.Add(embedding.ToArray());
+                    embeddings.Add(embedding);
                 }
 
                 // Cluster similar topics
@@ -83,7 +79,6 @@ namespace Meritocious.AI.SemanticClustering.Services
         {
             try
             {
-                // Create a kernel instance
                 // Generate embeddings
                 var embedding1 = await semanticKernelService.GetEmbeddingAsync(content1);
                 var embedding2 = await semanticKernelService.GetEmbeddingAsync(content2);
@@ -102,20 +97,14 @@ namespace Meritocious.AI.SemanticClustering.Services
         {
             try
             {
-                // Create a kernel instance
-                var kernel = CreateKernel();
-
-#pragma warning disable SKEXP0001
-
                 // Generate embedding for the content
-                var embeddingService = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
-                var contentEmbedding = await embeddingService.GenerateEmbeddingAsync(content);
+                var contentEmbedding = await semanticKernelService.GetEmbeddingAsync(content);
 
                 // Extract topics to use as a fallback
                 var topics = await ExtractKeyTopicsAsync(content);
 
                 // Search for related threads
-                return await SearchRelatedThreadsAsync(contentEmbedding.ToArray(), topics, maxResults);
+                return await SearchRelatedThreadsAsync(contentEmbedding, topics, maxResults);
             }
             catch (Exception ex)
             {
@@ -125,7 +114,7 @@ namespace Meritocious.AI.SemanticClustering.Services
         }
 
         private async Task<List<string>> SearchRelatedThreadsAsync(
-            ReadOnlyMemory<float> contentEmbedding,
+            float[] contentEmbedding,
             List<string> topics,
             int maxResults)
         {
@@ -137,7 +126,7 @@ namespace Meritocious.AI.SemanticClustering.Services
                 // Search for similar vectors in the 'threads' collection
                 var searchResults = await vectorDbService.SearchAsync(
                     "meritocious_thread_vectors", // Collection name for threads
-                    contentEmbedding.ToArray(),
+                    contentEmbedding,
                     maxResults);
 
                 // Extract thread IDs from search results
@@ -145,18 +134,13 @@ namespace Meritocious.AI.SemanticClustering.Services
                 {
                     if (result.Metadata.TryGetValue("threadId", out var threadId))
                     {
-                        relatedThreads.Add(threadId);
+                        relatedThreads.Add(threadId.ToString());
                     }
                 }
 
                 // If we found fewer related threads than requested, supplement with topic-based results
                 if (relatedThreads.Count < maxResults && topics.Any())
                 {
-                    // Create a kernel instance for topic embeddings
-                    var kernel = CreateKernel();
-                    var embeddingService = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
-
-                    // Create a semantic search for each topic
                     foreach (var topic in topics)
                     {
                         if (relatedThreads.Count >= maxResults)
@@ -165,21 +149,21 @@ namespace Meritocious.AI.SemanticClustering.Services
                         }
 
                         // Generate embedding for the topic
-                        var topicEmbedding = await embeddingService.GenerateEmbeddingAsync(topic);
+                        var topicEmbedding = await semanticKernelService.GetEmbeddingAsync(topic);
 
                         // Search for threads related to this topic
                         var topicResults = await vectorDbService.SearchAsync(
                             "meritocious_thread_vectors",
-                            topicEmbedding.ToArray(),
+                            topicEmbedding,
                             maxResults - relatedThreads.Count);
 
                         // Add unique results to our list
                         foreach (var result in topicResults)
                         {
                             if (result.Metadata.TryGetValue("threadId", out var threadId) &&
-                                !relatedThreads.Contains(threadId))
+                                !relatedThreads.Contains(threadId.ToString()))
                             {
-                                relatedThreads.Add(threadId);
+                                relatedThreads.Add(threadId.ToString());
 
                                 if (relatedThreads.Count >= maxResults)
                                 {
@@ -201,7 +185,7 @@ namespace Meritocious.AI.SemanticClustering.Services
             }
         }
 
-        private double CalculateCosineSimilarity(ReadOnlyMemory<float> v1, ReadOnlyMemory<float> v2)
+        private double CalculateCosineSimilarity(float[] v1, float[] v2)
         {
             float dotProduct = 0;
             float norm1 = 0;
@@ -209,9 +193,9 @@ namespace Meritocious.AI.SemanticClustering.Services
 
             for (int i = 0; i < v1.Length; i++)
             {
-                dotProduct += v1.Span[i] * v2.Span[i];
-                norm1 += v1.Span[i] * v1.Span[i];
-                norm2 += v2.Span[i] * v2.Span[i];
+                dotProduct += v1[i] * v2[i];
+                norm1 += v1[i] * v1[i];
+                norm2 += v2[i] * v2[i];
             }
 
             return dotProduct / (Math.Sqrt(norm1) * Math.Sqrt(norm2));
@@ -219,18 +203,12 @@ namespace Meritocious.AI.SemanticClustering.Services
 
         private async Task<List<string>> RankTopicClustersAsync(List<TopicCluster> clusters, string content)
         {
-            // Create a kernel instance
-            var kernel = CreateKernel();
-            var embeddingService = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
-
-            // Generate embedding for the content
-            var contentEmbedding = await embeddingService.GenerateEmbeddingAsync(content);
-
             var rankedTopics = new List<(string topic, double score)>();
 
             foreach (var cluster in clusters)
             {
-                var clusterEmbedding = await embeddingService.GenerateEmbeddingAsync(cluster.MainTopic);
+                var clusterEmbedding = await semanticKernelService.GetEmbeddingAsync(cluster.MainTopic);
+                var contentEmbedding = await semanticKernelService.GetEmbeddingAsync(content);
 
                 double score = 0;
 
@@ -238,9 +216,9 @@ namespace Meritocious.AI.SemanticClustering.Services
                 score += (cluster.RelatedTopics.Count + 1) * 0.2;
 
                 // Semantic similarity score
-                score += CalculateCosineSimilarity(clusterEmbedding.ToArray().AsMemory(), contentEmbedding.ToArray().AsMemory()) * 0.4;
+                score += CalculateCosineSimilarity(clusterEmbedding, contentEmbedding) * 0.4;
 
-                // Position score (implement based on first occurrence in text)
+                // Position score
                 var positionScore = CalculatePositionScore(cluster, content);
                 score += positionScore * 0.2;
 
@@ -281,8 +259,8 @@ namespace Meritocious.AI.SemanticClustering.Services
                     }
 
                     var similarity = CalculateCosineSimilarity(
-                        embeddings[i].AsMemory(),
-                        embeddings[j].AsMemory());
+                        embeddings[i],
+                        embeddings[j]);
 
                     if (similarity > 0.7) // Similarity threshold
                     {

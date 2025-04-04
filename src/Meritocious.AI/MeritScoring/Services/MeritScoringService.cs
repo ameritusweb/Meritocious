@@ -111,7 +111,7 @@ namespace Meritocious.AI.MeritScoring.Services
             // Combine scores with weights
             decimal finalScore = (
                 readabilityMetrics.score * 0.3m +
-                structureScore * 0.3m +
+                structureScore.score * 0.3m +
                 technicalScore.score * 0.2m +
                 grammarScore.score * 0.2m);
 
@@ -364,7 +364,7 @@ namespace Meritocious.AI.MeritScoring.Services
             return (score, explanation);
         }
 
-        private async Task<decimal> EvaluateStructureAsync(string content)
+        private async Task<(decimal score, string explanation)> EvaluateStructureAsync(string content)
         {
             // Use semantic kernel to evaluate structure coherence
             var structurePrompt = @"Evaluate the structure coherence of this text.
@@ -375,7 +375,8 @@ namespace Meritocious.AI.MeritScoring.Services
                                   Text: {{$text}}";
 
             var result = await semanticKernelService.CompleteTextAsync(structurePrompt, new Dictionary<string, object> { ["text"] = content });
-            return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
+            var resScore = decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
+            return (resScore, "Structural coherence evaluation");
         }
 
         private decimal CalculateCosineSimilarity(ReadOnlyMemory<float> v1, ReadOnlyMemory<float> v2)
@@ -461,7 +462,7 @@ namespace Meritocious.AI.MeritScoring.Services
             return (score, explanation);
         }
 
-        private async Task<decimal> EvaluateInsightDepthAsync(string content)
+        private async Task<(decimal score, string explanation)> EvaluateInsightDepthAsync(string content)
         {
             var insightPrompt = @"Evaluate the depth of insights in this text.
                                Consider:
@@ -474,7 +475,8 @@ namespace Meritocious.AI.MeritScoring.Services
                                Text: {{$text}}";
 
             var result = await semanticKernelService.CompleteTextAsync(insightPrompt, new Dictionary<string, object> { ["text"] = content });
-            return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
+            var resScore =  decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
+            return (resScore, "Analysis depth and novelty evaluation");
         }
 
         private async Task<decimal> EvaluateContextAdvancementAsync(string content, string context)

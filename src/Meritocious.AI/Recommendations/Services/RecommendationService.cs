@@ -129,7 +129,8 @@ namespace Meritocious.AI.Recommendations.Services
                     profile.InteractionPatterns[pattern] = 0;
                 }
 
-                profile.InteractionPatterns[pattern] += recencyWeight;
+                // TODO: Add recency weight.
+                // profile.InteractionPatterns[pattern] += recencyWeight;
             }
 
             // Normalize weights
@@ -210,6 +211,12 @@ namespace Meritocious.AI.Recommendations.Services
                 .OrderByDescending(r => r.RelevanceScore)
                 .Take(count)
                 .ToList();
+        }
+
+        private decimal CalculateContentRelevance(Content content, UserProfile userProfile)
+        {
+            // TODO: Calculate content relevance.
+            throw new NotImplementedException();
         }
 
         private async Task<List<ContentRecommendation>> GetSemanticRecommendationsAsync(
