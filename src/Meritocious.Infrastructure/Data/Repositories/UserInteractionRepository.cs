@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface IUserInteractionRepository
+    {
+        Task<List<UserContentInteraction>> GetUserInteractionsAsync(Guid userId, DateTime? since = null);
+        Task<List<UserContentInteraction>> GetContentInteractionsAsync(Guid contentId, ContentType contentType, DateTime? since = null);
+        Task<Dictionary<string, decimal>> GetUserInteractionPatternsAsync(Guid userId);
+    }
+
     public class UserInteractionRepository : GenericRepository<UserContentInteraction>
     {
         public UserInteractionRepository(MeritociousDbContext context) : base(context)

@@ -13,6 +13,7 @@ namespace Meritocious.Core.Entities
         public decimal MeritScore { get; private set; }
         public DateTime? LastLoginAt { get; private set; }
         public bool IsActive { get; private set; }
+        public DateTime CreatedAt { get; private set; }
 
         private readonly List<Post> _posts;
         public IReadOnlyCollection<Post> Posts => _posts.AsReadOnly();
@@ -34,7 +35,7 @@ namespace Meritocious.Core.Entities
         {
             return new User
             {
-                Username = username,
+                UserName = username,
                 Email = email,
                 PasswordHash = passwordHash,
                 MeritScore = 0,

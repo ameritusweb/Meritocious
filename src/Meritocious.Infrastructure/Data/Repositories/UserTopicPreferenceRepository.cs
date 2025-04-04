@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface IUserTopicPreferenceRepository
+    {
+        Task<List<UserTopicPreference>> GetUserPreferencesAsync(Guid userId);
+        Task<List<User>> GetUsersInterestedInTopicAsync(string topic, decimal minWeight = 0.1m);
+        Task UpdateUserPreferencesAsync(Guid userId, Dictionary<string, decimal> preferences);
+    }
+
     public class UserTopicPreferenceRepository : GenericRepository<UserTopicPreference>
     {
         public UserTopicPreferenceRepository(MeritociousDbContext context) : base(context)
@@ -62,5 +69,4 @@ namespace Meritocious.Infrastructure.Data.Repositories
             await _context.SaveChangesAsync();
         }
     }
-
 }

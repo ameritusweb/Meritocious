@@ -19,6 +19,7 @@ namespace Meritocious.Infrastructure
     using Meritocious.Core.Features.Notifications.Models;
     using Meritocious.Core.Entities;
     using Meritocious.Infrastructure.Data.Services;
+    using Microsoft.AspNetCore.Identity;
 
     public static class ServiceCollectionExtensions
     {
@@ -33,7 +34,7 @@ namespace Meritocious.Infrastructure
                     b => b.MigrationsAssembly(typeof(MeritociousDbContext).Assembly.FullName)));
 
             // Add Identity
-            services.AddIdentity<User, IdentityRole>(options =>
+            services.AddIdentity<User, IdentityRole<Guid>>(options =>
             {
                 options.Password.RequiredLength = 8;
                 options.Password.RequireDigit = true;

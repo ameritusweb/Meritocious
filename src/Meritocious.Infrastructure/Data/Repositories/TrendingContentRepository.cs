@@ -9,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface ITrendingContentRepository
+    {
+        Task<List<TrendingContent>> GetTrendingContentAsync(ContentType? contentType = null, int count = 10);
+        Task<List<TrendingContent>> GetTrendingByTopicAsync(string topic, int count = 10);
+        Task RecalculateTrendingScoresAsync(TimeSpan windowSize);
+    }
+
     public class TrendingContentRepository : GenericRepository<TrendingContent>
     {
         public TrendingContentRepository(MeritociousDbContext context) : base(context)

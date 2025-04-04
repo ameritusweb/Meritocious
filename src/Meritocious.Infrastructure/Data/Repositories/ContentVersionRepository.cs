@@ -5,6 +5,18 @@ using Meritocious.Core.Features.Versioning;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface IContentVersionRepository
+    {
+        Task<List<ContentVersion>> GetVersionHistoryAsync(Guid contentId, ContentType contentType, bool includeDiffs = false);
+        Task<ContentVersion> GetVersionAsync(Guid contentId, ContentType contentType, int versionNumber);
+        Task<ContentVersion> GetLatestVersionAsync(Guid contentId, ContentType contentType);
+        Task<List<ContentVersion>> GetModerationEditsAsync(Guid contentId, ContentType contentType);
+        Task<List<ContentVersion>> GetUserEditsAsync(Guid userId, DateTime? since = null);
+        Task<ContentDiff> GetVersionDiffAsync(Guid versionId);
+        Task<int> GetNextVersionNumberAsync(Guid contentId, ContentType contentType);
+        Task SaveDiffAsync(ContentDiff diff);
+    }
+
     public class ContentVersionRepository : GenericRepository<ContentVersion>
     {
         public ContentVersionRepository(MeritociousDbContext context) : base(context)

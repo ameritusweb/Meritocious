@@ -1,5 +1,6 @@
 ﻿using Meritocious.Common.Enums;
 using Meritocious.Core.Features.Recommendations.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,13 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface IContentTopicRepository
+    {
+        Task<List<ContentTopic>> GetContentTopicsAsync(Guid contentId, ContentType contentType);
+        Task<List<ContentTopic>> GetTopicsForContentListAsync(List<Guid> contentIds, ContentType contentType);
+        Task<List<string>> GetTopTrendingTopicsAsync(int count = 10);
+    }
+
     public class ContentTopicRepository : GenericRepository<ContentTopic>
     {
         public ContentTopicRepository(MeritociousDbContext context) : base(context)

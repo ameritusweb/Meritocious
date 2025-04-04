@@ -6,6 +6,17 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface ITagRepository
+    {
+        Task<Tag> GetBySlugAsync(string slug);
+        Task<List<Tag>> GetPopularTagsAsync(int count = 10);
+        Task<List<Tag>> GetTagsByCategoryAsync(TagCategory category);
+        Task<List<Tag>> GetChildTagsAsync(Guid parentTagId);
+        Task<List<Tag>> SearchTagsAsync(string searchTerm, bool includeSynonyms = true);
+        Task<List<Tag>> GetRelatedTagsAsync(Guid tagId, TagRelationType? relationType = null);
+        Task<List<Tag>> GetTagsWithMinimumMeritAsync(decimal minMeritScore);
+    }
+
     public class TagRepository : GenericRepository<Tag>
     {
         public TagRepository(MeritociousDbContext context) : base(context)
@@ -253,7 +264,10 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
             if (approvedOnly)
             {
-                query = query.Where(w => w.IsApproved);
+                query = query.Where(w => w.IsApproved)
+                    .Include(w => w.Tag)
+                    .Include(w => w.Editor)
+                    .Include(w => w.ApprovedBy);
             }
 
             return await query
