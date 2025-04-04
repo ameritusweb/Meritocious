@@ -12,6 +12,7 @@ namespace Meritocious.Core.Services
     using Meritocious.AI.MeritScoring.Interfaces;
     using Meritocious.Infrastructure.Data.Repositories;
     using Microsoft.Extensions.Logging;
+    using Meritocious.Core.Entities;
 
     public class MeritScoringService : IMeritScoringService
     {
@@ -62,8 +63,7 @@ namespace Meritocious.Core.Services
                         score.Explanations,
                         context,
                         isRecalculation,
-                        recalculationReason
-                    );
+                        recalculationReason);
 
                     await meritScoreHistoryRepository.AddAsync(history);
                 }

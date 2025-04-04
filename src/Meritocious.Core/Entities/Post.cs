@@ -39,8 +39,8 @@ namespace Meritocious.Core.Entities
 
         public decimal AverageTimeSpentSeconds { get; internal set; }
 
-        public DateTime? PublishedAt { get; private set; }
-        public string SynthesisMap { get; private set; }
+        public DateTime? PublishedAt { get; internal set; }
+        public string SynthesisMap { get; internal set; }
         private readonly List<ContentVersion> versions = new();
         public IReadOnlyCollection<ContentVersion> Versions => versions.AsReadOnly();
 
@@ -195,7 +195,7 @@ namespace Meritocious.Core.Entities
 
         public void IncrementLikes()
         {
-            LikeCount++;
+            Engagement.Likes++;
             UpdatedAt = DateTime.UtcNow;
         }
 
@@ -203,7 +203,7 @@ namespace Meritocious.Core.Entities
         {
             if (LikeCount > 0)
             {
-                LikeCount--;
+                Engagement.Likes--;
             }
 
             UpdatedAt = DateTime.UtcNow;
@@ -211,7 +211,7 @@ namespace Meritocious.Core.Entities
 
         public void IncrementShares()
         {
-            ShareCount++;
+            Engagement.Shares++;
             UpdatedAt = DateTime.UtcNow;
         }
 

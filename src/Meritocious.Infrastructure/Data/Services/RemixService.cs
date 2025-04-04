@@ -7,6 +7,7 @@ using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.Core.Events;
 using Meritocious.Common.DTOs.Remix;
+using Meritocious.Common.Enums;
 
 namespace Meritocious.Infrastructure.Data.Services;
 
@@ -577,7 +578,7 @@ public class RemixService : IRemixService
                         r => r.Parent.Title,
                         r => r.RelevanceScore),
                 
-                PeakEngagementTime = engagement.PeakEngagementTime,
+                PeakEngagementTime = engagement.PeakEngagementTime.GetValueOrDefault(),
                 EngagementVelocity = engagement.EngagementVelocity,
                 SentimentScore = engagement.SentimentScore,
                 TopEngagementSources = relations

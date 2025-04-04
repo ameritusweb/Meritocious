@@ -117,6 +117,7 @@ namespace Meritocious.Core.Services
             {
                 throw new KeyNotFoundException("Post not found");
             }
+
             return post;
         }
     }

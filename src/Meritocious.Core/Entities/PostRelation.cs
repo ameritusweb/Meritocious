@@ -5,7 +5,7 @@ public class PostRelation : BaseEntity
     public Guid ParentId { get; private set; }
     public Guid ChildId { get; private set; }
     public string RelationType { get; private set; } // "fork" or "remix"
-    public int OrderIndex { get; private set; } // For ordering remix sources
+    public int OrderIndex { get; internal set; } // For ordering remix sources
     public string Role { get; private set; } // For remix: "support", "contrast", "example", "question"
     public string Context { get; private set; } // How this source is used
     public List<QuoteLocation> Quotes { get; set; } = new();

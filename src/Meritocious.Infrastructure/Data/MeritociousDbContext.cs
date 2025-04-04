@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Recommendations.Models;
@@ -7,7 +6,7 @@ using ContentSimilarity = Meritocious.Core.Entities.ContentSimilarity;
 
 namespace Meritocious.Infrastructure.Data
 {
-    public class MeritociousDbContext : IdentityDbContext<User>
+    public class MeritociousDbContext : Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext<User>
     {
         // Original entities
         public override DbSet<User> Users { get; set; }

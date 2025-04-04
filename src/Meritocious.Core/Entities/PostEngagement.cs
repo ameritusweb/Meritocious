@@ -5,39 +5,39 @@ namespace Meritocious.Core.Entities
     public class PostEngagement : BaseEntity
     {
         // Basic metrics
-        public int Views { get; private set; }
-        public int UniqueViews { get; private set; }
-        public int Likes { get; private set; }
-        public int Comments { get; private set; }
-        public int Forks { get; private set; }
-        public int Shares { get; private set; }
+        public int Views { get; internal set; }
+        public int UniqueViews { get; internal set; }
+        public int Likes { get; internal set; }
+        public int Comments { get; internal set; }
+        public int Forks { get; internal set; }
+        public int Shares { get; internal set; }
 
         // User engagement
-        public decimal AverageTimeSpentSeconds { get; private set; }
-        public decimal BounceRate { get; private set; }
-        public int ContributorCount { get; private set; }
+        public decimal AverageTimeSpentSeconds { get; internal set; }
+        public decimal BounceRate { get; internal set; }
+        public int ContributorCount { get; internal set; }
 
         // Impact metrics
-        public int CitationCount { get; private set; }
-        public int ReferenceCount { get; private set; }
+        public int CitationCount { get; internal set; }
+        public int ReferenceCount { get; internal set; }
 
         // Breakdowns
-        public Dictionary<string, int> ViewsByRegion { get; private set; } = new();
-        public Dictionary<string, int> ViewsByPlatform { get; private set; } = new();
-        public Dictionary<DateTime, int> ViewTrend { get; private set; } = new();
-        public Dictionary<string, decimal> SourceInfluenceScores { get; private set; } = new();
+        public Dictionary<string, int> ViewsByRegion { get; internal set; } = new();
+        public Dictionary<string, int> ViewsByPlatform { get; internal set; } = new();
+        public Dictionary<DateTime, int> ViewTrend { get; internal set; } = new();
+        public Dictionary<string, decimal> SourceInfluenceScores { get; internal set; } = new();
 
         // Insights
-        public DateTime? PeakEngagementTime { get; private set; }
-        public decimal EngagementVelocity { get; private set; }
-        public decimal SentimentScore { get; private set; }
-        public List<string> TopEngagementSources { get; private set; } = new();
+        public DateTime? PeakEngagementTime { get; internal set; }
+        public decimal EngagementVelocity { get; internal set; }
+        public decimal SentimentScore { get; internal set; }
+        public List<string> TopEngagementSources { get; internal set; } = new();
 
         // Navigation properties
-        public Guid PostId { get; private set; }
-        public Post Post { get; private set; }
+        public Guid PostId { get; internal set; }
+        public Post Post { get; internal set; }
 
-        private PostEngagement()
+        internal PostEngagement()
         {
         }
 
