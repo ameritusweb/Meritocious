@@ -12,6 +12,7 @@ public class NotificationHub : Hub
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
         }
+
         await base.OnConnectedAsync();
     }
 

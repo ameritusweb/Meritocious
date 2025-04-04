@@ -15,11 +15,11 @@ namespace Meritocious.Core.Services
 
     public class MeritScoringService : IMeritScoringService
     {
-        private readonly IMeritScorer _meritScorer;
-        private readonly UserRepository _userRepository;
-        private readonly PostRepository _postRepository;
-        private readonly CommentRepository _commentRepository;
-        private readonly ILogger<MeritScoringService> _logger;
+        private readonly IMeritScorer meritScorer;
+        private readonly UserRepository userRepository;
+        private readonly PostRepository postRepository;
+        private readonly CommentRepository commentRepository;
+        private readonly ILogger<MeritScoringService> logger;
 
         public MeritScoringService(
             IMeritScorer meritScorer,
@@ -28,11 +28,11 @@ namespace Meritocious.Core.Services
             CommentRepository commentRepository,
             ILogger<MeritScoringService> logger)
         {
-            _meritScorer = meritScorer;
-            _userRepository = userRepository;
-            _postRepository = postRepository;
-            _commentRepository = commentRepository;
-            _logger = logger;
+            this.meritScorer = meritScorer;
+            this.userRepository = userRepository;
+            this.postRepository = postRepository;
+            this.commentRepository = commentRepository;
+            this.logger = logger;
         }
 
         public async Task<MeritScoreDto> CalculateContentScoreAsync(
@@ -42,7 +42,7 @@ namespace Meritocious.Core.Services
         {
             try
             {
-                var score = await _meritScorer.ScoreContentAsync(content, context);
+                var score = await meritScorer.ScoreContentAsync(content, context);
 
                 // Store the score history (implement in future)
                 // await _meritScoreRepository.AddScoreHistoryAsync(contentId, type, score);
@@ -51,20 +51,22 @@ namespace Meritocious.Core.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error calculating content score");
+                logger.LogError(ex, "Error calculating content score");
                 throw;
             }
         }
 
         public async Task<decimal> CalculateUserMeritScoreAsync(Guid userId)
         {
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await userRepository.GetByIdAsync(userId);
             if (user == null)
+            {
                 throw new KeyNotFoundException("User not found");
+            }
 
             // Get user's posts and comments
-            var posts = await _postRepository.GetPostsByUserAsync(userId);
-            var comments = await _commentRepository.GetCommentsByUserAsync(userId);
+            var posts = await postRepository.GetPostsByUserAsync(userId);
+            var comments = await commentRepository.GetCommentsByUserAsync(userId);
 
             // Calculate weighted average of content scores
             decimal totalScore = 0;
@@ -83,12 +85,14 @@ namespace Meritocious.Core.Services
             }
 
             if (totalItems == 0)
+            {
                 return 0;
+            }
 
             var averageScore = totalScore / totalItems;
 
             // Update user's merit score
-            await _userRepository.UpdateAsync(user);
+            await userRepository.UpdateAsync(user);
 
             return averageScore;
         }
@@ -97,11 +101,11 @@ namespace Meritocious.Core.Services
         {
             try
             {
-                return await _meritScorer.ValidateContentAsync(content);
+                return await meritScorer.ValidateContentAsync(content);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error validating content quality");
+                logger.LogError(ex, "Error validating content quality");
                 throw;
             }
         }

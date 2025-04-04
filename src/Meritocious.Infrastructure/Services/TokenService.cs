@@ -37,8 +37,7 @@ namespace Meritocious.Infrastructure.Services
                 audience: jwtSettings.Audience,
                 claims: claims,
                 expires: expires,
-                signingCredentials: credentials
-            );
+                signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
