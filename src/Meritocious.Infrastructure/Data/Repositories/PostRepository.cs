@@ -63,7 +63,7 @@
         Task<Dictionary<string, int>> GetRelationshipDistributionAsync(Guid postId);
     }
 
-    public class PostRepository : GenericRepository<Post>
+    public partial class PostRepository : GenericRepository<Post>
     {
         public PostRepository(MeritociousDbContext context) : base(context)
         {
@@ -611,6 +611,150 @@
                 .ToListAsync();
 
             return distribution.ToDictionary(x => x.RelationType, x => x.Count);
+        }
+
+        public async Task<List<Post>> GetByIdsWithFullDetailsAsync(Guid userId, bool includeDrafts = false)
+        {
+            // Start with base query including all key relationships
+            var query = dbSet
+                .Include(p => p.Author)
+                .Include(p => p.Tags)
+                .Include(p => p.ParentRelations)
+                    .ThenInclude(r => r.Parent)
+                        .ThenInclude(p => p.Author)
+                .Include(p => p.ChildRelations)
+                    .ThenInclude(r => r.Child)
+                        .ThenInclude(p => p.Author)
+                .Include(p => p.Notes)
+                .Where(p => p.AuthorId == userId && !p.IsDeleted);
+
+            // Apply draft filter
+            if (!includeDrafts)
+            {
+                query = query.Where(p => !p.IsDraft);
+            }
+
+            // Get the posts
+            var posts = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .AsSplitQuery() // Split the query to avoid cartesian explosion
+                .ToListAsync();
+
+            // Load quotes for remix relations
+            var remixRelations = posts
+                .SelectMany(p => p.ParentRelations.Concat(p.ChildRelations))
+                .Where(r => r.RelationType == "remix")
+                .ToList();
+
+            if (remixRelations.Any())
+            {
+                var remixRelationIds = remixRelations.Select(r => r.Id).ToList();
+                var quotes = await context.Set<QuoteLocation>()
+                    .Where(q => remixRelationIds.Contains(q.PostSourceId))
+                    .ToListAsync();
+
+                // Group quotes by relation and assign
+                var quotesByRelation = quotes.GroupBy(q => q.PostSourceId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                foreach (var relation in remixRelations)
+                {
+                    if (quotesByRelation.TryGetValue(relation.Id, out var relationQuotes))
+                    {
+                        foreach (var quote in relationQuotes)
+                        {
+                            relation.AddQuote(quote);
+                        }
+                    }
+                }
+            }
+
+            // Get engagement metrics if available
+            var postIds = posts.Select(p => p.Id).ToList();
+            var engagement = await context.Set<PostEngagement>()
+                .Where(e => postIds.Contains(e.PostId))
+                .ToDictionaryAsync(e => e.PostId);
+
+            foreach (var post in posts)
+            {
+                if (engagement.TryGetValue(post.Id, out var metrics))
+                {
+                    post.ViewCount = metrics.Views;
+                    post.UniqueViewCount = metrics.UniqueViews;
+                    post.LikeCount = metrics.Likes;
+                    post.ShareCount = metrics.Shares;
+                    post.AverageTimeSpentSeconds = metrics.AverageTimeSpentSeconds;
+                }
+            }
+
+            return posts;
+        }
+
+        public async Task<List<Post>> GetByIdsWithFullDetailsAsync(IEnumerable<Guid> postIds)
+        {
+            // Similar to above but filtering by postIds instead of userId
+            var query = dbSet
+                .Include(p => p.Author)
+                .Include(p => p.Tags)
+                .Include(p => p.ParentRelations)
+                    .ThenInclude(r => r.Parent)
+                        .ThenInclude(p => p.Author)
+                .Include(p => p.ChildRelations)
+                    .ThenInclude(r => r.Child)
+                        .ThenInclude(p => p.Author)
+                .Include(p => p.Notes)
+                .Where(p => postIds.Contains(p.Id) && !p.IsDeleted);
+
+            var posts = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .AsSplitQuery()
+                .ToListAsync();
+
+            // Load quotes and engagement metrics as above
+            var remixRelations = posts
+                .SelectMany(p => p.ParentRelations.Concat(p.ChildRelations))
+                .Where(r => r.RelationType == "remix")
+                .ToList();
+
+            if (remixRelations.Any())
+            {
+                var remixRelationIds = remixRelations.Select(r => r.Id).ToList();
+                var quotes = await context.Set<QuoteLocation>()
+                    .Where(q => remixRelationIds.Contains(q.PostSourceId))
+                    .ToListAsync();
+
+                var quotesByRelation = quotes.GroupBy(q => q.PostSourceId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                foreach (var relation in remixRelations)
+                {
+                    if (quotesByRelation.TryGetValue(relation.Id, out var relationQuotes))
+                    {
+                        foreach (var quote in relationQuotes)
+                        {
+                            relation.AddQuote(quote);
+                        }
+                    }
+                }
+            }
+
+            var engagement = await context.Set<PostEngagement>()
+                .Where(e => postIds.Contains(e.PostId))
+                .ToDictionaryAsync(e => e.PostId);
+
+            foreach (var post in posts)
+            {
+                if (engagement.TryGetValue(post.Id, out var metrics))
+                {
+                    post.ViewCount = metrics.Views;
+                    post.UniqueViewCount = metrics.UniqueViews;
+                    post.LikeCount = metrics.Likes;
+                    post.ShareCount = metrics.Shares;
+                    post.AverageTimeSpentSeconds = metrics.AverageTimeSpentSeconds;
+                }
+            }
+
+            return posts;
         }
     }
 }

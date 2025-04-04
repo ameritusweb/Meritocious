@@ -6,6 +6,7 @@ using Meritocious.AI.SemanticKernel.Interfaces;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.Core.Events;
+using Meritocious.Common.DTOs.Remix;
 
 namespace Meritocious.Infrastructure.Data.Services;
 
@@ -66,7 +67,7 @@ public class RemixService : IRemixService
             Title = request.Title,
             Content = request.InitialContent,
             AuthorId = request.AuthorId,
-            SubstackId = request.SubstackId,
+            SubstackId = request.SubstackId.ToString(),
             IsDraft = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
@@ -112,7 +113,7 @@ public class RemixService : IRemixService
     public async Task<RemixDto> UpdateRemixAsync(Guid remixId, UpdateRemixRequest request)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -144,7 +145,7 @@ public class RemixService : IRemixService
     public async Task<RemixDto> GetRemixByIdAsync(Guid remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -157,7 +158,7 @@ public class RemixService : IRemixService
             {
                 SourcePostId = r.ParentId,
                 PostTitle = r.Parent.Title,
-                AuthorUsername = r.Parent.Author.Username,
+                AuthorUsername = r.Parent.Author.UserName,
                 Relationship = r.Role,
                 Context = r.Context,
                 Order = r.OrderIndex,
@@ -192,11 +193,11 @@ public class RemixService : IRemixService
             MeritScore = post.MeritScore,
             Sources = sources,
             Tags = post.Tags.Select(t => t.Name).ToList(),
-            SubstackId = post.SubstackId,
+            SubstackId = Guid.Parse(post.SubstackId),
             IsDraft = post.IsDraft,
             PublishedAt = post.PublishedAt,
             CreatedAt = post.CreatedAt,
-            UpdatedAt = post.UpdatedAt,
+            UpdatedAt = post.UpdatedAt.GetValueOrDefault(),
             Notes = notes
         };
     }
@@ -204,7 +205,7 @@ public class RemixService : IRemixService
     public async Task<bool> DeleteRemixAsync(Guid remixId, Guid userId)
     {
         var post = await postRepository.GetByIdAsync(remixId);
-        if (post == null || post.Type != "remix" || post.AuthorId != userId)
+        if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId)
         {
             return false;
         }
@@ -216,7 +217,7 @@ public class RemixService : IRemixService
     public async Task<RemixDto> PublishRemixAsync(Guid remixId, Guid userId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix" || post.AuthorId != userId)
+        if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId)
         {
             throw new ArgumentException("Remix post not found or unauthorized");
         }
@@ -236,7 +237,7 @@ public class RemixService : IRemixService
     public async Task<RemixSourceDto> AddSourceAsync(Guid remixId, AddSourceRequest request)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -279,7 +280,7 @@ public class RemixService : IRemixService
             {
                 SourcePostId = r.ParentId,
                 PostTitle = sourcePost.Title,
-                AuthorUsername = sourcePost.Author.Username,
+                AuthorUsername = sourcePost.Author.UserName,
                 Relationship = r.Role,
                 Context = r.Context,
                 Order = r.OrderIndex,
@@ -299,7 +300,7 @@ public class RemixService : IRemixService
     public async Task<bool> RemoveSourceAsync(Guid remixId, Guid sourceId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             return false;
         }
@@ -329,7 +330,7 @@ public class RemixService : IRemixService
     public async Task<RemixSourceDto> UpdateSourceRelationshipAsync(Guid remixId, Guid sourceId, string relationship)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -353,7 +354,7 @@ public class RemixService : IRemixService
         {
             SourcePostId = relation.ParentId,
             PostTitle = relation.Parent.Title,
-            AuthorUsername = relation.Parent.Author.Username,
+            AuthorUsername = relation.Parent.Author.UserName,
             Relationship = relation.Role,
             Context = relation.Context,
             Order = relation.OrderIndex,
@@ -429,7 +430,7 @@ public class RemixService : IRemixService
         {
             Id = p.Id,
             Title = p.Title,
-            AuthorUsername = p.Author.Username,
+            AuthorUsername = p.Author.UserName,
             MeritScore = p.MeritScore,
             Tags = p.Tags.Select(t => t.Name).ToList(),
             CreatedAt = p.CreatedAt,
@@ -457,7 +458,7 @@ public class RemixService : IRemixService
         {
             Id = p.Id,
             Title = p.Title,
-            AuthorUsername = p.Author.Username,
+            AuthorUsername = p.Author.UserName,
             MeritScore = p.MeritScore,
             Tags = p.Tags.Select(t => t.Name).ToList()
         });
@@ -468,7 +469,7 @@ public class RemixService : IRemixService
         RemixEngagementEvent engagementEvent)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -530,7 +531,7 @@ public class RemixService : IRemixService
     public async Task<RemixAnalytics> GetRemixAnalyticsAsync(Guid remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -792,7 +793,7 @@ public class RemixService : IRemixService
     public async Task<string> GenerateSynthesisMapAsync(Guid remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -1007,7 +1008,7 @@ public class RemixService : IRemixService
     public async Task<RemixScoreResult> CalculateRemixScoreAsync(Guid remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix")
+        if (post == null || post.GetPostType() != "remix")
         {
             throw new ArgumentException("Remix post not found");
         }
@@ -1126,7 +1127,7 @@ public class RemixService : IRemixService
         });
 
         // 4. Source Utilization Score - How effectively are sources used?
-        var sourceUtilization = CalculateSourceUtilization(remix, sources.Select(s => s.Post).ToList());
+        var sourceUtilization = CalculateSourceUtilization(post, sources.Select(s => s.Post).ToList());
         insights.Add(new ScoreInsight 
         { 
             Category = "Source Utilization",
@@ -1246,6 +1247,4 @@ public class RemixService : IRemixService
         public decimal Insight { get; set; }
         public string Explanation { get; set; }
     }
-    }
-
 }

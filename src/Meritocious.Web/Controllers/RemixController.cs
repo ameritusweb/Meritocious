@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Interfaces;
 using Meritocious.Infrastructure.Data.Services;
+using Meritocious.Common.DTOs.Remix;
 
 namespace Meritocious.Web.Controllers;
 
@@ -25,7 +26,7 @@ public class RemixController : ApiControllerBase
     [ProducesResponseType(typeof(RemixDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateRemix([FromBody] CreateRemixRequest request)
     {
-        request.AuthorId = GetUserId();
+        request.AuthorId = Guid.Parse(GetUserId());
         var remix = await remixService.CreateRemixAsync(request);
         return CreatedAtAction(nameof(GetRemix), new { id = remix.Id }, remix);
     }
@@ -144,7 +145,7 @@ public class RemixController : ApiControllerBase
     [ProducesResponseType(typeof(IEnumerable<RemixDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyRemixes([FromQuery] RemixFilter filter)
     {
-        var remixes = await remixService.GetUserRemixesAsync(GetUserId(), filter);
+        var remixes = await remixService.GetUserRemixesAsync(Guid.Parse(GetUserId()), filter);
         return Ok(remixes);
     }
 

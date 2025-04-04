@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 namespace Meritocious.Core.Entities
 {
-    public class Post : BaseEntity
+    public partial class Post : BaseEntity
     {
         public string Title { get; internal set; }
         public string Content { get; internal set; }
@@ -37,12 +37,32 @@ namespace Meritocious.Core.Entities
         private readonly Dictionary<string, decimal> meritComponents = new();
         public IReadOnlyDictionary<string, decimal> MeritComponents => meritComponents;
 
-        // Engagement metrics (moved from RemixEngagement)
-        public int ViewCount { get; internal set; }
-        public int UniqueViewCount { get; internal set; }
-        public int LikeCount { get; internal set; }
-        public int ShareCount { get; internal set; }
         public decimal AverageTimeSpentSeconds { get; internal set; }
+
+        public DateTime? PublishedAt { get; private set; }
+        public string SynthesisMap { get; private set; }
+        private readonly List<ContentVersion> versions = new();
+        public IReadOnlyCollection<ContentVersion> Versions => versions.AsReadOnly();
+
+        public void UpdateSynthesisMap(string synthesisMap)
+        {
+            SynthesisMap = synthesisMap;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void AddRelation(PostRelation relation)
+        {
+            if (relation.RelationType == "remix")
+            {
+                ParentRelations.Add(relation);
+            }
+            else if (relation.RelationType == "fork")
+            {
+                ChildRelations.Add(relation);
+            }
+
+            UpdatedAt = DateTime.UtcNow;
+        }
 
         private readonly List<MeritScore> meritScores = new();
         public IReadOnlyCollection<MeritScore> MeritScores => meritScores.AsReadOnly();
@@ -199,6 +219,31 @@ namespace Meritocious.Core.Entities
         {
             IsDeleted = true;
             UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public static class PostExtensions
+    {
+        public static string GetPostType(this Post post)
+        {
+            // Determine type based on relationships
+            if (post.ParentRelations.Any(r => r.RelationType == "remix"))
+            {
+                return "remix";
+            }
+
+            if (post.ParentRelations.Any(r => r.RelationType == "fork"))
+            {
+                return "fork";
+            }
+
+            // Check if this post has been remixed or forked
+            if (post.ChildRelations.Any(r => r.RelationType == "remix" || r.RelationType == "fork"))
+            {
+                return "source";
+            }
+
+            return "original";
         }
     }
 }
