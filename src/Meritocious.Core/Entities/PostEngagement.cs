@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.DTOs.Engagement;
+using Meritocious.Common.DTOs.Remix;
 
 namespace Meritocious.Core.Entities
 {
@@ -26,6 +27,8 @@ namespace Meritocious.Core.Entities
         public Dictionary<string, int> ViewsByPlatform { get; internal set; } = new();
         public Dictionary<DateTime, int> ViewTrend { get; internal set; } = new();
         public Dictionary<string, decimal> SourceInfluenceScores { get; internal set; } = new();
+        public int TotalViews => Views;
+        public Dictionary<DateTime, int> ViewsOverTime => ViewTrend;
 
         // Insights
         public DateTime? PeakEngagementTime { get; internal set; }
@@ -144,6 +147,36 @@ namespace Meritocious.Core.Entities
         public void RecordReference()
         {
             ReferenceCount++;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void RecordInteraction(RemixInteractionType type)
+        {
+            switch (type)
+            {
+                case RemixInteractionType.Like:
+                    RecordLike();
+                    break;
+                case RemixInteractionType.Comment:
+                    RecordComment();
+                    break;
+                case RemixInteractionType.Share:
+                    RecordShare();
+                    break;
+                case RemixInteractionType.Fork:
+                    RecordFork();
+                    break;
+            }
+        }
+
+        public void UpdateEngagementMetrics(decimal timeSpentSeconds, bool bounced)
+        {
+            AverageTimeSpentSeconds = ((AverageTimeSpentSeconds * (Views - 1)) + timeSpentSeconds) / Views;
+            if (bounced)
+            {
+                BounceRate = ((BounceRate * (Views - 1)) + 1) / Views;
+            }
+
             UpdatedAt = DateTime.UtcNow;
         }
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Meritocious.Common.DTOs.Merit;
+using Meritocious.Common.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,10 +67,48 @@ namespace Meritocious.Core.Entities
         }
 
         private readonly List<MeritScore> meritScores = new();
+        private decimal meritScore;
         public IReadOnlyCollection<MeritScore> MeritScores => meritScores.AsReadOnly();
 
         // Computed total merit score
         public decimal MeritScore => meritScores.CalculateTotalMeritScore();
+
+        public MeritScoreHistory UpdateMeritScore(MeritScoreDto scoreDto, Func<string, MeritScoreType> meritScoreTypes)
+        {
+            // Update final score and components
+            meritScore = scoreDto.FinalScore;
+            meritComponents.Clear();
+            foreach (var component in scoreDto.Components)
+            {
+                meritComponents[component.Key] = component.Value;
+            }
+
+            // Convert component scores to MeritScore entities
+            foreach (var component in scoreDto.Components)
+            {
+                var scoreType = meritScoreTypes(component.Key);
+                if (scoreType != null)
+                {
+                    AddMeritScore(scoreType, component.Value);
+                }
+            }
+
+            // Create history entry
+            var history = MeritScoreHistory.Create(
+                Id,
+                ContentType.Post,
+                scoreDto.FinalScore,
+                new Dictionary<string, decimal>(scoreDto.Components),
+                scoreDto.ModelVersion,
+                scoreDto.Explanations,
+                scoreDto.Context,
+                scoreDto.IsRecalculation,
+                scoreDto.RecalculationReason);
+
+            UpdatedAt = DateTime.UtcNow;
+
+            return history;
+        }
 
         public void AddMeritScore(MeritScoreType scoreType, decimal score)
         {
@@ -79,8 +119,14 @@ namespace Meritocious.Core.Entities
             }
             else
             {
-                meritScores.Add(Meritocious.Core.Entities.MeritScore.Create(Id, "Post", scoreType, score));
+                meritScores.Add(MeritScore.Create(Id, "Post", scoreType, score));
             }
+
+            // Also update components dictionary for consistency
+            meritComponents[scoreType.Name] = score;
+
+            // Recalculate final merit score based on weighted components
+            RecalculateFinalScore();
 
             UpdatedAt = DateTime.UtcNow;
         }
@@ -93,10 +139,47 @@ namespace Meritocious.Core.Entities
                 if (existingScore != null)
                 {
                     existingScore.UpdateScore(score);
+
+                    // Update components dictionary
+                    var scoreType = existingScore.ScoreType;
+                    if (scoreType != null)
+                    {
+                        meritComponents[scoreType.Name] = score;
+                    }
                 }
             }
 
+            // Recalculate final merit score
+            RecalculateFinalScore();
+
             UpdatedAt = DateTime.UtcNow;
+        }
+
+        private void RecalculateFinalScore()
+        {
+            // Calculate weighted average based on score types
+            if (meritScores.Any())
+            {
+                meritScore = meritScores
+                    .Where(s => s.ScoreType?.IsActive == true)
+                    .Sum(s => s.Score * (s.ScoreType?.Weight ?? 0));
+            }
+        }
+
+        // Additional helper methods
+        public decimal GetComponentScore(string component)
+        {
+            return meritComponents.TryGetValue(component, out var score) ? score : 0m;
+        }
+
+        public MeritScore GetMeritScore(Guid scoreTypeId)
+        {
+            return meritScores.FirstOrDefault(s => s.ScoreTypeId == scoreTypeId);
+        }
+
+        public bool HasMeritScore(Guid scoreTypeId)
+        {
+            return meritScores.Any(s => s.ScoreTypeId == scoreTypeId);
         }
 
         internal Post()
@@ -180,10 +263,10 @@ namespace Meritocious.Core.Entities
 
         public void RecordView(bool isUnique, decimal timeSpentSeconds)
         {
-            ViewCount++;
+            Engagement.Views++;
             if (isUnique)
             {
-                UniqueViewCount++;
+                Engagement.UniqueViews++;
             }
 
             // Update average time spent

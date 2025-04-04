@@ -157,5 +157,24 @@ namespace Meritocious.Core.Services
                 throw;
             }
         }
+
+        public async Task<MeritScoreDto> CalculateContentScoreAsync(
+        string content,
+        ContentType type,
+        string context = null)
+        {
+            var score = await meritScorer.ScoreContentAsync(content, context);
+
+            return new MeritScoreDto
+            {
+                ContentType = type,
+                Context = context,
+                Timestamp = DateTime.UtcNow,
+                FinalScore = score.FinalScore,
+                Components = score.Components,
+                ModelVersion = score.ModelVersion,
+                Explanations = score.Explanations
+            };
+        }
     }
 }

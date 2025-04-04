@@ -1,4 +1,4 @@
-﻿using Meritocious.Core.Features.Notifications.Models;
+﻿using Meritocious.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

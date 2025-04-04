@@ -1,4 +1,4 @@
-﻿using Meritocious.Core.Features.Notifications.Models;
+﻿using Meritocious.Core.Entities;
 using Meritocious.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -7,47 +7,46 @@ namespace Meritocious.Infrastructure.Data.Services
 {
     public class NotificationService : INotificationService
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<NotificationService> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<NotificationService> logger;
 
         public NotificationService(
             MeritociousDbContext context,
             ILogger<NotificationService> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<Notification> SendNotificationAsync(Notification notification)
         {
             try
             {
-                await _context.Notifications.AddAsync(notification);
-                await _context.SaveChangesAsync();
+                await context.Notifications.AddAsync(notification);
+                await context.SaveChangesAsync();
 
                 // In a real implementation, we might also:
                 // 1. Send a push notification
                 // 2. Send an email
                 // 3. Trigger a websocket event
-
                 return notification;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending notification to user {UserId}", notification.UserId);
+                logger.LogError(ex, "Error sending notification to user {UserId}", notification.UserId);
                 throw;
             }
         }
 
-        public async Task<List<Notification>> GetUserNotificationsAsync(
+        public async Task<List<Meritocious.Core.Entities.Notification>> GetUserNotificationsAsync(
             Guid userId,
             bool unreadOnly = false,
             int? count = null)
         {
             try
             {
-                var query = _context.Notifications
-                    .Where(n => n.UserId == userId);
+                var query = context.Notifications
+                    .Where(n => n.UserId == userId.ToString());
 
                 if (unreadOnly)
                 {
@@ -65,7 +64,7 @@ namespace Meritocious.Infrastructure.Data.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting notifications for user {UserId}", userId);
+                logger.LogError(ex, "Error getting notifications for user {UserId}", userId);
                 throw;
             }
         }
@@ -74,8 +73,8 @@ namespace Meritocious.Infrastructure.Data.Services
         {
             try
             {
-                var notifications = await _context.Notifications
-                    .Where(n => n.UserId == userId && notificationIds.Contains(n.Id))
+                var notifications = await context.Notifications
+                    .Where(n => n.UserId == userId.ToString() && notificationIds.Contains(n.Id))
                     .ToListAsync();
 
                 foreach (var notification in notifications)
@@ -83,11 +82,11 @@ namespace Meritocious.Infrastructure.Data.Services
                     notification.MarkAsRead();
                 }
 
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error marking notifications as read for user {UserId}", userId);
+                logger.LogError(ex, "Error marking notifications as read for user {UserId}", userId);
                 throw;
             }
         }

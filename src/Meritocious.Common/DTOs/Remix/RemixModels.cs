@@ -59,6 +59,7 @@ namespace Meritocious.Common.DTOs.Remix
         public List<string> Tags { get; set; } = new();
         public decimal? MinMeritScore { get; set; }
         public string SortBy { get; set; } = "relevance";
+        public int? Limit { get; set; }
     }
 
     public class RemixScoreResult

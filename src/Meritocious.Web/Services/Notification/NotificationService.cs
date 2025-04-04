@@ -154,17 +154,17 @@ namespace Meritocious.Web.Services.Notification
             }).ToList();
         }
 
-        public Task<Core.Features.Notifications.Models.Notification> SendNotificationAsync(Core.Features.Notifications.Models.Notification notification)
-        {
-            throw new NotImplementedException(); // TODO: Implement this
-        }
-
-        public Task<List<Core.Features.Notifications.Models.Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int? count = null)
-        {
-            throw new NotImplementedException(); // TODO: Implement this
-        }
-
         public Task MarkNotificationsAsReadAsync(Guid userId, List<Guid> notificationIds)
+        {
+            throw new NotImplementedException(); // TODO: Implement this
+        }
+
+        public Task<Core.Entities.Notification> SendNotificationAsync(Core.Entities.Notification notification)
+        {
+            throw new NotImplementedException(); // TODO: Implement this
+        }
+
+        Task<List<Core.Entities.Notification>> INotificationService.GetUserNotificationsAsync(Guid userId, bool unreadOnly, int? count)
         {
             throw new NotImplementedException(); // TODO: Implement this
         }

@@ -621,7 +621,7 @@ public class RemixService : IRemixService
         {
             Id = p.Id,
             Title = p.Title,
-            AuthorUsername = p.Author.Username,
+            AuthorUsername = p.Author.UserName,
             MeritScore = p.MeritScore,
             Tags = p.Tags.Select(t => t.Name).ToList(),
             CreatedAt = p.CreatedAt
@@ -842,25 +842,25 @@ public class RemixService : IRemixService
 
         // 2. Analyze key themes and create theme clusters
         var allContent = string.Join("\n\n", sources.Select(s => s.Content));
-        var themesPrompt = $"""
+        var themesPrompt = $$"""
             Analyze these source contents and identify 3-5 key themes or concepts that connect them:
             {allContent}
-
+    
             For each theme:
             - Provide a clear, concise label (2-3 words)
             - List which sources (by number, 1-based) strongly relate to this theme
             - Explain the theme's significance in 1 sentence
-
+    
             Format as JSON:
-            {{
+            {
                 "themes": [
-                    {{
+                    {
                         "label": "theme name",
                         "sourceIndices": [1, 2],
                         "description": "theme description"
-                    }}
+                    }
                 ]
-            }}
+            }
             """;
 
         var themesResult = await semanticKernelService.CompleteTextAsync(themesPrompt);

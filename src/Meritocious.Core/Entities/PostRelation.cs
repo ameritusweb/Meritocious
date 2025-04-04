@@ -63,4 +63,16 @@ public class PostRelation : BaseEntity
         RelevanceScore = score;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateOrderIndex(int newOrder)
+    {
+        OrderIndex = newOrder;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateRole(string newRole)
+    {
+        Role = newRole;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
