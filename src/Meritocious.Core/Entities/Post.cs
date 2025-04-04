@@ -26,6 +26,9 @@ namespace Meritocious.Core.Entities
         private readonly List<Tag> _tags;
         public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
 
+        private readonly List<Note> _notes;
+        public IReadOnlyCollection<Note> Notes => _notes.AsReadOnly();
+
         private readonly HashSet<PostRelation> _parentRelations = new();
         private readonly HashSet<PostRelation> _childRelations = new();
         public IReadOnlyCollection<PostRelation> ParentRelations => _parentRelations;
@@ -45,6 +48,14 @@ namespace Meritocious.Core.Entities
         {
             _comments = new List<Comment>();
             _tags = new List<Tag>();
+            _notes = new List<Note>();
+        }
+
+        public void AddNote(string type, string content, List<Guid> relatedSourceIds, decimal confidence)
+        {
+            var note = Note.Create(this, type, content, relatedSourceIds, confidence);
+            _notes.Add(note);
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public static Post Create(string title, string content, User author, Post parent = null, Substack substack = null)

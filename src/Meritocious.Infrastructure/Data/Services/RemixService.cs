@@ -6,11 +6,12 @@ using Meritocious.AI.SemanticKernel.Interfaces;
 
 namespace Meritocious.Infrastructure.Data.Services;
 
+/// <summary>
+/// Service for handling remixes (posts that synthesize content from multiple source posts).
+/// A remix is a special type of post that has relationships with its source posts through PostRelation entities.
+/// </summary>
 public class RemixService : IRemixService
 {
-    private readonly IRemixRepository _remixRepository;
-    private readonly IRemixSourceRepository _sourceRepository;
-    private readonly IRemixNoteRepository _noteRepository;
     private readonly IPostRepository _postRepository;
     private readonly IMeritScoringService _meritScoringService;
     private readonly ISemanticSearchService _semanticSearchService;
@@ -18,18 +19,12 @@ public class RemixService : IRemixService
     private readonly ITagService _tagService;
 
     public RemixService(
-        IRemixRepository remixRepository,
-        IRemixSourceRepository sourceRepository,
-        IRemixNoteRepository noteRepository,
         IPostRepository postRepository,
         IMeritScoringService meritScoringService,
         ISemanticSearchService semanticSearchService,
         ISemanticKernelService semanticKernelService,
         ITagService tagService)
     {
-        _remixRepository = remixRepository;
-        _sourceRepository = sourceRepository;
-        _noteRepository = noteRepository;
         _postRepository = postRepository;
         _meritScoringService = meritScoringService;
         _semanticSearchService = semanticSearchService;
@@ -39,7 +34,7 @@ public class RemixService : IRemixService
 
     public async Task<RemixDto> CreateRemixAsync(CreateRemixRequest request)
     {
-        var remix = new Remix
+        var post = new Post
         {
             Title = request.Title,
             Content = request.InitialContent,
@@ -47,147 +42,237 @@ public class RemixService : IRemixService
             SubstackId = request.SubstackId,
             IsDraft = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Type = "remix"
         };
 
         // Add tags
         if (request.Tags.Any())
         {
-            remix.Tags = await _tagService.GetOrCreateTagsAsync(request.Tags);
+            post.Tags = await _tagService.GetOrCreateTagsAsync(request.Tags);
         }
 
-        // Add initial sources
+        // Add post to repository first to get its ID
+        await _postRepository.AddAsync(post);
+
+        // Add initial source relationships
         if (request.InitialSourceIds.Any())
         {
-            var posts = await _postRepository.GetByIdsAsync(request.InitialSourceIds);
-            remix.Sources = posts.Select(p => new RemixSource
+            var sourceOrder = 0;
+            foreach (var sourceId in request.InitialSourceIds)
             {
-                SourcePost = p,
-                SourcePostId = p.Id,
-                Relationship = "support", // Default relationship
-                Order = remix.Sources.Count
-            }).ToList();
+                var relation = PostRelation.CreateRemixSource(
+                    await _postRepository.GetByIdAsync(sourceId), 
+                    post, 
+                    "support", // Default relationship
+                    sourceOrder++);
+                
+                await _postRepository.AddSourceAsync(post.Id, relation);
+            }
         }
-
-        await _remixRepository.AddAsync(remix);
 
         // Generate initial synthesis map and notes
-        if (remix.Sources.Any())
+        if (request.InitialSourceIds.Any())
         {
-            remix.SynthesisMap = await GenerateSynthesisMapAsync(remix.Id);
-            var notes = await GenerateInsightsAsync(remix.Id);
+            var synthesisMap = await GenerateSynthesisMapAsync(post.Id);
+            await _postRepository.UpdateSynthesisMapAsync(post.Id, synthesisMap);
+            await GenerateInsightsAsync(post.Id);
         }
 
-        return await GetRemixByIdAsync(remix.Id);
+        return await GetRemixByIdAsync(post.Id);
     }
 
     public async Task<RemixDto> UpdateRemixAsync(Guid remixId, UpdateRemixRequest request)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null) throw new ArgumentException("Remix not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix") 
+            throw new ArgumentException("Remix post not found");
 
-        remix.Title = request.Title;
-        remix.Content = request.Content;
-        remix.UpdatedAt = DateTime.UtcNow;
+        // Update basic properties
+        post.Title = request.Title;
+        post.Content = request.Content;
+        post.UpdatedAt = DateTime.UtcNow;
 
         // Update tags
         if (request.Tags != null)
         {
-            remix.Tags = await _tagService.GetOrCreateTagsAsync(request.Tags);
+            post.Tags = await _tagService.GetOrCreateTagsAsync(request.Tags);
         }
 
         // Update synthesis map if requested
         if (request.UpdateSynthesisMap)
         {
-            remix.SynthesisMap = await GenerateSynthesisMapAsync(remixId);
+            var synthesisMap = await GenerateSynthesisMapAsync(remixId);
+            await _postRepository.UpdateSynthesisMapAsync(remixId, synthesisMap);
         }
 
-        await _remixRepository.UpdateAsync(remix);
+        // Save changes
+        await _postRepository.UpdateAsync(post);
 
         return await GetRemixByIdAsync(remixId);
     }
 
     public async Task<RemixDto> GetRemixByIdAsync(Guid remixId)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null) throw new ArgumentException("Remix not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix") 
+            throw new ArgumentException("Remix post not found");
+
+        // Get parent relations (remix sources)
+        var sources = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .OrderBy(r => r.OrderIndex)
+            .Select(r => new RemixSourceDto
+            {
+                SourcePostId = r.ParentId,
+                PostTitle = r.Parent.Title,
+                AuthorUsername = r.Parent.Author.Username,
+                Relationship = r.Role,
+                Context = r.Context,
+                Order = r.OrderIndex,
+                Quotes = r.Quotes.Select(q => new QuoteDto
+                {
+                    Text = q.Content,
+                    StartPosition = q.StartPosition,
+                    EndPosition = q.EndPosition,
+                    Context = q.Context
+                }).ToList()
+            })
+            .ToList();
+
+        // Map notes
+        var notes = post.Notes.Select(n => new RemixNoteDto
+        {
+            Id = n.Id,
+            Type = n.Type,
+            Content = n.Content,
+            RelatedSourceIds = n.RelatedSourceIds,
+            Confidence = n.Confidence,
+            IsApplied = n.IsApplied
+        }).ToList();
 
         return new RemixDto
         {
-            Id = remix.Id,
-            Title = remix.Title,
-            Content = remix.Content,
-            AuthorUsername = remix.Author.Username,
-            AuthorId = remix.AuthorId,
-            MeritScore = remix.MeritScore,
-            Sources = remix.Sources.Select(MapRemixSource).ToList(),
-            Tags = remix.Tags.Select(t => t.Name).ToList(),
-            SubstackId = remix.SubstackId,
-            IsDraft = remix.IsDraft,
-            PublishedAt = remix.PublishedAt,
-            CreatedAt = remix.CreatedAt,
-            UpdatedAt = remix.UpdatedAt,
-            Notes = remix.Notes.Select(MapRemixNote).ToList()
+            Id = post.Id,
+            Title = post.Title,
+            Content = post.Content,
+            AuthorUsername = post.Author.Username,
+            AuthorId = post.AuthorId,
+            MeritScore = post.MeritScore,
+            Sources = sources,
+            Tags = post.Tags.Select(t => t.Name).ToList(),
+            SubstackId = post.SubstackId,
+            IsDraft = post.IsDraft,
+            PublishedAt = post.PublishedAt,
+            CreatedAt = post.CreatedAt,
+            UpdatedAt = post.UpdatedAt,
+            Notes = notes
         };
     }
 
     public async Task<bool> DeleteRemixAsync(Guid remixId, Guid userId)
     {
-        var remix = await _remixRepository.GetByIdAsync(remixId);
-        if (remix == null || remix.AuthorId != userId) return false;
+        var post = await _postRepository.GetByIdAsync(remixId);
+        if (post == null || post.Type != "remix" || post.AuthorId != userId) 
+            return false;
 
-        await _remixRepository.DeleteAsync(remix);
+        await _postRepository.DeleteAsync(post);
         return true;
     }
 
     public async Task<RemixDto> PublishRemixAsync(Guid remixId, Guid userId)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null || remix.AuthorId != userId) 
-            throw new ArgumentException("Remix not found or unauthorized");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix" || post.AuthorId != userId) 
+            throw new ArgumentException("Remix post not found or unauthorized");
 
         // Calculate final merit score
         var scoreResult = await CalculateRemixScoreAsync(remixId);
-        remix.MeritScore = scoreResult.FinalScore;
+        post.MeritScore = scoreResult.FinalScore;
 
         // Update status
-        remix.IsDraft = false;
-        remix.PublishedAt = DateTime.UtcNow;
+        post.IsDraft = false;
+        post.PublishedAt = DateTime.UtcNow;
         
-        await _remixRepository.UpdateAsync(remix);
+        await _postRepository.UpdateAsync(post);
         return await GetRemixByIdAsync(remixId);
     }
 
     public async Task<RemixSourceDto> AddSourceAsync(Guid remixId, AddSourceRequest request)
     {
-        var source = new RemixSource
-        {
-            RemixId = remixId,
-            SourcePostId = request.PostId,
-            Relationship = request.Relationship,
-            Context = request.Context,
-            QuotedExcerpts = request.InitialQuotes,
-            Order = (await _sourceRepository.GetByRemixIdAsync(remixId)).Count()
-        };
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix")
+            throw new ArgumentException("Remix post not found");
 
-        await _sourceRepository.AddAsync(source);
+        var sourcePost = await _postRepository.GetByIdAsync(request.PostId);
+        if (sourcePost == null)
+            throw new ArgumentException("Source post not found");
+
+        // Create relation
+        var sourceOrder = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .Count();
+
+        var relation = PostRelation.CreateRemixSource(
+            sourcePost,
+            post,
+            request.Relationship,
+            sourceOrder,
+            request.Context);
+
+        await _postRepository.AddSourceAsync(remixId, relation);
+
+        // Add initial quotes if provided
+        if (request.InitialQuotes?.Any() == true)
+        {
+            await _postRepository.UpdateQuotesAsync(relation.Id, request.InitialQuotes);
+        }
 
         // Update synthesis map and generate new insights
-        await UpdateSynthesisMapAsync(remixId, await GenerateSynthesisMapAsync(remixId));
+        var synthesisMap = await GenerateSynthesisMapAsync(remixId);
+        await _postRepository.UpdateSynthesisMapAsync(remixId, synthesisMap);
         await GenerateInsightsAsync(remixId);
 
-        return MapRemixSource(await _sourceRepository.GetByIdWithDetailsAsync(source.Id));
+        // Return the newly created source
+        var sources = post.ParentRelations
+            .Where(r => r.RelationType == "remix" && r.ParentId == request.PostId)
+            .Select(r => new RemixSourceDto
+            {
+                SourcePostId = r.ParentId,
+                PostTitle = sourcePost.Title,
+                AuthorUsername = sourcePost.Author.Username,
+                Relationship = r.Role,
+                Context = r.Context,
+                Order = r.OrderIndex,
+                Quotes = r.Quotes.Select(q => new QuoteDto
+                {
+                    Text = q.Content,
+                    StartPosition = q.StartPosition,
+                    EndPosition = q.EndPosition,
+                    Context = q.Context
+                }).ToList()
+            })
+            .First();
+
+        return sources;
     }
 
     public async Task<bool> RemoveSourceAsync(Guid remixId, Guid sourceId)
     {
-        var source = await _sourceRepository.GetByIdAsync(sourceId);
-        if (source == null || source.RemixId != remixId) return false;
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix") 
+            return false;
 
-        await _sourceRepository.DeleteAsync(source);
+        var relation = post.ParentRelations
+            .FirstOrDefault(r => r.RelationType == "remix" && r.ParentId == sourceId);
+        if (relation == null) 
+            return false;
+
+        await _postRepository.RemoveSourceAsync(remixId, sourceId);
 
         // Update synthesis map
-        await UpdateSynthesisMapAsync(remixId, await GenerateSynthesisMapAsync(remixId));
+        var synthesisMap = await GenerateSynthesisMapAsync(remixId);
+        await _postRepository.UpdateSynthesisMapAsync(remixId, synthesisMap);
 
         return true;
     }
@@ -195,109 +280,134 @@ public class RemixService : IRemixService
     public async Task UpdateSourceOrderAsync(Guid remixId, IEnumerable<SourceOrderUpdate> updates)
     {
         var orderUpdates = updates.Select(u => (u.SourceId, u.NewOrder));
-        await _remixRepository.UpdateSourceOrderAsync(remixId, orderUpdates);
+        await _postRepository.UpdateSourceOrderAsync(remixId, orderUpdates);
     }
 
     public async Task<RemixSourceDto> UpdateSourceRelationshipAsync(Guid remixId, Guid sourceId, string relationship)
     {
-        var source = await _sourceRepository.GetByIdWithDetailsAsync(sourceId);
-        if (source == null || source.RemixId != remixId) 
-            throw new ArgumentException("Source not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix")
+            throw new ArgumentException("Remix post not found");
 
-        source.Relationship = relationship;
-        await _sourceRepository.UpdateAsync(source);
+        var relation = post.ParentRelations
+            .FirstOrDefault(r => r.RelationType == "remix" && r.ParentId == sourceId);
+        if (relation == null)
+            throw new ArgumentException("Source relation not found");
+
+        // Update the relationship role
+        relation.UpdateRole(relationship);
+        await _postRepository.UpdateAsync(post);
 
         // Update synthesis map
-        await UpdateSynthesisMapAsync(remixId, await GenerateSynthesisMapAsync(remixId));
+        var synthesisMap = await GenerateSynthesisMapAsync(remixId);
+        await _postRepository.UpdateSynthesisMapAsync(remixId, synthesisMap);
 
-        return MapRemixSource(source);
+        return new RemixSourceDto
+        {
+            SourcePostId = relation.ParentId,
+            PostTitle = relation.Parent.Title,
+            AuthorUsername = relation.Parent.Author.Username,
+            Relationship = relation.Role,
+            Context = relation.Context,
+            Order = relation.OrderIndex,
+            Quotes = relation.Quotes.Select(q => new QuoteDto
+            {
+                Text = q.Content,
+                StartPosition = q.StartPosition,
+                EndPosition = q.EndPosition,
+                Context = q.Context
+            }).ToList()
+        };
     }
 
     public async Task AddQuoteToSourceAsync(Guid sourceId, AddQuoteRequest request)
     {
-        var source = await _sourceRepository.GetByIdWithDetailsAsync(sourceId);
-        if (source == null) throw new ArgumentException("Source not found");
+        var relation = await _postRepository.GetByIdWithRelations(sourceId)
+            .FirstOrDefaultAsync(r => r.RelationType == "remix");
+        if (relation == null) 
+            throw new ArgumentException("Source relation not found");
 
-        var post = await _postRepository.GetByIdAsync(source.SourcePostId);
-        if (post == null) throw new ArgumentException("Source post not found");
+        var sourcePost = await _postRepository.GetByIdAsync(relation.ParentId);
+        if (sourcePost == null) 
+            throw new ArgumentException("Source post not found");
 
         // Find the quote in the source content
-        var startIndex = post.Content.IndexOf(request.Text);
-        if (startIndex == -1) throw new ArgumentException("Quote not found in source content");
+        var startIndex = sourcePost.Content.IndexOf(request.Text);
+        if (startIndex == -1) 
+            throw new ArgumentException("Quote not found in source content");
 
         // Get some context around the quote
         var contextStart = Math.Max(0, startIndex - 100);
-        var contextLength = Math.Min(startIndex + request.Text.Length + 100, post.Content.Length) - contextStart;
-        var context = post.Content.Substring(contextStart, contextLength);
+        var contextLength = Math.Min(startIndex + request.Text.Length + 100, sourcePost.Content.Length) - contextStart;
+        var context = sourcePost.Content.Substring(contextStart, contextLength);
 
         // Create quote location
         var quote = new QuoteLocation
         {
-            RemixSourceId = sourceId,
-            Text = request.Text,
             StartPosition = startIndex,
             EndPosition = startIndex + request.Text.Length,
+            Content = request.Text,
             Context = context
         };
 
-        source.Quotes.Add(quote);
-        await _sourceRepository.UpdateAsync(source);
+        relation.AddQuote(quote);
+        await _postRepository.UpdateAsync(relation);
     }
 
     public async Task<IEnumerable<RemixDto>> GetUserRemixesAsync(Guid userId, RemixFilter filter)
     {
-        var remixes = await _remixRepository.GetUserRemixesAsync(userId, filter.IncludeDrafts);
+        var posts = await _postRepository.GetUserRemixesAsync(userId, filter.IncludeDrafts);
         
         // Apply additional filters
-        var filtered = remixes.Where(r => 
-            (!filter.FromDate.HasValue || r.CreatedAt >= filter.FromDate) &&
-            (!filter.ToDate.HasValue || r.CreatedAt <= filter.ToDate) &&
-            (!filter.Tags.Any() || r.Tags.Any(t => filter.Tags.Contains(t.Name)))
+        var filtered = posts.Where(p => 
+            (!filter.FromDate.HasValue || p.CreatedAt >= filter.FromDate) &&
+            (!filter.ToDate.HasValue || p.CreatedAt <= filter.ToDate) &&
+            (!filter.Tags.Any() || p.Tags.Any(t => filter.Tags.Contains(t.Name)))
         );
 
         // Apply sorting
         filtered = filter.SortBy switch
         {
-            "merit" => filtered.OrderByDescending(r => r.MeritScore),
-            "oldest" => filtered.OrderBy(r => r.CreatedAt),
-            _ => filtered.OrderByDescending(r => r.CreatedAt) // "newest" is default
+            "merit" => filtered.OrderByDescending(p => p.MeritScore),
+            "oldest" => filtered.OrderBy(p => p.CreatedAt),
+            _ => filtered.OrderByDescending(p => p.CreatedAt) // "newest" is default
         };
 
-        return filtered.Select(r => new RemixDto
+        return filtered.Select(p => new RemixDto
         {
-            Id = r.Id,
-            Title = r.Title,
-            AuthorUsername = r.Author.Username,
-            MeritScore = r.MeritScore,
-            Tags = r.Tags.Select(t => t.Name).ToList(),
-            CreatedAt = r.CreatedAt,
-            IsDraft = r.IsDraft
+            Id = p.Id,
+            Title = p.Title,
+            AuthorUsername = p.Author.Username,
+            MeritScore = p.MeritScore,
+            Tags = p.Tags.Select(t => t.Name).ToList(),
+            CreatedAt = p.CreatedAt,
+            IsDraft = p.IsDraft
         });
     }
 
     public async Task<IEnumerable<RemixDto>> GetRelatedRemixesAsync(Guid remixId, int limit = 5)
     {
-        var related = await _remixRepository.GetRelatedRemixesAsync(remixId, limit);
-        return related.Select(r => new RemixDto
+        var related = await _postRepository.GetRelatedRemixesAsync(remixId, limit);
+        return related.Select(p => new RemixDto
         {
-            Id = r.Id,
-            Title = r.Title,
-            AuthorUsername = r.Author.Username,
-            MeritScore = r.MeritScore,
-            Tags = r.Tags.Select(t => t.Name).ToList()
+            Id = p.Id,
+            Title = p.Title,
+            AuthorUsername = p.Author.Username,
+            MeritScore = p.MeritScore,
+            Tags = p.Tags.Select(t => t.Name).ToList()
         });
     }
 
     public async Task<IEnumerable<RemixDto>> GetTrendingRemixesAsync(int limit = 10)
     {
-        var trending = await _remixRepository.GetTrendingRemixesAsync(limit);
-        return trending.Select(r => new RemixDto
+        var trending = await _postRepository.GetTrendingRemixesAsync(limit);
+        return trending.Select(p => new RemixDto
         {
-            Id = r.Id,
-            Title = r.Title,
-            AuthorUsername = r.Author.Username,
-            MeritScore = r.MeritScore,
-            Tags = r.Tags.Select(t => t.Name).ToList()
+            Id = p.Id,
+            Title = p.Title,
+            AuthorUsername = p.Author.Username,
+            MeritScore = p.MeritScore,
+            Tags = p.Tags.Select(t => t.Name).ToList()
         });
     }
 
@@ -305,10 +415,11 @@ public class RemixService : IRemixService
         Guid remixId,
         RemixEngagementEvent engagementEvent)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null) throw new ArgumentException("Remix not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix") 
+            throw new ArgumentException("Remix post not found");
 
-        var engagement = await _remixRepository.GetEngagementAsync(remixId);
+        var engagement = await _postRepository.GetEngagementAsync(remixId);
 
         switch (engagementEvent.Type)
         {
@@ -341,9 +452,14 @@ public class RemixService : IRemixService
         // Update source influence if provided
         if (engagementEvent.SourceId.HasValue && engagementEvent.InfluenceScore.HasValue)
         {
-            engagement.UpdateSourceInfluence(
-                engagementEvent.SourceId.Value,
-                engagementEvent.InfluenceScore.Value);
+            var relation = post.ParentRelations
+                .FirstOrDefault(r => r.RelationType == "remix" && 
+                                   r.ParentId == engagementEvent.SourceId.Value);
+            
+            if (relation != null)
+            {
+                relation.UpdateRelevanceScore(engagementEvent.InfluenceScore.Value);
+            }
         }
 
         // Update sentiment if provided
@@ -354,22 +470,27 @@ public class RemixService : IRemixService
                 (oldScore + engagementEvent.SentimentScore.Value) / engagement.Comments;
         }
 
-        await _remixRepository.UpdateEngagementAsync(engagement);
+        await _postRepository.UpdateAsync(post);
     }
 
     public async Task<RemixAnalytics> GetRemixAnalyticsAsync(Guid remixId)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null) throw new ArgumentException("Remix not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix")
+            throw new ArgumentException("Remix post not found");
+
+        var engagement = await _postRepository.GetEngagementAsync(remixId);
+        var relations = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .ToList();
 
         return new RemixAnalytics
         {
-            TotalSources = remix.Sources.Count,
-            RelationshipDistribution = await _sourceRepository.GetRelationshipDistributionAsync(remixId),
-            NoteTypeDistribution = await _noteRepository.GetNoteTypeDistributionAsync(remixId),
-            AverageSourceRelevance = remix.Sources.Average(s => 
-                s.RelevanceScores.Values.DefaultIfEmpty(0).Average()),
-            TopTags = remix.Tags.Select(t => t.Name).ToList(),
+            TotalSources = relations.Count,
+            RelationshipDistribution = await _postRepository.GetRelationshipDistributionAsync(remixId),
+            NoteTypeDistribution = await _postRepository.GetNoteTypeDistributionAsync(remixId),
+            AverageSourceRelevance = relations.Average(r => r.RelevanceScore),
+            TopTags = post.Tags.Select(t => t.Name).ToList(),
             Engagement = new RemixEngagementMetrics
             {
                 Views = engagement.TotalViews,
@@ -389,22 +510,19 @@ public class RemixService : IRemixService
                 ViewsByRegion = engagement.ViewsByRegion,
                 ViewsByPlatform = engagement.ViewsByPlatform,
                 ViewTrend = engagement.ViewsOverTime,
-                SourceInfluenceScores = engagement.SourceInfluenceScores
+                SourceInfluenceScores = relations
                     .ToDictionary(
-                        kvp => remix.Sources
-                            .First(s => s.SourcePostId == kvp.Key)
-                            .SourcePost.Title,
-                        kvp => kvp.Value
+                        r => r.Parent.Title,
+                        r => r.RelevanceScore
                     ),
                 
                 PeakEngagementTime = engagement.PeakEngagementTime,
                 EngagementVelocity = engagement.EngagementVelocity,
                 SentimentScore = engagement.SentimentScore,
-                TopEngagementSources = remix.Sources
-                    .OrderByDescending(s => engagement.SourceInfluenceScores
-                        .GetValueOrDefault(s.SourcePostId))
+                TopEngagementSources = relations
+                    .OrderByDescending(r => r.RelevanceScore)
                     .Take(3)
-                    .Select(s => s.SourcePost.Title)
+                    .Select(r => r.Parent.Title)
                     .ToList()
             }
         };
@@ -415,60 +533,59 @@ public class RemixService : IRemixService
         // Use semantic search for better results
         var searchResults = await _semanticSearchService.SearchAsync(
             request.Query,
-            entityType: "remix",
+            entityType: "post",
             filters: new Dictionary<string, object>
             {
+                { "type", "remix" },
                 { "tags", request.Tags },
                 { "minMeritScore", request.MinMeritScore }
             }
         );
 
-        var remixIds = searchResults.Select(r => Guid.Parse(r.Id)).ToList();
-        var remixes = await _remixRepository.GetByIdsAsync(remixIds);
+        var postIds = searchResults.Select(r => Guid.Parse(r.Id)).ToList();
+        var posts = await _postRepository.GetByIdsAsync(postIds);
 
         // Sort based on request
         var ordered = request.SortBy switch
         {
-            "merit" => remixes.OrderByDescending(r => r.MeritScore),
-            "newest" => remixes.OrderByDescending(r => r.CreatedAt),
-            "oldest" => remixes.OrderBy(r => r.CreatedAt),
-            _ => remixes.OrderBy(r => searchResults.FindIndex(sr => 
-                sr.Id == r.Id.ToString())) // Maintain semantic search order
+            "merit" => posts.OrderByDescending(p => p.MeritScore),
+            "newest" => posts.OrderByDescending(p => p.CreatedAt),
+            "oldest" => posts.OrderBy(p => p.CreatedAt),
+            _ => posts.OrderBy(p => searchResults.FindIndex(sr => 
+                sr.Id == p.Id.ToString())) // Maintain semantic search order
         };
 
-        return ordered.Select(r => new RemixDto
+        return ordered.Select(p => new RemixDto
         {
-            Id = r.Id,
-            Title = r.Title,
-            AuthorUsername = r.Author.Username,
-            MeritScore = r.MeritScore,
-            Tags = r.Tags.Select(t => t.Name).ToList(),
-            CreatedAt = r.CreatedAt
+            Id = p.Id,
+            Title = p.Title,
+            AuthorUsername = p.Author.Username,
+            MeritScore = p.MeritScore,
+            Tags = p.Tags.Select(t => t.Name).ToList(),
+            CreatedAt = p.CreatedAt
         });
     }
 
     public async Task<IEnumerable<RemixNoteDto>> GenerateInsightsAsync(Guid remixId)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null) throw new ArgumentException("Remix not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null)
+            throw new ArgumentException("Post not found");
 
-        // Get source contents
-        var sources = await Task.WhenAll(remix.Sources.Select(async s => 
-        {
-            var post = await _postRepository.GetByIdAsync(s.SourcePostId);
-            return new
+        // Get source contents through relations
+        var sources = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .Select(r => new
             {
-                Id = s.SourcePostId,
-                Content = post.Content,
-                Title = post.Title,
-                Relationship = s.Relationship
-            };
-        }));
-
-        var notes = new List<RemixNote>();
+                Id = r.ParentId,
+                Content = r.Parent.Content,
+                Title = r.Parent.Title,
+                Relationship = r.Role
+            })
+            .ToList();
         
         // 1. Generate connections between sources
-        if (sources.Length > 1)
+        if (sources.Count > 1)
         {
             foreach (var source1 in sources)
             {
@@ -492,15 +609,11 @@ public class RemixService : IRemixService
 
                     if (confidence > 0.7m)
                     {
-                        notes.Add(new RemixNote
-                        {
-                            RemixId = remixId,
-                            Type = "Connection",
-                            Content = connection,
-                            RelatedSourceIds = new List<Guid> { source1.Id, source2.Id },
-                            Confidence = confidence,
-                            IsApplied = false
-                        });
+                        post.AddNote(
+                            "Connection",
+                            connection,
+                            new List<Guid> { source1.Id, source2.Id },
+                            confidence);
                     }
                 }
             }
@@ -529,15 +642,11 @@ public class RemixService : IRemixService
 
             if (confidence > 0.7m)
             {
-                notes.Add(new RemixNote
-                {
-                    RemixId = remixId,
-                    Type = "Insight",
-                    Content = insight,
-                    RelatedSourceIds = new List<Guid> { source.Id },
-                    Confidence = confidence,
-                    IsApplied = false
-                });
+                post.AddNote(
+                    "Insight",
+                    insight,
+                    new List<Guid> { source.Id },
+                    confidence);
             }
         }
 
@@ -551,8 +660,8 @@ public class RemixService : IRemixService
                 Review these sources that are being synthesized:
                 {sourcesContext}
 
-                Current remix content:
-                {remix.Content}
+                Current post content:
+                {post.Content}
 
                 Suggest 2-3 specific ways to strengthen the synthesis. Consider:
                 - Unexplored connections between sources
@@ -569,21 +678,26 @@ public class RemixService : IRemixService
                 var confidence = CalculateConfidence(suggestion);
                 if (confidence > 0.7m)
                 {
-                    notes.Add(new RemixNote
-                    {
-                        RemixId = remixId,
-                        Type = "Suggestion",
-                        Content = suggestion.Trim(),
-                        RelatedSourceIds = sources.Select(s => s.Id).ToList(),
-                        Confidence = confidence,
-                        IsApplied = false
-                    });
+                    post.AddNote(
+                        "Suggestion",
+                        suggestion.Trim(),
+                        sources.Select(s => s.Id).ToList(),
+                        confidence);
                 }
             }
         }
 
-        await _noteRepository.AddRangeAsync(notes);
-        return notes.Select(MapRemixNote);
+        await _postRepository.UpdateAsync(post);
+
+        return post.Notes.Select(n => new RemixNoteDto
+        {
+            Id = n.Id,
+            Type = n.Type,
+            Content = n.Content,
+            RelatedSourceIds = n.RelatedSourceIds,
+            Confidence = n.Confidence,
+            IsApplied = n.IsApplied
+        });
     }
 
     private decimal CalculateConfidence(string text)
@@ -615,19 +729,24 @@ public class RemixService : IRemixService
 
     public async Task<string> GenerateSynthesisMapAsync(Guid remixId)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null) throw new ArgumentException("Remix not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix") 
+            throw new ArgumentException("Remix post not found");
 
-        var sources = await Task.WhenAll(remix.Sources.Select(async s => 
+        var sourceRelations = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .ToList();
+
+        var sources = await Task.WhenAll(sourceRelations.Select(async r => 
         {
-            var post = await _postRepository.GetByIdAsync(s.SourcePostId);
+            var sourcePost = await _postRepository.GetByIdAsync(r.ParentId);
             return new
             {
-                Id = s.SourcePostId.ToString(),
-                Title = post.Title,
-                Content = post.Content,
-                Relationship = s.Relationship,
-                Order = s.Order
+                Id = r.ParentId.ToString(),
+                Title = sourcePost.Title,
+                Content = sourcePost.Content,
+                Relationship = r.Role,
+                Order = r.OrderIndex
             };
         }));
 
@@ -809,31 +928,44 @@ public class RemixService : IRemixService
 
     public async Task<IEnumerable<RemixNoteDto>> GetSuggestionsAsync(Guid remixId)
     {
-        var notes = await _noteRepository.GetUnusedSuggestionsAsync(remixId);
-        return notes.Select(MapRemixNote);
+        var notes = await _postRepository.GetUnusedSuggestionsAsync(remixId);
+        return notes.Select(n => new RemixNoteDto
+        {
+            Id = n.Id,
+            Type = n.Type,
+            Content = n.Content,
+            RelatedSourceIds = n.RelatedSourceIds,
+            Confidence = n.Confidence,
+            IsApplied = n.IsApplied
+        });
     }
 
     public async Task<RemixScoreResult> CalculateRemixScoreAsync(Guid remixId)
     {
-        var remix = await _remixRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (remix == null) throw new ArgumentException("Remix not found");
+        var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
+        if (post == null || post.Type != "remix") 
+            throw new ArgumentException("Remix post not found");
 
         var insights = new List<ScoreInsight>();
-        var sources = await Task.WhenAll(remix.Sources.Select(async s => 
+        var sourceRelations = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .ToList();
+            
+        var sources = await Task.WhenAll(sourceRelations.Select(async r => 
         {
-            var post = await _postRepository.GetByIdAsync(s.SourcePostId);
-            return new { Post = post, Source = s };
+            var sourcePost = await _postRepository.GetByIdAsync(r.ParentId);
+            return new { Post = sourcePost, Source = r };
         }));
 
         // 1. Synthesis Score - How well does it combine and build upon sources?
         var synthesisPrompt = $"""
             Evaluate how well this remix synthesizes its source materials:
 
-            Remix Content:
-            {remix.Content}
+            Post Content:
+            {post.Content}
 
             Source Materials:
-            {string.Join("\n\n", sources.Select(s => $"Source ({s.Source.Relationship}): {s.Post.Content}"))}
+            {string.Join("\n\n", sources.Select(s => $"Source ({s.Source.Role}): {s.Post.Content}"))}
 
             Score these aspects from 0.0 to 1.0:
             1. Integration - How well are sources woven together?
@@ -862,10 +994,10 @@ public class RemixService : IRemixService
 
         // 2. Cohesion Score - How well-structured and logically connected is it?
         var cohesionPrompt = $"""
-            Evaluate the cohesion and structure of this remix:
+            Evaluate the cohesion and structure of this post:
 
             Content:
-            {remix.Content}
+            {post.Content}
 
             Score these aspects from 0.0 to 1.0:
             1. Flow - How smoothly do ideas connect?
@@ -894,10 +1026,10 @@ public class RemixService : IRemixService
 
         // 3. Novelty Score - How original and innovative is the synthesis?
         var originalityPrompt = $"""
-            Evaluate the originality of this remix compared to its sources:
+            Evaluate the originality of this post compared to its sources:
 
-            Remix:
-            {remix.Content}
+            Post:
+            {post.Content}
 
             Sources:
             {string.Join("\n\n", sources.Select(s => s.Post.Content))}
@@ -956,7 +1088,7 @@ public class RemixService : IRemixService
         };
     }
 
-    private (decimal Score, string Explanation) CalculateSourceUtilization(Remix remix, List<Post> sources)
+    private (decimal Score, string Explanation) CalculateSourceUtilization(Post post, List<Post> sources)
     {
         // Start with perfect score and deduct based on issues
         decimal score = 1.0m;
@@ -976,7 +1108,7 @@ public class RemixService : IRemixService
 
         // Check content length relative to sources
         var sourceWords = sources.Sum(s => s.Content.Split().Length);
-        var remixWords = remix.Content.Split().Length;
+        var remixWords = post.Content.Split().Length;
         var ratio = (decimal)remixWords / sourceWords;
 
         if (ratio < 0.3m)
@@ -991,8 +1123,9 @@ public class RemixService : IRemixService
         }
 
         // Check relationship distribution
-        var relationships = remix.Sources
-            .GroupBy(s => s.Relationship)
+        var relationships = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .GroupBy(r => r.Role)
             .ToDictionary(g => g.Key, g => g.Count());
 
         if (relationships.Count == 1)
@@ -1002,7 +1135,11 @@ public class RemixService : IRemixService
         }
 
         // Check quote usage (if available)
-        var quotedExcerpts = remix.Sources.SelectMany(s => s.QuotedExcerpts).Count();
+        var quotedExcerpts = post.ParentRelations
+            .Where(r => r.RelationType == "remix")
+            .SelectMany(r => r.Quotes)
+            .Count();
+
         if (quotedExcerpts == 0)
         {
             score -= 0.1m;
@@ -1045,37 +1182,4 @@ public class RemixService : IRemixService
     }
     }
 
-    private static RemixSourceDto MapRemixSource(RemixSource source)
-    {
-        return new RemixSourceDto
-        {
-            SourcePostId = source.SourcePostId,
-            PostTitle = source.SourcePost.Title,
-            AuthorUsername = source.SourcePost.Author.Username,
-            Relationship = source.Relationship,
-            Context = source.Context,
-            Order = source.Order,
-            Quotes = source.Quotes.Select(q => new QuoteDto
-            {
-                Text = q.Text,
-                StartPosition = q.StartPosition,
-                EndPosition = q.EndPosition,
-                Context = q.Context
-            }).ToList(),
-            RelevanceScores = source.RelevanceScores
-        };
-    }
-
-    private static RemixNoteDto MapRemixNote(RemixNote note)
-    {
-        return new RemixNoteDto
-        {
-            Id = note.Id,
-            Type = note.Type,
-            Content = note.Content,
-            RelatedSourceIds = note.RelatedSourceIds,
-            Confidence = note.Confidence,
-            IsApplied = note.IsApplied
-        };
-    }
 }
