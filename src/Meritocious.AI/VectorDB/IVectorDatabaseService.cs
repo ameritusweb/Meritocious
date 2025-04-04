@@ -20,5 +20,7 @@ namespace Meritocious.AI.VectorDB
             float[] queryVector,
             int topK = 10,
             SearchFilter filter = null);
+
+        Task<bool> CreateCollectionAsync(string collectionName, int dimension);
     }
 }

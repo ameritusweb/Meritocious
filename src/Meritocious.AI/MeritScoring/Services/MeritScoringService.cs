@@ -88,6 +88,12 @@ namespace Meritocious.AI.MeritScoring.Services
             }
         }
 
+        public async Task<bool> ValidateContentAsync(string content, decimal minimumScore = 0.3m)
+        {
+            var score = await ScoreContentAsync(content);
+            return score.FinalScore >= minimumScore;
+        }
+
         private async Task<(decimal score, string explanation)> CalculateClarityScoreAsync(string content)
         {
             // 1. Calculate readability metrics
@@ -240,8 +246,7 @@ namespace Meritocious.AI.MeritScoring.Services
             decimal relevanceScore = (
                 semanticSimilarity * 0.4m +
                 topicCoherence * 0.3m +
-                contextualReferences * 0.3m
-            );
+                contextualReferences * 0.3m);
 
             string explanation = $"Semantic relevance: {semanticSimilarity:P}. " +
                                $"Topic coherence: {topicCoherence:P}. " +
@@ -267,8 +272,78 @@ namespace Meritocious.AI.MeritScoring.Services
 
         #region Helper Methods
 
+        private async Task<(decimal score, string explanation)> EvaluateTechnicalAccuracyAsync(string content)
+        {
+            var prompt = @"Evaluate the technical accuracy of this content.
+                Consider terminology, concepts, and factual correctness.
+                Rate from 0-1 and explain why.
+                Text: {{$text}}";
+
+            var result = await semanticKernelService.CompleteTextAsync(prompt,
+                new Dictionary<string, object> { ["text"] = content });
+            var score = decimal.TryParse(result.ToString(), out var s) ? s : 0.5m;
+            return (score, "Technical accuracy evaluation");
+        }
+
+        private async Task<(decimal score, string explanation)> CheckGrammarAsync(string content)
+        {
+            var prompt = @"Check this text for grammar and clarity.
+                Rate from 0-1 and explain issues found.
+                Text: {{$text}}";
+
+            var result = await semanticKernelService.CompleteTextAsync(prompt,
+                new Dictionary<string, object> { ["text"] = content });
+            var score = decimal.TryParse(result.ToString(), out var s) ? s : 0.5m;
+            return (score, "Grammar check completed");
+        }
+
+        private async Task<decimal> EvaluateEmpathyAsync(string content)
+        {
+            var prompt = @"Evaluate the empathy level in this text.
+                Rate from 0-1 based on emotional awareness and consideration.
+                Text: {{$text}}";
+
+            var result = await semanticKernelService.CompleteTextAsync(prompt,
+                new Dictionary<string, object> { ["text"] = content });
+            return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
+        }
+
+        private async Task<decimal> AnalyzeTopicCoherenceAsync(string content, string context)
+        {
+            var prompt = @"Analyze how well this content stays on topic with the context.
+                Rate from 0-1.
+                Context: {{$context}}
+                Content: {{$content}}";
+
+            var result = await semanticKernelService.CompleteTextAsync(prompt,
+                new Dictionary<string, object>
+                {
+                    ["context"] = context,
+                    ["content"] = content
+                });
+            return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
+        }
+
+        private async Task<decimal> AnalyzeContextualReferencesAsync(string content, string context)
+        {
+            var prompt = @"Analyze how well this content references and builds upon the context.
+                Rate from 0-1.
+                Context: {{$context}}
+                Content: {{$content}}";
+
+            var result = await semanticKernelService.CompleteTextAsync(prompt,
+                new Dictionary<string, object>
+                {
+                    ["context"] = context,
+                    ["content"] = content
+                });
+            return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
+        }
+
         private (decimal score, string explanation) CalculateReadabilityMetrics(string content)
         {
+#pragma warning disable SKEXP0050
+
             // Calculate various readability metrics (Flesch-Kincaid, etc.)
             var sentences = TextChunker.SplitPlainTextLines(content, 100).Count();
             var words = content.Split(new[] { ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;

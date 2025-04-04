@@ -50,7 +50,7 @@ namespace Meritocious.AI.SemanticClustering.Services
                 var result = await semanticKernelService.CompleteTextAsync(topicExtractionPrompt, new Dictionary<string, object> { ["input"] = content });
 
                 // Parse the comma-separated list
-                var topics = result.GetValue<string>()
+                var topics = result
                     .Split(',')
                     .Select(t => t.Trim())
                     .Where(t => !string.IsNullOrWhiteSpace(t))

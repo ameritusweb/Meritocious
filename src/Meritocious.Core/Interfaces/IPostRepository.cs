@@ -62,5 +62,7 @@ namespace Meritocious.Core.Interfaces
         Task<PostEngagement> GetEngagementAsync(Guid postId);
         Task RecordEngagementMetricsAsync(Guid postId, string region, string platform, bool isUnique, decimal timeSpentSeconds, bool bounced);
         Task RecordInteractionAsync(Guid postId, string interactionType);
+
+        Task<List<Post>> GetRecentPostsAsync(int count);
     }
 }

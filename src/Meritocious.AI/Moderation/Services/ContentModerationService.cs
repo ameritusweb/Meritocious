@@ -84,8 +84,6 @@ namespace Meritocious.AI.Moderation.Services
         {
             try
             {
-                var semanticKernel = CreateKernel();
-
                 // Define toxicity categories to evaluate
                 var categories = new[]
                 {
@@ -110,7 +108,7 @@ namespace Meritocious.AI.Moderation.Services
                                  Provide explanation with the score.
                                  Text: {{$text}}";
 
-                    var result = await semanticKernelService.CompleteTextAsync(prompt, new { text = content });
+                    var result = await semanticKernelService.CompleteTextAsync(prompt, new Dictionary<string, object> { ["text"] = content });
                     var analysis = JsonSerializer.Deserialize<ToxicityAnalysis>(result.ToString());
                     scores[category] = analysis.Score;
                 }
@@ -161,7 +159,7 @@ namespace Meritocious.AI.Moderation.Services
                            Rate from 0-1 and explain why.
                            Text: {{$text}}";
 
-            var result = await semanticKernelService.CompleteTextAsync(spamPrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(spamPrompt, new Dictionary<string, object> { ["text"] = content });
             var aiSpamScore = decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
 
             // Combine both scores
@@ -197,7 +195,7 @@ namespace Meritocious.AI.Moderation.Services
                              Rate from 0-1 and provide detailed explanation.
                              Text: {{$text}}";
 
-                var result = await semanticKernelService.CompleteTextAsync(prompt, new { text = content });
+                var result = await semanticKernelService.CompleteTextAsync(prompt, new Dictionary<string, object> { ["text"] = content });
                 var analysis = JsonSerializer.Deserialize<HarmAnalysis>(result.ToString());
 
                 analysisResults.Add(analysis);
@@ -250,7 +248,7 @@ namespace Meritocious.AI.Moderation.Services
                                  Rate severity from 0-1 and explain findings.
                                  Text: {{$text}}";
 
-            var result = await semanticKernelService.CompleteTextAsync(prohibitedPrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(prohibitedPrompt, new Dictionary<string, object> { ["text"] = content });
             var aiScore = decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
 
             // Return the higher of the two scores
