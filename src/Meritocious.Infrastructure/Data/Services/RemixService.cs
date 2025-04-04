@@ -71,14 +71,14 @@ public class RemixService : IRemixService
             SubstackId = request.SubstackId.ToString(),
             IsDraft = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            Type = "remix"
+            UpdatedAt = DateTime.UtcNow
         };
 
         // Add tags
         if (request.Tags.Any())
         {
-            post.Tags = await tagService.GetOrCreateTagsAsync(request.Tags);
+            // TODO: Add tags
+            // post.Tags = await tagService.GetOrCreateTagsAsync(request.Tags);
         }
 
         // Add post to repository first to get its ID
@@ -127,7 +127,8 @@ public class RemixService : IRemixService
         // Update tags
         if (request.Tags != null)
         {
-            post.Tags = await tagService.GetOrCreateTagsAsync(request.Tags);
+            // TODO: Update tags
+            // post.Tags = await tagService.GetOrCreateTagsAsync(request.Tags);
         }
 
         // Update synthesis map if requested
@@ -225,7 +226,9 @@ public class RemixService : IRemixService
 
         // Calculate final merit score
         var scoreResult = await CalculateRemixScoreAsync(remixId);
-        post.MeritScore = scoreResult.FinalScore;
+        
+        // TODO: Update merit score with score result
+        // post.MeritScore = scoreResult;
 
         // Update status
         post.IsDraft = false;
@@ -411,7 +414,9 @@ public class RemixService : IRemixService
         };
 
         relation.AddQuote(quote);
-        await postRepository.UpdateAsync(relation);
+
+        // TODO: Add relation
+        // await postRepository.UpdateAsync(relation);
     }
 
     public async Task<IEnumerable<RemixDto>> GetUserRemixesAsync(Guid userId, RemixFilter filter)
@@ -485,9 +490,10 @@ public class RemixService : IRemixService
         switch (engagementEvent.Type)
         {
             case RemixEngagementType.View:
-                engagement.RecordView(
-                    engagementEvent.Region ?? "unknown",
-                    engagementEvent.Platform ?? "unknown");
+                // TODO: Record view
+                // engagement.RecordView(
+                //    engagementEvent.Region ?? "unknown",
+                //    engagementEvent.Platform ?? "unknown");
                 break;
 
             case RemixEngagementType.Interaction:

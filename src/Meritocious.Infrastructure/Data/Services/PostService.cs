@@ -41,8 +41,9 @@ namespace Meritocious.Core.Services
             }
 
             var post = Post.Create(title, content, author, parent);
-            post.UpdateMeritScore(contentScore);
 
+            // TODO: Update merit score.
+            // post.UpdateMeritScore(contentScore);
             await postRepository.AddAsync(post);
             return post;
         }
@@ -63,8 +64,9 @@ namespace Meritocious.Core.Services
             }
 
             post.UpdateContent(title, content);
-            post.UpdateMeritScore(contentScore);
-
+            
+            // TODO: Update merit score
+            // post.UpdateMeritScore(contentScore);
             await postRepository.UpdateAsync(post);
             return post;
         }

@@ -54,15 +54,15 @@ namespace Meritocious.Core.Entities
 
         public void AddRelation(PostRelation relation)
         {
-            if (relation.RelationType == "remix")
-            {
-                ParentRelations.Add(relation);
-            }
-            else if (relation.RelationType == "fork")
-            {
-                ChildRelations.Add(relation);
-            }
-
+            // TODO: Add relation
+            // if (relation.RelationType == "remix")
+            // {
+            //    ParentRelations.Add(relation);
+            // }
+            // else if (relation.RelationType == "fork")
+            // {
+            //    ChildRelations.Add(relation);
+            // }
             UpdatedAt = DateTime.UtcNow;
         }
 
@@ -119,7 +119,8 @@ namespace Meritocious.Core.Entities
             }
             else
             {
-                meritScores.Add(MeritScore.Create(Id, "Post", scoreType, score));
+                // TODO: Add a merit score
+                // meritScores.Add(MeritScore.Create(Id, "Post", scoreType, score));
             }
 
             // Also update components dictionary for consistency
