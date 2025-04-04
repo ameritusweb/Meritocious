@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.AI.Recommendations.Services;
 using Meritocious.AI.SemanticClustering.Interfaces;
+using Meritocious.Core.Interfaces;
 
 namespace Meritocious.Infrastructure.Services
 {

@@ -1,35 +1,46 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Meritocious.AI.SemanticClustering.Interfaces;
+using Meritocious.AI.Shared.Configuration;
+using Meritocious.Core.Features.Recommendations.Models;
+using Meritocious.Core.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Embeddings;
-using Meritocious.AI.Shared.Configuration;
-using Meritocious.Core.Entities;
-using System.Text.Json;
-using Meritocious.AI.MeritScoring.Interfaces;
-using Meritocious.AI.SemanticClustering.Interfaces;
-using Meritocious.AI.SemanticClustering.Services;
-using Meritocious.Core.Features.Recommendations.Models;
-using Meritocious.Core.Interfaces;
 
 namespace Meritocious.AI.Recommendations.Services
 {
     public class RecommendationService : IRecommendationService
     {
-        private readonly IKernel _semanticKernel;
-        private readonly ILogger<RecommendationService> _logger;
-        private readonly AIServiceConfiguration _config;
-        private readonly IThreadAnalyzer _threadAnalyzer;
+        private readonly IKernel semanticKernel;
+        private readonly ILogger<RecommendationService> logger;
+        private readonly AIServiceConfiguration config;
+        private readonly IThreadAnalyzer threadAnalyzer;
+        private readonly IUserTopicPreferenceRepository preferenceRepo;
+        private readonly IUserInteractionRepository interactionRepo;
+        private readonly IContentTopicRepository topicRepo;
+        private readonly IPostRepository postRepo;
+        private readonly ITrendingContentRepository trendingRepo;
 
         public RecommendationService(
             IKernel semanticKernel,
             IThreadAnalyzer threadAnalyzer,
             IOptions<AIServiceConfiguration> config,
+            IUserTopicPreferenceRepository preferenceRepo,
+            IUserInteractionRepository interactionRepo,
+            IContentTopicRepository topicRepo,
+            IPostRepository postRepo,
+            ITrendingContentRepository trendingRepo,
             ILogger<RecommendationService> logger)
         {
-            _semanticKernel = semanticKernel;
-            _threadAnalyzer = threadAnalyzer;
-            _config = config.Value;
-            _logger = logger;
+            this.semanticKernel = semanticKernel;
+            this.threadAnalyzer = threadAnalyzer;
+            this.config = config.Value;
+            this.logger = logger;
+            this.preferenceRepo = preferenceRepo;
+            this.interactionRepo = interactionRepo;
+            this.topicRepo = topicRepo;
+            this.postRepo = postRepo;
+            this.trendingRepo = trendingRepo;
         }
 
         public async Task<List<ContentRecommendation>> GetRecommendationsAsync(
@@ -74,7 +85,7 @@ namespace Meritocious.AI.Recommendations.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating recommendations for user {UserId}", userId);
+                logger.LogError(ex, "Error generating recommendations for user {UserId}", userId);
                 return new List<ContentRecommendation>();
             }
         }
@@ -95,7 +106,7 @@ namespace Meritocious.AI.Recommendations.Services
             foreach (var interaction in userHistory.OrderByDescending(h => h.Timestamp))
             {
                 // Extract topics from content
-                var topics = await _threadAnalyzer.ExtractKeyTopicsAsync(interaction.ContentId.ToString());
+                var topics = await threadAnalyzer.ExtractKeyTopicsAsync(interaction.ContentId.ToString());
 
                 foreach (var topic in topics)
                 {
@@ -117,6 +128,7 @@ namespace Meritocious.AI.Recommendations.Services
                 {
                     profile.InteractionPatterns[pattern] = 0;
                 }
+
                 profile.InteractionPatterns[pattern] += recencyWeight;
             }
 
@@ -213,7 +225,7 @@ namespace Meritocious.AI.Recommendations.Services
                 .Take(10))
             {
                 var content = await GetContentByIdAsync(interaction.ContentId);
-                var embedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
+                var embedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
                 interactionEmbeddings.Add((interaction.ContentId, embedding));
             }
 
@@ -223,9 +235,11 @@ namespace Meritocious.AI.Recommendations.Services
             {
                 // Skip if user has already interacted
                 if (userProfile.InteractionHistory.Any(h => h.ContentId == content.ContentId))
+                {
                     continue;
+                }
 
-                var contentEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content.Value);
+                var contentEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content.Value);
 
                 // Calculate average similarity to user's positive interactions
                 var avgSimilarity = interactionEmbeddings
@@ -298,7 +312,7 @@ namespace Meritocious.AI.Recommendations.Services
             foreach (var recommendation in recommendations)
             {
                 var content = await GetContentByIdAsync(recommendation.ContentId);
-                var topics = await _threadAnalyzer.ExtractKeyTopicsAsync(content);
+                var topics = await threadAnalyzer.ExtractKeyTopicsAsync(content);
 
                 // Find matching interests
                 var matchingTopics = topics
@@ -365,12 +379,6 @@ namespace Meritocious.AI.Recommendations.Services
         #endregion
 
         #region Data Access Methods
-        private readonly UserInteractionRepository _interactionRepo;
-        private readonly ContentTopicRepository _topicRepo;
-        private readonly UserTopicPreferenceRepository _preferenceRepo;
-        private readonly TrendingContentRepository _trendingRepo;
-        private readonly ContentSimilarityRepository _similarityRepo;
-        private readonly IPostRepository _postRepo;
 
         private async Task<List<SimilarUser>> FindSimilarUsersAsync(UserProfile userProfile)
         {
@@ -380,14 +388,14 @@ namespace Meritocious.AI.Recommendations.Services
                 .OrderByDescending(t => t.Value)
                 .Take(5))
             {
-                var users = await _preferenceRepo.GetUsersInterestedInTopicAsync(
+                var users = await preferenceRepo.GetUsersInterestedInTopicAsync(
                     topic.Key,
                     limit: 10,
                     minWeight: 0.5m);
 
                 foreach (var user in users.Where(u => u.Id != userProfile.UserId))
                 {
-                    var userPrefs = await _preferenceRepo.GetUserTopicWeightsAsync(user.Id);
+                    var userPrefs = await preferenceRepo.GetUserTopicWeightsAsync(user.Id);
                     var similarity = CalculatePreferenceSimilarity(
                         userProfile.TopicPreferences,
                         userPrefs);
@@ -408,7 +416,7 @@ namespace Meritocious.AI.Recommendations.Services
 
         private async Task<List<ContentInteraction>> GetUserPositiveInteractionsAsync(Guid userId)
         {
-            var interactions = await _interactionRepo.GetUserInteractionsAsync(
+            var interactions = await interactionRepo.GetUserInteractionsAsync(
                 userId,
                 since: DateTime.UtcNow.AddDays(-30));
 
@@ -424,7 +432,7 @@ namespace Meritocious.AI.Recommendations.Services
 
         private async Task<List<Content>> GetRecentContentByTopicAsync(string topic)
         {
-            var content = await _topicRepo.GetTopicContentAsync(
+            var content = await topicRepo.GetTopicContentAsync(
                 topic,
                 limit: 50,
                 minRelevance: 0.5m);
@@ -432,7 +440,7 @@ namespace Meritocious.AI.Recommendations.Services
             var result = new List<Content>();
             foreach (var item in content)
             {
-                var post = await _postRepo.GetByIdAsync(item.ContentId);
+                var post = await postRepo.GetByIdAsync(item.ContentId);
                 if (post != null)
                 {
                     result.Add(new Content
@@ -449,13 +457,13 @@ namespace Meritocious.AI.Recommendations.Services
 
         private async Task<string> GetContentByIdAsync(Guid contentId)
         {
-            var post = await _postRepo.GetByIdAsync(contentId);
+            var post = await postRepo.GetByIdAsync(contentId);
             return post?.Content ?? string.Empty;
         }
 
         private async Task<List<Content>> GetRecentContentAsync(int count)
         {
-            var posts = await _postRepo.GetRecentPostsAsync(count);
+            var posts = await postRepo.GetRecentPostsAsync(count);
             return posts.Select(p => new Content
             {
                 ContentId = p.Id,
@@ -466,7 +474,7 @@ namespace Meritocious.AI.Recommendations.Services
 
         private async Task<List<TrendingContent>> GetTrendingContentAsync()
         {
-            var trending = await _trendingRepo.GetTrendingContentAsync(
+            var trending = await trendingRepo.GetTrendingContentAsync(
                 limit: 50,
                 timeWindow: "day",
                 minTrendingScore: 0.3m);
@@ -483,12 +491,12 @@ namespace Meritocious.AI.Recommendations.Services
             Dictionary<string, decimal> prefs2)
         {
             var topics = prefs1.Keys.Union(prefs2.Keys);
-            var dotProduct = topics.Sum(t =>
+            var dotProduct = (double)topics.Sum(t =>
                 (prefs1.ContainsKey(t) ? prefs1[t] : 0) *
                 (prefs2.ContainsKey(t) ? prefs2[t] : 0));
 
-            var norm1 = Math.Sqrt(prefs1.Values.Sum(v => v * v));
-            var norm2 = Math.Sqrt(prefs2.Values.Sum(v => v * v));
+            var norm1 = Math.Sqrt((double)prefs1.Values.Sum(v => v * v));
+            var norm2 = Math.Sqrt((double)prefs2.Values.Sum(v => v * v));
 
             return (decimal)(dotProduct / (norm1 * norm2));
         }

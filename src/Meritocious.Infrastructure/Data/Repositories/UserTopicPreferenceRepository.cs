@@ -1,5 +1,6 @@
 ﻿using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Recommendations.Models;
+using Meritocious.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,14 +10,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
-    public interface IUserTopicPreferenceRepository
-    {
-        Task<List<UserTopicPreference>> GetUserPreferencesAsync(Guid userId);
-        Task<List<User>> GetUsersInterestedInTopicAsync(string topic, decimal minWeight = 0.1m);
-        Task UpdateUserPreferencesAsync(Guid userId, Dictionary<string, decimal> preferences);
-    }
-
-    public class UserTopicPreferenceRepository : GenericRepository<UserTopicPreference>
+    public class UserTopicPreferenceRepository : GenericRepository<UserTopicPreference>, IUserTopicPreferenceRepository
     {
         public UserTopicPreferenceRepository(MeritociousDbContext context) : base(context)
         {

@@ -6,6 +6,7 @@ using Meritocious.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Meritocious.Web.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 

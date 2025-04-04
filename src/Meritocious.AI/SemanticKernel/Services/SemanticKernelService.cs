@@ -9,27 +9,29 @@ namespace Meritocious.AI.SemanticKernel.Services
 {
     public class SemanticKernelService : ISemanticKernelService
     {
-        private readonly ILogger<SemanticKernelService> _logger;
-        private readonly AIServiceConfiguration _config;
-        private Kernel? _kernel;
+        private readonly ILogger<SemanticKernelService> logger;
+        private readonly AIServiceConfiguration config;
+        private Kernel? kernel;
 
         public SemanticKernelService(
             IOptions<AIServiceConfiguration> config,
             ILogger<SemanticKernelService> logger)
         {
-            _config = config.Value;
-            _logger = logger;
+            this.config = config.Value;
+            this.logger = logger;
         }
 
         private Kernel GetKernel()
         {
-            if (_kernel != null)
-                return _kernel;
+            if (kernel != null)
+            {
+                return kernel;
+            }
 
             var builder = Kernel.CreateBuilder();
 
             // Embedding configuration
-            var embeddings = _config.Embeddings;
+            var embeddings = config.Embeddings;
             if (embeddings != null && embeddings.TryGetValue("ApiKey", out var embeddingApiKey))
             {
                 var embeddingModel = embeddings.TryGetValue("ModelId", out var model)
@@ -46,7 +48,7 @@ namespace Meritocious.AI.SemanticKernel.Services
             }
 
             // Completion configuration
-            var completion = _config.Completion;
+            var completion = config.Completion;
             if (completion != null && completion.TryGetValue("ApiKey", out var completionApiKey))
             {
                 var completionModel = completion.TryGetValue("ModelId", out var model)
@@ -60,15 +62,14 @@ namespace Meritocious.AI.SemanticKernel.Services
                 throw new InvalidOperationException("Completion API key not configured.");
             }
 
-            _kernel = builder.Build();
-            return _kernel;
+            kernel = builder.Build();
+            return kernel;
         }
 
         public async Task<float[]> GetEmbeddingAsync(string input)
         {
             try
             {
-
 #pragma warning disable SKEXP0001
 
                 var kernel = GetKernel();
@@ -78,7 +79,7 @@ namespace Meritocious.AI.SemanticKernel.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to generate embedding.");
+                logger.LogError(ex, "Failed to generate embedding.");
                 return Array.Empty<float>();
             }
         }
@@ -100,11 +101,10 @@ namespace Meritocious.AI.SemanticKernel.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to invoke prompt with settings.");
+                logger.LogError(ex, "Failed to invoke prompt with settings.");
                 return string.Empty;
             }
         }
-
 
         public PromptExecutionSettings DefaultGpt4Settings(double temp = 0.2, int maxTokens = 300)
         {
@@ -119,6 +119,5 @@ namespace Meritocious.AI.SemanticKernel.Services
                 }
             };
         }
-
     }
 }

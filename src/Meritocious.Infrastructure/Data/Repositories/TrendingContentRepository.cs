@@ -1,5 +1,6 @@
 ﻿using Meritocious.Common.Enums;
 using Meritocious.Core.Features.Recommendations.Models;
+using Meritocious.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -9,14 +10,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
-    public interface ITrendingContentRepository
-    {
-        Task<List<TrendingContent>> GetTrendingContentAsync(ContentType? contentType = null, int count = 10);
-        Task<List<TrendingContent>> GetTrendingByTopicAsync(string topic, int count = 10);
-        Task RecalculateTrendingScoresAsync(TimeSpan windowSize);
-    }
-
-    public class TrendingContentRepository : GenericRepository<TrendingContent>
+    public class TrendingContentRepository : GenericRepository<TrendingContent>, ITrendingContentRepository
     {
         public TrendingContentRepository(MeritociousDbContext context) : base(context)
         {
