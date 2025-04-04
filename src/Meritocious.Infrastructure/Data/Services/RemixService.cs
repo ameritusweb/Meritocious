@@ -142,8 +142,10 @@ public class RemixService : IRemixService
     public async Task<RemixDto> GetRemixByIdAsync(Guid remixId)
     {
         var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix") 
+        if (post == null || post.Type != "remix")
+        {
             throw new ArgumentException("Remix post not found");
+        }
 
         // Get parent relations (remix sources)
         var sources = post.ParentRelations
@@ -314,12 +316,16 @@ public class RemixService : IRemixService
     {
         var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.Type != "remix")
+        {
             throw new ArgumentException("Remix post not found");
+        }
 
         var relation = post.ParentRelations
             .FirstOrDefault(r => r.RelationType == "remix" && r.ParentId == sourceId);
         if (relation == null)
+        {
             throw new ArgumentException("Source relation not found");
+        }
 
         // Update the relationship role
         relation.UpdateRole(relationship);
@@ -355,13 +361,17 @@ public class RemixService : IRemixService
             throw new ArgumentException("Source relation not found");
 
         var sourcePost = await _postRepository.GetByIdAsync(relation.ParentId);
-        if (sourcePost == null) 
+        if (sourcePost == null)
+        {
             throw new ArgumentException("Source post not found");
+        }
 
         // Find the quote in the source content
         var startIndex = sourcePost.Content.IndexOf(request.Text);
-        if (startIndex == -1) 
+        if (startIndex == -1)
+        {
             throw new ArgumentException("Quote not found in source content");
+        }
 
         // Get some context around the quote
         var contextStart = Math.Max(0, startIndex - 100);
@@ -505,7 +515,9 @@ public class RemixService : IRemixService
     {
         var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.Type != "remix")
+        {
             throw new ArgumentException("Remix post not found");
+        }
 
         var engagement = await _postRepository.GetEngagementAsync(remixId);
         var relations = post.ParentRelations
@@ -744,8 +756,15 @@ public class RemixService : IRemixService
 
         // Penalize very short or very long insights
         var wordCount = text.Split(' ').Length;
-        if (wordCount < 10) confidence -= 0.2m;
-        if (wordCount > 50) confidence -= 0.1m;
+        if (wordCount < 10)
+        {
+            confidence -= 0.2m;
+        }
+
+        if (wordCount > 50)
+        {
+            confidence -= 0.1m;
+        }
 
         // Penalize generic insights
         var genericPhrases = new[] { "it is important to", "one should consider", "it is interesting that" };
@@ -758,8 +777,10 @@ public class RemixService : IRemixService
     public async Task<string> GenerateSynthesisMapAsync(Guid remixId)
     {
         var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix") 
+        if (post == null || post.Type != "remix")
+        {
             throw new ArgumentException("Remix post not found");
+        }
 
         var sourceRelations = post.ParentRelations
             .Where(r => r.RelationType == "remix")

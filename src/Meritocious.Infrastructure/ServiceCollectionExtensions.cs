@@ -92,34 +92,6 @@ namespace Meritocious.Infrastructure
             // Add validation behavior
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-            // Add DbSets for missing entities
-            services.AddDbContext<MeritociousDbContext>((serviceProvider, options) =>
-            {
-                var currentOptions = serviceProvider.GetRequiredService<DbContextOptions<MeritociousDbContext>>();
-                var dbContext = new MeritociousDbContext(currentOptions);
-
-                // Ensure DbSet properties are created for all entities
-                if (!dbContext.Model.FindEntityType(typeof(Notification)) != null)
-                {
-                    options.Entity<Notification>();
-                }
-
-                if (!dbContext.Model.FindEntityType(typeof(ContentReport)) != null)
-                {
-                    options.Entity<ContentReport>();
-                }
-
-                if (!dbContext.Model.FindEntityType(typeof(MeritScoreHistory)) != null)
-                {
-                    options.Entity<MeritScoreHistory>();
-                }
-
-                if (!dbContext.Model.FindEntityType(typeof(ContentModerationEvent)) != null)
-                {
-                    options.Entity<ContentModerationEvent>();
-                }
-            });
-
             return services;
         }
     }
