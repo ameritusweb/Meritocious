@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Meritocious.Core.Features.Merit.Queries;
 using Meritocious.Common.DTOs.Auth;
 using Meritocious.Infrastructure.Data;
+using Meritocious.Core.Results;
+using Microsoft.Extensions.Configuration;
 
 namespace Meritocious.Infrastructure.Queries
 {
@@ -11,35 +13,41 @@ namespace Meritocious.Infrastructure.Queries
         IRequestHandler<GetRecentLogsQuery, List<LogEntryDto>>,
         IRequestHandler<GetLogExportUrlQuery, string>
     {
-        private readonly MeritociousDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly MeritociousDbContext context;
+        private readonly IConfiguration configuration;
 
         public GetSystemLogsQueryHandler(
             MeritociousDbContext context,
             IConfiguration configuration)
         {
-            _context = context;
-            _configuration = configuration;
+            this.context = context;
+            this.configuration = configuration;
         }
 
         public async Task<PagedResult<LogEntryDto>> Handle(
             GetSystemLogsQuery request,
             CancellationToken cancellationToken)
         {
-            var query = _context.SystemLogs.AsQueryable();
+            var query = context.SystemLogs.AsQueryable();
 
             if (!string.IsNullOrEmpty(request.Level))
+            {
                 query = query.Where(l => l.Level == request.Level);
+            }
 
             if (!string.IsNullOrEmpty(request.SearchText))
                 query = query.Where(l => l.Message.Contains(request.SearchText) ||
                                        l.Source.Contains(request.SearchText));
 
             if (request.StartDate.HasValue)
+            {
                 query = query.Where(l => l.Timestamp >= request.StartDate.Value);
+            }
 
             if (request.EndDate.HasValue)
+            {
                 query = query.Where(l => l.Timestamp <= request.EndDate.Value);
+            }
 
             var totalItems = await query.CountAsync(cancellationToken);
 
@@ -71,7 +79,7 @@ namespace Meritocious.Infrastructure.Queries
             GetRecentLogsQuery request,
             CancellationToken cancellationToken)
         {
-            return await _context.SystemLogs
+            return await context.SystemLogs
                 .OrderByDescending(l => l.Timestamp)
                 .Take(request.Count)
                 .Select(l => new LogEntryDto
@@ -91,7 +99,7 @@ namespace Meritocious.Infrastructure.Queries
             CancellationToken cancellationToken)
         {
             // Generate a temporary signed URL for downloading logs
-            var baseUrl = _configuration["StorageBaseUrl"];
+            var baseUrl = configuration["StorageBaseUrl"];
             var fileName = $"logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.csv";
             
             // TODO: Implement actual log export generation and URL signing

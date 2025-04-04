@@ -1,3 +1,5 @@
+using Meritocious.Common.DTOs.Auth;
+
 namespace Meritocious.Common.DTOs.Security;
 
 public class SecurityOverviewDto
@@ -12,4 +14,9 @@ public class SecurityOverviewDto
     public double AverageApiRequestsPerMinute { get; set; }
     public int BlockedIpAddresses { get; set; }
     public int ActiveSessions { get; set; }
+    public int UniqueSuspiciousIps24h { get; set; }
+    public int TotalApiRequests24h { get; set; }
+    public List<LoginAttemptDto> RecentFailedLogins { get; set; } = new();
+    public List<SecurityAuditLogDto> RecentSecurityEvents { get; set; } = new();
+    public Dictionary<string, int> ApiEndpointUsage { get; set; } = new();
 }

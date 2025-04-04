@@ -19,39 +19,43 @@ namespace Meritocious.Core.Features.Users.Commands
 
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, Result<UserProfileDto>>
     {
-        private readonly UserRepository _userRepository;
-        private readonly IMediator _mediator;
-        private readonly ILogger<RegisterUserCommandHandler> _logger;
+        private readonly UserRepository userRepository;
+        private readonly IMediator mediator;
+        private readonly ILogger<RegisterUserCommandHandler> logger;
 
         public RegisterUserCommandHandler(
             UserRepository userRepository,
             IMediator mediator,
             ILogger<RegisterUserCommandHandler> logger)
         {
-            _userRepository = userRepository;
-            _mediator = mediator;
-            _logger = logger;
+            this.userRepository = userRepository;
+            this.mediator = mediator;
+            this.logger = logger;
         }
 
         public async Task<Result<UserProfileDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
             // Check for existing username
-            if (await _userRepository.GetByUsernameAsync(request.Username) != null)
+            if (await userRepository.GetByUsernameAsync(request.Username) != null)
+            {
                 return Result.Failure<UserProfileDto>("Username is already taken");
+            }
 
             // Check for existing email
-            if (await _userRepository.GetByEmailAsync(request.Email) != null)
+            if (await userRepository.GetByEmailAsync(request.Email) != null)
+            {
                 return Result.Failure<UserProfileDto>("Email is already registered");
+            }
 
             // Hash password
             string passwordHash = BCrypt.EnhancedHashPassword(request.Password);
 
             // Create user
             var user = User.Create(request.Username, request.Email, passwordHash);
-            await _userRepository.AddAsync(user);
+            await userRepository.AddAsync(user);
 
             // Publish event
-            await _mediator.Publish(new UserRegisteredEvent(user.Id), cancellationToken);
+            await mediator.Publish(new UserRegisteredEvent(user.Id), cancellationToken);
 
             return Result.Success(user.ToDto());
         }

@@ -33,7 +33,9 @@
         {
             var user = await _userRepository.GetByIdAsync(request.UserId);
             if (user == null)
+            {
                 return Result.Failure<UserProfileDto>($"User {request.UserId} not found");
+            }
 
             // Get user's top contributions
             var topPosts = await _postRepository.GetTopPostsByUserAsync(request.UserId, 5);

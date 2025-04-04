@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Reporting.Queries;
 using Meritocious.Core.Interfaces;
 using System;
@@ -11,18 +12,18 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetContentReportsQueryHandler : IRequestHandler<GetContentReportsQuery, List<ContentReport>>
     {
-        private readonly IReportingService _reportingService;
+        private readonly IReportingService reportingService;
 
         public GetContentReportsQueryHandler(IReportingService reportingService)
         {
-            _reportingService = reportingService;
+            this.reportingService = reportingService;
         }
 
         public async Task<List<ContentReport>> Handle(
             GetContentReportsQuery request,
             CancellationToken cancellationToken)
         {
-            return await _reportingService.GetReportsAsync(
+            return await reportingService.GetReportsAsync(
                 request.Status,
                 request.SortBy,
                 request.Page,

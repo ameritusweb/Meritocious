@@ -20,18 +20,18 @@
         {
             return value switch
             {
-                string s => new MetadataValue(s),
-                double d => new MetadataValue(d),
-                bool b => new MetadataValue(b),
-                int i => new MetadataValue((double)i),
-                float f => new MetadataValue((double)f),
-                IEnumerable<string> ss => new MetadataValue(ss.ToList()),
-                IEnumerable<double> ds => new MetadataValue(ds.ToList()),
-                IEnumerable<bool> bs => new MetadataValue(bs.ToList()),
-                IEnumerable<int> integers => new MetadataValue(integers.Select(i => (double)i).ToList()),
-                IEnumerable<float> floats => new MetadataValue(floats.Select(f => (double)f).ToList()),
-                Dictionary<string, object> nested => new MetadataValue(nested.ToMetadata()),
-                _ => new MetadataValue(value.ToString())
+                string s => s,
+                double d => d,
+                bool b => b,
+                int i => (double)i,
+                float f => (double)f,
+                IEnumerable<string> ss => ss.ToList(),
+                IEnumerable<double> ds => ds.ToList(),
+                IEnumerable<bool> bs => bs.ToList(),
+                IEnumerable<int> integers => integers.Select(i => (double)i).ToList(),
+                IEnumerable<float> floats => floats.Select(f => (double)f).ToList(),
+                Dictionary<string, object> nested => nested.ToMetadata(),
+                _ => value.ToString()
             };
         }
 
@@ -42,21 +42,21 @@
             {
                 if (kvp.Value != null)
                 {
-                    dict[kvp.Key] = ExtractValue(kvp.Value);
+                    dict[kvp.Key] = ExtractValue<object>(kvp.Value);
                 }
             }
 
             return dict;
         }
 
-        private static object ExtractValue(MetadataValue value)
+        private static T ExtractValue<T>(MetadataValue value)
         {
-            return value.Match(
-                stringValue => stringValue,
-                doubleValue => doubleValue,
-                boolValue => boolValue,
-                listValue => listValue.Select(v => v != null ? ExtractValue(v) : null).ToList(),
-                nestedMetadata => nestedMetadata.ToDictionary());
+            return value.Match<T>(
+                stringValue => (T)(object)stringValue,
+                doubleValue => (T)(object)doubleValue,
+                boolValue => (T)(object)boolValue,
+                listValue => (T)(object)listValue.Select(v => v != null ? ExtractValue<object>(v) : null).ToList(),
+                nestedMetadata => (T)(object)nestedMetadata.ToDictionary());
         }
     }
 

@@ -8,22 +8,22 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetTrendingSubstacksQueryHandler : IRequestHandler<GetTrendingSubstacksQuery, List<SubstackDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetTrendingSubstacksQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<List<SubstackDto>> Handle(GetTrendingSubstacksQuery request, CancellationToken cancellationToken)
     {
-        return await _context.Substacks
+        return await context.Substacks
             .OrderByDescending(s => s.EngagementRate)
             .Skip(request.Skip)
             .Take(request.Limit)
             .Select(s => new SubstackDto
             {
-                Id = s.Id,
+                Id = s.Id.ToString(),
                 Name = s.Name,
                 Subdomain = s.Subdomain,
                 CustomDomain = s.CustomDomain,

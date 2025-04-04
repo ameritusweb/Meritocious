@@ -9,6 +9,7 @@ namespace Meritocious.Core.Features.Posts.Queries
     using MediatR;
     using Meritocious.Core.Entities;
     using Meritocious.Core.Results;
+    using Meritocious.Infrastructure.Data.Repositories;
 
     public record GetPostQuery : IRequest<Result<Post>>
     {
@@ -17,18 +18,20 @@ namespace Meritocious.Core.Features.Posts.Queries
 
     public class GetPostQueryHandler : IRequestHandler<GetPostQuery, Result<Post>>
     {
-        private readonly PostRepository _postRepository;
+        private readonly PostRepository postRepository;
 
         public GetPostQueryHandler(PostRepository postRepository)
         {
-            _postRepository = postRepository;
+            this.postRepository = postRepository;
         }
 
         public async Task<Result<Post>> Handle(GetPostQuery request, CancellationToken cancellationToken)
         {
-            var post = await _postRepository.GetByIdAsync(request.PostId);
+            var post = await postRepository.GetByIdAsync(request.PostId);
             if (post == null)
+            {
                 return Result.Failure<Post>($"Post {request.PostId} not found");
+            }
 
             return Result.Success(post);
         }

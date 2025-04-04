@@ -4,20 +4,21 @@ using Microsoft.Extensions.Logging;
 using Meritocious.Common.DTOs.Auth;
 using Meritocious.Infrastructure.Data;
 using Meritocious.Core.Features.Security.Queries;
+using Meritocious.Common.DTOs.Security;
 
 namespace Meritocious.Infrastructure.Queries.Security
 {
     public class GetSecurityOverviewQueryHandler : IRequestHandler<GetSecurityOverviewQuery, SecurityOverviewDto>
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<GetSecurityOverviewQueryHandler> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<GetSecurityOverviewQueryHandler> logger;
 
         public GetSecurityOverviewQueryHandler(
             MeritociousDbContext context,
             ILogger<GetSecurityOverviewQueryHandler> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<SecurityOverviewDto> Handle(
@@ -29,29 +30,29 @@ namespace Meritocious.Infrastructure.Queries.Security
                 var oneDayAgo = DateTime.UtcNow.AddDays(-1);
 
                 // Get failed login attempts in last 24h
-                var failedLogins = await _context.LoginAttempts
+                var failedLogins = await context.LoginAttempts
                     .Where(l => !l.Success && l.Timestamp >= oneDayAgo)
                     .ToListAsync(cancellationToken);
 
                 // Get unique suspicious IPs
-                var suspiciousIps = await _context.SecurityAuditLogs
+                var suspiciousIps = await context.SecurityAuditLogs
                     .Where(l => l.Timestamp >= oneDayAgo && l.Severity != "low")
                     .Select(l => l.IpAddress)
                     .Distinct()
                     .CountAsync(cancellationToken);
 
                 // Get security incidents
-                var securityIncidents = await _context.SecurityAuditLogs
+                var securityIncidents = await context.SecurityAuditLogs
                     .Where(l => l.Timestamp >= oneDayAgo && l.Severity == "high")
                     .CountAsync(cancellationToken);
 
                 // Get API request count
-                var apiRequests = await _context.ApiUsageLogs
+                var apiRequests = await context.ApiUsageLogs
                     .Where(l => l.Timestamp >= oneDayAgo)
                     .CountAsync(cancellationToken);
 
                 // Get recent failed logins
-                var recentFailedLogins = await _context.LoginAttempts
+                var recentFailedLogins = await context.LoginAttempts
                     .Where(l => !l.Success)
                     .OrderByDescending(l => l.Timestamp)
                     .Take(5)
@@ -70,7 +71,7 @@ namespace Meritocious.Infrastructure.Queries.Security
                     .ToListAsync(cancellationToken);
 
                 // Get recent security events
-                var recentSecurityEvents = await _context.SecurityAuditLogs
+                var recentSecurityEvents = await context.SecurityAuditLogs
                     .OrderByDescending(l => l.Timestamp)
                     .Take(5)
                     .Select(l => new SecurityAuditLogDto
@@ -80,7 +81,7 @@ namespace Meritocious.Infrastructure.Queries.Security
                         Severity = l.Severity,
                         Description = l.Description,
                         IpAddress = l.IpAddress,
-                        Username = l.User.Username,
+                        Username = l.User.UserName,
                         UserAgent = l.UserAgent,
                         Timestamp = l.Timestamp,
                         Context = l.Context
@@ -88,7 +89,7 @@ namespace Meritocious.Infrastructure.Queries.Security
                     .ToListAsync(cancellationToken);
 
                 // Get API endpoint usage stats
-                var endpointUsage = await _context.ApiUsageLogs
+                var endpointUsage = await context.ApiUsageLogs
                     .Where(l => l.Timestamp >= oneDayAgo)
                     .GroupBy(l => l.Endpoint)
                     .Select(g => new { Endpoint = g.Key, Count = g.Count() })
@@ -110,7 +111,7 @@ namespace Meritocious.Infrastructure.Queries.Security
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting security overview");
+                logger.LogError(ex, "Error getting security overview");
                 throw;
             }
         }

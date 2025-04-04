@@ -25,19 +25,6 @@ namespace Meritocious.Common.DTOs.Auth
         public Dictionary<string, object> Context { get; set; } = new();
     }
 
-    public class LoginAttemptDto
-    {
-        public Guid Id { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public bool Success { get; set; }
-        public string IpAddress { get; set; } = string.Empty;
-        public string? UserAgent { get; set; }
-        public string? FailureReason { get; set; }
-        public DateTime Timestamp { get; set; }
-        public string? Location { get; set; }
-        public string? Device { get; set; }
-    }
-
     public class ApiUsageLogDto
     {
         public Guid Id { get; set; }
@@ -62,16 +49,5 @@ namespace Meritocious.Common.DTOs.Auth
         public string? Category { get; set; }
         public string? Username { get; set; }
         public string? IpAddress { get; set; }
-    }
-
-    public class SecurityOverviewDto
-    {
-        public int FailedLoginAttempts24h { get; set; }
-        public int UniqueSuspiciousIps24h { get; set; }
-        public int SecurityIncidents24h { get; set; }
-        public int TotalApiRequests24h { get; set; }
-        public List<LoginAttemptDto> RecentFailedLogins { get; set; } = new();
-        public List<SecurityAuditLogDto> RecentSecurityEvents { get; set; } = new();
-        public Dictionary<string, int> ApiEndpointUsage { get; set; } = new();
     }
 }

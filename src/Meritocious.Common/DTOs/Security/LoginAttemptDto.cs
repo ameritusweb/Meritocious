@@ -13,4 +13,6 @@ public class LoginAttemptDto
     public DateTime Timestamp { get; set; }
     public string AuthMethod { get; set; }
     public bool IsSuspicious { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string? Device { get; set; }
 }

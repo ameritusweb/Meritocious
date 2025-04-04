@@ -13,18 +13,18 @@
 
     public class GetTrendingTopicsQueryHandler : IRequestHandler<GetTrendingTopicsQuery, List<TrendingTopicDto>>
     {
-        private readonly ITagService _tagService;
-        private readonly PostRepository _postRepository;
-        private readonly ISemanticClusteringService _semanticClusteringService;
+        private readonly ITagService tagService;
+        private readonly PostRepository postRepository;
+        private readonly ISemanticClusteringService semanticClusteringService;
 
         public GetTrendingTopicsQueryHandler(
             ITagService tagService,
             PostRepository postRepository,
             ISemanticClusteringService semanticClusteringService)
         {
-            _tagService = tagService;
-            _postRepository = postRepository;
-            _semanticClusteringService = semanticClusteringService;
+            this.tagService = tagService;
+            this.postRepository = postRepository;
+            this.semanticClusteringService = semanticClusteringService;
         }
 
         public async Task<List<TrendingTopicDto>> Handle(
@@ -41,17 +41,17 @@
             };
 
             // Get recent posts
-            var recentPosts = await _postRepository.GetPostsAfterDateAsync(startTime);
+            var recentPosts = await postRepository.GetPostsAfterDateAsync(startTime);
 
             // Use semantic clustering to identify trending topics
-            var topics = await _semanticClusteringService.IdentifyTopicsAsync(
+            var topics = await semanticClusteringService.IdentifyTopicsAsync(
                 recentPosts.Select(p => p.Content).ToList());
 
             var trendingTopics = new List<TrendingTopicDto>();
             foreach (var topic in topics)
             {
-                var topicPosts = await _postRepository.GetPostsByTopicAsync(topic, startTime);
-                var relatedTags = await _tagService.GetRelatedTagsAsync(topic);
+                var topicPosts = await postRepository.GetPostsByTopicAsync(topic, startTime);
+                var relatedTags = await tagService.GetRelatedTagsAsync(topic);
 
                 trendingTopics.Add(new TrendingTopicDto
                 {
