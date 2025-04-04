@@ -11,6 +11,7 @@ namespace Meritocious.Core.Services
     using Meritocious.Infrastructure.Data.Repositories;
     using Meritocious.Core.Exceptions;
     using Microsoft.Extensions.Logging;
+    using Meritocious.Core.Features.Tags.Models;
 
     public class TagService : ITagService
     {
@@ -28,7 +29,7 @@ namespace Meritocious.Core.Services
             this.logger = logger;
         }
 
-        public async Task<Tag> CreateTagAsync(string name, string description = null)
+        public async Task<Tag> CreateTagAsync(string name, TagCategory category, string description = null)
         {
             var existingTag = await tagRepository.GetByNameAsync(name);
             if (existingTag != null)
@@ -36,7 +37,7 @@ namespace Meritocious.Core.Services
                 throw new DuplicateResourceException($"Tag '{name}' already exists");
             }
 
-            var tag = Tag.Create(name, description);
+            var tag = Tag.Create(name, description, category);
             await tagRepository.AddAsync(tag);
             return tag;
         }
@@ -62,7 +63,7 @@ namespace Meritocious.Core.Services
             return await tagRepository.SearchTagsAsync(searchTerm);
         }
 
-        public async Task AddTagToPostAsync(Guid postId, string tagName)
+        public async Task AddTagToPostAsync(Guid postId, string tagName, TagCategory category)
         {
             var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
@@ -73,7 +74,7 @@ namespace Meritocious.Core.Services
             var tag = await tagRepository.GetByNameAsync(tagName);
             if (tag == null)
             {
-                tag = await CreateTagAsync(tagName);
+                tag = await CreateTagAsync(tagName, category);
             }
 
             post.AddTag(tag);

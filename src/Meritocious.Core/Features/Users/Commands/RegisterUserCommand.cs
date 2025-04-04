@@ -10,6 +10,7 @@ namespace Meritocious.Core.Features.Users.Commands
     using FluentValidation;
     using Meritocious.Core.Entities;
     using Meritocious.Core.Results;
+    using Meritocious.Common.DTOs.Auth;
 
     public record RegisterUserCommand : IRequest<Result<UserProfileDto>>
     {

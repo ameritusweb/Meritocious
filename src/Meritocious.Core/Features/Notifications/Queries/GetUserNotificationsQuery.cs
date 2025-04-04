@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 namespace Meritocious.Core.Features.Notifications.Queries
 {
     using MediatR;
+    using Meritocious.Common.DTOs.Notifications;
     using Meritocious.Core.Features.Notifications.Models;
 
-    public record GetUserNotificationsQuery : IRequest<List<Notification>>
+    public record GetUserNotificationsQuery : IRequest<List<NotificationDto>>
     {
         public Guid UserId { get; init; }
         public bool UnreadOnly { get; init; } = false;

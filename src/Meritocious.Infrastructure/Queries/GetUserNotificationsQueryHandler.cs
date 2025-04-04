@@ -2,6 +2,7 @@
 {
     using MediatR;
     using Meritocious.Common.DTOs.Notifications;
+    using Meritocious.Core.Extensions;
     using Meritocious.Core.Features.Notifications.Models;
     using Meritocious.Core.Features.Notifications.Queries;
     using Meritocious.Core.Interfaces;
@@ -14,18 +15,18 @@
     public class GetUserNotificationsQueryHandler
         : IRequestHandler<GetUserNotificationsQuery, List<NotificationDto>>
     {
-        private readonly INotificationService _notificationService;
+        private readonly INotificationService notificationService;
 
         public GetUserNotificationsQueryHandler(INotificationService notificationService)
         {
-            _notificationService = notificationService;
+            this.notificationService = notificationService;
         }
 
         public async Task<List<NotificationDto>> Handle(
             GetUserNotificationsQuery request,
             CancellationToken cancellationToken)
         {
-            var notifications = await _notificationService.GetUserNotificationsAsync(
+            var notifications = await notificationService.GetUserNotificationsAsync(
                 request.UserId,
                 request.UnreadOnly,
                 request.Count);

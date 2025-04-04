@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Meritocious.Common.DTOs.Substacks;
 using Meritocious.Core.Features.Substacks.Queries;
 using Meritocious.Infrastructure.Data;
+using Meritocious.Core.Results;
 
 namespace Meritocious.Infrastructure.Queries;
 

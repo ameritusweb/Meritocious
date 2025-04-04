@@ -1,5 +1,5 @@
 ﻿using Meritocious.Common.DTOs.Notifications;
-using Meritocious.Core.Features.Notifications.Models;
+using Meritocious.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +15,11 @@ namespace Meritocious.Core.Extensions
             return new NotificationDto
             {
                 Id = notification.Id,
-                UserId = notification.UserId,
+                UserId = Guid.Parse(notification.UserId),
                 Type = notification.Type,
                 Title = notification.Title,
                 Message = notification.Message,
-                ActionUrl = notification.ActionUrl,
+                ActionUrl = notification.Link,
                 IsRead = notification.IsRead,
                 CreatedAt = notification.CreatedAt
             };
