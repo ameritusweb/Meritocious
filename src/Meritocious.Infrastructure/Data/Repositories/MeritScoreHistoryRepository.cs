@@ -6,6 +6,14 @@ using Meritocious.Core.Features.Reputation.Models;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface IMeritScoreHistoryRepository
+    {
+        Task<List<MeritScoreHistory>> GetContentScoreHistoryAsync(Guid contentId, ContentType contentType);
+        Task<MeritScoreHistory> GetLatestScoreAsync(Guid contentId, ContentType contentType);
+        Task<List<MeritScoreHistory>> GetRecalculationsAsync(Guid contentId, ContentType contentType);
+        Task<Dictionary<string, decimal>> GetAverageComponentScoresAsync(DateTime start, DateTime end);
+    }
+
     public class MeritScoreHistoryRepository : GenericRepository<MeritScoreHistory>
     {
         public MeritScoreHistoryRepository(MeritociousDbContext context) : base(context)

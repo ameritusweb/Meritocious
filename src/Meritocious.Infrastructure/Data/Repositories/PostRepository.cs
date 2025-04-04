@@ -1,14 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Meritocious.Infrastructure.Data.Repositories
+﻿namespace Meritocious.Infrastructure.Data.Repositories
 {
     using Microsoft.EntityFrameworkCore;
     using Meritocious.Core.Entities;
     using Meritocious.Core.Features.Recommendations.Models;
+    using System.Linq.Expressions;
+
+    public interface IPostRepository
+    {
+        Task<List<Post>> GetTopPostsAsync(int count = 10);
+
+        Task<List<Post>> GetPostsByUserAsync(Guid userId);
+
+        Task<List<Post>> GetPostsByTagAsync(string tagName);
+
+        Task<List<Post>> GetForkedPostsAsync(Guid parentPostId);
+
+        Task<List<Post>> GetRemixSourcesAsync(Guid remixId);
+
+        Task<List<Post>> GetRemixesAsync(Guid sourcePostId);
+
+        Task<List<Post>> GetPostsByTopicAsync(string topic, DateTime startTime);
+
+        Task<List<Post>> GetPostsAfterDateAsync(DateTime date);
+
+        Task<IList<Post>> GetPostWithRelations(
+            Guid postId,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            decimal? minMeritScore = null,
+            decimal? maxMeritScore = null,
+            string[] includedRelationTypes = null,
+            bool includeQuotes = false,
+            CancellationToken cancellationToken = default);
+
+        Task<List<UserInteractionHistory>> GetUserInteractionHistoryAsync(Guid userId);
+
+        Task<int> GetRelationCountAsync(
+            Guid postId,
+            string relationType,
+            bool asParent = true,
+            CancellationToken cancellationToken = default);
+    }
 
     public class PostRepository : GenericRepository<Post>
     {
@@ -125,14 +157,14 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<IList<Post>> GetPostWithRelations(
-            Guid postId,
-            DateTime? startDate = null,
-            DateTime? endDate = null,
-            decimal? minMeritScore = null,
-            decimal? maxMeritScore = null,
-            string[] includedRelationTypes = null,
-            bool includeQuotes = false,
-            CancellationToken cancellationToken = default)
+    Guid postId,
+    DateTime? startDate = null,
+    DateTime? endDate = null,
+    decimal? minMeritScore = null,
+    decimal? maxMeritScore = null,
+    string[] includedRelationTypes = null,
+    bool includeQuotes = false,
+    CancellationToken cancellationToken = default)
         {
             // Build base query with relationships
             var query = _dbSet
@@ -140,21 +172,21 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .Include(p => p.Tags)
                 .Include(p => p.ParentRelations
                     .Where(r => includedRelationTypes == null || includedRelationTypes.Contains(r.RelationType)))
-                .ThenInclude(r => r.Parent)
-                .ThenInclude(p => p.Author)
+                    .ThenInclude(r => r.Parent)
+                    .ThenInclude(p => p.Author)
                 .Include(p => p.ChildRelations
                     .Where(r => includedRelationTypes == null || includedRelationTypes.Contains(r.RelationType)))
-                .ThenInclude(r => r.Child)
-                .ThenInclude(p => p.Author)
+                    .ThenInclude(r => r.Child)
+                    .ThenInclude(p => p.Author)
                 .AsQueryable();
 
-            // Build relationship filter
+            // Filter by relation presence
             Expression<Func<Post, bool>> relationFilter = p =>
                 p.Id == postId ||
                 p.ParentRelations.Any(r => r.ParentId == postId) ||
                 p.ChildRelations.Any(r => r.ChildId == postId);
 
-            // Apply filters
+            // Apply additional filters
             query = query
                 .Where(relationFilter)
                 .Where(p => !p.IsDeleted)
@@ -163,26 +195,26 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .Where(p => !minMeritScore.HasValue || p.MeritScore >= minMeritScore)
                 .Where(p => !maxMeritScore.HasValue || p.MeritScore <= maxMeritScore);
 
-            // Load filtered posts
+            // Load posts
             var posts = await query.ToListAsync(cancellationToken);
 
-            // For remixes, ensure we have all sources
-            var remixPosts = posts.Where(p => 
+            // Handle remix relations
+            var remixPosts = posts.Where(p =>
                 p.ParentRelations.Any(r => r.RelationType == "remix") ||
                 p.ChildRelations.Any(r => r.RelationType == "remix")).ToList();
 
             if (remixPosts.Any())
             {
-                // Get all related post IDs
-                var relatedIds = remixPosts.SelectMany(p => 
-                    p.ParentRelations.Select(r => r.ParentId)
-                    .Concat(p.ChildRelations.Select(r => r.ChildId)))
+                var relatedIds = remixPosts
+                    .SelectMany(p =>
+                        p.ParentRelations.Select(r => r.ParentId)
+                        .Concat(p.ChildRelations.Select(r => r.ChildId)))
                     .Distinct()
-                    .Except(posts.Select(p => p.Id));
+                    .Except(posts.Select(p => p.Id))
+                    .ToList();
 
                 if (relatedIds.Any())
                 {
-                    // Load missing posts
                     var missingPosts = await _dbSet
                         .Include(p => p.Author)
                         .Include(p => p.Tags)
@@ -193,7 +225,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 }
             }
 
-            // If requested, load quotes for remix relations
+            // Load quotes for remix relations (bulk load)
             if (includeQuotes)
             {
                 var remixRelations = posts
@@ -203,10 +235,22 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
                 if (remixRelations.Any())
                 {
-                    // Load quotes for remix relations
-                    await _context.Entry(remixRelations)
-                        .Collection(r => r.Quotes)
-                        .LoadAsync(cancellationToken);
+                    var remixRelationIds = remixRelations.Select(r => r.Id).ToList();
+
+                    var loadedRemixRelations = await _context.PostRelations
+                        .Where(r => remixRelationIds.Contains(r.Id))
+                        .Include(r => r.Quotes)
+                        .ToListAsync(cancellationToken);
+
+                    var quotesByRelationId = loadedRemixRelations.ToDictionary(r => r.Id, r => r.Quotes);
+
+                    foreach (var relation in remixRelations)
+                    {
+                        if (quotesByRelationId.TryGetValue(relation.Id, out var quotes))
+                        {
+                            relation.Quotes = quotes;
+                        }
+                    }
                 }
             }
 

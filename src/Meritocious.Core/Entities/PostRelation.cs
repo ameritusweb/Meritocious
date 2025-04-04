@@ -8,13 +8,15 @@ public class PostRelation : BaseEntity
     public int OrderIndex { get; private set; } // For ordering remix sources
     public string Role { get; private set; } // For remix: "support", "contrast", "example", "question"
     public string Context { get; private set; } // How this source is used
-    public List<QuoteLocation> Quotes { get; private set; } = new();
+    public List<QuoteLocation> Quotes { get; set; } = new();
     public decimal RelevanceScore { get; private set; } // AI-generated relevance metric
 
     public Post Parent { get; private set; }
     public Post Child { get; private set; }
 
-    private PostRelation() { } // For EF Core
+    private PostRelation()
+    { 
+    } // For EF Core
 
     public static PostRelation CreateFork(Post parent, Post child)
     {
