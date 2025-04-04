@@ -6,30 +6,24 @@ using Meritocious.Common.Enums;
 using System.Text.Json;
 using Meritocious.AI.Moderation.Interfaces;
 using Meritocious.Common.DTOs.Moderation;
+using Meritocious.AI.SemanticKernel.Interfaces;
 
 namespace Meritocious.AI.Moderation.Services
 {
     public class ContentModerationService : IContentModerator
     {
-        private readonly IKernelBuilder semanticKernelBuilder;
+        private readonly ISemanticKernelService semanticKernelService;
         private readonly ILogger<ContentModerationService> logger;
         private readonly AIServiceConfiguration config;
 
         public ContentModerationService(
-            IKernelBuilder semanticKernelBuilder,
+            ISemanticKernelService semanticKernelService,
             IOptions<AIServiceConfiguration> config,
             ILogger<ContentModerationService> logger)
         {
-            this.semanticKernelBuilder = semanticKernelBuilder;
+            this.semanticKernelService = semanticKernelService;
             this.config = config.Value;
             this.logger = logger;
-        }
-
-        private Kernel CreateKernel()
-        {
-            // Create a new kernel using the builder
-            var kernel = semanticKernelBuilder.Build();
-            return kernel;
         }
 
         public async Task<ModerationActionType> EvaluateContentAsync(string content)
@@ -116,7 +110,7 @@ namespace Meritocious.AI.Moderation.Services
                                  Provide explanation with the score.
                                  Text: {{$text}}";
 
-                    var result = await semanticKernel.InvokeSemanticFunctionAsync(prompt, new { text = content });
+                    var result = await semanticKernelService.CompleteTextAsync(prompt, new { text = content });
                     var analysis = JsonSerializer.Deserialize<ToxicityAnalysis>(result.ToString());
                     scores[category] = analysis.Score;
                 }
@@ -136,8 +130,6 @@ namespace Meritocious.AI.Moderation.Services
 
         private async Task<decimal> DetectSpamAsync(string content)
         {
-            var semanticKernel = CreateKernel();
-
             // Check common spam indicators
             var spamIndicators = new Dictionary<string, decimal>
             {
@@ -169,7 +161,7 @@ namespace Meritocious.AI.Moderation.Services
                            Rate from 0-1 and explain why.
                            Text: {{$text}}";
 
-            var result = await semanticKernel.InvokeSemanticFunctionAsync(spamPrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(spamPrompt, new { text = content });
             var aiSpamScore = decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
 
             // Combine both scores
@@ -178,8 +170,6 @@ namespace Meritocious.AI.Moderation.Services
 
         private async Task<decimal> AnalyzeHarmfulContentAsync(string content)
         {
-            var semanticKernel = CreateKernel();
-
             // Define categories of harmful content to check
             var harmCategories = new[]
             {
@@ -207,7 +197,7 @@ namespace Meritocious.AI.Moderation.Services
                              Rate from 0-1 and provide detailed explanation.
                              Text: {{$text}}";
 
-                var result = await semanticKernel.InvokeSemanticFunctionAsync(prompt, new { text = content });
+                var result = await semanticKernelService.CompleteTextAsync(prompt, new { text = content });
                 var analysis = JsonSerializer.Deserialize<HarmAnalysis>(result.ToString());
 
                 analysisResults.Add(analysis);
@@ -221,8 +211,6 @@ namespace Meritocious.AI.Moderation.Services
 
         private async Task<decimal> CheckProhibitedContentAsync(string content)
         {
-            var semanticKernel = CreateKernel();
-
             // Define prohibited content patterns
             var prohibitedPatterns = new Dictionary<string, decimal>
             {
@@ -262,7 +250,7 @@ namespace Meritocious.AI.Moderation.Services
                                  Rate severity from 0-1 and explain findings.
                                  Text: {{$text}}";
 
-            var result = await semanticKernel.InvokeSemanticFunctionAsync(prohibitedPrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(prohibitedPrompt, new { text = content });
             var aiScore = decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
 
             // Return the higher of the two scores

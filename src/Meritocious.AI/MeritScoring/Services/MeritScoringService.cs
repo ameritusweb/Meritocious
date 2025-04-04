@@ -11,33 +11,27 @@ using System.Text.RegularExpressions;
 using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.AI.Moderation.Interfaces;
 using Meritocious.Common.Constants;
+using Meritocious.AI.SemanticKernel.Interfaces;
 
 namespace Meritocious.AI.MeritScoring.Services
 {
     public class MeritScoringService : IMeritScorer
     {
-        private readonly IKernelBuilder semanticKernelBuilder;
+        private readonly ISemanticKernelService semanticKernelService;
         private readonly ILogger<MeritScoringService> logger;
         private readonly AIServiceConfiguration config;
         private readonly IContentModerator contentModerator;
 
         public MeritScoringService(
-            IKernelBuilder semanticKernelBuilder,
+            ISemanticKernelService semanticKernelService,
             IContentModerator contentModerator,
             IOptions<AIServiceConfiguration> config,
             ILogger<MeritScoringService> logger)
         {
-            this.semanticKernelBuilder = semanticKernelBuilder;
+            this.semanticKernelService = semanticKernelService;
             this.contentModerator = contentModerator;
             this.config = config.Value;
             this.logger = logger;
-        }
-
-        private Kernel CreateKernel()
-        {
-            // Create a new kernel using the builder
-            var kernel = semanticKernelBuilder.Build();
-            return kernel;
         }
 
         public async Task<MeritScoreDto> ScoreContentAsync(string content, string? context = null)
@@ -127,17 +121,15 @@ namespace Meritocious.AI.MeritScoring.Services
             string content,
             string? context)
         {
-            var semanticKernel = CreateKernel();
-
             // 1. Generate embeddings for the content
-            var contentEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
+            var contentEmbedding = await semanticKernelService.GetEmbeddingAsync(content);
 
             // 2. If context exists, compare with it
             decimal similarityScore = 0;
             if (!string.IsNullOrEmpty(context))
             {
-                var contextEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(context);
-                similarityScore = CalculateCosineSimilarity(contentEmbedding, contextEmbedding);
+                var contextEmbedding = await semanticKernelService.GetEmbeddingAsync(context);
+                similarityScore = CalculateCosineSimilarity(contentEmbedding.AsMemory(), contextEmbedding.AsMemory());
             }
 
             // 3. Check for unique concepts and ideas
@@ -182,8 +174,7 @@ namespace Meritocious.AI.MeritScoring.Services
                 argumentScore.score * 0.3m +
                 evidenceScore.score * 0.2m +
                 insightScore.score * 0.25m +
-                contextAdvancementScore * 0.25m
-            );
+                contextAdvancementScore * 0.25m);
 
             string explanation = $"Argument strength: {argumentScore.explanation}. " +
                                $"Evidence quality: {evidenceScore.explanation}. " +
@@ -234,12 +225,10 @@ namespace Meritocious.AI.MeritScoring.Services
                 return (1.0m, "No context provided for relevance calculation");
             }
 
-            var semanticKernel = CreateKernel();
-
             // 1. Calculate semantic similarity
-            var contentEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
-            var contextEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(context);
-            var semanticSimilarity = CalculateCosineSimilarity(contentEmbedding, contextEmbedding);
+            var contentEmbedding = await semanticKernelService.GetEmbeddingAsync(content);
+            var contextEmbedding = await semanticKernelService.GetEmbeddingAsync(context);
+            var semanticSimilarity = CalculateCosineSimilarity(contentEmbedding.AsMemory(), contextEmbedding.AsMemory());
 
             // 2. Analyze topic coherence
             var topicCoherence = await AnalyzeTopicCoherenceAsync(content, context);
@@ -310,7 +299,7 @@ namespace Meritocious.AI.MeritScoring.Services
                                   Rate from 0 to 1, where 1 is perfectly structured.
                                   Text: {{$text}}";
 
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(structurePrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(structurePrompt, new Dictionary<string, object> { ["text"] = content });
             return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
         }
 
@@ -336,7 +325,7 @@ namespace Meritocious.AI.MeritScoring.Services
                                  Rate originality from 0 to 1, where 1 is highly original.
                                  Text: {{$text}}";
 
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(conceptsPrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(conceptsPrompt, new Dictionary<string, object> { ["text"] = content });
             return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
         }
 
@@ -363,15 +352,14 @@ namespace Meritocious.AI.MeritScoring.Services
                                 Text: {{$text}}";
 
             // Use semantic kernel to analyze
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(analysisPrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(analysisPrompt, new Dictionary<string, object> { ["text"] = content });
             var analysis = JsonSerializer.Deserialize<ArgumentAnalysis>(result.ToString());
 
             decimal score = (
                 analysis.LogicalReasoning +
                 analysis.SupportingEvidence +
                 analysis.CounterArgumentAddressing +
-                analysis.ConclusionStrength
-            ) / 4;
+                analysis.ConclusionStrength) / 4;
 
             string explanation = $"Logical reasoning: {analysis.LogicalReasoningExplanation}";
 
@@ -410,15 +398,15 @@ namespace Meritocious.AI.MeritScoring.Services
                                Rate from 0-1 and explain why.
                                Text: {{$text}}";
 
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(insightPrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(insightPrompt, new Dictionary<string, object> { ["text"] = content });
             return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
         }
 
         private async Task<decimal> EvaluateContextAdvancementAsync(string content, string context)
         {
             // Generate embeddings for both texts
-            var contentEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
-            var contextEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(context);
+            var contentEmbedding = await semanticKernelService.GetEmbeddingAsync(content);
+            var contextEmbedding = await semanticKernelService.GetEmbeddingAsync(context);
 
             // Calculate semantic similarity
             var similarity = CalculateCosineSimilarity(contentEmbedding, contextEmbedding);
@@ -435,9 +423,9 @@ namespace Meritocious.AI.MeritScoring.Services
                                 Context: {{$context}}
                                 Response: {{$content}}";
 
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(
+            var result = await semanticKernelService.CompleteTextAsync(
                 buildingPrompt,
-                new { context, content });
+                new Dictionary<string, object> { ["context"] = context, ["content"] = content });
 
             var buildingScore = decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
 
@@ -456,7 +444,7 @@ namespace Meritocious.AI.MeritScoring.Services
                             Rate from 0-1.
                             Text: {{$text}}";
 
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(tonePrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(tonePrompt, new Dictionary<string, object> { ["text"] = content });
             return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
         }
 
@@ -478,7 +466,7 @@ namespace Meritocious.AI.MeritScoring.Services
                                    Rate from 0-1.
                                    Text: {{$text}}";
 
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(constructivePrompt, new { text = content });
+            var result = await semanticKernelService.CompleteTextAsync(constructivePrompt, new Dictionary<string, object> { ["text"] = content });
             var aiScore = decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
 
             // Combine both scores
@@ -544,9 +532,9 @@ namespace Meritocious.AI.MeritScoring.Services
                                   
                                   Rate from 0-1.";
 
-            var result = await _semanticKernel.InvokeSemanticFunctionAsync(
+            var result = await semanticKernelService.CompleteTextAsync(
                 credibilityPrompt,
-                new { citations = string.Join("\n", citations) });
+                new Dictionary<string, object> { ["citations"] = string.Join("\n", citations) });
 
             return decimal.TryParse(result.ToString(), out var score) ? score : 0.5m;
         }

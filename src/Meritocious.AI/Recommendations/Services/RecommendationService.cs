@@ -5,13 +5,13 @@ using Meritocious.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Embeddings;
+using Meritocious.AI.SemanticKernel.Interfaces;
 
 namespace Meritocious.AI.Recommendations.Services
 {
     public class RecommendationService : IRecommendationService
     {
-        private readonly IKernel semanticKernel;
+        private readonly ISemanticKernelService semanticKernel;
         private readonly ILogger<RecommendationService> logger;
         private readonly AIServiceConfiguration config;
         private readonly IThreadAnalyzer threadAnalyzer;
@@ -22,7 +22,7 @@ namespace Meritocious.AI.Recommendations.Services
         private readonly ITrendingContentRepository trendingRepo;
 
         public RecommendationService(
-            IKernel semanticKernel,
+            ISemanticKernelService semanticKernel,
             IThreadAnalyzer threadAnalyzer,
             IOptions<AIServiceConfiguration> config,
             IUserTopicPreferenceRepository preferenceRepo,
@@ -227,8 +227,8 @@ namespace Meritocious.AI.Recommendations.Services
                 .Take(10))
             {
                 var content = await GetContentByIdAsync(interaction.ContentId);
-                var embedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
-                interactionEmbeddings.Add((interaction.ContentId, embedding));
+                var embedding = await semanticKernel.GetEmbeddingAsync(content);
+                interactionEmbeddings.Add((interaction.ContentId, new ReadOnlyMemory<float>(embedding)));
             }
 
             // Find semantically similar content
@@ -241,7 +241,7 @@ namespace Meritocious.AI.Recommendations.Services
                     continue;
                 }
 
-                var contentEmbedding = await semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content.Value);
+                var contentEmbedding = await semanticKernel.GetEmbeddingAsync(content.Value);
 
                 // Calculate average similarity to user's positive interactions
                 var avgSimilarity = interactionEmbeddings

@@ -1,32 +1,32 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
 using Meritocious.Core.Entities;
 using System.Collections.Concurrent;
 using Meritocious.Common.Enums;
 using Meritocious.AI.VectorDB;
 using Meritocious.AI.MeritScoring.Interfaces;
+using Meritocious.AI.SemanticKernel.Interfaces;
 using Pinecone;
 
 namespace Meritocious.AI.Search
 {
     public class SemanticSearchService : ISemanticSearchService
     {
-        private readonly IVectorDatabaseService _vectorDb;
-        private readonly IKernel _semanticKernel;
-        private readonly ILogger<SemanticSearchService> _logger;
-        private readonly ConcurrentDictionary<ContentType, string> _collectionNames;
+        private readonly IVectorDatabaseService vectorDb;
+        private readonly ISemanticKernelService semanticKernel;
+        private readonly ILogger<SemanticSearchService> logger;
+        private readonly ConcurrentDictionary<ContentType, string> collectionNames;
 
         private const int VECTOR_DIMENSION = 1536; // OpenAI ada-002 embedding dimension
 
         public SemanticSearchService(
             IVectorDatabaseService vectorDb,
-            IKernel semanticKernel,
+            ISemanticKernelService semanticKernel,
             ILogger<SemanticSearchService> logger)
         {
-            _vectorDb = vectorDb;
-            _semanticKernel = semanticKernel;
-            _logger = logger;
-            _collectionNames = new ConcurrentDictionary<ContentType, string>();
+            this.vectorDb = vectorDb;
+            this.semanticKernel = semanticKernel;
+            this.logger = logger;
+            collectionNames = new ConcurrentDictionary<ContentType, string>();
         }
 
         public async Task InitializeCollectionsAsync()
@@ -36,13 +36,13 @@ namespace Meritocious.AI.Search
                 foreach (ContentType contentType in Enum.GetValues(typeof(ContentType)))
                 {
                     var collectionName = GetCollectionName(contentType);
-                    await _vectorDb.CreateCollectionAsync(collectionName, VECTOR_DIMENSION);
-                    _collectionNames[contentType] = collectionName;
+                    await vectorDb.CreateCollectionAsync(collectionName, VECTOR_DIMENSION);
+                    collectionNames[contentType] = collectionName;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error initializing vector collections");
+                logger.LogError(ex, "Error initializing vector collections");
                 throw;
             }
         }
@@ -52,7 +52,7 @@ namespace Meritocious.AI.Search
             try
             {
                 var collectionName = GetCollectionName(contentType);
-                var embedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
+                var embedding = await semanticKernel.GetEmbeddingAsync(content);
 
                 var vector = new VectorEntry
                 {
@@ -65,13 +65,13 @@ namespace Meritocious.AI.Search
                     }
                 };
 
-                await _vectorDb.InsertVectorsAsync(collectionName, new[] { vector }.ToList());
-                _logger.LogInformation("Indexed content {ContentId} of type {ContentType}",
+                await vectorDb.InsertVectorsAsync(collectionName, new[] { vector }.ToList());
+                logger.LogInformation("Indexed content {ContentId} of type {ContentType}",
                     contentId, contentType);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error indexing content {ContentId} of type {ContentType}",
+                logger.LogError(ex, "Error indexing content {ContentId} of type {ContentType}",
                     contentId, contentType);
                 throw;
             }
@@ -85,16 +85,16 @@ namespace Meritocious.AI.Search
             try
             {
                 var collectionName = GetCollectionName(contentType);
-                var queryEmbedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(query);
+                var queryEmbedding = await semanticKernel.GetEmbeddingAsync(query);
 
-                return await _vectorDb.SearchAsync(
+                return await vectorDb.SearchAsync(
                     collectionName,
                     queryEmbedding.ToArray(),
                     maxResults);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error searching similar content for query in {ContentType}",
+                logger.LogError(ex, "Error searching similar content for query in {ContentType}",
                     contentType);
                 throw;
             }
@@ -116,14 +116,14 @@ namespace Meritocious.AI.Search
                     throw new InvalidOperationException($"Content {contentId} not found in vector database");
                 }
 
-                return await _vectorDb.SearchAsync(
+                return await vectorDb.SearchAsync(
                     collectionName,
                     sourceVector,
                     maxResults + 1); // Add 1 to account for the source content itself
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error finding similar content for {ContentId} of type {ContentType}",
+                logger.LogError(ex, "Error finding similar content for {ContentId} of type {ContentType}",
                     contentId, contentType);
                 throw;
             }
@@ -134,7 +134,7 @@ namespace Meritocious.AI.Search
             try
             {
                 var collectionName = GetCollectionName(contentType);
-                var embedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(newContent);
+                var embedding = await semanticKernel.GetEmbeddingAsync(newContent);
 
                 var vector = new VectorEntry
                 {
@@ -148,13 +148,13 @@ namespace Meritocious.AI.Search
                     }
                 };
 
-                await _vectorDb.UpdateVectorAsync(collectionName, vector);
-                _logger.LogInformation("Updated content {ContentId} of type {ContentType} in vector database",
+                await vectorDb.UpdateVectorAsync(collectionName, vector);
+                logger.LogInformation("Updated content {ContentId} of type {ContentType} in vector database",
                     contentId, contentType);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating content {ContentId} of type {ContentType} in vector database",
+                logger.LogError(ex, "Error updating content {ContentId} of type {ContentType} in vector database",
                     contentId, contentType);
                 throw;
             }
@@ -165,14 +165,14 @@ namespace Meritocious.AI.Search
             try
             {
                 var collectionName = GetCollectionName(contentType);
-                await _vectorDb.DeleteVectorsAsync(collectionName, new[] { contentId.ToString() }.ToList());
+                await vectorDb.DeleteVectorsAsync(collectionName, new[] { contentId.ToString() }.ToList());
 
-                _logger.LogInformation("Deleted content {ContentId} of type {ContentType} from vector database",
+                logger.LogInformation("Deleted content {ContentId} of type {ContentType} from vector database",
                     contentId, contentType);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting content {ContentId} of type {ContentType} from vector database",
+                logger.LogError(ex, "Error deleting content {ContentId} of type {ContentType} from vector database",
                     contentId, contentType);
                 throw;
             }
@@ -183,7 +183,7 @@ namespace Meritocious.AI.Search
             try
             {
                 var collectionName = GetCollectionName(contentType);
-                var results = await _vectorDb.SearchAsync(
+                var results = await vectorDb.SearchAsync(
                     collectionName,
                     new float[VECTOR_DIMENSION], // Dummy vector for exact ID match
                     1,
@@ -198,7 +198,7 @@ namespace Meritocious.AI.Search
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting embedding for content {ContentId} of type {ContentType}",
+                logger.LogError(ex, "Error getting embedding for content {ContentId} of type {ContentType}",
                     contentId, contentType);
                 throw;
             }
@@ -223,7 +223,7 @@ namespace Meritocious.AI.Search
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error calculating similarity between content {ContentId1} and {ContentId2}",
+                logger.LogError(ex, "Error calculating similarity between content {ContentId1} and {ContentId2}",
                     contentId1, contentId2);
                 throw;
             }
@@ -236,10 +236,10 @@ namespace Meritocious.AI.Search
         {
             try
             {
-                var embedding = await _semanticKernel.Memory.Embeddings.GenerateEmbeddingAsync(content);
+                var embedding = await semanticKernel.GetEmbeddingAsync(content);
                 var collectionName = GetCollectionName(contentType);
 
-                var results = await _vectorDb.SearchAsync(
+                var results = await vectorDb.SearchAsync(
                     collectionName,
                     embedding.ToArray(),
                     100); // Get more results to find all potential duplicates
@@ -251,7 +251,7 @@ namespace Meritocious.AI.Search
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error finding semantic duplicates in {ContentType}", contentType);
+                logger.LogError(ex, "Error finding semantic duplicates in {ContentType}", contentType);
                 throw;
             }
         }
