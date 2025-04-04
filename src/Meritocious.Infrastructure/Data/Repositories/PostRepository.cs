@@ -61,6 +61,9 @@
         Task UpdateQuotesAsync(Guid relationId, IEnumerable<string> quotes);
         Task UpdateRelevanceScoresAsync(Guid relationId, Dictionary<string, decimal> scores);
         Task<Dictionary<string, int>> GetRelationshipDistributionAsync(Guid postId);
+        Task<PostEngagement> GetEngagementAsync(Guid postId);
+        Task RecordEngagementMetricsAsync(Guid postId, string region, string platform, bool isUnique, decimal timeSpentSeconds, bool bounced);
+        Task RecordInteractionAsync(Guid postId, string interactionType);
     }
 
     public partial class PostRepository : GenericRepository<Post>
@@ -677,14 +680,7 @@
 
             foreach (var post in posts)
             {
-                if (engagement.TryGetValue(post.Id, out var metrics))
-                {
-                    post.ViewCount = metrics.Views;
-                    post.UniqueViewCount = metrics.UniqueViews;
-                    post.LikeCount = metrics.Likes;
-                    post.ShareCount = metrics.Shares;
-                    post.AverageTimeSpentSeconds = metrics.AverageTimeSpentSeconds;
-                }
+                await GetOrCreateEngagementAsync(post);
             }
 
             return posts;
@@ -744,14 +740,7 @@
 
             foreach (var post in posts)
             {
-                if (engagement.TryGetValue(post.Id, out var metrics))
-                {
-                    post.ViewCount = metrics.Views;
-                    post.UniqueViewCount = metrics.UniqueViews;
-                    post.LikeCount = metrics.Likes;
-                    post.ShareCount = metrics.Shares;
-                    post.AverageTimeSpentSeconds = metrics.AverageTimeSpentSeconds;
-                }
+                await GetOrCreateEngagementAsync(post);
             }
 
             return posts;
