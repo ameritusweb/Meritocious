@@ -10,5 +10,4 @@ namespace Meritocious.Core.Interfaces
         Task UpdateUserPreferencesAsync(Guid userId, Dictionary<string, decimal> preferences);
         Task<Dictionary<string, decimal>> GetUserTopicWeightsAsync(Guid userId);
     }
-
 }

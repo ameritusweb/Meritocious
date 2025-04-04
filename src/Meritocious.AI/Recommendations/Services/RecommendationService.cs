@@ -402,16 +402,16 @@ namespace Meritocious.AI.Recommendations.Services
                     limit: 10,
                     minWeight: 0.5m);
 
-                foreach (var user in users.Where(u => u.Id != userProfile.UserId))
+                foreach (var user in users.Where(u => u.Id != userProfile.UserId.ToString()))
                 {
-                    var userPrefs = await preferenceRepo.GetUserTopicWeightsAsync(user.Id);
+                    var userPrefs = await preferenceRepo.GetUserTopicWeightsAsync(Guid.Parse(user.Id));
                     var similarity = CalculatePreferenceSimilarity(
                         userProfile.TopicPreferences,
                         userPrefs);
 
                     similarUsers.Add(new SimilarUser
                     {
-                        UserId = user.Id,
+                        UserId = Guid.Parse(user.Id),
                         Similarity = similarity
                     });
                 }
@@ -483,16 +483,18 @@ namespace Meritocious.AI.Recommendations.Services
 
         private async Task<List<TrendingContent>> GetTrendingContentAsync()
         {
-            var trending = await trendingRepo.GetTrendingContentAsync(
-                limit: 50,
-                timeWindow: "day",
-                minTrendingScore: 0.3m);
+            // var trending = await trendingRepo.GetTrendingContentAsync(
+            //    limit: 50,
+            //    timeWindow: "day",
+            //    minTrendingScore: 0.3m);
 
-            return trending.Select(t => new TrendingContent
-            {
-                ContentId = t.ContentId,
-                TrendingScore = t.TrendingScore
-            }).ToList();
+            // return trending.Select(t => new TrendingContent
+            // {
+            //    ContentId = t.ContentId,
+            //    TrendingScore = t.TrendingScore
+            // }).ToList();
+            // TODO: Create repository function for this.
+            throw new NotImplementedException();
         }
 
         private decimal CalculatePreferenceSimilarity(
@@ -508,6 +510,12 @@ namespace Meritocious.AI.Recommendations.Services
             var norm2 = Math.Sqrt((double)prefs2.Values.Sum(v => v * v));
 
             return (decimal)(dotProduct / (norm1 * norm2));
+        }
+
+        Task<List<Core.Interfaces.ContentRecommendation>> IRecommendationService.GetRecommendationsAsync(Guid userId, List<UserInteractionHistory> userHistory, int count, List<string> excludedContentIds)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
         }
 
         #endregion

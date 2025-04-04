@@ -53,11 +53,15 @@ namespace Meritocious.AI.Recommendations
                 foreach (var content in similarContent)
                 {
                     if (processedContentIds.Contains(content.Id))
+                    {
                         continue;
+                    }
 
                     // Skip content the user has already interacted with
                     if (userProfile.InteractionHistory.Any(h => h.ContentId.ToString() == content.Id))
+                    {
                         continue;
+                    }
 
                     processedContentIds.Add(content.Id);
                     recommendations.Add(new ContentRecommendation
@@ -83,10 +87,14 @@ namespace Meritocious.AI.Recommendations
                 foreach (var content in topicResults)
                 {
                     if (processedContentIds.Contains(content.Id))
+                    {
                         continue;
+                    }
 
                     if (userProfile.InteractionHistory.Any(h => h.ContentId.ToString() == content.Id))
+                    {
                         continue;
+                    }
 
                     processedContentIds.Add(content.Id);
                     recommendations.Add(new ContentRecommendation
@@ -124,7 +132,9 @@ namespace Meritocious.AI.Recommendations
             foreach (var rec in initialRecs)
             {
                 if (recommendations.Count >= count)
+                {
                     break;
+                }
 
                 var isUnique = true;
                 var recEmbedding = await semanticSearch.GetContentEmbeddingAsync(
@@ -177,17 +187,21 @@ namespace Meritocious.AI.Recommendations
                 foreach (var relatedTopic in relatedTopics.Where(t => t.Score >= 0.6 && t.Score <= 0.8))
                 {
                     var topicResults = await semanticSearch.SearchSimilarContentAsync(
-                        relatedTopic.Metadata["topic"],
+                        relatedTopic.Metadata["topic"].ToString(),
                         ContentType.Post,
                         count);
 
                     foreach (var content in topicResults)
                     {
                         if (processedContentIds.Contains(content.Id))
+                        {
                             continue;
+                        }
 
                         if (userProfile.InteractionHistory.Any(h => h.ContentId.ToString() == content.Id))
+                        {
                             continue;
+                        }
 
                         processedContentIds.Add(content.Id);
                         recommendations.Add(new ContentRecommendation

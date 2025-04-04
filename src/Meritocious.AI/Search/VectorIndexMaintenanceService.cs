@@ -9,22 +9,22 @@ namespace Meritocious.AI.Search
 {
     public class VectorIndexMaintenanceService : BackgroundService
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<VectorIndexMaintenanceService> _logger;
-        private readonly ConcurrentQueue<IndexingJob> _indexingQueue;
-        private readonly SemaphoreSlim _indexingSemaphore;
-        private readonly TimeSpan _batchDelay = TimeSpan.FromSeconds(5);
-        private readonly int _maxBatchSize = 100;
-        private readonly int _maxConcurrentIndexing = 3;
+        private readonly IServiceScopeFactory scopeFactory;
+        private readonly ILogger<VectorIndexMaintenanceService> logger;
+        private readonly ConcurrentQueue<IndexingJob> indexingQueue;
+        private readonly SemaphoreSlim indexingSemaphore;
+        private readonly TimeSpan batchDelay = TimeSpan.FromSeconds(5);
+        private readonly int maxBatchSize = 100;
+        private readonly int maxConcurrentIndexing = 3;
 
         public VectorIndexMaintenanceService(
             IServiceScopeFactory scopeFactory,
             ILogger<VectorIndexMaintenanceService> logger)
         {
-            _scopeFactory = scopeFactory;
-            _logger = logger;
-            _indexingQueue = new ConcurrentQueue<IndexingJob>();
-            _indexingSemaphore = new SemaphoreSlim(_maxConcurrentIndexing);
+            this.scopeFactory = scopeFactory;
+            this.logger = logger;
+            indexingQueue = new ConcurrentQueue<IndexingJob>();
+            indexingSemaphore = new SemaphoreSlim(maxConcurrentIndexing);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,7 +32,7 @@ namespace Meritocious.AI.Search
             try
             {
                 // Initialize vector collections
-                using (var scope = _scopeFactory.CreateScope())
+                using (var scope = scopeFactory.CreateScope())
                 {
                     var searchService = scope.ServiceProvider.GetRequiredService<ISemanticSearchService>();
                     await searchService.InitializeCollectionsAsync();
@@ -43,18 +43,18 @@ namespace Meritocious.AI.Search
                     try
                     {
                         await ProcessIndexingBatchAsync(stoppingToken);
-                        await Task.Delay(_batchDelay, stoppingToken);
+                        await Task.Delay(batchDelay, stoppingToken);
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
-                        _logger.LogError(ex, "Error processing indexing batch");
+                        logger.LogError(ex, "Error processing indexing batch");
                         await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                     }
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogError(ex, "Fatal error in vector index maintenance service");
+                logger.LogError(ex, "Fatal error in vector index maintenance service");
                 throw;
             }
         }
@@ -64,12 +64,15 @@ namespace Meritocious.AI.Search
             var batch = new List<IndexingJob>();
 
             // Collect batch of jobs
-            while (batch.Count < _maxBatchSize && _indexingQueue.TryDequeue(out var job))
+            while (batch.Count < maxBatchSize && indexingQueue.TryDequeue(out var job))
             {
                 batch.Add(job);
             }
 
-            if (!batch.Any()) return;
+            if (!batch.Any())
+            {
+                return;
+            }
 
             // Group jobs by content type for efficient processing
             var jobGroups = batch.GroupBy(j => j.ContentType);
@@ -87,16 +90,19 @@ namespace Meritocious.AI.Search
             IGrouping<ContentType, IndexingJob> jobs,
             CancellationToken stoppingToken)
         {
-            await _indexingSemaphore.WaitAsync(stoppingToken);
+            await indexingSemaphore.WaitAsync(stoppingToken);
 
             try
             {
-                using var scope = _scopeFactory.CreateScope();
+                using var scope = scopeFactory.CreateScope();
                 var searchService = scope.ServiceProvider.GetRequiredService<ISemanticSearchService>();
 
                 foreach (var job in jobs)
                 {
-                    if (stoppingToken.IsCancellationRequested) break;
+                    if (stoppingToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
 
                     try
                     {
@@ -125,7 +131,7 @@ namespace Meritocious.AI.Search
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex,
+                        logger.LogError(ex,
                             "Error processing indexing job {Operation} for content {ContentId} of type {ContentType}",
                             job.Operation, job.ContentId, job.ContentType);
                     }
@@ -133,13 +139,13 @@ namespace Meritocious.AI.Search
             }
             finally
             {
-                _indexingSemaphore.Release();
+                indexingSemaphore.Release();
             }
         }
 
         public void EnqueueJob(IndexingJob job)
         {
-            _indexingQueue.Enqueue(job);
+            indexingQueue.Enqueue(job);
         }
 
         public class IndexingJob

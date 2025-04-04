@@ -12,6 +12,7 @@
             {
                 metadata[kvp.Key] = ConvertToMetadataValue(kvp.Value);
             }
+
             return metadata;
         }
 
@@ -44,6 +45,7 @@
                     dict[kvp.Key] = ExtractValue(kvp.Value);
                 }
             }
+
             return dict;
         }
 
@@ -54,8 +56,7 @@
                 doubleValue => doubleValue,
                 boolValue => boolValue,
                 listValue => listValue.Select(v => v != null ? ExtractValue(v) : null).ToList(),
-                nestedMetadata => nestedMetadata.ToDictionary()
-            );
+                nestedMetadata => nestedMetadata.ToDictionary());
         }
     }
 

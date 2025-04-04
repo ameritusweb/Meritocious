@@ -9,43 +9,43 @@ namespace Meritocious.AI.VectorDB
 {
     public class PineconeVectorDatabaseService : IVectorDatabaseService, IAsyncDisposable
     {
-        private readonly BasePinecone _client;
-        private readonly ILogger<PineconeVectorDatabaseService> _logger;
-        private readonly Dictionary<string, Index> _indexCache;
-        private readonly SemaphoreSlim _semaphore = new(1, 1);
-        private readonly VectorDBSettings _settings;
+        private readonly BasePinecone client;
+        private readonly ILogger<PineconeVectorDatabaseService> logger;
+        private readonly Dictionary<string, Index> indexCache;
+        private readonly SemaphoreSlim semaphore = new(1, 1);
+        private readonly VectorDBSettings settings;
 
         public PineconeVectorDatabaseService(
            IOptions<VectorDBSettings> settings,
            ILogger<PineconeVectorDatabaseService> logger)
         {
-            _settings = settings.Value;
+            this.settings = settings.Value;
 
             var clientOptions = new ClientOptions
             {
-                BaseUrl = $"https://controller.{_settings.Environment}.pinecone.io",
+                BaseUrl = $"https://controller.{this.settings.Environment}.pinecone.io",
                 HttpClient = new HttpClient(),
                 MaxRetries = 3,
                 Timeout = TimeSpan.FromSeconds(30),
                 IsTlsEnabled = true
             };
 
-            _client = new BasePinecone(_settings.ApiKey, clientOptions);
-            _logger = logger;
-            _indexCache = new Dictionary<string, Index>();
+            client = new BasePinecone(this.settings.ApiKey, clientOptions);
+            this.logger = logger;
+            indexCache = new Dictionary<string, Index>();
         }
 
         public async Task<bool> CreateIndexAsync(string indexName, int dimension)
         {
             try
             {
-                await _semaphore.WaitAsync();
+                await semaphore.WaitAsync();
 
-                var indexes = await _client.ListIndexesAsync();
+                var indexes = await client.ListIndexesAsync();
                 var hasIndex = indexes?.Indexes?.Any(x => x.Name == indexName);
                 if (hasIndex.GetValueOrDefault())
                 {
-                    _logger.LogWarning("Index {IndexName} already exists", indexName);
+                    logger.LogWarning("Index {IndexName} already exists", indexName);
                     return false;
                 }
 
@@ -54,15 +54,15 @@ namespace Meritocious.AI.VectorDB
                 {
                     Pod = new PodSpec
                     {
-                        Environment = _settings.Environment,
-                        PodType = _settings.DefaultIndex.PodType,
-                        Pods = _settings.DefaultIndex.Pods,
-                        Replicas = _settings.DefaultIndex.Replicas,
-                        Shards = _settings.DefaultIndex.Shards,
-                        SourceCollection = _settings.DefaultIndex.SourceCollection,
+                        Environment = settings.Environment,
+                        PodType = settings.DefaultIndex.PodType,
+                        Pods = settings.DefaultIndex.Pods,
+                        Replicas = settings.DefaultIndex.Replicas,
+                        Shards = settings.DefaultIndex.Shards,
+                        SourceCollection = settings.DefaultIndex.SourceCollection,
                         MetadataConfig = new PodSpecMetadataConfig
                         {
-                            Indexed = _settings.DefaultIndex.MetadataConfig.Indexed
+                            Indexed = settings.DefaultIndex.MetadataConfig.Indexed
                         }
                     }
                 };
@@ -75,22 +75,22 @@ namespace Meritocious.AI.VectorDB
                     Spec = OneOf<ServerlessIndexSpec, PodIndexSpec>.FromT1(podSpec)
                 };
 
-                await _client.CreateIndexAsync(request);
+                await client.CreateIndexAsync(request);
                 await WaitForIndexReadyAsync(indexName);
 
-                _logger.LogInformation("Created index {IndexName} with dimension {Dimension}",
+                logger.LogInformation("Created index {IndexName} with dimension {Dimension}",
                     indexName, dimension);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating index {IndexName}", indexName);
+                logger.LogError(ex, "Error creating index {IndexName}", indexName);
                 throw;
             }
             finally
             {
-                _semaphore.Release();
+                semaphore.Release();
             }
         }
 
@@ -98,29 +98,29 @@ namespace Meritocious.AI.VectorDB
         {
             try
             {
-                await _semaphore.WaitAsync();
+                await semaphore.WaitAsync();
 
-                var indexes = await _client.ListIndexesAsync();
+                var indexes = await client.ListIndexesAsync();
                 var hasIndex = indexes?.Indexes?.Any(x => x.Name == indexName);
                 if (!hasIndex.GetValueOrDefault())
                 {
                     return false;
                 }
 
-                await _client.DeleteIndexAsync(indexName);
-                _indexCache.Remove(indexName);
+                await client.DeleteIndexAsync(indexName);
+                indexCache.Remove(indexName);
 
-                _logger.LogInformation("Deleted index {IndexName}", indexName);
+                logger.LogInformation("Deleted index {IndexName}", indexName);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting index {IndexName}", indexName);
+                logger.LogError(ex, "Error deleting index {IndexName}", indexName);
                 throw;
             }
             finally
             {
-                _semaphore.Release();
+                semaphore.Release();
             }
         }
 
@@ -128,18 +128,18 @@ namespace Meritocious.AI.VectorDB
         {
             try
             {
-                if (_indexCache.TryGetValue(indexName, out var cachedIndex))
+                if (indexCache.TryGetValue(indexName, out var cachedIndex))
                 {
                     return cachedIndex;
                 }
 
-                var index = await _client.DescribeIndexAsync(indexName);
-                _indexCache[indexName] = index;
+                var index = await client.DescribeIndexAsync(indexName);
+                indexCache[indexName] = index;
                 return index;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting index {IndexName}", indexName);
+                logger.LogError(ex, "Error getting index {IndexName}", indexName);
                 throw;
             }
         }
@@ -148,12 +148,12 @@ namespace Meritocious.AI.VectorDB
         {
             try
             {
-                var indexes = await _client.ListIndexesAsync();
+                var indexes = await client.ListIndexesAsync();
                 return indexes.Indexes.ToList();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error listing indexes");
+                logger.LogError(ex, "Error listing indexes");
                 throw;
             }
         }
@@ -201,14 +201,14 @@ namespace Meritocious.AI.VectorDB
                     };
                 }
 
-                await _client.ConfigureIndexAsync(indexName, request);
-                _indexCache.Remove(indexName); // Clear cache to force refresh
+                await client.ConfigureIndexAsync(indexName, request);
+                indexCache.Remove(indexName); // Clear cache to force refresh
 
-                _logger.LogInformation("Configured index {IndexName}", indexName);
+                logger.LogInformation("Configured index {IndexName}", indexName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error configuring index {IndexName}", indexName);
+                logger.LogError(ex, "Error configuring index {IndexName}", indexName);
                 throw;
             }
         }
@@ -222,13 +222,13 @@ namespace Meritocious.AI.VectorDB
                     Vectors = vectors.Select(v => v.ToPineconeVector()).ToList()
                 };
 
-                await _client.Index.UpsertAsync(request);
-                _logger.LogInformation("Inserted {Count} vectors", vectors.Count);
+                await client.Index.UpsertAsync(request);
+                logger.LogInformation("Inserted {Count} vectors", vectors.Count);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error inserting vectors");
+                logger.LogError(ex, "Error inserting vectors");
                 throw;
             }
         }
@@ -242,13 +242,13 @@ namespace Meritocious.AI.VectorDB
                     Vectors = new[] { vector.ToPineconeVector() }
                 };
 
-                await _client.Index.UpsertAsync(request);
-                _logger.LogInformation("Updated vector {VectorId}", vector.Id);
+                await client.Index.UpsertAsync(request);
+                logger.LogInformation("Updated vector {VectorId}", vector.Id);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating vector");
+                logger.LogError(ex, "Error updating vector");
                 throw;
             }
         }
@@ -262,13 +262,13 @@ namespace Meritocious.AI.VectorDB
                     Ids = ids
                 };
 
-                await _client.Index.DeleteAsync(request);
-                _logger.LogInformation("Deleted {Count} vectors", ids.Count);
+                await client.Index.DeleteAsync(request);
+                logger.LogInformation("Deleted {Count} vectors", ids.Count);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting vectors");
+                logger.LogError(ex, "Error deleting vectors");
                 throw;
             }
         }
@@ -294,9 +294,10 @@ namespace Meritocious.AI.VectorDB
                     request.Filter = filter.ToMetadata();
                 }
 
-                var response = await _client.Index.QueryAsync(request);
+                var response = await client.Index.QueryAsync(request);
                 var searchResults = new List<SearchResult>();
-                if (response.Results != null) {
+                if (response.Results != null)
+                {
                     foreach (var results in response.Results)
                     {
                         if (results.Matches != null)
@@ -313,7 +314,7 @@ namespace Meritocious.AI.VectorDB
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error searching vectors");
+                logger.LogError(ex, "Error searching vectors");
                 throw;
             }
         }
@@ -325,10 +326,10 @@ namespace Meritocious.AI.VectorDB
 
             while (DateTime.UtcNow - start < timeout)
             {
-                var description = await _client.DescribeIndexAsync(indexName);
+                var description = await client.DescribeIndexAsync(indexName);
                 if (description.Status.State == IndexModelStatusState.Ready)
                 {
-                    _indexCache[indexName] = description;
+                    indexCache[indexName] = description;
                     return;
                 }
 
@@ -352,14 +353,20 @@ namespace Meritocious.AI.VectorDB
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting index stats for {IndexName}", indexName);
+                logger.LogError(ex, "Error getting index stats for {IndexName}", indexName);
                 throw;
             }
         }
 
         public async ValueTask DisposeAsync()
         {
-            _semaphore.Dispose();
+            semaphore.Dispose();
+        }
+
+        public Task<bool> CreateCollectionAsync(string collectionName, int dimension)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
         }
     }
 }
