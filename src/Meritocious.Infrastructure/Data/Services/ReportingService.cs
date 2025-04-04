@@ -8,15 +8,15 @@ namespace Meritocious.Infrastructure.Data.Services
 {
     public class ReportingService : IReportingService
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<ReportingService> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<ReportingService> logger;
 
         public ReportingService(
             MeritociousDbContext context,
             ILogger<ReportingService> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<ContentReport> CreateReportAsync(
@@ -31,8 +31,8 @@ namespace Meritocious.Infrastructure.Data.Services
                 // Check if content exists
                 bool contentExists = contentType switch
                 {
-                    ContentType.Post => await _context.Posts.AnyAsync(p => p.Id == contentId),
-                    ContentType.Comment => await _context.Comments.AnyAsync(c => c.Id == contentId),
+                    ContentType.Post => await context.Posts.AnyAsync(p => p.Id == contentId),
+                    ContentType.Comment => await context.Comments.AnyAsync(c => c.Id == contentId),
                     _ => false
                 };
 
@@ -49,14 +49,14 @@ namespace Meritocious.Infrastructure.Data.Services
                     reportType,
                     description);
 
-                await _context.ContentReports.AddAsync(report);
-                await _context.SaveChangesAsync();
+                await context.ContentReports.AddAsync(report);
+                await context.SaveChangesAsync();
 
                 return report;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating report for {ContentType} {ContentId}", contentType, contentId);
+                logger.LogError(ex, "Error creating report for {ContentType} {ContentId}", contentType, contentId);
                 throw;
             }
         }
@@ -65,7 +65,7 @@ namespace Meritocious.Infrastructure.Data.Services
         {
             try
             {
-                var report = await _context.ContentReports
+                var report = await context.ContentReports
                     .SingleOrDefaultAsync(r => r.Id == reportId);
 
                 if (report == null)
@@ -77,7 +77,7 @@ namespace Meritocious.Infrastructure.Data.Services
             }
             catch (Exception ex) when (!(ex is KeyNotFoundException))
             {
-                _logger.LogError(ex, "Error getting report {ReportId}", reportId);
+                logger.LogError(ex, "Error getting report {ReportId}", reportId);
                 throw;
             }
         }
@@ -90,7 +90,7 @@ namespace Meritocious.Infrastructure.Data.Services
         {
             try
             {
-                var query = _context.ContentReports.AsQueryable();
+                var query = context.ContentReports.AsQueryable();
 
                 // Filter by status
                 if (status != "all")
@@ -117,7 +117,7 @@ namespace Meritocious.Infrastructure.Data.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting reports");
+                logger.LogError(ex, "Error getting reports");
                 throw;
             }
         }
@@ -133,13 +133,13 @@ namespace Meritocious.Infrastructure.Data.Services
                 var report = await GetReportByIdAsync(reportId);
 
                 report.Resolve(moderatorId, resolution, notes);
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
 
                 return report;
             }
             catch (Exception ex) when (!(ex is KeyNotFoundException))
             {
-                _logger.LogError(ex, "Error resolving report {ReportId}", reportId);
+                logger.LogError(ex, "Error resolving report {ReportId}", reportId);
                 throw;
             }
         }

@@ -55,7 +55,7 @@ namespace Meritocious.Core.Features.Users.Commands
             await userRepository.AddAsync(user);
 
             // Publish event
-            await mediator.Publish(new UserRegisteredEvent(user.Id), cancellationToken);
+            await mediator.Publish(new UserRegisteredEvent(Guid.Parse(user.Id)), cancellationToken);
 
             return Result.Success(user.ToDto());
         }

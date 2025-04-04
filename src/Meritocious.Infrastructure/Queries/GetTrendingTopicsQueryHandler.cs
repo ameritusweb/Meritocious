@@ -2,6 +2,7 @@
 {
     using MediatR;
     using Meritocious.AI.Clustering.Interfaces;
+    using Meritocious.Common.DTOs.Content;
     using Meritocious.Core.Features.Discovery.Queries;
     using Meritocious.Core.Interfaces;
     using Meritocious.Infrastructure.Data.Repositories;
@@ -67,7 +68,7 @@
                         {
                             Id = p.Id,
                             Title = p.Title,
-                            AuthorUsername = p.Author.Username,
+                            AuthorUsername = p.Author.UserName,
                             MeritScore = p.MeritScore,
                             CreatedAt = p.CreatedAt
                         })

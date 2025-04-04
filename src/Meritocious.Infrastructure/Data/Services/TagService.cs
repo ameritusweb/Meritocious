@@ -14,36 +14,36 @@ namespace Meritocious.Core.Services
 
     public class TagService : ITagService
     {
-        private readonly TagRepository _tagRepository;
-        private readonly PostRepository _postRepository;
-        private readonly ILogger<TagService> _logger;
+        private readonly TagRepository tagRepository;
+        private readonly PostRepository postRepository;
+        private readonly ILogger<TagService> logger;
 
         public TagService(
             TagRepository tagRepository,
             PostRepository postRepository,
             ILogger<TagService> logger)
         {
-            _tagRepository = tagRepository;
-            _postRepository = postRepository;
-            _logger = logger;
+            this.tagRepository = tagRepository;
+            this.postRepository = postRepository;
+            this.logger = logger;
         }
 
         public async Task<Tag> CreateTagAsync(string name, string description = null)
         {
-            var existingTag = await _tagRepository.GetByNameAsync(name);
+            var existingTag = await tagRepository.GetByNameAsync(name);
             if (existingTag != null)
             {
                 throw new DuplicateResourceException($"Tag '{name}' already exists");
             }
 
             var tag = Tag.Create(name, description);
-            await _tagRepository.AddAsync(tag);
+            await tagRepository.AddAsync(tag);
             return tag;
         }
 
         public async Task<Tag> GetTagByNameAsync(string name)
         {
-            var tag = await _tagRepository.GetByNameAsync(name);
+            var tag = await tagRepository.GetByNameAsync(name);
             if (tag == null)
             {
                 throw new ResourceNotFoundException($"Tag '{name}' not found");
@@ -53,41 +53,41 @@ namespace Meritocious.Core.Services
 
         public async Task<List<Tag>> GetPopularTagsAsync(int count = 10)
         {
-            return await _tagRepository.GetPopularTagsAsync(count);
+            return await tagRepository.GetPopularTagsAsync(count);
         }
 
         public async Task<List<Tag>> SearchTagsAsync(string searchTerm)
         {
-            return await _tagRepository.SearchTagsAsync(searchTerm);
+            return await tagRepository.SearchTagsAsync(searchTerm);
         }
 
         public async Task AddTagToPostAsync(Guid postId, string tagName)
         {
-            var post = await _postRepository.GetByIdAsync(postId);
+            var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
             {
                 throw new ResourceNotFoundException($"Post '{postId}' not found");
             }
 
-            var tag = await _tagRepository.GetByNameAsync(tagName);
+            var tag = await tagRepository.GetByNameAsync(tagName);
             if (tag == null)
             {
                 tag = await CreateTagAsync(tagName);
             }
 
             post.AddTag(tag);
-            await _postRepository.UpdateAsync(post);
+            await postRepository.UpdateAsync(post);
         }
 
         public async Task RemoveTagFromPostAsync(Guid postId, string tagName)
         {
-            var post = await _postRepository.GetByIdAsync(postId);
+            var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
             {
                 throw new ResourceNotFoundException($"Post '{postId}' not found");
             }
 
-            var tag = await _tagRepository.GetByNameAsync(tagName);
+            var tag = await tagRepository.GetByNameAsync(tagName);
             if (tag == null)
             {
                 throw new ResourceNotFoundException($"Tag '{tagName}' not found");
@@ -95,7 +95,19 @@ namespace Meritocious.Core.Services
 
             // Note: AddTag/RemoveTag logic is handled in the Post entity
             // We might need to add a RemoveTag method to the Post entity
-            await _postRepository.UpdateAsync(post);
+            await postRepository.UpdateAsync(post);
+        }
+
+        public Task<IEnumerable<Tag>> GetOrCreateTagsAsync(IEnumerable<string> tagNames)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<object>> GetRelatedTagsAsync(string topic)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
         }
     }
 }

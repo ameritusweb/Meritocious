@@ -14,15 +14,15 @@ namespace Meritocious.Infrastructure.Data.Services
 {
     public class SearchService : ISearchService
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<SearchService> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<SearchService> logger;
 
         public SearchService(
             MeritociousDbContext context,
             ILogger<SearchService> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<SearchResultDto> SearchAsync(
@@ -79,7 +79,7 @@ namespace Meritocious.Infrastructure.Data.Services
                     {
                         // In a real implementation, we would fetch and count tags
                         // This is a placeholder
-                        var tags = await _context.Posts
+                        var tags = await context.Posts
                             .Where(p => p.Id == post.Id)
                             .SelectMany(p => p.Tags.Select(t => t.Name))
                             .ToListAsync();
@@ -90,6 +90,7 @@ namespace Meritocious.Infrastructure.Data.Services
                             {
                                 facets["tags"][tag] = 0;
                             }
+
                             facets["tags"][tag]++;
                         }
                     }
@@ -131,7 +132,7 @@ namespace Meritocious.Infrastructure.Data.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error searching for term: {SearchTerm}", searchTerm);
+                logger.LogError(ex, "Error searching for term: {SearchTerm}", searchTerm);
                 throw;
             }
         }
@@ -140,7 +141,7 @@ namespace Meritocious.Infrastructure.Data.Services
             string searchTerm,
             Dictionary<string, string> filters)
         {
-            var query = _context.Posts
+            var query = context.Posts
                 .Where(p => !p.IsDeleted)
                 .Where(p => p.Title.ToLower().Contains(searchTerm) ||
                            p.Content.ToLower().Contains(searchTerm));
@@ -181,7 +182,7 @@ namespace Meritocious.Infrastructure.Data.Services
                 Title = p.Title,
                 Excerpt = GetExcerpt(p.Content, searchTerm),
                 AuthorId = p.AuthorId,
-                AuthorUsername = p.Author.Username,
+                AuthorUsername = p.Author.UserName,
                 MeritScore = p.MeritScore,
                 CreatedAt = p.CreatedAt,
                 HighlightedTerms = ExtractHighlightedTerms(p.Content, searchTerm)
@@ -192,7 +193,7 @@ namespace Meritocious.Infrastructure.Data.Services
             string searchTerm,
             Dictionary<string, string> filters)
         {
-            var query = _context.Comments
+            var query = context.Comments
                 .Where(c => !c.IsDeleted)
                 .Where(c => c.Content.ToLower().Contains(searchTerm));
 
@@ -236,7 +237,7 @@ namespace Meritocious.Infrastructure.Data.Services
                 Title = $"Comment on {c.Post.Title}",
                 Excerpt = GetExcerpt(c.Content, searchTerm),
                 AuthorId = c.AuthorId,
-                AuthorUsername = c.Author.Username,
+                AuthorUsername = c.Author.UserName,
                 MeritScore = c.MeritScore,
                 CreatedAt = c.CreatedAt,
                 HighlightedTerms = ExtractHighlightedTerms(c.Content, searchTerm)
@@ -246,7 +247,9 @@ namespace Meritocious.Infrastructure.Data.Services
         private string GetExcerpt(string content, string searchTerm, int length = 200)
         {
             if (string.IsNullOrEmpty(content))
+            {
                 return string.Empty;
+            }
 
             // Find the position of the search term
             var index = content.ToLower().IndexOf(searchTerm.ToLower());
@@ -265,8 +268,15 @@ namespace Meritocious.Infrastructure.Data.Services
             var excerpt = content.Substring(start, end - start);
 
             // Add ellipsis if we're not at the bounds
-            if (start > 0) excerpt = "..." + excerpt;
-            if (end < content.Length) excerpt = excerpt + "...";
+            if (start > 0)
+            {
+                excerpt = "..." + excerpt;
+            }
+
+            if (end < content.Length)
+            {
+                excerpt = excerpt + "...";
+            }
 
             return excerpt;
         }
@@ -274,7 +284,9 @@ namespace Meritocious.Infrastructure.Data.Services
         private List<string> ExtractHighlightedTerms(string content, string searchTerm)
         {
             if (string.IsNullOrEmpty(content) || string.IsNullOrEmpty(searchTerm))
+            {
                 return new List<string>();
+            }
 
             // Extract words that contain the search term
             var pattern = $@"\b\w*{Regex.Escape(searchTerm)}\w*\b";

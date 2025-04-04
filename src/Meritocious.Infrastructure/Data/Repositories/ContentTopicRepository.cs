@@ -26,6 +26,12 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<ContentTopic>> GetTopicContentAsync(string topic, int limit, decimal minRelevance)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
+        }
+
         public async Task<List<ContentTopic>> GetTopicsForContentListAsync(
             List<Guid> contentIds,
             ContentType contentType)

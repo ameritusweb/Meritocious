@@ -685,5 +685,11 @@
 
             return posts;
         }
+
+        public Task<List<Post>> GetRecentPostsAsync(int count)
+        {
+            // TODO: Complete this.
+            throw new NotImplementedException();
+        }
     }
 }

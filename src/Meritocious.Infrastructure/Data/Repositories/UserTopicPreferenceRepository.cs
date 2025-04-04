@@ -38,6 +38,12 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public Task<Dictionary<string, decimal>> GetUserTopicWeightsAsync(Guid userId)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
+        }
+
         public async Task UpdateUserPreferencesAsync(
             Guid userId,
             Dictionary<string, decimal> preferences)

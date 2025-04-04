@@ -9,14 +9,15 @@ namespace Meritocious.Core.EventHandlers
     using MediatR;
     using Meritocious.Core.Events;
     using Meritocious.Core.Interfaces;
+    using Meritocious.Infrastructure.Data.Repositories;
     using Microsoft.Extensions.Logging;
 
     public class PostCreatedEventHandler : INotificationHandler<PostCreatedEvent>
     {
-        private readonly IMeritScoringService _meritScoringService;
-        private readonly ContentSimilarityRepository _similarityRepository;
-        private readonly IPostRepository _postRepository;
-        private readonly ILogger<PostCreatedEventHandler> _logger;
+        private readonly IMeritScoringService meritScoringService;
+        private readonly ContentSimilarityRepository similarityRepository;
+        private readonly IPostRepository postRepository;
+        private readonly ILogger<PostCreatedEventHandler> logger;
 
         public PostCreatedEventHandler(
             IMeritScoringService meritScoringService,
@@ -24,10 +25,10 @@ namespace Meritocious.Core.EventHandlers
             IPostRepository postRepository,
             ILogger<PostCreatedEventHandler> logger)
         {
-            _meritScoringService = meritScoringService;
-            _similarityRepository = similarityRepository;
-            _postRepository = postRepository;
-            _logger = logger;
+            this.meritScoringService = meritScoringService;
+            this.similarityRepository = similarityRepository;
+            this.postRepository = postRepository;
+            this.logger = logger;
         }
 
         public async Task Handle(PostCreatedEvent notification, CancellationToken cancellationToken)
@@ -35,32 +36,35 @@ namespace Meritocious.Core.EventHandlers
             try
             {
                 // Recalculate user's merit score
-                await _meritScoringService.CalculateUserMeritScoreAsync(notification.AuthorId);
+                await meritScoringService.CalculateUserMeritScoreAsync(notification.AuthorId);
 
                 // Get recently active posts for initial similarity comparison
-                var recentPosts = await _postRepository.Query
-                    .Where(p => p.CreatedAt > DateTime.UtcNow.AddDays(-30))
-                    .Select(p => p.Id)
-                    .ToListAsync(cancellationToken);
+                var recentPosts = new List<Guid>();
+                
+                // TODO: Get recent posts.
+                // await postRepository.Query
+                //    .Where(p => p.CreatedAt > DateTime.UtcNow.AddDays(-30))
+                //    .Select(p => p.Id)
+                //    .ToListAsync(cancellationToken);
 
                 // Add the new post ID
                 recentPosts.Add(notification.PostId);
 
                 // Create similarity records for the new post with recent posts
-                await _similarityRepository.CreateMissingSimilaritiesAsync(recentPosts);
+                await similarityRepository.CreateMissingSimilaritiesAsync(recentPosts);
 
                 // Mark these new records for priority update
-                await _similarityRepository.MarkForUpdateAsync(notification.PostId, priority: 2);
+                await similarityRepository.MarkForUpdateAsync(notification.PostId, priority: 2);
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Handled PostCreatedEvent for Post {PostId} by User {UserId}. Created {Count} similarity records.",
                     notification.PostId,
                     notification.AuthorId,
-                    recentPosts.Count - 1);
+                    recentPosts.Count() - 1);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
+                logger.LogError(
                     ex,
                     "Error handling PostCreatedEvent for Post {PostId}",
                     notification.PostId);
