@@ -3,6 +3,8 @@ using Meritocious.Core.Entities;
 using Meritocious.Core.Interfaces;
 using Meritocious.Common.DTOs.Content;
 using Meritocious.AI.SemanticKernel.Interfaces;
+using Meritocious.Infrastructure.Data.Repositories;
+using Meritocious.AI.MeritScoring.Interfaces;
 
 namespace Meritocious.Infrastructure.Data.Services;
 

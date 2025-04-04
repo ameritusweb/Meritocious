@@ -20,6 +20,8 @@ namespace Meritocious.Infrastructure
     using Meritocious.Core.Entities;
     using Meritocious.Infrastructure.Data.Services;
     using Microsoft.AspNetCore.Identity;
+    using Meritocious.Core.Features.Substacks.Services;
+    using Meritocious.Infrastructure.Services;
 
     public static class ServiceCollectionExtensions
     {
@@ -57,9 +59,6 @@ namespace Meritocious.Infrastructure
             services.AddScoped<PostRepository>();
             services.AddScoped<CommentRepository>();
             services.AddScoped<TagRepository>();
-            services.AddScoped<RemixRepository>();
-            services.AddScoped<RemixSourceRepository>();
-            services.AddScoped<RemixNoteRepository>();
             services.AddScoped<ContentSimilarityRepository>();
             services.AddScoped<ContentTopicRepository>();
             services.AddScoped<UserTopicPreferenceRepository>();
