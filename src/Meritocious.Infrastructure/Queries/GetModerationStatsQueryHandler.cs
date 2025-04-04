@@ -13,15 +13,15 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetModerationStatsQueryHandler : IRequestHandler<GetModerationStatsQuery, ModerationStatsDto>
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<GetModerationStatsQueryHandler> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<GetModerationStatsQueryHandler> logger;
 
         public GetModerationStatsQueryHandler(
             MeritociousDbContext context,
             ILogger<GetModerationStatsQueryHandler> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<ModerationStatsDto> Handle(
@@ -39,7 +39,7 @@ namespace Meritocious.Infrastructure.Queries
                     _ => DateTime.UtcNow.AddDays(-1)
                 };
 
-                var reports = await _context.ContentReports
+                var reports = await context.ContentReports
                     .Where(r => r.CreatedAt >= startDate)
                     .ToListAsync(cancellationToken);
 
@@ -73,7 +73,7 @@ namespace Meritocious.Infrastructure.Queries
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting moderation stats");
+                logger.LogError(ex, "Error getting moderation stats");
                 throw;
             }
         }

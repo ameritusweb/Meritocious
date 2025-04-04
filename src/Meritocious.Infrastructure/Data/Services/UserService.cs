@@ -29,10 +29,14 @@ namespace Meritocious.Core.Services
         {
             // Validate unique username and email
             if (await _userRepository.GetByUsernameAsync(username) != null)
+            {
                 throw new InvalidOperationException("Username already exists");
+            }
 
             if (await _userRepository.GetByEmailAsync(email) != null)
+            {
                 throw new InvalidOperationException("Email already exists");
+            }
 
             var passwordHash = HashPassword(password);
             var user = User.Create(username, email, passwordHash);
@@ -45,7 +49,10 @@ namespace Meritocious.Core.Services
         {
             var user = await _userRepository.GetByIdAsync(id);
             if (user == null)
+            {
                 throw new KeyNotFoundException("User not found");
+            }
+
             return user;
         }
 
@@ -67,7 +74,6 @@ namespace Meritocious.Core.Services
 
             // Update allowed fields
             // Note: Username and email changes might require additional verification
-
             await _userRepository.UpdateAsync(user);
         }
 
@@ -81,7 +87,10 @@ namespace Meritocious.Core.Services
         public async Task<bool> ValidateUserCredentialsAsync(string email, string password)
         {
             var user = await _userRepository.GetByEmailAsync(email);
-            if (user == null) return false;
+            if (user == null)
+            {
+                return false;
+            }
 
             var passwordHash = HashPassword(password);
             return user.PasswordHash == passwordHash;

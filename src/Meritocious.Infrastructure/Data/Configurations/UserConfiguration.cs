@@ -10,7 +10,7 @@
         {
             builder.HasKey(u => u.Id);
 
-            builder.Property(u => u.Username)
+            builder.Property(u => u.UserName)
                 .IsRequired()
                 .HasMaxLength(50);
 
@@ -26,7 +26,7 @@
                 .HasPrecision(5, 2)
                 .HasDefaultValue(0.00m);
 
-            builder.HasIndex(u => u.Username)
+            builder.HasIndex(u => u.UserName)
                 .IsUnique();
 
             builder.HasIndex(u => u.Email)

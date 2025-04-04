@@ -20,19 +20,29 @@ public class GetApiUsageQueryHandler : IRequestHandler<GetApiUsageQuery, IEnumer
         var query = _context.ApiUsageLogs.AsQueryable();
 
         if (request.StartDate.HasValue)
-            query = query.Where(a => a.TimeStamp >= request.StartDate.Value);
+        {
+            query = query.Where(a => a.Timestamp >= request.StartDate.Value);
+        }
 
         if (request.EndDate.HasValue)
-            query = query.Where(a => a.TimeStamp <= request.EndDate.Value);
+        {
+            query = query.Where(a => a.Timestamp <= request.EndDate.Value);
+        }
 
         if (!string.IsNullOrEmpty(request.EndpointPath))
+        {
             query = query.Where(a => a.EndpointPath == request.EndpointPath);
+        }
 
         if (!string.IsNullOrEmpty(request.HttpMethod))
+        {
             query = query.Where(a => a.HttpMethod == request.HttpMethod);
+        }
 
         if (!string.IsNullOrEmpty(request.ClientId))
+        {
             query = query.Where(a => a.ClientId == request.ClientId);
+        }
 
         var skip = (request.Page - 1) * request.PageSize;
 

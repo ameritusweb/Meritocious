@@ -34,7 +34,6 @@ namespace Meritocious.Infrastructure.Commands
                 // {
                 //     await _mediator.Publish(new PostDeletedEvent(request.PostId, request.DeletedByUserId.Value), cancellationToken);
                 // }
-
                 return Result.Success();
             }
             catch (KeyNotFoundException ex)

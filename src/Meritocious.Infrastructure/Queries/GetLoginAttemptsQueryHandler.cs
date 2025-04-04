@@ -20,19 +20,29 @@ public class GetLoginAttemptsQueryHandler : IRequestHandler<GetLoginAttemptsQuer
         var query = _context.LoginAttempts.AsQueryable();
 
         if (request.StartDate.HasValue)
+        {
             query = query.Where(l => l.Timestamp >= request.StartDate.Value);
+        }
 
         if (request.EndDate.HasValue)
+        {
             query = query.Where(l => l.Timestamp <= request.EndDate.Value);
+        }
 
         if (!string.IsNullOrEmpty(request.UserId))
+        {
             query = query.Where(l => l.UserId == request.UserId);
+        }
 
         if (request.Success.HasValue)
+        {
             query = query.Where(l => l.Success == request.Success.Value);
+        }
 
         if (request.IsSuspicious.HasValue)
+        {
             query = query.Where(l => l.IsSuspicious == request.IsSuspicious.Value);
+        }
 
         var skip = (request.Page - 1) * request.PageSize;
 

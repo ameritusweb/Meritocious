@@ -14,35 +14,39 @@ namespace Meritocious.Core.Features.Posts.Commands
 
     public class ForkPostCommandHandler : IRequestHandler<ForkPostCommand, Result<Post>>
     {
-        private readonly PostRepository _postRepository;
-        private readonly UserRepository _userRepository;
-        private readonly IMediator _mediator;
+        private readonly PostRepository postRepository;
+        private readonly UserRepository userRepository;
+        private readonly IMediator mediator;
 
         public ForkPostCommandHandler(
             PostRepository postRepository,
             UserRepository userRepository,
             IMediator mediator)
         {
-            _postRepository = postRepository;
-            _userRepository = userRepository;
-            _mediator = mediator;
+            this.postRepository = postRepository;
+            this.userRepository = userRepository;
+            this.mediator = mediator;
         }
 
         public async Task<Result<Post>> Handle(ForkPostCommand request, CancellationToken cancellationToken)
         {
-            var originalPost = await _postRepository.GetByIdAsync(request.OriginalPostId);
+            var originalPost = await postRepository.GetByIdAsync(request.OriginalPostId);
             if (originalPost == null)
+            {
                 return Result.Failure<Post>($"Original post {request.OriginalPostId} not found");
+            }
 
-            var newAuthor = await _userRepository.GetByIdAsync(request.NewAuthorId);
+            var newAuthor = await userRepository.GetByIdAsync(request.NewAuthorId);
             if (newAuthor == null)
+            {
                 return Result.Failure<Post>($"User {request.NewAuthorId} not found");
+            }
 
             var forkedPost = originalPost.CreateFork(newAuthor, request.NewTitle);
-            await _postRepository.AddAsync(forkedPost);
+            await postRepository.AddAsync(forkedPost);
 
-            await _mediator.Publish(
-                new PostForkedEvent(originalPost.Id, forkedPost.Id, newAuthor.Id),
+            await mediator.Publish(
+                new PostForkedEvent(originalPost.Id, forkedPost.Id, Guid.Parse(newAuthor.Id)),
                 cancellationToken);
 
             return Result.Success(forkedPost);

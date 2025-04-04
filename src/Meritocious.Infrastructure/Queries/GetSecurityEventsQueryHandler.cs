@@ -8,31 +8,41 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetSecurityEventsQueryHandler : IRequestHandler<GetSecurityEventsQuery, IEnumerable<SecurityEventDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetSecurityEventsQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<SecurityEventDto>> Handle(GetSecurityEventsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.SecurityEvents.AsQueryable();
+        var query = context.SecurityEvents.AsQueryable();
 
         if (request.StartDate.HasValue)
+        {
             query = query.Where(e => e.Timestamp >= request.StartDate.Value);
+        }
 
         if (request.EndDate.HasValue)
+        {
             query = query.Where(e => e.Timestamp <= request.EndDate.Value);
+        }
 
         if (!string.IsNullOrEmpty(request.Severity))
+        {
             query = query.Where(e => e.Severity == request.Severity);
+        }
 
         if (!string.IsNullOrEmpty(request.EventType))
+        {
             query = query.Where(e => e.EventType == request.EventType);
+        }
 
         if (request.RequiresAction.HasValue)
+        {
             query = query.Where(e => e.RequiresAction == request.RequiresAction.Value);
+        }
 
         var skip = (request.Page - 1) * request.PageSize;
 

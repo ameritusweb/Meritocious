@@ -17,30 +17,32 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class ResolveReportCommandHandler : IRequestHandler<ResolveReportCommand, Result>
     {
-        private readonly IReportingService _reportingService;
-        private readonly IMediator _mediator;
-        private readonly ILogger<ResolveReportCommandHandler> _logger;
+        private readonly IReportingService reportingService;
+        private readonly IMediator mediator;
+        private readonly ILogger<ResolveReportCommandHandler> logger;
 
         public ResolveReportCommandHandler(
             IReportingService reportingService,
             IMediator mediator,
             ILogger<ResolveReportCommandHandler> logger)
         {
-            _reportingService = reportingService;
-            _mediator = mediator;
-            _logger = logger;
+            this.reportingService = reportingService;
+            this.mediator = mediator;
+            this.logger = logger;
         }
 
         public async Task<Result> Handle(ResolveReportCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var report = await _reportingService.GetReportByIdAsync(request.ReportId);
+                var report = await reportingService.GetReportByIdAsync(request.ReportId);
                 if (report == null)
+                {
                     return Result.Failure($"Report {request.ReportId} not found");
+                }
 
                 // Update report status
-                await _reportingService.ResolveReportAsync(
+                await reportingService.ResolveReportAsync(
                     request.ReportId,
                     request.ModeratorId,
                     request.Resolution,
@@ -49,7 +51,7 @@ namespace Meritocious.Infrastructure.Commands
                 // Apply moderation action if needed
                 if (request.Action.ActionType != ModerationActionType.None)
                 {
-                    await _mediator.Send(new ModerateContentCommand
+                    await mediator.Send(new ModerateContentCommand
                     {
                         ContentId = report.ContentId,
                         ContentType = report.ContentType,
@@ -59,13 +61,13 @@ namespace Meritocious.Infrastructure.Commands
                 }
 
                 // Notify reporter of resolution
-                await _mediator.Publish(new ReportResolvedEvent(report, request.ModeratorId, request.Resolution));
+                await mediator.Publish(new ReportResolvedEvent(report, request.ModeratorId, request.Resolution));
 
                 return Result.Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error resolving report {ReportId}", request.ReportId);
+                logger.LogError(ex, "Error resolving report {ReportId}", request.ReportId);
                 return Result.Failure(ex.Message);
             }
         }

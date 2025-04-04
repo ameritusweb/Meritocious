@@ -1,4 +1,6 @@
-﻿using Meritocious.Infrastructure.Data.Repositories;
+﻿using Meritocious.Core.Entities;
+using Meritocious.Infrastructure.Data.Repositories;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,34 +11,35 @@ namespace Meritocious.Infrastructure.Data
 {
     public class UnitOfWork : IDisposable
     {
-        private readonly MeritociousDbContext _context;
-        private bool _disposed;
+        private readonly MeritociousDbContext context;
+        private bool disposed;
 
-        private UserRepository _userRepository;
-        private PostRepository _postRepository;
-        private CommentRepository _commentRepository;
-        private TagRepository _tagRepository;
+        private UserRepository userRepository;
+        private PostRepository postRepository;
+        private CommentRepository commentRepository;
+        private TagRepository tagRepository;
+        private UserManager<User> userManager;
 
         public UnitOfWork(MeritociousDbContext context)
         {
-            _context = context;
+            this.context = context;
         }
 
         public UserRepository Users =>
-            _userRepository ??= new UserRepository(_context);
+            userRepository ??= new UserRepository(context, userManager);
 
         public PostRepository Posts =>
-            _postRepository ??= new PostRepository(_context);
+            postRepository ??= new PostRepository(context);
 
         public CommentRepository Comments =>
-            _commentRepository ??= new CommentRepository(_context);
+            commentRepository ??= new CommentRepository(context);
 
         public TagRepository Tags =>
-            _tagRepository ??= new TagRepository(_context);
+            tagRepository ??= new TagRepository(context);
 
         public async Task<int> SaveChangesAsync()
         {
-            return await _context.SaveChangesAsync();
+            return await context.SaveChangesAsync();
         }
 
         public void Dispose()
@@ -47,11 +50,12 @@ namespace Meritocious.Infrastructure.Data
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!_disposed && disposing)
+            if (!disposed && disposing)
             {
-                _context.Dispose();
+                context.Dispose();
             }
-            _disposed = true;
+
+            disposed = true;
         }
     }
 }

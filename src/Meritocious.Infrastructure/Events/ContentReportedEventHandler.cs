@@ -13,18 +13,18 @@ namespace Meritocious.Core.Features.Reporting.Events
 
     public class ContentReportedEventHandler : INotificationHandler<ContentReportedEvent>
     {
-        private readonly INotificationService _notificationService;
-        private readonly IUserService _userService;
-        private readonly ILogger<ContentReportedEventHandler> _logger;
+        private readonly INotificationService notificationService;
+        private readonly IUserService userService;
+        private readonly ILogger<ContentReportedEventHandler> logger;
 
         public ContentReportedEventHandler(
             INotificationService notificationService,
             IUserService userService,
             ILogger<ContentReportedEventHandler> logger)
         {
-            _notificationService = notificationService;
-            _userService = userService;
-            _logger = logger;
+            this.notificationService = notificationService;
+            this.userService = userService;
+            this.logger = logger;
         }
 
         public async Task Handle(ContentReportedEvent notification, CancellationToken cancellationToken)
@@ -32,12 +32,12 @@ namespace Meritocious.Core.Features.Reporting.Events
             try
             {
                 // Get list of moderators
-                var moderators = await _userService.GetModeratorsAsync();
+                var moderators = await userService.GetModeratorsAsync();
 
                 // Notify each moderator
                 foreach (var moderator in moderators)
                 {
-                    await _notificationService.SendNotificationAsync(
+                    await notificationService.SendNotificationAsync(
                         Notification.Create(
                             moderator.Id,
                             "ContentReport",
@@ -47,13 +47,13 @@ namespace Meritocious.Core.Features.Reporting.Events
                         ));
                 }
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Notified moderators about content report {ReportId}",
                     notification.Report.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
+                logger.LogError(
                     ex,
                     "Error handling ContentReportedEvent for report {ReportId}",
                     notification.Report.Id);

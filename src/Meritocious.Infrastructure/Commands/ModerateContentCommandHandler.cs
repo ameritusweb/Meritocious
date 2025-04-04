@@ -16,10 +16,10 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class ModerateContentCommandHandler : IRequestHandler<ModerateContentCommand, Result<ModerationResult>>
     {
-        private readonly IContentModerator _contentModerator;
-        private readonly PostRepository _postRepository;
-        private readonly CommentRepository _commentRepository;
-        private readonly IMediator _mediator;
+        private readonly IContentModerator contentModerator;
+        private readonly PostRepository postRepository;
+        private readonly CommentRepository commentRepository;
+        private readonly IMediator mediator;
 
         public ModerateContentCommandHandler(
             IContentModerator contentModerator,
@@ -27,10 +27,10 @@ namespace Meritocious.Infrastructure.Commands
             CommentRepository commentRepository,
             IMediator mediator)
         {
-            _contentModerator = contentModerator;
-            _postRepository = postRepository;
-            _commentRepository = commentRepository;
-            _mediator = mediator;
+            this.contentModerator = contentModerator;
+            this.postRepository = postRepository;
+            this.commentRepository = commentRepository;
+            this.mediator = mediator;
         }
 
         public async Task<Result<ModerationResult>> Handle(
@@ -43,16 +43,22 @@ namespace Meritocious.Infrastructure.Commands
                 switch (request.ContentType)
                 {
                     case ContentType.Post:
-                        var post = await _postRepository.GetByIdAsync(request.ContentId);
+                        var post = await postRepository.GetByIdAsync(request.ContentId);
                         if (post == null)
+                        {
                             return Result.Failure<ModerationResult>($"Post {request.ContentId} not found");
+                        }
+
                         content = post.Content;
                         break;
 
                     case ContentType.Comment:
-                        var comment = await _commentRepository.GetByIdAsync(request.ContentId);
+                        var comment = await commentRepository.GetByIdAsync(request.ContentId);
                         if (comment == null)
+                        {
                             return Result.Failure<ModerationResult>($"Comment {request.ContentId} not found");
+                        }
+
                         content = comment.Content;
                         break;
 
@@ -61,8 +67,8 @@ namespace Meritocious.Infrastructure.Commands
                 }
 
                 // Get moderation decision
-                var moderationAction = await _contentModerator.EvaluateContentAsync(content);
-                var toxicityScores = await _contentModerator.GetToxicityScoresAsync(content);
+                var moderationAction = await contentModerator.EvaluateContentAsync(content);
+                var toxicityScores = await contentModerator.GetToxicityScoresAsync(content);
 
                 var result = new ModerationResult
                 {
@@ -83,26 +89,28 @@ namespace Meritocious.Infrastructure.Commands
                 switch (request.ContentType)
                 {
                     case ContentType.Post:
-                        var post = await _postRepository.GetByIdAsync(request.ContentId);
+                        var post = await postRepository.GetByIdAsync(request.ContentId);
                         if (moderationAction.ActionType == ModerationActionType.Delete)
                         {
                             post.Delete();
-                            await _postRepository.UpdateAsync(post);
+                            await postRepository.UpdateAsync(post);
                         }
+
                         break;
 
                     case ContentType.Comment:
-                        var comment = await _commentRepository.GetByIdAsync(request.ContentId);
+                        var comment = await commentRepository.GetByIdAsync(request.ContentId);
                         if (moderationAction.ActionType == ModerationActionType.Delete)
                         {
                             comment.Delete();
-                            await _commentRepository.UpdateAsync(comment);
+                            await commentRepository.UpdateAsync(comment);
                         }
+
                         break;
                 }
 
                 // Publish event
-                await _mediator.Publish(new ContentModeratedEvent(
+                await mediator.Publish(new ContentModeratedEvent(
                     request.ContentId,
                     request.ContentType,
                     moderationAction,

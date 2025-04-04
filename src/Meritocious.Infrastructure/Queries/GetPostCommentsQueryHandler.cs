@@ -11,32 +11,34 @@ using System.Threading.Tasks;
 
 public class GetPostCommentsQueryHandler : IRequestHandler<GetPostCommentsQuery, Result<List<Comment>>>
 {
-    private readonly CommentRepository _commentRepository;
-    private readonly PostRepository _postRepository;
+    private readonly CommentRepository commentRepository;
+    private readonly PostRepository postRepository;
 
     public GetPostCommentsQueryHandler(
         CommentRepository commentRepository,
         PostRepository postRepository)
     {
-        _commentRepository = commentRepository;
-        _postRepository = postRepository;
+        this.commentRepository = commentRepository;
+        this.postRepository = postRepository;
     }
 
     public async Task<Result<List<Comment>>> Handle(GetPostCommentsQuery request, CancellationToken cancellationToken)
     {
-        var post = await _postRepository.GetByIdAsync(request.PostId);
+        var post = await postRepository.GetByIdAsync(request.PostId);
         if (post == null)
+        {
             return Result.Failure<List<Comment>>($"Post {request.PostId} not found");
+        }
 
         var comments = request.SortBy switch
         {
-            "merit" => await _commentRepository.GetCommentsByPostOrderedByMeritAsync(
+            "merit" => await commentRepository.GetCommentsByPostOrderedByMeritAsync(
                 request.PostId, request.Page, request.PageSize),
-            "date" => await _commentRepository.GetCommentsByPostOrderedByDateAsync(
+            "date" => await commentRepository.GetCommentsByPostOrderedByDateAsync(
                 request.PostId, request.Page, request.PageSize),
-            "thread" => await _commentRepository.GetCommentsByPostThreadedAsync(
+            "thread" => await commentRepository.GetCommentsByPostThreadedAsync(
                 request.PostId, request.Page, request.PageSize),
-            _ => await _commentRepository.GetCommentsByPostOrderedByMeritAsync(
+            _ => await commentRepository.GetCommentsByPostOrderedByMeritAsync(
                 request.PostId, request.Page, request.PageSize)
         };
 

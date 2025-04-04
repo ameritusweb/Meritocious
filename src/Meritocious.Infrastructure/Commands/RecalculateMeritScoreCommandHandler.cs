@@ -15,10 +15,10 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class RecalculateMeritScoreCommandHandler : IRequestHandler<RecalculateMeritScoreCommand, Result<decimal>>
     {
-        private readonly IMeritScoringService _meritScoringService;
-        private readonly PostRepository _postRepository;
-        private readonly CommentRepository _commentRepository;
-        private readonly IMediator _mediator;
+        private readonly IMeritScoringService meritScoringService;
+        private readonly PostRepository postRepository;
+        private readonly CommentRepository commentRepository;
+        private readonly IMediator mediator;
 
         public RecalculateMeritScoreCommandHandler(
             IMeritScoringService meritScoringService,
@@ -26,10 +26,10 @@ namespace Meritocious.Infrastructure.Commands
             CommentRepository commentRepository,
             IMediator mediator)
         {
-            _meritScoringService = meritScoringService;
-            _postRepository = postRepository;
-            _commentRepository = commentRepository;
-            _mediator = mediator;
+            this.meritScoringService = meritScoringService;
+            this.postRepository = postRepository;
+            this.commentRepository = commentRepository;
+            this.mediator = mediator;
         }
 
         public async Task<Result<decimal>> Handle(RecalculateMeritScoreCommand request, CancellationToken cancellationToken)
@@ -42,16 +42,22 @@ namespace Meritocious.Infrastructure.Commands
                 switch (request.ContentType)
                 {
                     case ContentType.Post:
-                        var post = await _postRepository.GetByIdAsync(request.ContentId);
+                        var post = await postRepository.GetByIdAsync(request.ContentId);
                         if (post == null)
+                        {
                             return Result.Failure<decimal>($"Post {request.ContentId} not found");
+                        }
+
                         content = post.Content;
                         break;
 
                     case ContentType.Comment:
-                        var comment = await _commentRepository.GetByIdAsync(request.ContentId);
+                        var comment = await commentRepository.GetByIdAsync(request.ContentId);
                         if (comment == null)
+                        {
                             return Result.Failure<decimal>($"Comment {request.ContentId} not found");
+                        }
+
                         content = comment.Content;
                         context = comment.Post?.Content;
                         break;
@@ -60,26 +66,26 @@ namespace Meritocious.Infrastructure.Commands
                         return Result.Failure<decimal>($"Unsupported content type: {request.ContentType}");
                 }
 
-                var score = await _meritScoringService.CalculateContentScoreAsync(content, request.ContentType, context);
+                var score = await meritScoringService.CalculateContentScoreAsync(content, request.ContentType, context);
 
                 // Update the content's merit score
                 switch (request.ContentType)
                 {
                     case ContentType.Post:
-                        var post = await _postRepository.GetByIdAsync(request.ContentId);
+                        var post = await postRepository.GetByIdAsync(request.ContentId);
                         post.UpdateMeritScore(score.FinalScore);
-                        await _postRepository.UpdateAsync(post);
+                        await postRepository.UpdateAsync(post);
                         break;
 
                     case ContentType.Comment:
-                        var comment = await _commentRepository.GetByIdAsync(request.ContentId);
+                        var comment = await commentRepository.GetByIdAsync(request.ContentId);
                         comment.UpdateMeritScore(score.FinalScore);
-                        await _commentRepository.UpdateAsync(comment);
+                        await commentRepository.UpdateAsync(comment);
                         break;
                 }
 
                 // Publish event
-                await _mediator.Publish(new ContentScoredEvent(request.ContentId, request.ContentType, score));
+                await mediator.Publish(new ContentScoredEvent(request.ContentId, request.ContentType, score));
 
                 return Result.Success(score.FinalScore);
             }

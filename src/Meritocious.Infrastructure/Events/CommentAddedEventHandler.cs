@@ -12,18 +12,18 @@ namespace Meritocious.Core.Features.Comments.Events
 
     public class CommentAddedEventHandler : INotificationHandler<CommentAddedEvent>
     {
-        private readonly IMeritScoringService _meritScoringService;
-        private readonly IPostService _postService;
-        private readonly ILogger<CommentAddedEventHandler> _logger;
+        private readonly IMeritScoringService meritScoringService;
+        private readonly IPostService postService;
+        private readonly ILogger<CommentAddedEventHandler> logger;
 
         public CommentAddedEventHandler(
             IMeritScoringService meritScoringService,
             IPostService postService,
             ILogger<CommentAddedEventHandler> logger)
         {
-            _meritScoringService = meritScoringService;
-            _postService = postService;
-            _logger = logger;
+            this.meritScoringService = meritScoringService;
+            this.postService = postService;
+            this.logger = logger;
         }
 
         public async Task Handle(CommentAddedEvent notification, CancellationToken cancellationToken)
@@ -31,19 +31,19 @@ namespace Meritocious.Core.Features.Comments.Events
             try
             {
                 // Recalculate user's merit score
-                await _meritScoringService.CalculateUserMeritScoreAsync(notification.AuthorId);
+                await meritScoringService.CalculateUserMeritScoreAsync(notification.AuthorId);
 
                 // Update post's activity score
-                await _postService.UpdatePostActivityAsync(notification.PostId);
+                await postService.UpdatePostActivityAsync(notification.PostId);
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Processed CommentAddedEvent for Comment {CommentId} on Post {PostId}",
                     notification.CommentId,
                     notification.PostId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
+                logger.LogError(
                     ex,
                     "Error processing CommentAddedEvent for Comment {CommentId}",
                     notification.CommentId);

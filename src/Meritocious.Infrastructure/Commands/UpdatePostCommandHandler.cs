@@ -16,10 +16,10 @@ namespace Meritocious.Core.Features.Posts.Commands
 
     public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, Result<Post>>
     {
-        private readonly PostRepository _postRepository;
-        private readonly ITagService _tagService;
-        private readonly IMeritScorer _meritScorer;
-        private readonly IMediator _mediator;
+        private readonly PostRepository postRepository;
+        private readonly ITagService tagService;
+        private readonly IMeritScorer meritScorer;
+        private readonly IMediator mediator;
 
         public UpdatePostCommandHandler(
             PostRepository postRepository,
@@ -27,25 +27,31 @@ namespace Meritocious.Core.Features.Posts.Commands
             IMeritScorer meritScorer,
             IMediator mediator)
         {
-            _postRepository = postRepository;
-            _tagService = tagService;
-            _meritScorer = meritScorer;
-            _mediator = mediator;
+            this.postRepository = postRepository;
+            this.tagService = tagService;
+            this.meritScorer = meritScorer;
+            this.mediator = mediator;
         }
 
         public async Task<Result<Post>> Handle(UpdatePostCommand request, CancellationToken cancellationToken)
         {
-            var post = await _postRepository.GetByIdAsync(request.PostId);
+            var post = await postRepository.GetByIdAsync(request.PostId);
             if (post == null)
+            {
                 return Result.Failure<Post>($"Post {request.PostId} not found");
+            }
 
             if (post.AuthorId != request.EditorId)
+            {
                 return Result.Failure<Post>("Only the author can edit this post");
+            }
 
             // Validate content quality
-            var contentScore = await _meritScorer.ScoreContentAsync(request.Content);
-            if (!await _meritScorer.ValidateContentAsync(request.Content))
+            var contentScore = await meritScorer.ScoreContentAsync(request.Content);
+            if (!await meritScorer.ValidateContentAsync(request.Content))
+            {
                 return Result.Failure<Post>("Content does not meet quality standards");
+            }
 
             // Update post
             post.UpdateContent(request.Title, request.Content);
@@ -54,13 +60,13 @@ namespace Meritocious.Core.Features.Posts.Commands
             // Update tags
             foreach (var tagName in request.Tags)
             {
-                await _tagService.AddTagToPostAsync(post.Id, tagName);
+                await tagService.AddTagToPostAsync(post.Id, tagName);
             }
 
-            await _postRepository.UpdateAsync(post);
+            await postRepository.UpdateAsync(post);
 
             // Publish event
-            await _mediator.Publish(new PostUpdatedEvent(post.Id, request.EditorId), cancellationToken);
+            await mediator.Publish(new PostUpdatedEvent(post.Id, request.EditorId), cancellationToken);
 
             return Result.Success(post);
         }

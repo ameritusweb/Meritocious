@@ -15,15 +15,15 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetPostsByUserQueryHandler : IRequestHandler<GetPostsByUserQuery, Result<List<PostDto>>>
     {
-        private readonly PostRepository _postRepository;
-        private readonly UserRepository _userRepository;
+        private readonly PostRepository postRepository;
+        private readonly UserRepository userRepository;
 
         public GetPostsByUserQueryHandler(
             PostRepository postRepository,
             UserRepository userRepository)
         {
-            _postRepository = postRepository;
-            _userRepository = userRepository;
+            this.postRepository = postRepository;
+            this.userRepository = userRepository;
         }
 
         public async Task<Result<List<PostDto>>> Handle(GetPostsByUserQuery request, CancellationToken cancellationToken)
@@ -31,12 +31,14 @@ namespace Meritocious.Infrastructure.Queries
             try
             {
                 // Verify the user exists
-                var user = await _userRepository.GetByIdAsync(request.UserId);
+                var user = await userRepository.GetByIdAsync(request.UserId);
                 if (user == null)
+                {
                     return Result.Failure<List<PostDto>>($"User {request.UserId} not found");
+                }
 
                 // Get posts by user
-                var posts = await _postRepository.GetPostsByUserAsync(request.UserId);
+                var posts = await postRepository.GetPostsByUserAsync(request.UserId);
 
                 // Apply sorting
                 posts = request.SortBy switch

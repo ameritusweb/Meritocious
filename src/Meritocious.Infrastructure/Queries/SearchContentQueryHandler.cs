@@ -15,10 +15,10 @@ namespace Meritocious.Core.Features.Search.Queries
 
     public class SearchContentQueryHandler : IRequestHandler<SearchContentQuery, SearchResultDto>
     {
-        private readonly PostRepository _postRepository;
-        private readonly CommentRepository _commentRepository;
-        private readonly ISearchService _searchService;
-        private readonly ILogger<SearchContentQueryHandler> _logger;
+        private readonly PostRepository postRepository;
+        private readonly CommentRepository commentRepository;
+        private readonly ISearchService searchService;
+        private readonly ILogger<SearchContentQueryHandler> logger;
 
         public SearchContentQueryHandler(
             PostRepository postRepository,
@@ -26,10 +26,10 @@ namespace Meritocious.Core.Features.Search.Queries
             ISearchService searchService,
             ILogger<SearchContentQueryHandler> logger)
         {
-            _postRepository = postRepository;
-            _commentRepository = commentRepository;
-            _searchService = searchService;
-            _logger = logger;
+            this.postRepository = postRepository;
+            this.commentRepository = commentRepository;
+            this.searchService = searchService;
+            this.logger = logger;
         }
 
         public async Task<SearchResultDto> Handle(SearchContentQuery request, CancellationToken cancellationToken)
@@ -37,7 +37,7 @@ namespace Meritocious.Core.Features.Search.Queries
             try
             {
                 // Perform search using the search service
-                var searchResults = await _searchService.SearchAsync(
+                var searchResults = await searchService.SearchAsync(
                     request.SearchTerm,
                     request.ContentTypes,
                     request.Filters,
@@ -51,7 +51,7 @@ namespace Meritocious.Core.Features.Search.Queries
                     switch (result.Type)
                     {
                         case ContentType.Post:
-                            var post = await _postRepository.GetByIdAsync(result.Id);
+                            var post = await postRepository.GetByIdAsync(result.Id);
                             if (post != null)
                             {
                                 items.Add(new SearchItemDto
@@ -61,7 +61,7 @@ namespace Meritocious.Core.Features.Search.Queries
                                     Title = post.Title,
                                     Excerpt = GetExcerpt(post.Content, request.SearchTerm),
                                     AuthorId = post.AuthorId,
-                                    AuthorUsername = post.Author.Username,
+                                    AuthorUsername = post.Author.UserName,
                                     MeritScore = post.MeritScore,
                                     CreatedAt = post.CreatedAt,
                                     HighlightedTerms = result.HighlightedTerms
@@ -70,7 +70,7 @@ namespace Meritocious.Core.Features.Search.Queries
                             break;
 
                         case ContentType.Comment:
-                            var comment = await _commentRepository.GetByIdAsync(result.Id);
+                            var comment = await commentRepository.GetByIdAsync(result.Id);
                             if (comment != null)
                             {
                                 items.Add(new SearchItemDto
@@ -80,7 +80,7 @@ namespace Meritocious.Core.Features.Search.Queries
                                     Title = $"Comment on {comment.Post.Title}",
                                     Excerpt = GetExcerpt(comment.Content, request.SearchTerm),
                                     AuthorId = comment.AuthorId,
-                                    AuthorUsername = comment.Author.Username,
+                                    AuthorUsername = comment.Author.UserName,
                                     MeritScore = comment.MeritScore,
                                     CreatedAt = comment.CreatedAt,
                                     HighlightedTerms = result.HighlightedTerms
@@ -109,7 +109,7 @@ namespace Meritocious.Core.Features.Search.Queries
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error performing content search for term: {SearchTerm}", request.SearchTerm);
+                logger.LogError(ex, "Error performing content search for term: {SearchTerm}", request.SearchTerm);
                 throw;
             }
         }
@@ -133,8 +133,15 @@ namespace Meritocious.Core.Features.Search.Queries
             var excerpt = content.Substring(start, end - start);
 
             // Add ellipsis if we're not at the bounds
-            if (start > 0) excerpt = "..." + excerpt;
-            if (end < content.Length) excerpt = excerpt + "...";
+            if (start > 0)
+            {
+                excerpt = "..." + excerpt;
+            }
+
+            if (end < content.Length)
+            {
+                excerpt = excerpt + "...";
+            }
 
             return excerpt;
         }
