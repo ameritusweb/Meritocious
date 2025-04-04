@@ -17,7 +17,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<ReputationBadge>> GetUserBadgesAsync(Guid userId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(b => b.User)
                 .Where(b => b.UserId == userId)
                 .OrderByDescending(b => b.Level)
@@ -29,7 +29,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             string badgeType,
             bool awardedOnly = true)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(b => b.User)
                 .Where(b => b.BadgeType == badgeType);
 
@@ -48,7 +48,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             string category,
             bool awardedOnly = true)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(b => b.User)
                 .Where(b => b.Category == category);
 
@@ -67,7 +67,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             int count = 10,
             DateTime? since = null)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(b => b.User)
                 .Where(b => b.AwardedAt.HasValue);
 
@@ -86,7 +86,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid userId,
             decimal minimumProgress = 0.5m)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(b =>
                     b.UserId == userId &&
                     !b.AwardedAt.HasValue &&
@@ -98,7 +98,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         public async Task<Dictionary<string, int>> GetBadgeDistributionAsync(
             string badgeType = null)
         {
-            var query = _dbSet.Where(b => b.AwardedAt.HasValue);
+            var query = dbSet.Where(b => b.AwardedAt.HasValue);
 
             if (!string.IsNullOrEmpty(badgeType))
             {
@@ -119,7 +119,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<(string BadgeType, int Count)>> GetTopBadgeTypesAsync(int count = 10)
         {
-            var topTypes = await _dbSet
+            var topTypes = await dbSet
                 .Where(b => b.AwardedAt.HasValue)
                 .GroupBy(b => b.BadgeType)
                 .Select(g => new

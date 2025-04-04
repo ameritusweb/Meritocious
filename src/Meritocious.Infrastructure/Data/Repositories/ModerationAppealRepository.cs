@@ -17,7 +17,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<ModerationAppeal>> GetPendingAppealsAsync()
         {
-            return await _dbSet
+            return await dbSet
                 .Include(a => a.ModerationAction)
                 .Include(a => a.Appealer)
                 .Where(a => a.Status == AppealStatus.Pending)
@@ -27,7 +27,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<ModerationAppeal>> GetUserAppealsAsync(Guid userId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(a => a.ModerationAction)
                 .Include(a => a.Reviewer)
                 .Where(a => a.AppealerId == userId)
@@ -37,7 +37,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<ModerationAppeal>> GetActionAppealsAsync(Guid moderationActionId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(a => a.Appealer)
                 .Include(a => a.Reviewer)
                 .Where(a => a.ModerationActionId == moderationActionId)
@@ -47,7 +47,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<bool> HasPendingAppealAsync(Guid moderationActionId)
         {
-            return await _dbSet
+            return await dbSet
                 .AnyAsync(a =>
                     a.ModerationActionId == moderationActionId &&
                     a.Status == AppealStatus.Pending);
@@ -57,7 +57,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             DateTime start,
             DateTime end)
         {
-            var stats = await _dbSet
+            var stats = await dbSet
                 .Include(a => a.ModerationAction)
                 .Where(a => a.CreatedAt >= start && a.CreatedAt <= end)
                 .GroupBy(a => a.ModerationAction.ActionType)

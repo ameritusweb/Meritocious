@@ -12,14 +12,14 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
     public class GenericRepository<T> : IRepository<T> where T : class
     {
-        protected readonly MeritociousDbContext _context;
-        protected readonly DbSet<T> _dbSet;
+        protected readonly MeritociousDbContext context;
+        protected readonly DbSet<T> dbSet;
 
         internal MeritociousDbContext DbContext
         {
             get
             {
-                return _context;
+                return context;
             }
         }
 
@@ -27,43 +27,43 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             get
             {
-                return _dbSet;
+                return dbSet;
             }
         }
 
         public GenericRepository(MeritociousDbContext context)
         {
-            _context = context;
-            _dbSet = context.Set<T>();
+            this.context = context;
+            dbSet = context.Set<T>();
         }
 
         public virtual async Task<T> GetByIdAsync(Guid id)
         {
-            return await _dbSet.FindAsync(id);
+            return await dbSet.FindAsync(id);
         }
 
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await dbSet.ToListAsync();
         }
 
         public virtual async Task<T> AddAsync(T entity)
         {
-            await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            await dbSet.AddAsync(entity);
+            await context.SaveChangesAsync();
             return entity;
         }
 
         public virtual async Task UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
+            dbSet.Update(entity);
+            await context.SaveChangesAsync();
         }
 
         public virtual async Task DeleteAsync(T entity)
         {
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
+            dbSet.Remove(entity);
+            await context.SaveChangesAsync();
         }
 
         protected virtual IQueryable<T> GetQueryable(
@@ -71,15 +71,14 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
             string includeProperties = "")
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = dbSet;
 
             if (filter != null)
             {
                 query = query.Where(filter);
             }
 
-            foreach (var includeProperty in includeProperties.Split
-                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var includeProperty in includeProperties.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 query = query.Include(includeProperty);
             }

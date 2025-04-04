@@ -26,7 +26,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             int count = 10,
             string category = null)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(m => m.User);
 
             if (!string.IsNullOrEmpty(category))
@@ -43,7 +43,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<UserReputationMetrics>> GetUsersByLevelAsync(ReputationLevel level)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(m => m.User)
                 .Where(m => m.Level == level)
                 .OrderByDescending(m => m.OverallMeritScore)
@@ -54,7 +54,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             string topic,
             int count = 10)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(m => m.User)
                 .Where(m => m.TopicExpertise.ContainsKey(topic))
                 .OrderByDescending(m => m.TopicExpertise[topic])
@@ -64,7 +64,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<Dictionary<ReputationLevel, int>> GetLevelDistributionAsync()
         {
-            var distribution = await _dbSet
+            var distribution = await dbSet
                 .GroupBy(m => m.Level)
                 .Select(g => new
                 {

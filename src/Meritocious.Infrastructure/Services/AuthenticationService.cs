@@ -11,10 +11,10 @@ namespace Meritocious.Infrastructure.Services
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private readonly UserRepository _userRepository;
-        private readonly ITokenService _tokenService;
-        private readonly GoogleAuthSettings _googleSettings;
-        private readonly ILogger<AuthenticationService> _logger;
+        private readonly UserRepository userRepository;
+        private readonly ITokenService tokenService;
+        private readonly GoogleAuthSettings googleSettings;
+        private readonly ILogger<AuthenticationService> logger;
 
         public AuthenticationService(
             UserRepository userRepository,
@@ -22,10 +22,10 @@ namespace Meritocious.Infrastructure.Services
             IOptions<GoogleAuthSettings> googleSettings,
             ILogger<AuthenticationService> logger)
         {
-            _userRepository = userRepository;
-            _tokenService = tokenService;
-            _googleSettings = googleSettings.Value;
-            _logger = logger;
+            this.userRepository = userRepository;
+            this.tokenService = tokenService;
+            this.googleSettings = googleSettings.Value;
+            this.logger = logger;
         }
 
         public async Task<Result<AuthenticationResult>> AuthenticateGoogleUserAsync(string idToken)
@@ -34,13 +34,13 @@ namespace Meritocious.Infrastructure.Services
             {
                 var settings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { _googleSettings.ClientId }
+                    Audience = new[] { googleSettings.ClientId }
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
 
                 // Check if user exists with this Google ID
-                var externalLogin = await _userRepository.GetExternalLoginAsync("Google", payload.Subject);
+                var externalLogin = await userRepository.GetExternalLoginAsync("Google", payload.Subject);
 
                 if (externalLogin != null)
                 {
@@ -48,23 +48,23 @@ namespace Meritocious.Infrastructure.Services
                     externalLogin.UpdateLoginInfo(
                         payload.Name,
                         payload.Picture,
-                        _tokenService.GenerateRefreshToken(),
+                        tokenService.GenerateRefreshToken(),
                         DateTime.UtcNow.AddDays(30));
 
-                    await _userRepository.UpdateExternalLoginAsync(externalLogin);
+                    await userRepository.UpdateExternalLoginAsync(externalLogin);
 
                     return Result.Success(new AuthenticationResult
                     {
-                        AccessToken = _tokenService.GenerateAccessToken(externalLogin.User),
+                        AccessToken = tokenService.GenerateAccessToken(externalLogin.User),
                         RefreshToken = externalLogin.RefreshToken,
-                        ExpiresAt = _tokenService.GetAccessTokenExpiration(),
+                        ExpiresAt = tokenService.GetAccessTokenExpiration(),
                         User = externalLogin.User.ToDto(),
                         IsNewUser = false
                     });
                 }
 
                 // Check if user exists with this email
-                var user = await _userRepository.GetByEmailAsync(payload.Email);
+                var user = await userRepository.GetByEmailAsync(payload.Email);
                 bool isNewUser = false;
 
                 if (user == null)
@@ -75,7 +75,7 @@ namespace Meritocious.Infrastructure.Services
                         payload.Email,
                         Guid.NewGuid().ToString()); // Random password for external accounts
 
-                    await _userRepository.AddAsync(user);
+                    await userRepository.AddAsync(user);
                     isNewUser = true;
                 }
 
@@ -87,28 +87,28 @@ namespace Meritocious.Infrastructure.Services
                     payload.Email,
                     payload.Name,
                     payload.Picture,
-                    _tokenService.GenerateRefreshToken(),
+                    tokenService.GenerateRefreshToken(),
                     DateTime.UtcNow.AddDays(30));
 
-                await _userRepository.AddExternalLoginAsync(newExternalLogin);
+                await userRepository.AddExternalLoginAsync(newExternalLogin);
 
                 return Result.Success(new AuthenticationResult
                 {
-                    AccessToken = _tokenService.GenerateAccessToken(user),
+                    AccessToken = tokenService.GenerateAccessToken(user),
                     RefreshToken = newExternalLogin.RefreshToken,
-                    ExpiresAt = _tokenService.GetAccessTokenExpiration(),
+                    ExpiresAt = tokenService.GetAccessTokenExpiration(),
                     User = user.ToDto(),
                     IsNewUser = isNewUser
                 });
             }
             catch (InvalidJwtException ex)
             {
-                _logger.LogWarning(ex, "Invalid Google ID token");
+                logger.LogWarning(ex, "Invalid Google ID token");
                 return Result.Failure<AuthenticationResult>("Invalid Google authentication token");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error authenticating Google user");
+                logger.LogError(ex, "Error authenticating Google user");
                 return Result.Failure<AuthenticationResult>("An error occurred during authentication");
             }
         }
@@ -117,7 +117,7 @@ namespace Meritocious.Infrastructure.Services
         {
             try
             {
-                var externalLogin = await _userRepository.GetExternalLoginByRefreshTokenAsync(refreshToken);
+                var externalLogin = await userRepository.GetExternalLoginByRefreshTokenAsync(refreshToken);
 
                 if (externalLogin == null ||
                     externalLogin.RefreshTokenExpiresAt <= DateTime.UtcNow)
@@ -126,27 +126,27 @@ namespace Meritocious.Infrastructure.Services
                 }
 
                 // Generate new tokens
-                var newRefreshToken = _tokenService.GenerateRefreshToken();
+                var newRefreshToken = tokenService.GenerateRefreshToken();
                 externalLogin.UpdateLoginInfo(
                     externalLogin.Name,
                     externalLogin.PictureUrl,
                     newRefreshToken,
                     DateTime.UtcNow.AddDays(30));
 
-                await _userRepository.UpdateExternalLoginAsync(externalLogin);
+                await userRepository.UpdateExternalLoginAsync(externalLogin);
 
                 return Result.Success(new AuthenticationResult
                 {
-                    AccessToken = _tokenService.GenerateAccessToken(externalLogin.User),
+                    AccessToken = tokenService.GenerateAccessToken(externalLogin.User),
                     RefreshToken = newRefreshToken,
-                    ExpiresAt = _tokenService.GetAccessTokenExpiration(),
+                    ExpiresAt = tokenService.GetAccessTokenExpiration(),
                     User = externalLogin.User.ToDto(),
                     IsNewUser = false
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error refreshing token");
+                logger.LogError(ex, "Error refreshing token");
                 return Result.Failure<AuthenticationResult>("An error occurred while refreshing the token");
             }
         }
@@ -155,7 +155,7 @@ namespace Meritocious.Infrastructure.Services
         {
             try
             {
-                var externalLogin = await _userRepository.GetExternalLoginByRefreshTokenAsync(refreshToken);
+                var externalLogin = await userRepository.GetExternalLoginByRefreshTokenAsync(refreshToken);
 
                 if (externalLogin == null)
                 {
@@ -168,12 +168,12 @@ namespace Meritocious.Infrastructure.Services
                     null,
                     null);
 
-                await _userRepository.UpdateExternalLoginAsync(externalLogin);
+                await userRepository.UpdateExternalLoginAsync(externalLogin);
                 return Result.Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error revoking token");
+                logger.LogError(ex, "Error revoking token");
                 return Result.Failure("An error occurred while revoking the token");
             }
         }
@@ -184,19 +184,19 @@ namespace Meritocious.Infrastructure.Services
             {
                 var settings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { _googleSettings.ClientId }
+                    Audience = new[] { googleSettings.ClientId }
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
 
                 // Check if this Google account is already linked to another user
-                var existingLogin = await _userRepository.GetExternalLoginAsync("Google", payload.Subject);
+                var existingLogin = await userRepository.GetExternalLoginAsync("Google", payload.Subject);
                 if (existingLogin != null)
                 {
                     return Result.Failure("This Google account is already linked to another user");
                 }
 
-                var user = await _userRepository.GetByIdAsync(userId);
+                var user = await userRepository.GetByIdAsync(userId);
                 if (user == null)
                 {
                     return Result.Failure("User not found");
@@ -211,20 +211,20 @@ namespace Meritocious.Infrastructure.Services
                     payload.Email,
                     payload.Name,
                     payload.Picture,
-                    _tokenService.GenerateRefreshToken(),
+                    tokenService.GenerateRefreshToken(),
                     DateTime.UtcNow.AddDays(30));
 
-                await _userRepository.AddExternalLoginAsync(newExternalLogin);
+                await userRepository.AddExternalLoginAsync(newExternalLogin);
                 return Result.Success();
             }
             catch (InvalidJwtException ex)
             {
-                _logger.LogWarning(ex, "Invalid Google ID token");
+                logger.LogWarning(ex, "Invalid Google ID token");
                 return Result.Failure("Invalid Google authentication token");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error linking Google account");
+                logger.LogError(ex, "Error linking Google account");
                 return Result.Failure("An error occurred while linking the Google account");
             }
         }
@@ -233,18 +233,18 @@ namespace Meritocious.Infrastructure.Services
         {
             try
             {
-                var externalLogin = await _userRepository.GetExternalLoginByUserIdAsync(userId, "Google");
+                var externalLogin = await userRepository.GetExternalLoginByUserIdAsync(userId, "Google");
                 if (externalLogin == null)
                 {
                     return Result.Failure("No Google account linked to this user");
                 }
 
-                await _userRepository.RemoveExternalLoginAsync(externalLogin);
+                await userRepository.RemoveExternalLoginAsync(externalLogin);
                 return Result.Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error unlinking Google account");
+                logger.LogError(ex, "Error unlinking Google account");
                 return Result.Failure("An error occurred while unlinking the Google account");
             }
         }

@@ -14,10 +14,10 @@ namespace Meritocious.Core.Services
 
     public class CommentService : ICommentService
     {
-        private readonly CommentRepository _commentRepository;
-        private readonly PostRepository _postRepository;
-        private readonly IMeritScorer _meritScorer;
-        private readonly ILogger<CommentService> _logger;
+        private readonly CommentRepository commentRepository;
+        private readonly PostRepository postRepository;
+        private readonly IMeritScorer meritScorer;
+        private readonly ILogger<CommentService> logger;
 
         public CommentService(
             CommentRepository commentRepository,
@@ -25,10 +25,10 @@ namespace Meritocious.Core.Services
             IMeritScorer meritScorer,
             ILogger<CommentService> logger)
         {
-            _commentRepository = commentRepository;
-            _postRepository = postRepository;
-            _meritScorer = meritScorer;
-            _logger = logger;
+            this.commentRepository = commentRepository;
+            this.postRepository = postRepository;
+            this.meritScorer = meritScorer;
+            this.logger = logger;
         }
 
         public async Task<Comment> AddCommentAsync(
@@ -37,21 +37,25 @@ namespace Meritocious.Core.Services
             User author,
             Guid? parentCommentId = null)
         {
-            var post = await _postRepository.GetByIdAsync(postId);
+            var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
+            {
                 throw new KeyNotFoundException("Post not found");
+            }
 
             Comment parentComment = null;
             if (parentCommentId.HasValue)
             {
-                parentComment = await _commentRepository.GetByIdAsync(parentCommentId.Value);
+                parentComment = await commentRepository.GetByIdAsync(parentCommentId.Value);
                 if (parentComment == null)
+                {
                     throw new KeyNotFoundException("Parent comment not found");
+                }
             }
 
             // Validate content quality
-            var contentScore = await _meritScorer.ScoreContentAsync(content);
-            if (!await _meritScorer.ValidateContentAsync(content))
+            var contentScore = await meritScorer.ScoreContentAsync(content);
+            if (!await meritScorer.ValidateContentAsync(content))
             {
                 throw new InvalidOperationException("Comment does not meet quality standards");
             }
@@ -59,19 +63,21 @@ namespace Meritocious.Core.Services
             var comment = Comment.Create(content, post, author, parentComment);
             comment.UpdateMeritScore(contentScore.FinalScore);
 
-            await _commentRepository.AddAsync(comment);
+            await commentRepository.AddAsync(comment);
             return comment;
         }
 
         public async Task<Comment> UpdateCommentAsync(Guid commentId, string content)
         {
-            var comment = await _commentRepository.GetByIdAsync(commentId);
+            var comment = await commentRepository.GetByIdAsync(commentId);
             if (comment == null)
+            {
                 throw new KeyNotFoundException("Comment not found");
+            }
 
             // Validate content quality
-            var contentScore = await _meritScorer.ScoreContentAsync(content);
-            if (!await _meritScorer.ValidateContentAsync(content))
+            var contentScore = await meritScorer.ScoreContentAsync(content);
+            if (!await meritScorer.ValidateContentAsync(content))
             {
                 throw new InvalidOperationException("Comment does not meet quality standards");
             }
@@ -79,28 +85,30 @@ namespace Meritocious.Core.Services
             comment.UpdateContent(content);
             comment.UpdateMeritScore(contentScore.FinalScore);
 
-            await _commentRepository.UpdateAsync(comment);
+            await commentRepository.UpdateAsync(comment);
             return comment;
         }
 
         public async Task DeleteCommentAsync(Guid commentId)
         {
-            var comment = await _commentRepository.GetByIdAsync(commentId);
+            var comment = await commentRepository.GetByIdAsync(commentId);
             if (comment == null)
+            {
                 throw new KeyNotFoundException("Comment not found");
+            }
 
             comment.Delete();
-            await _commentRepository.UpdateAsync(comment);
+            await commentRepository.UpdateAsync(comment);
         }
 
         public async Task<List<Comment>> GetCommentsByPostAsync(Guid postId)
         {
-            return await _commentRepository.GetCommentsByPostAsync(postId);
+            return await commentRepository.GetCommentsByPostAsync(postId);
         }
 
         public async Task<List<Comment>> GetCommentsByUserAsync(Guid userId)
         {
-            return await _commentRepository.GetCommentsByUserAsync(userId);
+            return await commentRepository.GetCommentsByUserAsync(userId);
         }
     }
 }

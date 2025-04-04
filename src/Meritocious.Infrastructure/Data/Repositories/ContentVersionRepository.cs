@@ -28,7 +28,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             ContentType contentType,
             bool includeDiffs = false)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(v => v.Editor)
                 .Where(v => v.ContentId == contentId && v.ContentType == contentType);
 
@@ -47,7 +47,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             ContentType contentType,
             int versionNumber)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(v => v.Editor)
                 .FirstOrDefaultAsync(v =>
                     v.ContentId == contentId &&
@@ -59,7 +59,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(v => v.Editor)
                 .Where(v => v.ContentId == contentId && v.ContentType == contentType)
                 .OrderByDescending(v => v.VersionNumber)
@@ -70,7 +70,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(v => v.Editor)
                 .Where(v =>
                     v.ContentId == contentId &&
@@ -84,7 +84,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid userId,
             DateTime? since = null)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(v => v.Editor)
                 .Where(v => v.EditorId == userId);
 
@@ -100,7 +100,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<ContentDiff> GetVersionDiffAsync(Guid versionId)
         {
-            return await _context.Set<ContentDiff>()
+            return await context.Set<ContentDiff>()
                 .Include(d => d.ContentVersion)
                 .FirstOrDefaultAsync(d => d.ContentVersionId == versionId);
         }
@@ -109,7 +109,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            var maxVersion = await _dbSet
+            var maxVersion = await dbSet
                 .Where(v => v.ContentId == contentId && v.ContentType == contentType)
                 .MaxAsync(v => (int?)v.VersionNumber) ?? 0;
 
@@ -118,8 +118,8 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task SaveDiffAsync(ContentDiff diff)
         {
-            await _context.Set<ContentDiff>().AddAsync(diff);
-            await _context.SaveChangesAsync();
+            await context.Set<ContentDiff>().AddAsync(diff);
+            await context.SaveChangesAsync();
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             ContentType? contentType = null,
             int count = 10)
         {
-            var query = _dbSet.AsQueryable();
+            var query = dbSet.AsQueryable();
 
             if (contentType.HasValue)
             {
@@ -45,12 +45,12 @@ namespace Meritocious.Infrastructure.Data.Repositories
             int count = 10)
         {
             // Join with ContentTopics to find trending content by topic
-            var topicContent = await _context.Set<ContentTopic>()
+            var topicContent = await context.Set<ContentTopic>()
                 .Where(t => t.Topic == topic)
                 .Select(t => t.ContentId)
                 .ToListAsync();
 
-            return await _dbSet
+            return await dbSet
                 .Where(t => topicContent.Contains(t.ContentId) &&
                            t.WindowEnd >= DateTime.UtcNow)
                 .OrderByDescending(t => t.TrendingScore)
@@ -64,7 +64,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             var windowStart = now.Subtract(windowSize);
 
             // Get all content with interactions in the window
-            var interactions = await _context.Set<UserContentInteraction>()
+            var interactions = await context.Set<UserContentInteraction>()
                 .Where(i => i.InteractedAt >= windowStart)
                 .GroupBy(i => new { i.ContentId, i.ContentType })
                 .Select(g => new
@@ -79,7 +79,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
             foreach (var interaction in interactions)
             {
-                var trending = await _dbSet
+                var trending = await dbSet
                     .FirstOrDefaultAsync(t =>
                         t.ContentId == interaction.ContentId &&
                         t.ContentType == interaction.ContentType);
@@ -90,7 +90,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                         interaction.ContentId,
                         interaction.ContentType,
                         windowSize);
-                    await _dbSet.AddAsync(trending);
+                    await dbSet.AddAsync(trending);
                 }
 
                 trending.UpdateMetrics(
@@ -99,7 +99,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                     interaction.AverageMeritScore);
             }
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
 }

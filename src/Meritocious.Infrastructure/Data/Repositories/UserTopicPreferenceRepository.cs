@@ -24,7 +24,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<UserTopicPreference>> GetUserPreferencesAsync(Guid userId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(p => p.User)
                 .Where(p => p.UserId == userId)
                 .OrderByDescending(p => p.Weight)
@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             string topic,
             decimal minWeight = 0.1m)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(p => p.User)
                 .Where(p => p.Topic == topic && p.Weight >= minWeight)
                 .Select(p => p.User)
@@ -46,7 +46,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid userId,
             Dictionary<string, decimal> preferences)
         {
-            var existing = await _dbSet
+            var existing = await dbSet
                 .Where(p => p.UserId == userId)
                 .ToListAsync();
 
@@ -60,13 +60,13 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 }
                 else
                 {
-                    var user = await _context.Users.FindAsync(userId);
+                    var user = await context.Users.FindAsync(userId);
                     var newPref = UserTopicPreference.Create(user, pref.Key, pref.Value);
-                    await _dbSet.AddAsync(newPref);
+                    await dbSet.AddAsync(newPref);
                 }
             }
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
 }

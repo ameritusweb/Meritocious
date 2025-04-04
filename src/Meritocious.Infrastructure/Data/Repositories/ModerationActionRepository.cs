@@ -16,7 +16,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(a => a.Moderator)
                 .Include(a => a.ReviewedBy)
                 .Include(a => a.Effects)
@@ -29,7 +29,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid moderatorId,
             DateTime? since = null)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(a => a.Effects)
                 .Where(a => a.ModeratorId == moderatorId);
 
@@ -45,7 +45,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<ModerationAction>> GetPendingReviewActionsAsync()
         {
-            return await _dbSet
+            return await dbSet
                 .Include(a => a.Moderator)
                 .Include(a => a.Effects)
                 .Where(a => a.Outcome == ModerationDecisionOutcome.Pending)
@@ -57,7 +57,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             ModerationActionType actionType,
             DateTime? since = null)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(a => a.Moderator)
                 .Include(a => a.Effects)
                 .Where(a => a.ActionType == actionType);
@@ -76,7 +76,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _context.Set<ModerationActionEffect>()
+            return await context.Set<ModerationActionEffect>()
                 .Include(e => e.ModerationAction)
                 .Where(e =>
                     e.ModerationAction.ContentId == contentId &&

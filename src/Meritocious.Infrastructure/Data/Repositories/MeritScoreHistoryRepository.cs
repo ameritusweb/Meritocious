@@ -24,7 +24,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(h => h.ContentId == contentId && h.ContentType == contentType)
                 .OrderByDescending(h => h.EvaluatedAt)
                 .ToListAsync();
@@ -34,7 +34,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(h => h.ContentId == contentId && h.ContentType == contentType)
                 .OrderByDescending(h => h.EvaluatedAt)
                 .FirstOrDefaultAsync();
@@ -44,7 +44,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(h =>
                     h.ContentId == contentId &&
                     h.ContentType == contentType &&
@@ -57,7 +57,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             DateTime start,
             DateTime end)
         {
-            var scores = await _dbSet
+            var scores = await dbSet
                 .Where(h => h.EvaluatedAt >= start && h.EvaluatedAt <= end)
                 .SelectMany(h => h.Components)
                 .GroupBy(c => c.Key)

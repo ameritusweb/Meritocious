@@ -26,7 +26,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(t => t.ContentId == contentId && t.ContentType == contentType)
                 .OrderByDescending(t => t.Relevance)
                 .ToListAsync();
@@ -36,7 +36,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             List<Guid> contentIds,
             ContentType contentType)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(t => contentIds.Contains(t.ContentId) && t.ContentType == contentType)
                 .OrderByDescending(t => t.Relevance)
                 .ToListAsync();
@@ -46,7 +46,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
 
-            return await _dbSet
+            return await dbSet
                 .Where(t => t.ExtractedAt >= thirtyDaysAgo)
                 .GroupBy(t => t.Topic)
                 .OrderByDescending(g => g.Count())

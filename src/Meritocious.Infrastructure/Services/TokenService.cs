@@ -11,11 +11,11 @@ namespace Meritocious.Infrastructure.Services
 {
     public class TokenService : ITokenService
     {
-        private readonly JwtSettings _jwtSettings;
+        private readonly JwtSettings jwtSettings;
 
         public TokenService(IOptions<JwtSettings> jwtSettings)
         {
-            _jwtSettings = jwtSettings.Value;
+            this.jwtSettings = jwtSettings.Value;
         }
 
         public string GenerateAccessToken(User user)
@@ -23,18 +23,18 @@ namespace Meritocious.Infrastructure.Services
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Us),
+                new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("merit_score", user.MeritScore.ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
+            var expires = DateTime.UtcNow.AddMinutes(jwtSettings.AccessTokenExpirationMinutes);
 
             var token = new JwtSecurityToken(
-                issuer: _jwtSettings.Issuer,
-                audience: _jwtSettings.Audience,
+                issuer: jwtSettings.Issuer,
+                audience: jwtSettings.Audience,
                 claims: claims,
                 expires: expires,
                 signingCredentials: credentials
@@ -53,22 +53,22 @@ namespace Meritocious.Infrastructure.Services
 
         public DateTime GetAccessTokenExpiration()
         {
-            return DateTime.UtcNow.AddMinutes(_jwtSettings.AccessTokenExpirationMinutes);
+            return DateTime.UtcNow.AddMinutes(jwtSettings.AccessTokenExpirationMinutes);
         }
 
         public ClaimsPrincipal ValidateToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
+            var key = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
 
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = _jwtSettings.Issuer,
+                ValidIssuer = jwtSettings.Issuer,
                 ValidateAudience = true,
-                ValidAudience = _jwtSettings.Audience,
+                ValidAudience = jwtSettings.Audience,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             };

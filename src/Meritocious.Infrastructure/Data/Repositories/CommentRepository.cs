@@ -22,7 +22,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<Comment>> GetCommentsByPostAsync(Guid postId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(c => c.Author)
                 .Include(c => c.Replies)
                 .Where(c => c.PostId == postId && !c.IsDeleted)
@@ -32,7 +32,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<Comment>> GetCommentsByUserAsync(Guid userId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(c => c.Post)
                 .Where(c => c.AuthorId == userId && !c.IsDeleted)
                 .OrderByDescending(c => c.CreatedAt)
@@ -41,7 +41,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<Comment>> GetRepliesAsync(Guid parentCommentId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(c => c.Author)
                 .Where(c => c.ParentCommentId == parentCommentId && !c.IsDeleted)
                 .OrderByDescending(c => c.MeritScore)
@@ -53,7 +53,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
     int? page = null,
     int? pageSize = null)
         {
-            var query = _context.Comments
+            var query = context.Comments
                 .Include(c => c.Author)
                 .Include(c => c.Replies)
                 .Where(c => c.PostId == postId && !c.IsDeleted)
@@ -74,7 +74,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             int? page = null,
             int? pageSize = null)
         {
-            var query = _context.Comments
+            var query = context.Comments
                 .Include(c => c.Author)
                 .Include(c => c.Replies)
                 .Where(c => c.PostId == postId && !c.IsDeleted)
@@ -95,7 +95,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             int? page = null,
             int? pageSize = null)
         {
-            var query = _context.Comments
+            var query = context.Comments
                 .Include(c => c.Author)
                 .Include(c => c.Replies)
                 .Where(c => c.PostId == postId &&

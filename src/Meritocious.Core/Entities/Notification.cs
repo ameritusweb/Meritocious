@@ -18,10 +18,9 @@ public class Notification : BaseEntity
     public string CommentId { get; private set; }
     public Comment Comment { get; private set; }
     
-    public string RemixId { get; private set; }
-    public Remix Remix { get; private set; }
-    
-    private Notification() { }
+    private Notification()
+    {
+    }
     
     public static Notification Create(
         User user,
@@ -40,9 +39,9 @@ public class Notification : BaseEntity
             Title = title,
             Message = message,
             Link = link,
-            PostId = post?.Id,
+            PostId = post?.Id.ToString(),
             Post = post,
-            CommentId = comment?.Id,
+            CommentId = comment?.Id.ToString(),
             Comment = comment,
             IsRead = false,
             CreatedAt = DateTime.UtcNow

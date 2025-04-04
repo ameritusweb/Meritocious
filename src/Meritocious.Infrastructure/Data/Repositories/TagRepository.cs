@@ -25,7 +25,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<Tag> GetBySlugAsync(string slug)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(t => t.ParentTag)
                 .Include(t => t.Synonyms)
                 .Include(t => t.RelatedTags)
@@ -34,7 +34,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<Tag>> GetPopularTagsAsync(int count = 10)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(t => t.Status == TagStatus.Active)
                 .OrderByDescending(t => t.UseCount)
                 .Take(count)
@@ -43,7 +43,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<Tag>> GetTagsByCategoryAsync(TagCategory category)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(t => t.ParentTag)
             .Where(t =>
                     t.Category == category &&
@@ -54,7 +54,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<Tag>> GetChildTagsAsync(Guid parentTagId)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(t =>
                     t.ParentTagId == parentTagId &&
                     t.Status == TagStatus.Active)
@@ -66,7 +66,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             string searchTerm,
             bool includeSynonyms = true)
         {
-            var query = _dbSet.AsQueryable();
+            var query = dbSet.AsQueryable();
 
             if (includeSynonyms)
             {
@@ -89,7 +89,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid tagId,
             TagRelationType? relationType = null)
         {
-            var query = _context.Set<TagRelationship>()
+            var query = context.Set<TagRelationship>()
                 .Include(r => r.RelatedTag)
                 .Where(r =>
                     r.SourceTagId == tagId &&
@@ -106,7 +106,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<Tag>> GetTagsWithMinimumMeritAsync(decimal minMeritScore)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(t =>
                     t.Status == TagStatus.Active &&
                     t.MeritThreshold >= minMeritScore)
@@ -123,7 +123,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<TagSynonym>> GetTagSynonymsAsync(Guid tagId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(s => s.Creator)
                 .Include(s => s.ApprovedBy)
                 .Where(s => s.TagId == tagId)
@@ -133,7 +133,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<TagSynonym>> GetPendingApprovalAsync()
         {
-            return await _dbSet
+            return await dbSet
                 .Include(s => s.Tag)
                 .Include(s => s.Creator)
                 .Where(s => !s.IsApproved)
@@ -143,7 +143,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<TagSynonym> FindSynonymAsync(string name)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(s => s.Tag)
                 .FirstOrDefaultAsync(s =>
                     s.Name.ToLower() == name.ToLower() &&
@@ -161,7 +161,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid tagId,
             bool includeIncoming = true)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(r => r.SourceTag)
                 .Include(r => r.RelatedTag)
                 .Include(r => r.Creator)
@@ -185,7 +185,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<TagRelationship>> GetPendingApprovalAsync()
         {
-            return await _dbSet
+            return await dbSet
                 .Include(r => r.SourceTag)
                 .Include(r => r.RelatedTag)
                 .Include(r => r.Creator)
@@ -197,7 +197,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         public async Task<List<TagRelationship>> GetRelationshipsByTypeAsync(
             TagRelationType relationType)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(r => r.SourceTag)
                 .Include(r => r.RelatedTag)
                 .Where(r =>
@@ -216,7 +216,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<TagWiki>> GetTagWikiHistoryAsync(Guid tagId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(w => w.Editor)
                 .Include(w => w.ApprovedBy)
                 .Where(w => w.TagId == tagId)
@@ -226,7 +226,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<TagWiki> GetLatestWikiVersionAsync(Guid tagId)
         {
-            return await _dbSet
+            return await dbSet
                 .Include(w => w.Editor)
                 .Include(w => w.ApprovedBy)
                 .Where(w => w.TagId == tagId && w.IsApproved)
@@ -236,7 +236,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<TagWiki>> GetPendingApprovalAsync()
         {
-            return await _dbSet
+            return await dbSet
                 .Include(w => w.Tag)
                 .Include(w => w.Editor)
                 .Where(w => !w.IsApproved)
@@ -246,7 +246,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<int> GetNextVersionNumberAsync(Guid tagId)
         {
-            var maxVersion = await _dbSet
+            var maxVersion = await dbSet
                 .Where(w => w.TagId == tagId)
                 .MaxAsync(w => (int?)w.VersionNumber) ?? 0;
 
@@ -257,7 +257,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             int count = 10,
             bool approvedOnly = true)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(w => w.Tag)
                 .Include(w => w.Editor)
                 .Include(w => w.ApprovedBy);

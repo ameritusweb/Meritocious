@@ -5,8 +5,33 @@ using Meritocious.Common.DTOs.Content;
 using Meritocious.AI.SemanticKernel.Interfaces;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.AI.MeritScoring.Interfaces;
+using Meritocious.Core.Events;
 
 namespace Meritocious.Infrastructure.Data.Services;
+
+public interface IRemixService
+{
+    Task<RemixDto> CreateRemixAsync(CreateRemixRequest request);
+    Task<RemixDto> UpdateRemixAsync(Guid remixId, UpdateRemixRequest request);
+    Task<RemixDto> GetRemixByIdAsync(Guid remixId);
+    Task<bool> DeleteRemixAsync(Guid remixId, Guid userId);
+    Task<RemixDto> PublishRemixAsync(Guid remixId, Guid userId);
+    Task<RemixSourceDto> AddSourceAsync(Guid remixId, AddSourceRequest request);
+    Task<bool> RemoveSourceAsync(Guid remixId, Guid sourceId);
+    Task UpdateSourceOrderAsync(Guid remixId, IEnumerable<SourceOrderUpdate> updates);
+    Task<RemixSourceDto> UpdateSourceRelationshipAsync(Guid remixId, Guid sourceId, string relationship);
+    Task AddQuoteToSourceAsync(Guid sourceId, AddQuoteRequest request);
+    Task<IEnumerable<RemixDto>> GetUserRemixesAsync(Guid userId, RemixFilter filter);
+    Task<IEnumerable<RemixDto>> GetRelatedRemixesAsync(Guid remixId, int limit = 5);
+    Task<IEnumerable<RemixDto>> GetTrendingRemixesAsync(int limit = 10);
+    Task RecordEngagementAsync(Guid remixId, RemixEngagementEvent engagementEvent);
+    Task<RemixAnalytics> GetRemixAnalyticsAsync(Guid remixId);
+    Task<IEnumerable<RemixDto>> SearchRemixesAsync(RemixSearchRequest request);
+    Task<IEnumerable<RemixNoteDto>> GenerateInsightsAsync(Guid remixId);
+    Task<string> GenerateSynthesisMapAsync(Guid remixId);
+    Task<IEnumerable<RemixNoteDto>> GetSuggestionsAsync(Guid remixId);
+    Task<RemixScoreResult> CalculateRemixScoreAsync(Guid remixId);
+}
 
 /// <summary>
 /// Service for handling remixes (posts that synthesize content from multiple source posts).
@@ -364,8 +389,7 @@ public class RemixService : IRemixService
         var filtered = posts.Where(p => 
             (!filter.FromDate.HasValue || p.CreatedAt >= filter.FromDate) &&
             (!filter.ToDate.HasValue || p.CreatedAt <= filter.ToDate) &&
-            (!filter.Tags.Any() || p.Tags.Any(t => filter.Tags.Contains(t.Name)))
-        );
+            (!filter.Tags.Any() || p.Tags.Any(t => filter.Tags.Contains(t.Name))));
 
         // Apply sorting
         filtered = filter.SortBy switch
@@ -394,7 +418,7 @@ public class RemixService : IRemixService
         {
             Id = p.Id,
             Title = p.Title,
-            AuthorUsername = p.Author.Username,
+            AuthorUsername = p.Author.UserName,
             MeritScore = p.MeritScore,
             Tags = p.Tags.Select(t => t.Name).ToList()
         });
@@ -418,8 +442,10 @@ public class RemixService : IRemixService
         RemixEngagementEvent engagementEvent)
     {
         var post = await _postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.Type != "remix") 
+        if (post == null || post.Type != "remix")
+        {
             throw new ArgumentException("Remix post not found");
+        }
 
         var engagement = await _postRepository.GetEngagementAsync(remixId);
 

@@ -10,17 +10,17 @@ namespace Meritocious.Infrastructure.Services
 {
     public class RecommendationBackgroundService : BackgroundService
     {
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<RecommendationBackgroundService> _logger;
-        private readonly TimeSpan _trendingUpdateInterval = TimeSpan.FromMinutes(15);
-        private readonly TimeSpan _similarityUpdateInterval = TimeSpan.FromHours(1);
+        private readonly IServiceScopeFactory scopeFactory;
+        private readonly ILogger<RecommendationBackgroundService> logger;
+        private readonly TimeSpan trendingUpdateInterval = TimeSpan.FromMinutes(15);
+        private readonly TimeSpan similarityUpdateInterval = TimeSpan.FromHours(1);
 
         public RecommendationBackgroundService(
             IServiceScopeFactory scopeFactory,
             ILogger<RecommendationBackgroundService> logger)
         {
-            _scopeFactory = scopeFactory;
-            _logger = logger;
+            this.scopeFactory = scopeFactory;
+            this.logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,11 +36,12 @@ namespace Meritocious.Infrastructure.Services
                     await UpdateContentSimilaritiesAsync(stoppingToken);
 
                     // Wait for the next update interval
-                    await Task.Delay(_trendingUpdateInterval, stoppingToken);
+                    await Task.Delay(trendingUpdateInterval, stoppingToken);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    _logger.LogError(ex, "Error updating recommendations");
+                    logger.LogError(ex, "Error updating recommendations");
+
                     // Wait a shorter interval before retrying after error
                     await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
                 }
@@ -49,7 +50,7 @@ namespace Meritocious.Infrastructure.Services
 
         private async Task UpdateTrendingContentAsync(CancellationToken stoppingToken)
         {
-            using var scope = _scopeFactory.CreateScope();
+            using var scope = scopeFactory.CreateScope();
             var trendingRepo = scope.ServiceProvider.GetRequiredService<TrendingContentRepository>();
 
             // Update trending scores for different time windows
@@ -62,23 +63,26 @@ namespace Meritocious.Infrastructure.Services
 
             foreach (var window in windows)
             {
-                if (stoppingToken.IsCancellationRequested) return;
+                if (stoppingToken.IsCancellationRequested)
+                {
+                    return;
+                }
 
                 try
                 {
                     await trendingRepo.RecalculateTrendingScoresAsync(window);
-                    _logger.LogInformation("Updated trending content for {Window} window", window);
+                    logger.LogInformation("Updated trending content for {Window} window", window);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error updating trending content for {Window} window", window);
+                    logger.LogError(ex, "Error updating trending content for {Window} window", window);
                 }
             }
         }
 
         private async Task UpdateContentSimilaritiesAsync(CancellationToken stoppingToken)
         {
-            using var scope = _scopeFactory.CreateScope();
+            using var scope = scopeFactory.CreateScope();
             var similarityRepo = scope.ServiceProvider.GetRequiredService<ContentSimilarityRepository>();
             var threadAnalyzer = scope.ServiceProvider.GetRequiredService<IThreadAnalyzer>();
 
@@ -91,7 +95,10 @@ namespace Meritocious.Infrastructure.Services
 
                 foreach (var pair in contentPairs)
                 {
-                    if (stoppingToken.IsCancellationRequested) return;
+                    if (stoppingToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
                     try
                     {
@@ -101,7 +108,7 @@ namespace Meritocious.Infrastructure.Services
 
                         if (post1 == null || post2 == null)
                         {
-                            _logger.LogWarning("One or both posts not found for pair {Id1}, {Id2}", pair.id1, pair.id2);
+                            logger.LogWarning("One or both posts not found for pair {Id1}, {Id2}", pair.id1, pair.id2);
                             continue;
                         }
 
@@ -121,14 +128,14 @@ namespace Meritocious.Infrastructure.Services
                             record.UpdateScore((decimal)similarity);
                             await similarityRepo.DbContext.SaveChangesAsync();
                             
-                            _logger.LogInformation(
+                            logger.LogInformation(
                                 "Updated similarity score for content pair {Id1}, {Id2} to {Score}",
                                 pair.id1, pair.id2, similarity);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error calculating similarity for content pair {Id1}, {Id2}",
+                        logger.LogError(ex, "Error calculating similarity for content pair {Id1}, {Id2}",
                             pair.id1, pair.id2);
                     }
                 }
@@ -140,7 +147,7 @@ namespace Meritocious.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating content similarities");
+                logger.LogError(ex, "Error updating content similarities");
             }
         }
 
@@ -158,7 +165,7 @@ namespace Meritocious.Infrastructure.Services
                 
                 if (recentPosts.Any())
                 {
-                    _logger.LogInformation("Found {Count} recently modified posts to process", recentPosts.Count);
+                    logger.LogInformation("Found {Count} recently modified posts to process", recentPosts.Count);
                     
                     // Create missing similarity records for new content
                     var recentIds = recentPosts.Select(p => p.Id).ToList();
@@ -185,19 +192,19 @@ namespace Meritocious.Infrastructure.Services
                     }
                     else
                     {
-                        _logger.LogWarning(
+                        logger.LogWarning(
                             "Skipping similarity pair ({Id1}, {Id2}) - one or both posts not found or deleted",
                             pair.id1, pair.id2);
                     }
                 }
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Retrieved {Count} content pairs for similarity update", 
                     results.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving content pairs for similarity update");
+                logger.LogError(ex, "Error retrieving content pairs for similarity update");
             }
 
             return results;

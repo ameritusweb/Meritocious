@@ -26,7 +26,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid userId,
             DateTime? since = null)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(i => i.User)
                 .Where(i => i.UserId == userId);
 
@@ -45,7 +45,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             ContentType contentType,
             DateTime? since = null)
         {
-            var query = _dbSet
+            var query = dbSet
                 .Include(i => i.User)
                 .Where(i => i.ContentId == contentId && i.ContentType == contentType);
 
@@ -61,7 +61,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<Dictionary<string, decimal>> GetUserInteractionPatternsAsync(Guid userId)
         {
-            var interactions = await _dbSet
+            var interactions = await dbSet
                 .Where(i => i.UserId == userId)
                 .GroupBy(i => i.InteractionType)
                 .Select(g => new

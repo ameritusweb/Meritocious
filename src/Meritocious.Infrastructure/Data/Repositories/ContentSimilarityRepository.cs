@@ -27,7 +27,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             Guid contentId,
             decimal minSimilarity = 0.7m)
         {
-            return await _dbSet
+            return await dbSet
                 .Where(s => (s.ContentId1 == contentId || s.ContentId2 == contentId) &&
                            s.SimilarityScore >= minSimilarity)
                 .OrderByDescending(s => s.SimilarityScore)
@@ -36,7 +36,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<decimal> GetContentSimilarityAsync(Guid contentId1, Guid contentId2)
         {
-            var similarity = await _dbSet
+            var similarity = await dbSet
                 .FirstOrDefaultAsync(s =>
                     (s.ContentId1 == contentId1 && s.ContentId2 == contentId2) ||
                     (s.ContentId1 == contentId2 && s.ContentId2 == contentId1));
@@ -46,7 +46,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<(Guid id1, Guid id2)>> GetContentPairsForUpdateAsync(int batchSize = 100)
         {
-            var result = await _dbSet
+            var result = await dbSet
                 .Where(s => s.NeedsUpdate)
                 .OrderByDescending(s => s.UpdatePriority)
                 .ThenBy(s => s.LastUpdated)
@@ -62,7 +62,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         public async Task MarkForUpdateAsync(Guid contentId, int priority = 0)
         {
             // Mark all pairs involving this content
-            var similarities = await _dbSet
+            var similarities = await dbSet
                 .Where(s => s.ContentId1 == contentId || s.ContentId2 == contentId)
                 .ToListAsync();
 
@@ -71,13 +71,13 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 similarity.MarkForUpdate(priority);
             }
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
 
         public async Task MarkOldSimilaritiesForUpdateAsync(TimeSpan age, int priority = 0)
         {
             var cutoff = DateTime.UtcNow - age;
-            var oldSimilarities = await _dbSet
+            var oldSimilarities = await dbSet
                 .Where(s => s.LastUpdated < cutoff && !s.NeedsUpdate)
                 .ToListAsync();
 
@@ -86,13 +86,13 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 similarity.MarkForUpdate(priority);
             }
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
 
         public async Task CreateMissingSimilaritiesAsync(List<Guid> contentIds)
         {
             // Find all existing pairs
-            var existingPairs = await _dbSet
+            var existingPairs = await dbSet
                 .Where(s => contentIds.Contains(s.ContentId1) && contentIds.Contains(s.ContentId2))
                 .Select(s => new { s.ContentId1, s.ContentId2 })
                 .ToListAsync();
@@ -119,8 +119,8 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
             if (newPairs.Any())
             {
-                await _dbSet.AddRangeAsync(newPairs);
-                await _context.SaveChangesAsync();
+                await dbSet.AddRangeAsync(newPairs);
+                await context.SaveChangesAsync();
             }
         }
 
