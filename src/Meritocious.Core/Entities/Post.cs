@@ -15,27 +15,26 @@ namespace Meritocious.Core.Entities
         public User Author { get; private set; }
         public Guid? ParentPostId { get; private set; }
         public Post ParentPost { get; private set; }
-        public decimal MeritScore { get; private set; }
         public bool IsDeleted { get; private set; }
         public string SubstackId { get; private set; }
         public Substack Substack { get; private set; }
 
-        private readonly List<Comment> _comments;
-        public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
+        private readonly List<Comment> comments;
+        public IReadOnlyCollection<Comment> Comments => comments.AsReadOnly();
 
-        private readonly List<Tag> _tags;
-        public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
+        private readonly List<Tag> tags;
+        public IReadOnlyCollection<Tag> Tags => tags.AsReadOnly();
 
-        private readonly List<Note> _notes;
-        public IReadOnlyCollection<Note> Notes => _notes.AsReadOnly();
+        private readonly List<Note> notes;
+        public IReadOnlyCollection<Note> Notes => notes.AsReadOnly();
 
-        private readonly HashSet<PostRelation> _parentRelations = new();
-        private readonly HashSet<PostRelation> _childRelations = new();
-        public IReadOnlyCollection<PostRelation> ParentRelations => _parentRelations;
-        public IReadOnlyCollection<PostRelation> ChildRelations => _childRelations;
+        private readonly HashSet<PostRelation> parentRelations = new();
+        private readonly HashSet<PostRelation> childRelations = new();
+        public IReadOnlyCollection<PostRelation> ParentRelations => parentRelations;
+        public IReadOnlyCollection<PostRelation> ChildRelations => childRelations;
 
-        private readonly Dictionary<string, decimal> _meritComponents = new();
-        public IReadOnlyDictionary<string, decimal> MeritComponents => _meritComponents;
+        private readonly Dictionary<string, decimal> meritComponents = new();
+        public IReadOnlyDictionary<string, decimal> MeritComponents => meritComponents;
 
         // Engagement metrics (moved from RemixEngagement)
         public int ViewCount { get; private set; }
@@ -44,17 +43,52 @@ namespace Meritocious.Core.Entities
         public int ShareCount { get; private set; }
         public decimal AverageTimeSpentSeconds { get; private set; }
 
+        private readonly List<MeritScore> meritScores = new();
+        public IReadOnlyCollection<MeritScore> MeritScores => meritScores.AsReadOnly();
+
+        // Computed total merit score
+        public decimal MeritScore => meritScores.CalculateTotalMeritScore();
+
+        public void AddMeritScore(MeritScoreType scoreType, decimal score)
+        {
+            var existingScore = meritScores.FirstOrDefault(s => s.ScoreTypeId == scoreType.Id);
+            if (existingScore != null)
+            {
+                existingScore.UpdateScore(score);
+            }
+            else
+            {
+                meritScores.Add(Meritocious.Core.Entities.MeritScore.Create(Id, "Post", scoreType, score));
+            }
+
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdateMeritScores(Dictionary<Guid, decimal> scores)
+        {
+            foreach (var (scoreTypeId, score) in scores)
+            {
+                var existingScore = meritScores.FirstOrDefault(s => s.ScoreTypeId == scoreTypeId);
+                if (existingScore != null)
+                {
+                    existingScore.UpdateScore(score);
+                }
+            }
+
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         private Post()
         {
-            _comments = new List<Comment>();
-            _tags = new List<Tag>();
-            _notes = new List<Note>();
+            comments = new List<Comment>();
+            tags = new List<Tag>();
+            notes = new List<Note>();
         }
 
         public void AddNote(string type, string content, List<Guid> relatedSourceIds, decimal confidence)
         {
             var note = Note.Create(this, type, content, relatedSourceIds, confidence);
-            _notes.Add(note);
+            notes.Add(note);
             UpdatedAt = DateTime.UtcNow;
         }
 
@@ -64,13 +98,12 @@ namespace Meritocious.Core.Entities
             {
                 Title = title,
                 Content = content,
-                AuthorId = author.Id,
+                AuthorId = Guid.Parse(author?.Id),
                 Author = author,
                 ParentPostId = parent?.Id,
                 ParentPost = parent,
-                SubstackId = substack?.Id,
+                SubstackId = substack?.Id.ToString(),
                 Substack = substack,
-                MeritScore = 0,
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow
             };
@@ -83,17 +116,11 @@ namespace Meritocious.Core.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void UpdateMeritScore(decimal newScore)
-        {
-            MeritScore = newScore;
-            UpdatedAt = DateTime.UtcNow;
-        }
-
         public void AddTag(Tag tag)
         {
-            if (!_tags.Contains(tag))
+            if (!tags.Contains(tag))
             {
-                _tags.Add(tag);
+                tags.Add(tag);
             }
         }
 
@@ -102,12 +129,11 @@ namespace Meritocious.Core.Entities
             var fork = Create(
                 newTitle ?? $"Fork: {Title}",
                 Content,
-                author
-            );
+                author);
             
             var relation = PostRelation.CreateFork(this, fork);
-            _childRelations.Add(relation);
-            fork._parentRelations.Add(relation);
+            childRelations.Add(relation);
+            fork.parentRelations.Add(relation);
             
             return fork;
         }
@@ -124,8 +150,8 @@ namespace Meritocious.Core.Entities
             foreach (var (source, role, context) in sources)
             {
                 var relation = PostRelation.CreateRemixSource(source, remix, role, index++, context);
-                source._childRelations.Add(relation);
-                remix._parentRelations.Add(relation);
+                source.childRelations.Add(relation);
+                remix.parentRelations.Add(relation);
             }
 
             return remix;
@@ -134,23 +160,15 @@ namespace Meritocious.Core.Entities
         public void RecordView(bool isUnique, decimal timeSpentSeconds)
         {
             ViewCount++;
-            if (isUnique) UniqueViewCount++;
+            if (isUnique)
+            {
+                UniqueViewCount++;
+            }
 
             // Update average time spent
             var oldTotal = AverageTimeSpentSeconds * (ViewCount - 1);
             AverageTimeSpentSeconds = (oldTotal + timeSpentSeconds) / ViewCount;
 
-            UpdatedAt = DateTime.UtcNow;
-        }
-
-        public void UpdateMeritScore(decimal score, Dictionary<string, decimal> components)
-        {
-            MeritScore = score;
-            _meritComponents.Clear();
-            foreach (var (component, value) in components)
-            {
-                _meritComponents[component] = value;
-            }
             UpdatedAt = DateTime.UtcNow;
         }
 
@@ -162,7 +180,11 @@ namespace Meritocious.Core.Entities
 
         public void DecrementLikes()
         {
-            if (LikeCount > 0) LikeCount--;
+            if (LikeCount > 0)
+            {
+                LikeCount--;
+            }
+
             UpdatedAt = DateTime.UtcNow;
         }
 
