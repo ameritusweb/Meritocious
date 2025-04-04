@@ -21,10 +21,26 @@ namespace Meritocious.Common.Extensions
 
         public static string GetMeritLevel(this decimal score)
         {
-            if (score >= MeritScoreConstants.Thresholds.Exceptional) return "Exceptional";
-            if (score >= MeritScoreConstants.Thresholds.HighValue) return "High Value";
-            if (score >= MeritScoreConstants.Thresholds.SolidContribution) return "Solid";
-            if (score >= MeritScoreConstants.Thresholds.BasicMerit) return "Basic";
+            if (score >= MeritScoreConstants.Thresholds.Exceptional)
+            {
+                return "Exceptional";
+            }
+
+            if (score >= MeritScoreConstants.Thresholds.HighValue)
+            {
+                return "High Value";
+            }
+
+            if (score >= MeritScoreConstants.Thresholds.SolidContribution)
+            {
+                return "Solid";
+            }
+
+            if (score >= MeritScoreConstants.Thresholds.BasicMerit)
+            {
+                return "Basic";
+            }
+
             return "Low Signal";
         }
     }

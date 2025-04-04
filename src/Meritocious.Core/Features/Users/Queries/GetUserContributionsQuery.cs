@@ -1,5 +1,6 @@
 using MediatR;
 using Meritocious.Common.DTOs;
+using Meritocious.Common.DTOs.Contributions;
 
 namespace Meritocious.Core.Features.Users.Queries;
 

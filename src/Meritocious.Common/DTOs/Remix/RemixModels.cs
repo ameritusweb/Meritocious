@@ -42,6 +42,8 @@ namespace Meritocious.Common.DTOs.Remix
     {
         public string Text { get; set; }
         public string Context { get; set; }
+        public int StartPosition { get; set; }
+        public int EndPosition { get; set; }
     }
 
     public class RemixFilter
@@ -60,6 +62,8 @@ namespace Meritocious.Common.DTOs.Remix
         public decimal? MinMeritScore { get; set; }
         public string SortBy { get; set; } = "relevance";
         public int? Limit { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
     }
 
     public class RemixScoreResult

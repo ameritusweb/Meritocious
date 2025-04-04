@@ -1,6 +1,7 @@
 using FluentValidation;
 using Meritocious.Core.Interfaces;
 using Meritocious.Common.DTOs.Content;
+using Meritocious.Common.DTOs.Remix;
 
 namespace Meritocious.Core.Validation;
 
@@ -46,33 +47,34 @@ public class UpdateRemixRequestValidator : AbstractValidator<UpdateRemixRequest>
     }
 }
 
-public class AddSourceRequestValidator : AbstractValidator<AddSourceRequest>
-{
-    private readonly IPostRepository _postRepository;
+// TODO: Move Validator
+//public class AddSourceRequestValidator : AbstractValidator<AddSourceRequest>
+//{
+//    private readonly IPostRepository _postRepository;
 
-    public AddSourceRequestValidator(IPostRepository postRepository)
-    {
-        _postRepository = postRepository;
+//    public AddSourceRequestValidator(IPostRepository postRepository)
+//    {
+//        _postRepository = postRepository;
 
-        RuleFor(x => x.PostId)
-            .NotEmpty()
-            .MustAsync(async (id, ct) => await _postRepository.ExistsAsync(id))
-            .WithMessage("Referenced post does not exist");
+//        RuleFor(x => x.PostId)
+//            .NotEmpty()
+//            .MustAsync(async (id, ct) => await _postRepository.ExistsAsync(id))
+//            .WithMessage("Referenced post does not exist");
 
-        RuleFor(x => x.Relationship)
-            .NotEmpty()
-            .Must(r => new[] { "support", "contrast", "example", "question" }.Contains(r.ToLower()))
-            .WithMessage("Invalid relationship type");
+//        RuleFor(x => x.Relationship)
+//            .NotEmpty()
+//            .Must(r => new[] { "support", "contrast", "example", "question" }.Contains(r.ToLower()))
+//            .WithMessage("Invalid relationship type");
 
-        RuleFor(x => x.Context)
-            .MaximumLength(500)
-            .WithMessage("Context should be less than 500 characters");
+//        RuleFor(x => x.Context)
+//            .MaximumLength(500)
+//            .WithMessage("Context should be less than 500 characters");
 
-        RuleFor(x => x.InitialQuotes)
-            .Must(quotes => quotes == null || quotes.Count <= 5)
-            .WithMessage("Cannot add more than 5 initial quotes");
-    }
-}
+//        RuleFor(x => x.InitialQuotes)
+//            .Must(quotes => quotes == null || quotes.Count <= 5)
+//            .WithMessage("Cannot add more than 5 initial quotes");
+//    }
+//}
 
 public class AddQuoteRequestValidator : AbstractValidator<AddQuoteRequest>
 {

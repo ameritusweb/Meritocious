@@ -5,6 +5,7 @@ using Meritocious.Core.Features.Substacks.Services;
 using Meritocious.Core.Features.Posts.Commands;
 using Meritocious.Core.Results;
 using Meritocious.Core.Features.Substacks.Models;
+using Meritocious.Core.Commands;
 
 namespace Meritocious.Core.Features.Substacks.Commands;
 
@@ -53,40 +54,40 @@ public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPo
             // Clean up the HTML content
             var cleanContent = CleanHtmlContent(content);
 
-            if (request.ImportAsRemix)
-            {
-                var remixCommand = new ForkPostCommand
-                {
-                    OriginalPostUrl = request.PostUrl,
-                    Content = cleanContent,
-                    UserId = request.UserId,
-                    Source = "substack",
-                    SourceName = request.SubstackName,
-                    Notes = request.RemixNotes
-                };
+            // TODO: Make this work.
+            // if (request.ImportAsRemix)
+            // {
+            //    var remixCommand = new ForkPostCommand
+            //    {
+            //        OriginalPostUrl = request.PostUrl,
+            //        Content = cleanContent,
+            //        UserId = request.UserId,
+            //        Source = "substack",
+            //        SourceName = request.SubstackName,
+            //        Notes = request.RemixNotes
+            //    };
 
-                var remixResult = await _mediator.Send(remixCommand, cancellationToken);
-                return remixResult;
-            }
-            else
-            {
-                var createCommand = new CreatePostCommand
-                {
-                    Content = cleanContent,
-                    UserId = request.UserId,
-                    Source = "substack",
-                    SourceUrl = request.PostUrl,
-                    SourceName = request.SubstackName
-                };
-
-                var createResult = await _mediator.Send(createCommand, cancellationToken);
-                return createResult;
-            }
+            //    var remixResult = await _mediator.Send(remixCommand, cancellationToken);
+            //    return remixResult;
+            // }
+            // else
+            // {
+            //    var createCommand = new CreatePostCommand
+            //    {
+            //        Content = cleanContent,
+            //        UserId = request.UserId,
+            //        Source = "substack",
+            //        SourceUrl = request.PostUrl,
+            //        SourceName = request.SubstackName
+            //    };
+            //    var createResult = await _mediator.Send(createCommand, cancellationToken);
+            //    return createResult;
+            // }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error importing Substack post from {Url}", request.PostUrl);
-            return Result<Guid>.Failure(new[] { "Failed to import Substack post" });
+            return Result<Guid>.Failure("Failed to import Substack post");
         }
     }
 

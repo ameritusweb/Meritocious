@@ -1,3 +1,4 @@
+using Meritocious.Core.Features.Recommendations.Models;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 

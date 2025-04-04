@@ -1,5 +1,6 @@
 using MediatR;
 using Meritocious.Common.DTOs.Auth;
+using Meritocious.Core.Results;
 
 namespace Meritocious.Core.Features.Merit.Queries
 {
