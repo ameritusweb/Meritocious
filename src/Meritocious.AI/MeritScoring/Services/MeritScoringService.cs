@@ -16,10 +16,10 @@ namespace Meritocious.AI.MeritScoring.Services
 {
     public class MeritScoringService : IMeritScorer
     {
-        private readonly IKernelBuilder _semanticKernelBuilder;
-        private readonly ILogger<MeritScoringService> _logger;
-        private readonly AIServiceConfiguration _config;
-        private readonly IContentModerator _contentModerator;
+        private readonly IKernelBuilder semanticKernelBuilder;
+        private readonly ILogger<MeritScoringService> logger;
+        private readonly AIServiceConfiguration config;
+        private readonly IContentModerator contentModerator;
 
         public MeritScoringService(
             IKernelBuilder semanticKernelBuilder,
@@ -27,16 +27,16 @@ namespace Meritocious.AI.MeritScoring.Services
             IOptions<AIServiceConfiguration> config,
             ILogger<MeritScoringService> logger)
         {
-            _semanticKernelBuilder = semanticKernelBuilder;
-            _contentModerator = contentModerator;
-            _config = config.Value;
-            _logger = logger;
+            this.semanticKernelBuilder = semanticKernelBuilder;
+            this.contentModerator = contentModerator;
+            this.config = config.Value;
+            this.logger = logger;
         }
 
         private Kernel CreateKernel()
         {
             // Create a new kernel using the builder
-            var kernel = _semanticKernelBuilder.Build();
+            var kernel = semanticKernelBuilder.Build();
             return kernel;
         }
 
@@ -89,7 +89,7 @@ namespace Meritocious.AI.MeritScoring.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error calculating merit score for content");
+                logger.LogError(ex, "Error calculating merit score for content");
                 throw;
             }
         }
@@ -113,8 +113,7 @@ namespace Meritocious.AI.MeritScoring.Services
                 readabilityMetrics.score * 0.3m +
                 structureScore * 0.3m +
                 technicalScore.score * 0.2m +
-                grammarScore.score * 0.2m
-            );
+                grammarScore.score * 0.2m);
 
             var explanation = $"Readability: {readabilityMetrics.explanation}. " +
                             $"Structure: {structureScore.explanation}. " +
@@ -151,8 +150,7 @@ namespace Meritocious.AI.MeritScoring.Services
             decimal noveltyScore = (
                 (1 - similarityScore) * 0.4m +
                 uniqueConceptsScore * 0.4m +
-                informationDensityScore * 0.2m
-            );
+                informationDensityScore * 0.2m);
 
             string explanation = $"Content originality: {(1 - similarityScore):P}. " +
                                $"Unique concepts: {uniqueConceptsScore:P}. " +
@@ -198,7 +196,7 @@ namespace Meritocious.AI.MeritScoring.Services
         private async Task<(decimal score, string explanation)> CalculateCivilityScoreAsync(string content)
         {
             // 1. Get toxicity scores from content moderator
-            var toxicityScores = await _contentModerator.GetToxicityScoresAsync(content);
+            var toxicityScores = await contentModerator.GetToxicityScoresAsync(content);
 
             // 2. Analyze tone and respect
             var toneScore = await AnalyzeToneAsync(content);
@@ -217,8 +215,7 @@ namespace Meritocious.AI.MeritScoring.Services
                 baseCivility * 0.4m +
                 toneScore * 0.2m +
                 constructiveScore * 0.2m +
-                empathyScore * 0.2m
-            );
+                empathyScore * 0.2m);
 
             string explanation = $"Content civility: {baseCivility:P}. " +
                                $"Tone: {toneScore:P}. " +
@@ -505,8 +502,7 @@ namespace Meritocious.AI.MeritScoring.Services
             {
                 citations.AddRange(
                     Regex.Matches(content, pattern)
-                        .Select(m => m.Groups[1].Value)
-                );
+                        .Select(m => m.Groups[1].Value));
             }
 
             return citations.Distinct().ToList();
@@ -533,7 +529,10 @@ namespace Meritocious.AI.MeritScoring.Services
 
         private async Task<decimal> EvaluateSourceCredibilityAsync(List<string> citations)
         {
-            if (!citations.Any()) return 0.5m;
+            if (!citations.Any())
+            {
+                return 0.5m;
+            }
 
             var credibilityPrompt = @"Evaluate the credibility of these sources:
                                   {{$citations}}

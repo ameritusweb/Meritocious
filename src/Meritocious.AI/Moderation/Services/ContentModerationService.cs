@@ -11,24 +11,24 @@ namespace Meritocious.AI.Moderation.Services
 {
     public class ContentModerationService : IContentModerator
     {
-        private readonly IKernelBuilder _semanticKernelBuilder;
-        private readonly ILogger<ContentModerationService> _logger;
-        private readonly AIServiceConfiguration _config;
+        private readonly IKernelBuilder semanticKernelBuilder;
+        private readonly ILogger<ContentModerationService> logger;
+        private readonly AIServiceConfiguration config;
 
         public ContentModerationService(
             IKernelBuilder semanticKernelBuilder,
             IOptions<AIServiceConfiguration> config,
             ILogger<ContentModerationService> logger)
         {
-            _semanticKernelBuilder = semanticKernelBuilder;
-            _config = config.Value;
-            _logger = logger;
+            this.semanticKernelBuilder = semanticKernelBuilder;
+            this.config = config.Value;
+            this.logger = logger;
         }
 
         private Kernel CreateKernel()
         {
             // Create a new kernel using the builder
-            var kernel = _semanticKernelBuilder.Build();
+            var kernel = semanticKernelBuilder.Build();
             return kernel;
         }
 
@@ -81,7 +81,7 @@ namespace Meritocious.AI.Moderation.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error evaluating content for moderation");
+                logger.LogError(ex, "Error evaluating content for moderation");
                 return ModerationActionType.RequireReview;
             }
         }
@@ -125,7 +125,7 @@ namespace Meritocious.AI.Moderation.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error calculating toxicity scores");
+                logger.LogError(ex, "Error calculating toxicity scores");
                 return new Dictionary<string, decimal>
                 {
                     ["toxicity"] = 0.5m,

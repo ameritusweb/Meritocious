@@ -189,7 +189,9 @@ namespace Meritocious.AI.Recommendations.Services
                 {
                     // Skip if user has already interacted
                     if (userProfile.InteractionHistory.Any(h => h.ContentId == content.ContentId))
+                    {
                         continue;
+                    }
 
                     // Calculate content relevance based on topic preference
                     var relevanceScore = CalculateContentRelevance(content, userProfile);
