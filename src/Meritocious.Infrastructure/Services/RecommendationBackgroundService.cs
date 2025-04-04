@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Meritocious.Infrastructure.Data.Repositories;
@@ -110,7 +111,7 @@ namespace Meritocious.Infrastructure.Services
                             post2.Content);
 
                         // Update the similarity record
-                        var record = await similarityRepo._dbSet
+                        var record = await similarityRepo.DbSet
                             .FirstOrDefaultAsync(s => 
                                 (s.ContentId1 == pair.id1 && s.ContentId2 == pair.id2) ||
                                 (s.ContentId1 == pair.id2 && s.ContentId2 == pair.id1));
@@ -118,7 +119,7 @@ namespace Meritocious.Infrastructure.Services
                         if (record != null)
                         {
                             record.UpdateScore((decimal)similarity);
-                            await similarityRepo._context.SaveChangesAsync();
+                            await similarityRepo.DbContext.SaveChangesAsync();
                             
                             _logger.LogInformation(
                                 "Updated similarity score for content pair {Id1}, {Id2} to {Score}",

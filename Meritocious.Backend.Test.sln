@@ -3,12 +3,55 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "mock-frontend", "src\mock-frontend\mock-frontend.esproj", "{B9EF9D53-B44E-927F-40D5-13E566DED116}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meritocious.Web", "src\Meritocious.Web\Meritocious.Web.csproj", "{785EE4D9-EE21-97FA-7407-AB86357121B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meritocious.AI", "src\Meritocious.AI\Meritocious.AI.csproj", "{4DAC7A2A-D898-900A-5DDF-1A00DB48DDC1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meritocious.Common", "src\Meritocious.Common\Meritocious.Common.csproj", "{1517BC8D-6500-F526-3BF7-15DA2DCDD7EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meritocious.Core", "src\Meritocious.Core\Meritocious.Core.csproj", "{88C91351-F749-51E2-AE74-95EC452AF908}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meritocious.Infrastructure", "src\Meritocious.Infrastructure\Meritocious.Infrastructure.csproj", "{36A2322B-0203-02E0-2B05-4E8F96B610E9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B9EF9D53-B44E-927F-40D5-13E566DED116}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9EF9D53-B44E-927F-40D5-13E566DED116}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9EF9D53-B44E-927F-40D5-13E566DED116}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{B9EF9D53-B44E-927F-40D5-13E566DED116}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9EF9D53-B44E-927F-40D5-13E566DED116}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9EF9D53-B44E-927F-40D5-13E566DED116}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{785EE4D9-EE21-97FA-7407-AB86357121B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{785EE4D9-EE21-97FA-7407-AB86357121B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{785EE4D9-EE21-97FA-7407-AB86357121B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{785EE4D9-EE21-97FA-7407-AB86357121B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DAC7A2A-D898-900A-5DDF-1A00DB48DDC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DAC7A2A-D898-900A-5DDF-1A00DB48DDC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DAC7A2A-D898-900A-5DDF-1A00DB48DDC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DAC7A2A-D898-900A-5DDF-1A00DB48DDC1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1517BC8D-6500-F526-3BF7-15DA2DCDD7EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1517BC8D-6500-F526-3BF7-15DA2DCDD7EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1517BC8D-6500-F526-3BF7-15DA2DCDD7EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1517BC8D-6500-F526-3BF7-15DA2DCDD7EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88C91351-F749-51E2-AE74-95EC452AF908}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88C91351-F749-51E2-AE74-95EC452AF908}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88C91351-F749-51E2-AE74-95EC452AF908}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88C91351-F749-51E2-AE74-95EC452AF908}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36A2322B-0203-02E0-2B05-4E8F96B610E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36A2322B-0203-02E0-2B05-4E8F96B610E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36A2322B-0203-02E0-2B05-4E8F96B610E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36A2322B-0203-02E0-2B05-4E8F96B610E9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2FA442CB-23B7-49EF-BA2D-2A457C9C0DF0}
 	EndGlobalSection
 EndGlobal

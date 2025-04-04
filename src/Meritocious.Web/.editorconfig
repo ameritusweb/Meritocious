@@ -1,0 +1,59 @@
+﻿<rules>
+
+	[*.{cs,vb}]
+	#### Naming styles ####
+
+	# Naming rules
+
+	# Disable all StyleCop rules (by severity)
+	dotnet_analyzer_diagnostic.severity = none
+
+	dotnet_diagnostic.SA1000.severity = error
+	dotnet_diagnostic.SA1001.severity = error
+	dotnet_diagnostic.SA1002.severity = error
+	dotnet_diagnostic.SA1003.severity = error
+	dotnet_diagnostic.SA1004.severity = error
+	dotnet_diagnostic.SA1005.severity = error
+	dotnet_diagnostic.SA1006.severity = error
+	dotnet_diagnostic.SA1007.severity = error
+	dotnet_diagnostic.SA1008.severity = error
+	dotnet_diagnostic.SA1009.severity = error
+	dotnet_diagnostic.SA1010.severity = error
+	dotnet_diagnostic.SA1011.severity = error
+	dotnet_diagnostic.SA1012.severity = error
+	dotnet_diagnostic.SA1013.severity = error
+	dotnet_diagnostic.SA1014.severity = error
+	dotnet_diagnostic.SA1015.severity = error
+	dotnet_diagnostic.SA1016.severity = error
+	dotnet_diagnostic.SA1017.severity = error
+	dotnet_diagnostic.SA1018.severity = error
+	dotnet_diagnostic.SA1019.severity = error
+	dotnet_diagnostic.SA1023.severity = error
+	dotnet_diagnostic.SA1028.severity = silent
+	dotnet_diagnostic.SA1101.severity = silent
+	dotnet_diagnostic.SA1110.severity = error
+	dotnet_diagnostic.SA1121.severity = error
+	dotnet_diagnostic.SA1200.severity = silent
+	dotnet_diagnostic.SA1300.severity = error
+	dotnet_diagnostic.SA1302.severity = error
+	dotnet_diagnostic.SA1309.severity = error
+	dotnet_diagnostic.SA1401.severity = error
+	dotnet_diagnostic.SA1500.severity = error
+	dotnet_diagnostic.SA1501.severity = error
+	dotnet_diagnostic.SA1502.severity = error
+	dotnet_diagnostic.SA1503.severity = error
+	dotnet_diagnostic.SA1504.severity = error
+	dotnet_diagnostic.SA1505.severity = error
+	dotnet_diagnostic.SA1506.severity = error
+	dotnet_diagnostic.SA1507.severity = error
+	dotnet_diagnostic.SA1508.severity = error
+	dotnet_diagnostic.SA1509.severity = error
+	dotnet_diagnostic.SA1510.severity = error
+	dotnet_diagnostic.SA1511.severity = error
+	dotnet_diagnostic.SA1512.severity = error
+	dotnet_diagnostic.SA1513.severity = error
+	dotnet_diagnostic.SA1514.severity = error
+	dotnet_diagnostic.SA1515.severity = error
+	dotnet_diagnostic.SA1516.severity = silent
+
+</rules>

@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.Enums;
+using Meritocious.Core.Features.Recommendations.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

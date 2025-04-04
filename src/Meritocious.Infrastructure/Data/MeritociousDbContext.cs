@@ -2,20 +2,29 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Features.Recommendations.Models;
+using ContentSimilarity = Meritocious.Core.Entities.ContentSimilarity;
 
 namespace Meritocious.Infrastructure.Data
 {
     public class MeritociousDbContext : IdentityDbContext<User>
     {
         // Original entities
-        public DbSet<User> Users { get; set; }
+        public override DbSet<User> Users { get; set; }
         public DbSet<Post> Posts { get; set; }
+        public DbSet<PostRelation> PostRelations { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<ExternalLogin> ExternalLogins { get; set; }
 
+        // Recommendations
+        public DbSet<UserContentInteraction> UserContentInteractions { get; set; }
+        public DbSet<ContentTopic> ContentTopics { get; set; }
+        public DbSet<UserTopicPreference> UserTopicPreferences { get; set; }
+        public DbSet<ContentSimilarity> ContentSimilarities { get; set; }
+        public DbSet<TrendingContent> TrendingContents { get; set; }
+
         // Content versioning
         public DbSet<ContentVersion> ContentVersions { get; set; }
-        public DbSet<ContentSimilarity> ContentSimilarities { get; set; }
 
         // Moderation
         public DbSet<ModerationAction> ModerationActions { get; set; }
@@ -40,10 +49,6 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<TagWiki> TagWikis { get; set; }
 
         // Remixes
-        public DbSet<Remix> Remixes { get; set; }
-        public DbSet<RemixNote> RemixNotes { get; set; }
-        public DbSet<RemixSource> RemixSources { get; set; }
-        public DbSet<RemixEngagement> RemixEngagements { get; set; }
         public DbSet<QuoteLocation> QuoteLocations { get; set; }
 
         // Security

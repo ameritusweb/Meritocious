@@ -30,8 +30,7 @@ public class Notification : BaseEntity
         string message,
         string link = null,
         Post post = null,
-        Comment comment = null,
-        Remix remix = null)
+        Comment comment = null)
     {
         return new Notification
         {
@@ -45,8 +44,6 @@ public class Notification : BaseEntity
             Post = post,
             CommentId = comment?.Id,
             Comment = comment,
-            RemixId = remix?.Id,
-            Remix = remix,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };

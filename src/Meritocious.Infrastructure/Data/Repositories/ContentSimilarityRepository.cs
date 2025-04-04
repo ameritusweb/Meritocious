@@ -7,6 +7,16 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
+    public interface IContentSimilarityRepository
+    {
+        Task<List<ContentSimilarity>> GetSimilarContentAsync(Guid contentId, decimal minSimilarity = 0.7m);
+        Task<decimal> GetContentSimilarityAsync(Guid contentId1, Guid contentId2);
+        Task<List<(Guid id1, Guid id2)>> GetContentPairsForUpdateAsync(int batchSize = 100);
+        Task MarkForUpdateAsync(Guid contentId, int priority = 0);
+        Task MarkOldSimilaritiesForUpdateAsync(TimeSpan age, int priority = 0);
+        Task CreateMissingSimilaritiesAsync(List<Guid> contentIds);
+    }
+
     public class ContentSimilarityRepository : GenericRepository<ContentSimilarity>
     {
         public ContentSimilarityRepository(MeritociousDbContext context) : base(context)
@@ -36,15 +46,17 @@ namespace Meritocious.Infrastructure.Data.Repositories
 
         public async Task<List<(Guid id1, Guid id2)>> GetContentPairsForUpdateAsync(int batchSize = 100)
         {
-            return await _dbSet
+            var result = await _dbSet
                 .Where(s => s.NeedsUpdate)
                 .OrderByDescending(s => s.UpdatePriority)
                 .ThenBy(s => s.LastUpdated)
                 .Select(s => new { s.ContentId1, s.ContentId2 })
                 .Take(batchSize)
                 .AsNoTracking()
-                .Select(x => (x.ContentId1, x.ContentId2))
                 .ToListAsync();
+
+            return result.Select(x => (x.ContentId1, x.ContentId2))
+                .ToList();
         }
 
         public async Task MarkForUpdateAsync(Guid contentId, int priority = 0)

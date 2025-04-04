@@ -4,7 +4,17 @@ namespace Meritocious.Infrastructure.Data.Repositories
     using Microsoft.EntityFrameworkCore;
     using Meritocious.Core.Entities;
 
-    public class CommentRepository : GenericRepository<Comment>
+    public interface ICommentRepository
+    {
+        Task<List<Comment>> GetCommentsByPostAsync(Guid postId);
+        Task<List<Comment>> GetCommentsByUserAsync(Guid userId);
+        Task<List<Comment>> GetRepliesAsync(Guid parentCommentId);
+        Task<List<Comment>> GetCommentsByPostOrderedByMeritAsync(Guid postId, int? page = null, int? pageSize = null);
+        Task<List<Comment>> GetCommentsByPostOrderedByDateAsync(Guid postId, int? page = null, int? pageSize = null);
+        Task<List<Comment>> GetCommentsByPostThreadedAsync(Guid postId, int? page = null, int? pageSize = null);
+    }
+
+    public class CommentRepository : GenericRepository<Comment>, ICommentRepository
     {
         public CommentRepository(MeritociousDbContext context) : base(context)
         {
