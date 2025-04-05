@@ -23,7 +23,7 @@ public class Notification : BaseEntity
     }
     
     public static Notification Create(
-        User user,
+        string userId,
         string type,
         string title,
         string message,
@@ -33,8 +33,7 @@ public class Notification : BaseEntity
     {
         return new Notification
         {
-            UserId = user.Id,
-            User = user,
+            UserId = userId,
             Type = type,
             Title = title,
             Message = message,

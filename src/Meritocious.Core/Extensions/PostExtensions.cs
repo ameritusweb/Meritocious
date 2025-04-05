@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.DTOs.Content;
+using Meritocious.Common.DTOs.Merit;
 using Meritocious.Core.Entities;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,17 @@ namespace Meritocious.Core.Extensions
                 ParentPostId = post.ParentPostId,
                 MeritScore = post.MeritScore,
                 Tags = post.Tags?.Select(t => t.Name).ToList() ?? new List<string>()
+            };
+        }
+
+        public static MeritScoreDto ToMeritScoreDto(this Post post)
+        {
+            return new MeritScoreDto
+            {
+                UserId = post.AuthorId,
+                CurrentScore = post.MeritScore,
+                LastCalculated = post.UpdatedAt ?? DateTime.UtcNow,
+                ScoreHistory = post.MeritScoreHistories.Select(h => h.ToDto()).ToList()
             };
         }
 

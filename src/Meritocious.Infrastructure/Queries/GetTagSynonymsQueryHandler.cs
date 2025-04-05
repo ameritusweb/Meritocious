@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetTagSynonymsQueryHandler : IRequestHandler<GetTagSynonymsQuery, IEnumerable<TagSynonymDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetTagSynonymsQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<TagSynonymDto>> Handle(GetTagSynonymsQuery request, CancellationToken cancellationToken)
     {
-        return await _context.TagSynonyms
+        return await context.TagSynonyms
             .Where(s => s.SourceTagId == request.TagId || s.TargetTagId == request.TagId)
             .Select(s => new TagSynonymDto
             {

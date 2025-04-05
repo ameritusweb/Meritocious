@@ -12,15 +12,15 @@ namespace Meritocious.Infrastructure.Queries
     public class GetModerationHistoryQueryHandler
     : IRequestHandler<GetModerationHistoryQuery, Result<List<ModerationHistoryDto>>>
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<GetModerationHistoryQueryHandler> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<GetModerationHistoryQueryHandler> logger;
 
         public GetModerationHistoryQueryHandler(
             MeritociousDbContext context,
             ILogger<GetModerationHistoryQueryHandler> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<Result<List<ModerationHistoryDto>>> Handle(
@@ -30,7 +30,7 @@ namespace Meritocious.Infrastructure.Queries
             try
             {
                 // Get content moderation events
-                var moderationEvents = await _context.ContentModerationEvents
+                var moderationEvents = await context.ContentModerationEvents
                     .Include(e => e.Moderator)
                     .Where(e => e.ContentId == request.ContentId &&
                                e.ContentType == request.ContentType)
@@ -38,7 +38,7 @@ namespace Meritocious.Infrastructure.Queries
                     .ToListAsync(cancellationToken);
 
                 // Get merit score history
-                var meritScoreHistory = await _context.MeritScoreHistory
+                var meritScoreHistory = await context.MeritScoreHistory
                     .Where(h => h.ContentId == request.ContentId &&
                                h.ContentType == request.ContentType)
                     .OrderByDescending(h => h.UpdatedAt)
@@ -65,7 +65,7 @@ namespace Meritocious.Infrastructure.Queries
                         Action = evt.Action.ToDto(),
                         Reason = evt.Reason,
                         IsAutomated = evt.IsAutomated,
-                        ModeratorUsername = evt.Moderator?.Username ?? "System",
+                        ModeratorUsername = evt.Moderator?.UserName ?? "System",
                         MeritScoreBefore = meritBefore,
                         MeritScoreAfter = meritAfter
                     });
@@ -75,7 +75,7 @@ namespace Meritocious.Infrastructure.Queries
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting moderation history for content {ContentId}",
+                logger.LogError(ex, "Error getting moderation history for content {ContentId}",
                     request.ContentId);
                 return Result.Failure<List<ModerationHistoryDto>>(
                     "Error retrieving moderation history");

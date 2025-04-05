@@ -18,5 +18,6 @@ namespace Meritocious.Core.Interfaces
         Task UpdateUserProfileAsync(Guid userId, UserProfileDto profile);
         Task UpdateUserMeritScoreAsync(Guid userId, decimal newScore);
         Task<bool> ValidateUserCredentialsAsync(string email, string password);
+        Task<IEnumerable<User>> GetModeratorsAsync();
     }
 }

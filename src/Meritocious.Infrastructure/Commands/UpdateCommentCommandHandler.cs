@@ -11,18 +11,18 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class UpdateCommentCommandHandler : IRequestHandler<UpdateCommentCommand, Result<CommentDto>>
     {
-        private readonly ICommentService _commentService;
-        private readonly CommentRepository _commentRepository;
-        private readonly IMediator _mediator;
+        private readonly ICommentService commentService;
+        private readonly CommentRepository commentRepository;
+        private readonly IMediator mediator;
 
         public UpdateCommentCommandHandler(
             ICommentService commentService,
             CommentRepository commentRepository,
             IMediator mediator)
         {
-            _commentService = commentService;
-            _commentRepository = commentRepository;
-            _mediator = mediator;
+            this.commentService = commentService;
+            this.commentRepository = commentRepository;
+            this.mediator = mediator;
         }
 
         public async Task<Result<CommentDto>> Handle(UpdateCommentCommand request, CancellationToken cancellationToken)
@@ -30,19 +30,22 @@ namespace Meritocious.Infrastructure.Commands
             try
             {
                 // Verify the comment exists and the editor is the author
-                var comment = await _commentRepository.GetByIdAsync(request.CommentId);
+                var comment = await commentRepository.GetByIdAsync(request.CommentId);
                 if (comment == null)
+                {
                     return Result.Failure<CommentDto>($"Comment {request.CommentId} not found");
+                }
 
                 if (comment.AuthorId != request.EditorId)
+                {
                     return Result.Failure<CommentDto>("Only the author can edit this comment");
+                }
 
                 // Update comment
-                var updatedComment = await _commentService.UpdateCommentAsync(request.CommentId, request.Content);
+                var updatedComment = await commentService.UpdateCommentAsync(request.CommentId, request.Content);
 
                 // Publish event (could add a CommentUpdatedEvent)
                 // await _mediator.Publish(new CommentUpdatedEvent(comment.Id, request.EditorId), cancellationToken);
-
                 return Result.Success(updatedComment.ToDto());
             }
             catch (Exception ex)

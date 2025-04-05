@@ -7,31 +7,37 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class FollowTagCommandHandler : IRequestHandler<FollowTagCommand, bool>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public FollowTagCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<bool> Handle(FollowTagCommand request, CancellationToken cancellationToken)
     {
-        var user = await _context.Users
+        var user = await context.Users
             .Include(u => u.FollowedTags)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
-        if (user == null) return false;
+        if (user == null)
+        {
+            return false;
+        }
 
-        var tag = await _context.Tags
-            .FirstOrDefaultAsync(t => t.Id == request.TagId, cancellationToken);
+        var tag = await context.Tags
+            .FirstOrDefaultAsync(t => t.Id.ToString() == request.TagId, cancellationToken);
 
-        if (tag == null) return false;
+        if (tag == null)
+        {
+            return false;
+        }
 
         if (!user.FollowedTags.Contains(tag))
         {
             user.FollowedTags.Add(tag);
             tag.FollowerCount++;
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
         return true;

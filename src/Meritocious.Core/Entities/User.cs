@@ -11,17 +11,32 @@ namespace Meritocious.Core.Entities
     public class User : IdentityUser
     {
         public decimal MeritScore { get; private set; }
+        public DateTime? LastCalculated { get; private set; }
         public DateTime? LastLoginAt { get; private set; }
         public bool IsActive { get; private set; }
         public DateTime CreatedAt { get; private set; }
         public DateTime UpdatedAt { get; private set; }
         public string AvatarUrl { get; set; }
+        public string DisplayName { get; set; }
+        public string Bio { get; set; }
+        public bool EmailNotificationsEnabled { get; set; }
+        public bool PublicProfile { get; set; }
+        public List<string> PreferredTags { get; set; } = new();
+        public string TimeZone { get; set; }
+        public string Language { get; set; }
+        public bool IsLocked { get; set; }
+        public bool IsEmailVerified { get; set; }
+        public DateTime? LastActivityAt { get; set; }
+        public DateTime? LastActiveAt { get; set; }
+        public virtual ICollection<Tag> FollowedTags { get; set; } = new List<Tag>();
 
         private readonly List<Post> posts;
         public IReadOnlyCollection<Post> Posts => posts.AsReadOnly();
 
         private readonly List<Comment> comments;
         public IReadOnlyCollection<Comment> Comments => comments.AsReadOnly();
+        private readonly List<MeritScoreHistory> meritScoreHistories;
+        public IReadOnlyCollection<MeritScoreHistory> MeritScoreHistories  => meritScoreHistories.AsReadOnly();
 
         private readonly List<Substack> followedSubstacks;
         public IReadOnlyCollection<Substack> FollowedSubstacks => followedSubstacks.AsReadOnly();

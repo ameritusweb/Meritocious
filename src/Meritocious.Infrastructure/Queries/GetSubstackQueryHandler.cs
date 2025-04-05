@@ -19,7 +19,7 @@ public class GetSubstackQueryHandler : IRequestHandler<GetSubstackQuery, Substac
     public async Task<SubstackDto> Handle(GetSubstackQuery request, CancellationToken cancellationToken)
     {
         var substack = await _context.Substacks
-            .Where(s => s.Id == request.SubstackId)
+            .Where(s => s.Id.ToString() == request.SubstackId)
             .Select(s => new SubstackDto
             {
                 Id = s.Id,

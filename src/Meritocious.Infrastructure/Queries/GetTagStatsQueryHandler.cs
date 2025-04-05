@@ -8,17 +8,17 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetTagStatsQueryHandler : IRequestHandler<GetTagStatsQuery, TagDto>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetTagStatsQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<TagDto> Handle(GetTagStatsQuery request, CancellationToken cancellationToken)
     {
-        return await _context.Tags
-            .Where(t => t.Id == request.TagId)
+        return await context.Tags
+            .Where(t => t.Id.ToString() == request.TagId)
             .Select(t => new TagDto
             {
                 Id = t.Id,

@@ -23,6 +23,7 @@ namespace Meritocious.Core.Entities
         public List<Tag> ChildTags { get; private set; }
         public Dictionary<string, string> Metadata { get; private set; }
         public List<TagWiki> WikiVersions { get; private set; }
+        public int FollowerCount { get; internal set; }
 
         private Tag()
         {

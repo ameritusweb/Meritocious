@@ -39,7 +39,8 @@ namespace Meritocious.Core.Entities
 
         private readonly Dictionary<string, decimal> meritComponents = new();
         public IReadOnlyDictionary<string, decimal> MeritComponents => meritComponents;
-
+        private readonly List<MeritScoreHistory> meritScoreHistories;
+        public IReadOnlyCollection<MeritScoreHistory> MeritScoreHistories => meritScoreHistories.AsReadOnly();
         public decimal AverageTimeSpentSeconds { get; internal set; }
 
         public DateTime? PublishedAt { get; internal set; }

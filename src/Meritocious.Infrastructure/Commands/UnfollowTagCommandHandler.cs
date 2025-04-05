@@ -7,30 +7,36 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class UnfollowTagCommandHandler : IRequestHandler<UnfollowTagCommand, bool>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public UnfollowTagCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<bool> Handle(UnfollowTagCommand request, CancellationToken cancellationToken)
     {
-        var user = await _context.Users
+        var user = await context.Users
             .Include(u => u.FollowedTags)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
-        if (user == null) return false;
+        if (user == null)
+        {
+            return false;
+        }
 
-        var tag = await _context.Tags
-            .FirstOrDefaultAsync(t => t.Id == request.TagId, cancellationToken);
+        var tag = await context.Tags
+            .FirstOrDefaultAsync(t => t.Id.ToString() == request.TagId, cancellationToken);
 
-        if (tag == null) return false;
+        if (tag == null)
+        {
+            return false;
+        }
 
         if (user.FollowedTags.Remove(tag))
         {
             tag.FollowerCount--;
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
         return true;

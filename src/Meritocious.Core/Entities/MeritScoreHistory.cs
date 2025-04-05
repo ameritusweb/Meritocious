@@ -19,6 +19,8 @@ namespace Meritocious.Core.Entities
         public DateTime EvaluatedAt { get; private set; }
         public bool IsRecalculation { get; private set; }
         public string RecalculationReason { get; private set; }
+        public DateTime Timestamp { get; private set; }
+        public string Reason { get; private set; }
 
         private MeritScoreHistory()
         {

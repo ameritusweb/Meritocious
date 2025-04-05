@@ -27,7 +27,7 @@ public class UnfollowSubstackCommandHandler : IRequestHandler<UnfollowSubstackCo
         }
 
         var substack = await _context.Substacks
-            .FirstOrDefaultAsync(s => s.Id == request.SubstackId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id.ToString() == request.SubstackId, cancellationToken);
 
         if (substack == null)
         {

@@ -16,24 +16,24 @@ namespace Meritocious.Core.Services
 
     public class UserService : IUserService
     {
-        private readonly UserRepository _userRepository;
-        private readonly ILogger<UserService> _logger;
+        private readonly UserRepository userRepository;
+        private readonly ILogger<UserService> logger;
 
         public UserService(UserRepository userRepository, ILogger<UserService> logger)
         {
-            _userRepository = userRepository;
-            _logger = logger;
+            this.userRepository = userRepository;
+            this.logger = logger;
         }
 
         public async Task<User> CreateUserAsync(string username, string email, string password)
         {
             // Validate unique username and email
-            if (await _userRepository.GetByUsernameAsync(username) != null)
+            if (await userRepository.GetByUsernameAsync(username) != null)
             {
                 throw new InvalidOperationException("Username already exists");
             }
 
-            if (await _userRepository.GetByEmailAsync(email) != null)
+            if (await userRepository.GetByEmailAsync(email) != null)
             {
                 throw new InvalidOperationException("Email already exists");
             }
@@ -41,13 +41,13 @@ namespace Meritocious.Core.Services
             var passwordHash = HashPassword(password);
             var user = User.Create(username, email, passwordHash);
 
-            await _userRepository.AddAsync(user);
+            await userRepository.AddAsync(user);
             return user;
         }
 
         public async Task<User> GetUserByIdAsync(Guid id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await userRepository.GetByIdAsync(id);
             if (user == null)
             {
                 throw new KeyNotFoundException("User not found");
@@ -58,13 +58,13 @@ namespace Meritocious.Core.Services
 
         public async Task<User> GetUserByUsernameAsync(string username)
         {
-            return await _userRepository.GetByUsernameAsync(username)
+            return await userRepository.GetByUsernameAsync(username)
                 ?? throw new KeyNotFoundException("User not found");
         }
 
         public async Task<User> GetUserByEmailAsync(string email)
         {
-            return await _userRepository.GetByEmailAsync(email)
+            return await userRepository.GetByEmailAsync(email)
                 ?? throw new KeyNotFoundException("User not found");
         }
 
@@ -74,19 +74,19 @@ namespace Meritocious.Core.Services
 
             // Update allowed fields
             // Note: Username and email changes might require additional verification
-            await _userRepository.UpdateAsync(user);
+            await userRepository.UpdateAsync(user);
         }
 
         public async Task UpdateUserMeritScoreAsync(Guid userId, decimal newScore)
         {
             var user = await GetUserByIdAsync(userId);
             user.UpdateMeritScore(newScore);
-            await _userRepository.UpdateAsync(user);
+            await userRepository.UpdateAsync(user);
         }
 
         public async Task<bool> ValidateUserCredentialsAsync(string email, string password)
         {
-            var user = await _userRepository.GetByEmailAsync(email);
+            var user = await userRepository.GetByEmailAsync(email);
             if (user == null)
             {
                 return false;
@@ -102,6 +102,12 @@ namespace Meritocious.Core.Services
             var bytes = Encoding.UTF8.GetBytes(password);
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToBase64String(hash);
+        }
+
+        public Task<IEnumerable<User>> GetModeratorsAsync()
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
         }
     }
 }

@@ -9,15 +9,15 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetPostHistoryQueryHandler : IRequestHandler<GetPostHistoryQuery, List<PostVersionDto>>
     {
-        private readonly MeritociousDbContext _context;
-        private readonly ILogger<GetPostHistoryQueryHandler> _logger;
+        private readonly MeritociousDbContext context;
+        private readonly ILogger<GetPostHistoryQueryHandler> logger;
 
         public GetPostHistoryQueryHandler(
             MeritociousDbContext context,
             ILogger<GetPostHistoryQueryHandler> logger)
         {
-            _context = context;
-            _logger = logger;
+            this.context = context;
+            this.logger = logger;
         }
 
         public async Task<List<PostVersionDto>> Handle(
@@ -26,9 +26,7 @@ namespace Meritocious.Infrastructure.Queries
         {
             try
             {
-                var query = _context.ContentVersions
-                    .Include(v => v.CreatedByUser)
-                    .Include(v => v.Tags)
+                var query = context.ContentVersions
                     .Where(v => v.PostId == request.PostId);
 
                 if (request.StartVersion.HasValue)
@@ -50,17 +48,21 @@ namespace Meritocious.Infrastructure.Queries
                         VersionNumber = v.VersionNumber,
                         Title = v.Title,
                         Content = request.IncludeContent ? v.Content : string.Empty,
-                        Tags = v.Tags.Select(t => t.Name).ToList(),
-                        ChangeDescription = v.ChangeDescription,
+                        
+                        // TODO: Implement extra properties
+                        // Tags = v.Tags.Select(t => t.Name).ToList(),
+                        // ChangeDescription = v.ChangeDescription,
                         CreatedAt = v.CreatedAt,
-                        CreatedBy = v.CreatedByUser.Username,
+                        
+                        // CreatedBy = v.CreatedByUser.Username,
                         MeritScore = v.MeritScore,
-                        ParentVersionId = v.ParentVersionId,
-                        NextVersionId = v.NextVersionId,
-                        Changes = v.Changes,
-                        AddedLines = v.AddedLines,
-                        RemovedLines = v.RemovedLines,
-                        ModifiedLines = v.ModifiedLines
+                        
+                        // ParentVersionId = v.ParentVersionId,
+                        // NextVersionId = v.NextVersionId,
+                        // Changes = v.Changes,
+                        // AddedLines = v.AddedLines,
+                        // RemovedLines = v.RemovedLines,
+                        // ModifiedLines = v.ModifiedLines
                     })
                     .ToListAsync(cancellationToken);
 
@@ -68,7 +70,7 @@ namespace Meritocious.Infrastructure.Queries
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting post history for post {PostId}", request.PostId);
+                logger.LogError(ex, "Error getting post history for post {PostId}", request.PostId);
                 throw;
             }
         }

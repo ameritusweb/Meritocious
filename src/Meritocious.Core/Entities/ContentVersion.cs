@@ -13,6 +13,7 @@ namespace Meritocious.Core.Entities
         public Guid ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
         public int VersionNumber { get; private set; }
+        public Guid PostId { get; private set; }
         public string Title { get; private set; }
         public string Content { get; private set; }
         public Guid EditorId { get; private set; }

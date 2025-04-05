@@ -9,6 +9,7 @@ namespace Meritocious.Core.Commands
     using FluentValidation;
     using MediatR;
     using Meritocious.Core.Entities;
+    using Meritocious.Core.Features.Tags.Models;
 
     public class CreatePostCommand : IRequest<Post>
     {
@@ -17,6 +18,7 @@ namespace Meritocious.Core.Commands
         public Guid AuthorId { get; set; }
         public Guid? ParentPostId { get; set; }
         public List<string> Tags { get; set; } = new();
+        public List<TagCategory> TagCategories { get; set; } = new();
     }
 
     public class CreatePostCommandValidator : AbstractValidator<CreatePostCommand>

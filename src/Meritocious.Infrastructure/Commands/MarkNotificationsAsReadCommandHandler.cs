@@ -12,11 +12,11 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class MarkNotificationsAsReadCommandHandler : IRequestHandler<MarkNotificationsAsReadCommand, Result>
     {
-        private readonly INotificationService _notificationService;
+        private readonly INotificationService notificationService;
 
         public MarkNotificationsAsReadCommandHandler(INotificationService notificationService)
         {
-            _notificationService = notificationService;
+            this.notificationService = notificationService;
         }
 
         public async Task<Result> Handle(
@@ -25,7 +25,7 @@ namespace Meritocious.Infrastructure.Commands
         {
             try
             {
-                await _notificationService.MarkNotificationsAsReadAsync(
+                await notificationService.MarkNotificationsAsReadAsync(
                     request.UserId,
                     request.NotificationIds);
 

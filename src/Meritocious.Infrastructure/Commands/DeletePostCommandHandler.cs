@@ -12,22 +12,22 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class DeletePostCommandHandler : IRequestHandler<DeletePostCommand, Result>
     {
-        private readonly IPostService _postService;
-        private readonly IMediator _mediator;
+        private readonly IPostService postService;
+        private readonly IMediator mediator;
 
         public DeletePostCommandHandler(
             IPostService postService,
             IMediator mediator)
         {
-            _postService = postService;
-            _mediator = mediator;
+            this.postService = postService;
+            this.mediator = mediator;
         }
 
         public async Task<Result> Handle(DeletePostCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                await _postService.DeletePostAsync(request.PostId);
+                await postService.DeletePostAsync(request.PostId);
 
                 // Could publish a PostDeletedEvent here
                 // if (request.DeletedByUserId.HasValue)

@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetTagRelationshipsQueryHandler : IRequestHandler<GetTagRelationshipsQuery, IEnumerable<TagRelationshipDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetTagRelationshipsQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<TagRelationshipDto>> Handle(GetTagRelationshipsQuery request, CancellationToken cancellationToken)
     {
-        var relationships = await _context.TagRelationships
+        var relationships = await context.TagRelationships
             .Where(r => r.ParentTagId == request.TagId || r.ChildTagId == request.TagId)
             .Select(r => new TagRelationshipDto
             {

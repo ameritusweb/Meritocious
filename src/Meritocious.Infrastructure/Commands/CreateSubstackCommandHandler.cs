@@ -9,16 +9,16 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class CreateSubstackCommandHandler : IRequestHandler<CreateSubstackCommand, SubstackDto>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public CreateSubstackCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<SubstackDto> Handle(CreateSubstackCommand request, CancellationToken cancellationToken)
     {
-        var existingSubstack = await _context.Substacks
+        var existingSubstack = await context.Substacks
             .FirstOrDefaultAsync(s => s.Subdomain == request.Subdomain, cancellationToken);
 
         if (existingSubstack != null)
@@ -26,7 +26,7 @@ public class CreateSubstackCommandHandler : IRequestHandler<CreateSubstackComman
             throw new DuplicateResourceException($"Substack with subdomain {request.Subdomain} already exists");
         }
 
-        var substack = new Entities.Substack
+        var substack = new Core.Entities.Substack
         {
             Name = request.Name,
             Subdomain = request.Subdomain,
@@ -41,12 +41,12 @@ public class CreateSubstackCommandHandler : IRequestHandler<CreateSubstackComman
             IsVerified = false
         };
 
-        _context.Substacks.Add(substack);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.Substacks.Add(substack);
+        await context.SaveChangesAsync(cancellationToken);
 
         return new SubstackDto
         {
-            Id = substack.Id,
+            Id = substack.Id.ToString(),
             Name = substack.Name,
             Subdomain = substack.Subdomain,
             CustomDomain = substack.CustomDomain,

@@ -24,5 +24,9 @@ namespace Meritocious.Common.DTOs.Merit
         public bool IsRecalculation { get; set; }
         public string RecalculationReason { get; set; }
         public Dictionary<string, decimal> Components { get; set; } = new();
+        public Guid UserId { get; set; }
+        public decimal CurrentScore { get; set; }
+        public DateTime LastCalculated { get; set; }
+        public List<MeritScoreHistoryDto> ScoreHistory { get; set; }
     }
 }

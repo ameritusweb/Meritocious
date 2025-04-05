@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetApiUsageQueryHandler : IRequestHandler<GetApiUsageQuery, IEnumerable<ApiUsageDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetApiUsageQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<ApiUsageDto>> Handle(GetApiUsageQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.ApiUsageLogs.AsQueryable();
+        var query = context.ApiUsageLogs.AsQueryable();
 
         if (request.StartDate.HasValue)
         {

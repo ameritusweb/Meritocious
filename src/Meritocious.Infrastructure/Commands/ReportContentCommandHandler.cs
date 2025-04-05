@@ -15,25 +15,25 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class ReportContentCommandHandler : IRequestHandler<ReportContentCommand, Result>
     {
-        private readonly IReportingService _reportingService;
-        private readonly IMediator _mediator;
-        private readonly ILogger<ReportContentCommandHandler> _logger;
+        private readonly IReportingService reportingService;
+        private readonly IMediator mediator;
+        private readonly ILogger<ReportContentCommandHandler> logger;
 
         public ReportContentCommandHandler(
             IReportingService reportingService,
             IMediator mediator,
             ILogger<ReportContentCommandHandler> logger)
         {
-            _reportingService = reportingService;
-            _mediator = mediator;
-            _logger = logger;
+            this.reportingService = reportingService;
+            this.mediator = mediator;
+            this.logger = logger;
         }
 
         public async Task<Result> Handle(ReportContentCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var report = await _reportingService.CreateReportAsync(
+                var report = await reportingService.CreateReportAsync(
                     request.ContentId,
                     request.ContentType,
                     request.ReporterId,
@@ -41,9 +41,9 @@ namespace Meritocious.Infrastructure.Commands
                     request.Description);
 
                 // Trigger automatic moderation if needed
-                if (await _reportingService.ShouldTriggerModerationAsync(report))
+                if (await reportingService.ShouldTriggerModerationAsync(report))
                 {
-                    await _mediator.Send(new ModerateContentCommand
+                    await mediator.Send(new ModerateContentCommand
                     {
                         ContentId = request.ContentId,
                         ContentType = request.ContentType,
@@ -52,13 +52,13 @@ namespace Meritocious.Infrastructure.Commands
                 }
 
                 // Notify moderators
-                await _mediator.Publish(new ContentReportedEvent(report));
+                await mediator.Publish(new ContentReportedEvent(report));
 
                 return Result.Success();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing content report");
+                logger.LogError(ex, "Error processing content report");
                 return Result.Failure(ex.Message);
             }
         }

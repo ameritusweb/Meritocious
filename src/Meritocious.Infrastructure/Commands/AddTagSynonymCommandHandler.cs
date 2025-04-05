@@ -8,11 +8,11 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class AddTagSynonymCommandHandler : IRequestHandler<AddTagSynonymCommand, TagSynonymDto>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public AddTagSynonymCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<TagSynonymDto> Handle(AddTagSynonymCommand request, CancellationToken cancellationToken)
@@ -26,8 +26,8 @@ public class AddTagSynonymCommandHandler : IRequestHandler<AddTagSynonymCommand,
             Status = "Pending"
         };
 
-        _context.TagSynonyms.Add(synonym);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.TagSynonyms.Add(synonym);
+        await context.SaveChangesAsync(cancellationToken);
 
         return new TagSynonymDto
         {

@@ -18,11 +18,11 @@ namespace Meritocious.Core.Features.Comments.Commands
 
     public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Result<CommentDto>>
     {
-        private readonly ICommentService _commentService;
-        private readonly UserRepository _userRepository;
-        private readonly PostRepository _postRepository;
-        private readonly IMeritScorer _meritScorer;
-        private readonly IMediator _mediator;
+        private readonly ICommentService commentService;
+        private readonly UserRepository userRepository;
+        private readonly PostRepository postRepository;
+        private readonly IMeritScorer meritScorer;
+        private readonly IMediator mediator;
 
         public AddCommentCommandHandler(
             ICommentService commentService,
@@ -31,36 +31,42 @@ namespace Meritocious.Core.Features.Comments.Commands
             IMeritScorer meritScorer,
             IMediator mediator)
         {
-            _commentService = commentService;
-            _userRepository = userRepository;
-            _postRepository = postRepository;
-            _meritScorer = meritScorer;
-            _mediator = mediator;
+            this.commentService = commentService;
+            this.userRepository = userRepository;
+            this.postRepository = postRepository;
+            this.meritScorer = meritScorer;
+            this.mediator = mediator;
         }
 
         public async Task<Result<CommentDto>> Handle(AddCommentCommand request, CancellationToken cancellationToken)
         {
-            var author = await _userRepository.GetByIdAsync(request.AuthorId);
+            var author = await userRepository.GetByIdAsync(request.AuthorId);
             if (author == null)
+            {
                 return Result.Failure<CommentDto>($"User {request.AuthorId} not found");
+            }
 
-            var post = await _postRepository.GetByIdAsync(request.PostId);
+            var post = await postRepository.GetByIdAsync(request.PostId);
             if (post == null)
+            {
                 return Result.Failure<CommentDto>($"Post {request.PostId} not found");
+            }
 
             // Validate content quality
-            var contentScore = await _meritScorer.ScoreContentAsync(request.Content);
-            if (!await _meritScorer.ValidateContentAsync(request.Content))
+            var contentScore = await meritScorer.ScoreContentAsync(request.Content);
+            if (!await meritScorer.ValidateContentAsync(request.Content))
+            {
                 return Result.Failure<CommentDto>("Comment does not meet quality standards");
+            }
 
-            var comment = await _commentService.AddCommentAsync(
+            var comment = await commentService.AddCommentAsync(
                 request.Content,
                 request.PostId,
                 author,
                 request.ParentCommentId);
 
             // Publish event
-            await _mediator.Publish(
+            await mediator.Publish(
                 new CommentAddedEvent(comment.Id, request.PostId, request.AuthorId),
                 cancellationToken);
 

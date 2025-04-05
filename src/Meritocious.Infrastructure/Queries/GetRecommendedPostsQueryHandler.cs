@@ -11,18 +11,18 @@ using System.Threading.Tasks;
 
 public class GetRecommendedPostsQueryHandler : IRequestHandler<GetRecommendedPostsQuery, List<PostRecommendationDto>>
 {
-    private readonly IRecommendationService _recommendationService;
-    private readonly PostRepository _postRepository;
-    private readonly UserRepository _userRepository;
+    private readonly IRecommendationService recommendationService;
+    private readonly PostRepository postRepository;
+    private readonly UserRepository userRepository;
 
     public GetRecommendedPostsQueryHandler(
         IRecommendationService recommendationService,
         PostRepository postRepository,
         UserRepository userRepository)
     {
-        _recommendationService = recommendationService;
-        _postRepository = postRepository;
-        _userRepository = userRepository;
+        this.recommendationService = recommendationService;
+        this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
     public async Task<List<PostRecommendationDto>> Handle(
@@ -30,15 +30,17 @@ public class GetRecommendedPostsQueryHandler : IRequestHandler<GetRecommendedPos
         CancellationToken cancellationToken)
     {
         // Get user's activity history
-        var user = await _userRepository.GetByIdAsync(request.UserId);
+        var user = await userRepository.GetByIdAsync(request.UserId);
         if (user == null)
+        {
             throw new ResourceNotFoundException($"User {request.UserId} not found");
+        }
 
         // Get user's recent interactions
-        var userHistory = await _postRepository.GetUserInteractionHistoryAsync(request.UserId);
+        var userHistory = await postRepository.GetUserInteractionHistoryAsync(request.UserId);
 
         // Get recommendations
-        var recommendations = await _recommendationService.GetRecommendationsAsync(
+        var recommendations = await recommendationService.GetRecommendationsAsync(
             request.UserId,
             userHistory,
             request.Count,
@@ -47,14 +49,14 @@ public class GetRecommendedPostsQueryHandler : IRequestHandler<GetRecommendedPos
         var results = new List<PostRecommendationDto>();
         foreach (var rec in recommendations)
         {
-            var post = await _postRepository.GetByIdAsync(rec.ContentId);
+            var post = await postRepository.GetByIdAsync(rec.ContentId);
             if (post != null)
             {
                 results.Add(new PostRecommendationDto
                 {
                     PostId = post.Id,
                     Title = post.Title,
-                    AuthorUsername = post.Author.Username,
+                    AuthorUsername = post.Author.UserName,
                     MeritScore = post.MeritScore,
                     Tags = post.Tags.Select(t => t.Name).ToList(),
                     RecommendationReason = rec.Reason,

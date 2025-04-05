@@ -22,6 +22,8 @@ namespace Meritocious.Core.Entities
         public DateTime? ApprovedAt { get; private set; }
         public Guid? ApprovedById { get; private set; }
         public User ApprovedBy { get; private set; }
+        public string ParentTagId { get; internal set; }
+        public string ChildTagId { get; internal set; }
 
         private TagRelationship()
         {

@@ -28,6 +28,7 @@ namespace Meritocious.Core.Entities
         public Guid? ReviewedById { get; private set; }
         public User ReviewedBy { get; private set; }
         public string ReviewNotes { get; private set; }
+        public string Status { get; internal set; }
 
         private ModerationAction()
         {

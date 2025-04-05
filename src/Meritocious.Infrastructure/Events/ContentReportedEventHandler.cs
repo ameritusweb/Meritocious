@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Meritocious.Core.Features.Reporting.Events
 {
     using MediatR;
+    using Meritocious.Core.Entities;
     using Meritocious.Core.Features.Notifications.Models;
     using Meritocious.Core.Interfaces;
     using Microsoft.Extensions.Logging;
@@ -43,8 +44,7 @@ namespace Meritocious.Core.Features.Reporting.Events
                             "ContentReport",
                             "New Content Report",
                             $"Content reported for {notification.Report.ReportType}: {notification.Report.Description}",
-                            $"/moderation/reports/{notification.Report.Id}"
-                        ));
+                            $"/moderation/reports/{notification.Report.Id}"));
                 }
 
                 logger.LogInformation(

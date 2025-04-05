@@ -67,6 +67,7 @@ namespace Meritocious.Core.Features.Search.Queries
                                     HighlightedTerms = result.HighlightedTerms
                                 });
                             }
+
                             break;
 
                         case ContentType.Comment:
@@ -86,6 +87,7 @@ namespace Meritocious.Core.Features.Search.Queries
                                     HighlightedTerms = result.HighlightedTerms
                                 });
                             }
+
                             break;
                     }
                 }

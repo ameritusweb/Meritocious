@@ -15,10 +15,10 @@ namespace Meritocious.Core.Commands
 
     public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Post>
     {
-        private readonly IPostService _postService;
-        private readonly UserRepository _userRepository;
-        private readonly ITagService _tagService;
-        private readonly IMediator _mediator;
+        private readonly IPostService postService;
+        private readonly UserRepository userRepository;
+        private readonly ITagService tagService;
+        private readonly IMediator mediator;
 
         public CreatePostCommandHandler(
             IPostService postService,
@@ -26,34 +26,34 @@ namespace Meritocious.Core.Commands
             ITagService tagService,
             IMediator mediator)
         {
-            _postService = postService;
-            _userRepository = userRepository;
-            _tagService = tagService;
-            _mediator = mediator;
+            this.postService = postService;
+            this.userRepository = userRepository;
+            this.tagService = tagService;
+            this.mediator = mediator;
         }
 
         public async Task<Post> Handle(CreatePostCommand request, CancellationToken cancellationToken)
         {
-            var author = await _userRepository.GetByIdAsync(request.AuthorId)
+            var author = await userRepository.GetByIdAsync(request.AuthorId)
                 ?? throw new ResourceNotFoundException($"User {request.AuthorId} not found");
 
             Post parent = null;
             if (request.ParentPostId.HasValue)
             {
-                parent = await _postService.GetPostByIdAsync(request.ParentPostId.Value)
+                parent = await postService.GetPostByIdAsync(request.ParentPostId.Value)
                     ?? throw new ResourceNotFoundException($"Parent post {request.ParentPostId} not found");
             }
 
-            var post = await _postService.CreatePostAsync(request.Title, request.Content, author, parent);
+            var post = await postService.CreatePostAsync(request.Title, request.Content, author, parent);
 
             // Add tags
-            foreach (var tagName in request.Tags)
+            foreach (var tagNameAndCategory in request.Tags.Zip(request.TagCategories))
             {
-                await _tagService.AddTagToPostAsync(post.Id, tagName);
+                await tagService.AddTagToPostAsync(post.Id, tagNameAndCategory.First, tagNameAndCategory.Second);
             }
 
             // Publish domain event
-            await _mediator.Publish(new PostCreatedEvent(post.Id, author.Id), cancellationToken);
+            await mediator.Publish(new PostCreatedEvent(post.Id, Guid.Parse(author.Id)), cancellationToken);
 
             return post;
         }

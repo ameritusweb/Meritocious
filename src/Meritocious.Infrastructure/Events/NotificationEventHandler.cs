@@ -13,15 +13,15 @@ namespace Meritocious.Core.Features.Notifications.Events
 
     public class NotificationEventHandler : INotificationHandler<NotificationEvent>
     {
-        private readonly INotificationService _notificationService;
-        private readonly ILogger<NotificationEventHandler> _logger;
+        private readonly INotificationService notificationService;
+        private readonly ILogger<NotificationEventHandler> logger;
 
         public NotificationEventHandler(
             INotificationService notificationService,
             ILogger<NotificationEventHandler> logger)
         {
-            _notificationService = notificationService;
-            _logger = logger;
+            this.notificationService = notificationService;
+            this.logger = logger;
         }
 
         public async Task Handle(NotificationEvent notification, CancellationToken cancellationToken)
@@ -35,16 +35,16 @@ namespace Meritocious.Core.Features.Notifications.Events
                     notification.Message,
                     notification.ActionUrl);
 
-                await _notificationService.SendNotificationAsync(notif);
+                await notificationService.SendNotificationAsync(notif);
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Sent notification to user {UserId} of type {Type}",
                     notification.UserId,
                     notification.Type);
             }
             catch (Exception ex)
             {
-                _logger.LogError(
+                logger.LogError(
                     ex,
                     "Error sending notification to user {UserId}",
                     notification.UserId);

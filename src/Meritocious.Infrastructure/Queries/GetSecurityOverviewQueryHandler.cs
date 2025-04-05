@@ -41,7 +41,7 @@ public class GetSecurityOverviewQueryHandler : IRequestHandler<GetSecurityOvervi
             .CountAsync(s => s.LastActivityAt >= last24Hours, cancellationToken);
 
         var apiRequests = await _context.ApiUsageLogs
-            .Where(a => a.TimeStamp >= last24Hours)
+            .Where(a => a.Timestamp >= last24Hours)
             .CountAsync(cancellationToken);
 
         return new SecurityOverviewDto
