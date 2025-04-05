@@ -9,7 +9,6 @@ namespace Meritocious.Infrastructure.Data
         {
             // Nothing to register directly, but this method serves as a marker
             // to ensure the extension methods are compiled and available
-
             return services;
         }
     }

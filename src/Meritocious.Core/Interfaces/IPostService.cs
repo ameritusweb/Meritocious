@@ -13,5 +13,6 @@
         Task<List<Post>> GetTopPostsAsync(int count = 10);
         Task<List<Post>> GetPostsByUserAsync(Guid userId);
         Task<List<Post>> GetPostsByTagAsync(string tagName);
+        Task UpdatePostActivityAsync(Guid postId);
     }
 }

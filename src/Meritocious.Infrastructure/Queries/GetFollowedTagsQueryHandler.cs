@@ -22,14 +22,14 @@ public class GetFollowedTagsQueryHandler : IRequestHandler<GetFollowedTagsQuery,
             .SelectMany(u => u.FollowedTags)
             .Select(t => new TagDto
             {
-                Id = t.Id,
+                Id = t.Id.ToString(),
                 Name = t.Name,
                 Description = t.Description,
-                UsageCount = t.UsageCount,
+                UsageCount = t.UseCount,
                 FollowerCount = t.FollowerCount,
                 CreatedAt = t.CreatedAt,
-                LastModified = t.LastModified,
-                IsModerated = t.IsModerated
+                LastModified = t.UpdatedAt,
+                IsModerated = t.Status == Core.Features.Tags.Models.TagStatus.Moderated
             })
             .ToListAsync(cancellationToken);
     }

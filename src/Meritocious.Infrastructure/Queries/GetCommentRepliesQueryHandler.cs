@@ -15,11 +15,11 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetCommentRepliesQueryHandler : IRequestHandler<GetCommentRepliesQuery, Result<List<CommentDto>>>
     {
-        private readonly CommentRepository _commentRepository;
+        private readonly CommentRepository commentRepository;
 
         public GetCommentRepliesQueryHandler(CommentRepository commentRepository)
         {
-            _commentRepository = commentRepository;
+            this.commentRepository = commentRepository;
         }
 
         public async Task<Result<List<CommentDto>>> Handle(GetCommentRepliesQuery request, CancellationToken cancellationToken)
@@ -27,20 +27,22 @@ namespace Meritocious.Infrastructure.Queries
             try
             {
                 // Verify the parent comment exists
-                var parentComment = await _commentRepository.GetByIdAsync(request.CommentId);
+                var parentComment = await commentRepository.GetByIdAsync(request.CommentId);
                 if (parentComment == null)
+                {
                     return Result.Failure<List<CommentDto>>($"Comment {request.CommentId} not found");
+                }
 
                 // Get replies
-                var replies = await _commentRepository.GetRepliesAsync(request.CommentId);
+                var replies = await commentRepository.GetRepliesAsync(request.CommentId);
 
                 // Apply sorting if needed
                 if (request.SortBy == "date")
                 {
                     replies = replies.OrderByDescending(r => r.CreatedAt).ToList();
                 }
-                // Default sorting by merit is already applied in the repository
 
+                // Default sorting by merit is already applied in the repository
                 // Apply pagination if needed
                 if (request.Page.HasValue && request.PageSize.HasValue)
                 {

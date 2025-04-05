@@ -29,7 +29,7 @@ public class UpdateUserSettingsCommandHandler : IRequestHandler<UpdateUserSettin
         user.AvatarUrl = request.Settings.AvatarUrl ?? user.AvatarUrl;
         user.EmailNotificationsEnabled = request.Settings.EmailNotificationsEnabled;
         user.PublicProfile = request.Settings.PublicProfile;
-        user.PreferredTags = request.Settings.PreferredTags ?? user.PreferredTags;
+        user.PreferredTags = request.Settings.PreferredTags?.ToList() ?? user.PreferredTags;
         user.TimeZone = request.Settings.TimeZone ?? user.TimeZone;
         user.Language = request.Settings.Language ?? user.Language;
 

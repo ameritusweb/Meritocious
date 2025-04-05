@@ -7,11 +7,11 @@ namespace Meritocious.Infrastructure.Queries
 {
     public class GetAdminStatsQueryHandler : IRequestHandler<GetAdminStatsQuery, AdminStats>
     {
-        private readonly MeritociousDbContext _context;
+        private readonly MeritociousDbContext context;
 
         public GetAdminStatsQueryHandler(MeritociousDbContext context)
         {
-            _context = context;
+            this.context = context;
         }
 
         public async Task<AdminStats> Handle(GetAdminStatsQuery request, CancellationToken cancellationToken)
@@ -21,10 +21,10 @@ namespace Meritocious.Infrastructure.Queries
 
             return new AdminStats
             {
-                TotalUsers = await _context.Users.CountAsync(cancellationToken),
-                ActiveUsers24h = await _context.Users
+                TotalUsers = await context.Users.CountAsync(cancellationToken),
+                ActiveUsers24h = await context.Users
                     .CountAsync(u => u.LastActiveAt >= yesterday, cancellationToken),
-                PostsToday = await _context.Posts
+                PostsToday = await context.Posts
                     .CountAsync(p => p.CreatedAt >= today, cancellationToken)
             };
         }

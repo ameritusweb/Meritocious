@@ -122,5 +122,11 @@ namespace Meritocious.Core.Services
 
             return post;
         }
+
+        public Task UpdatePostActivityAsync(Guid postId)
+        {
+            // TODO: Implement this.
+            throw new NotImplementedException();
+        }
     }
 }

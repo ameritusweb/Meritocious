@@ -18,12 +18,12 @@ public class GetTagSynonymsQueryHandler : IRequestHandler<GetTagSynonymsQuery, I
     public async Task<IEnumerable<TagSynonymDto>> Handle(GetTagSynonymsQuery request, CancellationToken cancellationToken)
     {
         return await context.TagSynonyms
-            .Where(s => s.SourceTagId == request.TagId || s.TargetTagId == request.TagId)
+            .Where(s => s.SourceTagId.ToString() == request.TagId || s.TargetTagId.ToString() == request.TagId)
             .Select(s => new TagSynonymDto
             {
-                SourceTagId = s.SourceTagId,
-                TargetTagId = s.TargetTagId,
-                CreatedBy = s.Creator.Id.ToString(),
+                SourceTagId = s.SourceTagId.ToString(),
+                TargetTagId = s.TargetTagId.ToString(),
+                CreatedBy = s.CreatedBy.Id.ToString(),
                 CreatedAt = s.CreatedAt,
                 ApprovedBy = s.ApprovedBy.Id.ToString(),
                 ApprovedAt = s.ApprovedAt,

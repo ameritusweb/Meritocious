@@ -73,6 +73,8 @@ namespace Meritocious.Core.Features.Recommendations.Models
                 CreatedAt = DateTime.UtcNow
             };
         }
+
+        public virtual ICollection<Substack> Substacks { get; set; } = new List<Substack>();
     }
 
     public class UserTopicPreference : BaseEntity

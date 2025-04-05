@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class UnfollowSubstackCommandHandler : IRequestHandler<UnfollowSubstackCommand, bool>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public UnfollowSubstackCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<bool> Handle(UnfollowSubstackCommand request, CancellationToken cancellationToken)
     {
-        var user = await _context.Users
+        var user = await context.Users
             .Include(u => u.FollowedSubstacks)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
@@ -26,7 +26,7 @@ public class UnfollowSubstackCommandHandler : IRequestHandler<UnfollowSubstackCo
             throw new ResourceNotFoundException($"User with ID {request.UserId} not found");
         }
 
-        var substack = await _context.Substacks
+        var substack = await context.Substacks
             .FirstOrDefaultAsync(s => s.Id.ToString() == request.SubstackId, cancellationToken);
 
         if (substack == null)
@@ -38,7 +38,7 @@ public class UnfollowSubstackCommandHandler : IRequestHandler<UnfollowSubstackCo
         if (removed)
         {
             substack.FollowerCount--;
-            await _context.SaveChangesAsync(cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
         }
 
         return removed;

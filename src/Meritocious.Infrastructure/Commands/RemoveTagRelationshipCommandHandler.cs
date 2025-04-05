@@ -7,25 +7,28 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class RemoveTagRelationshipCommandHandler : IRequestHandler<RemoveTagRelationshipCommand, bool>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public RemoveTagRelationshipCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<bool> Handle(RemoveTagRelationshipCommand request, CancellationToken cancellationToken)
     {
-        var relationship = await _context.TagRelationships
+        var relationship = await context.TagRelationships
             .FirstOrDefaultAsync(r => 
                 r.ParentTagId == request.ParentTagId && 
                 r.ChildTagId == request.ChildTagId, 
                 cancellationToken);
 
-        if (relationship == null) return false;
+        if (relationship == null)
+        {
+            return false;
+        }
 
-        _context.TagRelationships.Remove(relationship);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.TagRelationships.Remove(relationship);
+        await context.SaveChangesAsync(cancellationToken);
 
         return true;
     }

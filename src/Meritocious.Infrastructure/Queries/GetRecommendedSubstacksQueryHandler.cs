@@ -18,17 +18,17 @@ public class GetRecommendedSubstacksQueryHandler : IRequestHandler<GetRecommende
     public async Task<List<SubstackDto>> Handle(GetRecommendedSubstacksQuery request, CancellationToken cancellationToken)
     {
         var userInterests = await context.UserTopicPreferences
-            .Where(p => p.UserId == request.UserId)
-            .Select(p => p.TopicId)
+            .Where(p => p.UserId.ToString() == request.UserId)
+            .Select(p => p.Topic)
             .ToListAsync(cancellationToken);
 
         return await context.Substacks
-            .Where(s => s.Topics.Any(t => userInterests.Contains(t.TopicId)))
+            .Where(s => s.Topics.Any(t => userInterests.Contains(t.Topic)))
             .OrderByDescending(s => s.AvgMeritScore)
             .Take(request.Limit)
             .Select(s => new SubstackDto
             {
-                Id = s.Id,
+                Id = s.Id.ToString(),
                 Name = s.Name,
                 Subdomain = s.Subdomain,
                 CustomDomain = s.CustomDomain,

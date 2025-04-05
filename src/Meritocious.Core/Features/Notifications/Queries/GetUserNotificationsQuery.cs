@@ -8,7 +8,6 @@ namespace Meritocious.Core.Features.Notifications.Queries
 {
     using MediatR;
     using Meritocious.Common.DTOs.Notifications;
-    using Meritocious.Core.Features.Notifications.Models;
 
     public record GetUserNotificationsQuery : IRequest<List<NotificationDto>>
     {

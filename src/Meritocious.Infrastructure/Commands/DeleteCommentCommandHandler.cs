@@ -12,18 +12,18 @@ namespace Meritocious.Infrastructure.Commands
 {
     public class DeleteCommentCommandHandler : IRequestHandler<DeleteCommentCommand, Result>
     {
-        private readonly ICommentService _commentService;
+        private readonly ICommentService commentService;
 
         public DeleteCommentCommandHandler(ICommentService commentService)
         {
-            _commentService = commentService;
+            this.commentService = commentService;
         }
 
         public async Task<Result> Handle(DeleteCommentCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                await _commentService.DeleteCommentAsync(request.CommentId);
+                await commentService.DeleteCommentAsync(request.CommentId);
                 return Result.Success();
             }
             catch (KeyNotFoundException ex)
