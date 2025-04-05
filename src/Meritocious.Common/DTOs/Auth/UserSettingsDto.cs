@@ -10,4 +10,6 @@ public class UserSettingsDto
     public string[]? PreferredTags { get; set; }
     public string? TimeZone { get; set; }
     public string? Language { get; set; }
+    public bool TwoFactorEnabled { get; set; }
+    public bool TwoFactorRequired { get; set; }
 }

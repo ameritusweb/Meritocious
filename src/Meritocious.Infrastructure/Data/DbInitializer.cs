@@ -91,6 +91,11 @@
                 }
             }
 
+            // Enable and require 2FA for admin
+            adminUser.TwoFactorRequired = true;
+            adminUser.TwoFactorEnabled = true;
+            await userManager.UpdateAsync(adminUser);
+
             logger.LogInformation("Admin user seeded successfully.");
         }
 

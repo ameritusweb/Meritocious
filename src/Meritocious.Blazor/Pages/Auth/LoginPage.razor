@@ -1,63 +1,73 @@
-﻿@page "/login"
+@page "/login"
+@using Meritocious.Blazor.Pages.Auth.Components
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
 
 <div class="login-container">
     <Card Style="width: 400px;">
-        <div class="text-center mb-8">
-            <h2 class="text-2xl font-bold">Welcome to Meritocious</h2>
-            <p class="text-gray-500">Where ideas rise on merit</p>
-        </div>
-
-        <Form @ref="loginForm" 
-            Model="@loginModel"
-              OnFinish="HandleLogin"
-              Layout="FormLayout.Vertical">
-            <FormItem Label="Email">
-                <Input @bind-Value="@context.Email" 
-                       Placeholder="Enter your email" />
-            </FormItem>
-
-            <FormItem Label="Password">
-                <InputPassword @bind-Value="@context.Password"
-                             Placeholder="Enter your password" />
-            </FormItem>
-
-            <FormItem>
-                <Button Type="ButtonType.Primary"
-                        HtmlType="submit"
-                        Block
-                        Loading="@isLoading">
-                    Log In
-                </Button>
-            </FormItem>
-
-            <Divider>Or</Divider>
-
-            <Button Type="ButtonType.Default"
-                    Block
-                    OnClick="HandleGoogleLogin"
-                    Loading="@isGoogleLoading">
-                <Space>
-                    <Icon Type="google" Theme="IconThemeType.Outline" />
-                    <span>Continue with Google</span>
-                </Space>
-            </Button>
-        </Form>
-
-        @if (!string.IsNullOrEmpty(errorMessage))
+        @if (_requires2FA)
         {
-            <Alert Type="AlertType.Error"
-                   Message="@errorMessage"
-                   ShowIcon="true"
-                   Banner
-                   Class="mt-4" />
+            <TwoFactorVerificationComponent 
+                Error="@errorMessage"
+                OnVerificationComplete="HandleTwoFactorVerification" />
         }
+        else
+        {
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold">Welcome to Meritocious</h2>
+                <p class="text-gray-500">Where ideas rise on merit</p>
+            </div>
 
-        <div class="mt-4 text-center">
-            <a href="/register">Don't have an account? Sign up</a>
-        </div>
+            <Form @ref="loginForm" 
+                Model="@loginModel"
+                  OnFinish="HandleLogin"
+                  Layout="FormLayout.Vertical">
+                <FormItem Label="Email">
+                    <Input @bind-Value="@context.Email" 
+                           Placeholder="Enter your email" />
+                </FormItem>
+
+                <FormItem Label="Password">
+                    <InputPassword @bind-Value="@context.Password"
+                                 Placeholder="Enter your password" />
+                </FormItem>
+
+                <FormItem>
+                    <Button Type="ButtonType.Primary"
+                            HtmlType="submit"
+                            Block
+                            Loading="@isLoading">
+                        Log In
+                    </Button>
+                </FormItem>
+
+                <Divider>Or</Divider>
+
+                <Button Type="ButtonType.Default"
+                        Block
+                        OnClick="HandleGoogleLogin"
+                        Loading="@isGoogleLoading">
+                    <Space>
+                        <Icon Type="google" Theme="IconThemeType.Outline" />
+                        <span>Continue with Google</span>
+                    </Space>
+                </Button>
+            </Form>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <Alert Type="AlertType.Error"
+                       Message="@errorMessage"
+                       ShowIcon="true"
+                       Banner
+                       Class="mt-4" />
+            }
+
+            <div class="mt-4 text-center">
+                <a href="/register">Don't have an account? Sign up</a>
+            </div>
+        }
     </Card>
 </div>
 
@@ -77,6 +87,8 @@
     private bool isGoogleLoading;
     private string? errorMessage;
     private string? returnUrl;
+    private bool _requires2FA;
+    private bool _isLoginSuccessful;
 
     AntDesign.Form<LoginRequest> loginForm;
 
@@ -97,10 +109,19 @@
             errorMessage = null;
 
             var result = await AuthService.LoginAsync(loginModel);
+            _isLoginSuccessful = result.Success;
 
             if (result.Success)
             {
-                NavigateToReturnUrl();
+                var requires2FA = await AuthService.RequiresTwoFactorAsync();
+                if (requires2FA)
+                {
+                    _requires2FA = true;
+                }
+                else
+                {
+                    NavigateToReturnUrl();
+                }
             }
             else
             {
@@ -130,10 +151,19 @@
             if (!string.IsNullOrEmpty(idToken))
             {
                 var result = await AuthService.GoogleLoginAsync(idToken);
+                _isLoginSuccessful = result.Success;
 
                 if (result.Success)
                 {
-                    NavigateToReturnUrl();
+                    var requires2FA = await AuthService.RequiresTwoFactorAsync();
+                    if (requires2FA)
+                    {
+                        _requires2FA = true;
+                    }
+                    else
+                    {
+                        NavigateToReturnUrl();
+                    }
                 }
                 else
                 {
@@ -148,6 +178,18 @@
         finally
         {
             isGoogleLoading = false;
+        }
+    }
+
+    private async Task HandleTwoFactorVerification(bool isValid)
+    {
+        if (isValid)
+        {
+            NavigateToReturnUrl();
+        }
+        else
+        {
+            errorMessage = "Invalid verification code. Please try again.";
         }
     }
 

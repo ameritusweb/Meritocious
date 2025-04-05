@@ -45,12 +45,16 @@ namespace Meritocious.Infrastructure
                 
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = true;
-                
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-                options.Lockout.MaxFailedAccessAttempts = 5;
             })
             .AddEntityFrameworkStores<MeritociousDbContext>()
             .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
+            });
 
             // Register Repositories
             services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));

@@ -153,5 +153,112 @@ namespace Meritocious.Blazor.Services.Auth
                 return false;
             }
         }
+
+        public async Task<bool> RequiresTwoFactorAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("api/auth/requires-2fa");
+                if (!response.IsSuccessStatusCode)
+                {
+                    return false;
+                }
+                return await response.Content.ReadFromJsonAsync<bool>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking 2FA requirement");
+                return false;
+            }
+        }
+
+        public async Task<TwoFactorSetupResult> SetupTwoFactorAsync()
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync("api/auth/setup-2fa", null);
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to setup 2FA");
+                }
+                return await response.Content.ReadFromJsonAsync<TwoFactorSetupResult>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting up 2FA");
+                throw;
+            }
+        }
+
+        public async Task<bool> ValidateTwoFactorCodeAsync(string code)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/auth/validate-2fa", new { Code = code });
+                if (!response.IsSuccessStatusCode)
+                {
+                    return false;
+                }
+                return await response.Content.ReadFromJsonAsync<bool>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating 2FA code");
+                return false;
+            }
+        }
+
+        public async Task<UserSettingsDto> GetUserSettingsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("api/users/settings");
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to get user settings");
+                }
+                return await response.Content.ReadFromJsonAsync<UserSettingsDto>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user settings");
+                throw;
+            }
+        }
+
+        public async Task DisableTwoFactorAsync()
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync("api/auth/disable-2fa", null);
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to disable 2FA");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disabling 2FA");
+                throw;
+            }
+        }
+
+        public async Task DeleteAccountAsync()
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync("api/users/account");
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new Exception("Failed to delete account");
+                }
+                await LogoutAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting account");
+                throw;
+            }
+        }
     }
 }

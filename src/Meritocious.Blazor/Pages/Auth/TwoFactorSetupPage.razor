@@ -1,0 +1,107 @@
+@page "/auth/2fa-setup"
+@using Meritocious.Blazor.Services.Auth
+@using Meritocious.Common.DTOs.Auth
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Two-Factor Authentication Setup</h3>
+                </div>
+                <div class="card-body">
+                    @if (_loading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (_setupResult != null)
+                    {
+                        <div class="mb-4">
+                            <p>1. Install an authenticator app like Google Authenticator or Authy on your mobile device.</p>
+                            <p>2. Scan this QR code with your authenticator app:</p>
+                            <div class="text-center mb-3">
+                                <img src="@GetQrCodeImageUrl(_setupResult.QrCodeUrl)" alt="QR Code" class="img-fluid" />
+                            </div>
+                            <p>3. Or manually enter this key in your app:</p>
+                            <div class="alert alert-info text-center">
+                                <code>@_setupResult.SharedKey</code>
+                            </div>
+                            <p>4. Enter the code shown in your authenticator app to verify setup:</p>
+                            <div class="form-group">
+                                <input type="text" class="form-control" @bind="_verificationCode" placeholder="Enter code" />
+                            </div>
+                            @if (!string.IsNullOrEmpty(_error))
+                            {
+                                <div class="alert alert-danger mt-3">
+                                    @_error
+                                </div>
+                            }
+                            <button class="btn btn-primary mt-3" @onclick="ValidateCodeAsync">Verify Setup</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool _loading = true;
+    private TwoFactorSetupResult _setupResult;
+    private string _verificationCode;
+    private string _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _setupResult = await AuthService.SetupTwoFactorAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = "Failed to setup two-factor authentication.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string GetQrCodeImageUrl(string qrCodeUrl)
+    {
+        // Use a QR code generation service or library - for now returning the URL directly
+        return $"https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl={Uri.EscapeDataString(qrCodeUrl)}";
+    }
+
+    private async Task ValidateCodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_verificationCode))
+        {
+            _error = "Please enter the verification code.";
+            return;
+        }
+
+        try
+        {
+            var isValid = await AuthService.ValidateTwoFactorCodeAsync(_verificationCode);
+            if (isValid)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                _error = "Invalid verification code. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = "Failed to verify the code. Please try again.";
+        }
+    }
+}

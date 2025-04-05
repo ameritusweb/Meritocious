@@ -6,25 +6,30 @@ using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Extensions;
+using Meritocious.Common.DTOs.Auth;
+using Microsoft.AspNetCore.Identity;
 
 namespace Meritocious.Infrastructure.Services
 {
-    public class AuthenticationService : IAuthenticationService
+    public class AuthenticationService : Core.Interfaces.IAuthenticationService
     {
         private readonly UserRepository userRepository;
         private readonly ITokenService tokenService;
         private readonly GoogleAuthSettings googleSettings;
         private readonly ILogger<AuthenticationService> logger;
+        private readonly UserManager<User> userManager;
 
         public AuthenticationService(
             UserRepository userRepository,
             ITokenService tokenService,
             IOptions<GoogleAuthSettings> googleSettings,
+            UserManager<User> userManager,
             ILogger<AuthenticationService> logger)
         {
             this.userRepository = userRepository;
             this.tokenService = tokenService;
             this.googleSettings = googleSettings.Value;
+            this.userManager = userManager;
             this.logger = logger;
         }
 
@@ -246,6 +251,87 @@ namespace Meritocious.Infrastructure.Services
             {
                 logger.LogError(ex, "Error unlinking Google account");
                 return Result.Failure("An error occurred while unlinking the Google account");
+            }
+        }
+
+        public async Task<Result<bool>> RequiresTwoFactorAsync(Guid userId)
+        {
+            try
+            {
+                var user = await userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return Result.Failure<bool>("User not found");
+                }
+
+                var isInAdminRole = await userManager.IsInRoleAsync(user, "Admin");
+                return Result.Success(user.TwoFactorRequired || isInAdminRole);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error checking 2FA requirement");
+                return Result.Failure<bool>("Error checking two-factor authentication requirement");
+            }
+        }
+
+        public async Task<Result<TwoFactorSetupResult>> SetupTwoFactorAsync(Guid userId)
+        {
+            try
+            {
+                var user = await userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return Result.Failure<TwoFactorSetupResult>("User not found");
+                }
+
+                // Generate 2FA key
+                var unformattedKey = await userManager.GetAuthenticatorKeyAsync(user);
+                if (string.IsNullOrEmpty(unformattedKey))
+                {
+                    await userManager.ResetAuthenticatorKeyAsync(user);
+                    unformattedKey = await userManager.GetAuthenticatorKeyAsync(user);
+                }
+
+                var email = await userManager.GetEmailAsync(user);
+                var qrCodeUrl = $"otpauth://totp/Meritocious:{email}?secret={unformattedKey}&issuer=Meritocious";
+
+                user.TwoFactorEnabled = true;
+                await userManager.UpdateAsync(user);
+
+                return Result.Success(new TwoFactorSetupResult
+                {
+                    SharedKey = unformattedKey,
+                    QrCodeUrl = qrCodeUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error setting up 2FA");
+                return Result.Failure<TwoFactorSetupResult>("Error setting up two-factor authentication");
+            }
+        }
+
+        public async Task<Result<bool>> ValidateTwoFactorCodeAsync(Guid userId, string code)
+        {
+            try
+            {
+                var user = await userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return Result.Failure<bool>("User not found");
+                }
+
+                bool isValid = await userManager.VerifyTwoFactorTokenAsync(
+                    user,
+                    userManager.Options.Tokens.AuthenticatorTokenProvider,
+                    code);
+
+                return Result.Success(isValid);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error validating 2FA code");
+                return Result.Failure<bool>("Error validating two-factor authentication code");
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using Meritocious.Common.DTOs.Auth;
+using Meritocious.Common.DTOs.Auth;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Results;
 using System.Security.Claims;
@@ -12,6 +12,9 @@ namespace Meritocious.Core.Interfaces
         Task<Result> RevokeTokenAsync(string refreshToken);
         Task<Result> LinkGoogleAccountAsync(Guid userId, string idToken);
         Task<Result> UnlinkGoogleAccountAsync(Guid userId);
+        Task<Result<TwoFactorSetupResult>> SetupTwoFactorAsync(Guid userId);
+        Task<Result<bool>> ValidateTwoFactorCodeAsync(Guid userId, string code);
+        Task<Result<bool>> RequiresTwoFactorAsync(Guid userId);
     }
 
     public class AuthenticationResult

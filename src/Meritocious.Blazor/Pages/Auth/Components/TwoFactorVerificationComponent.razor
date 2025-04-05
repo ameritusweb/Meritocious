@@ -1,0 +1,50 @@
+@using Meritocious.Blazor.Services.Auth
+@inject IAuthService AuthService
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Two-Factor Authentication</h4>
+    </div>
+    <div class="card-body">
+        <p>Please enter the verification code from your authenticator app.</p>
+        <div class="form-group">
+            <input type="text" class="form-control" @bind="_code" placeholder="Enter code" />
+        </div>
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <div class="alert alert-danger mt-3">
+                @Error
+            </div>
+        }
+        <button class="btn btn-primary mt-3" @onclick="VerifyCodeAsync">Verify</button>
+    </div>
+</div>
+
+@code {
+    private string _code;
+
+    [Parameter]
+    public string Error { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnVerificationComplete { get; set; }
+
+    private async Task VerifyCodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_code))
+        {
+            Error = "Please enter the verification code.";
+            return;
+        }
+
+        try
+        {
+            var isValid = await AuthService.ValidateTwoFactorCodeAsync(_code);
+            await OnVerificationComplete.InvokeAsync(isValid);
+        }
+        catch
+        {
+            Error = "Failed to verify the code. Please try again.";
+        }
+    }
+}

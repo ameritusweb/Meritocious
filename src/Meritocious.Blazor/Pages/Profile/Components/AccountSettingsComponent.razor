@@ -1,0 +1,159 @@
+@using Meritocious.Blazor.Services.Auth
+@using Meritocious.Common.DTOs.Auth
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject MessageService MessageService
+@inject IFormStatusService FormStatus
+
+<Card Title="Security Settings" Class="mb-4">
+    <CardBody>
+        <div class="space-y-6">
+            <div>
+                <h4 class="mb-2">Two-Factor Authentication</h4>
+                <p class="text-gray-500 mb-4">
+                    Two-factor authentication adds an extra layer of security to your account.
+                </p>
+
+                @if (_loading)
+                {
+                    <div class="text-center">
+                        <Spin />
+                    </div>
+                }
+                else if (_userSettings?.TwoFactorEnabled == true)
+                {
+                    <Alert Type="@AlertType.Success"
+                           Message="Two-factor authentication is enabled"
+                           ShowIcon="true"
+                           Class="mb-4" />
+                    
+                    <Button Type="@ButtonType.Default"
+                            Danger
+                            OnClick="DisableTwoFactorAsync">
+                        Disable Two-Factor
+                    </Button>
+                }
+                else
+                {
+                    <Alert Type="@AlertType.Warning"
+                           Message="Two-factor authentication is not enabled"
+                           ShowIcon="true"
+                           Class="mb-4" />
+                    
+                    <Button Type="@ButtonType.Primary"
+                            OnClick="@(() => NavigationManager.NavigateTo("/auth/2fa-setup"))">
+                        Enable Two-Factor
+                    </Button>
+                }
+            </div>
+
+            @if (_userSettings?.TwoFactorRequired == true)
+            {
+                <Alert Type="@AlertType.Info"
+                       Message="Two-factor authentication is required for your account due to your role."
+                       ShowIcon="true" />
+            }
+        </div>
+    </CardBody>
+</Card>
+
+<Card Title="Account Actions" Class="mb-4">
+    <CardBody>
+        <div class="space-y-4">
+            <div>
+                <h4 class="mb-2">Change Password</h4>
+                <Button Type="@ButtonType.Default"
+                        OnClick="@(() => NavigationManager.NavigateTo("/auth/change-password"))">
+                    Change Password
+                </Button>
+            </div>
+
+            <Divider />
+
+            <div>
+                <h4 class="text-red-600 mb-2">Danger Zone</h4>
+                <Button Type="@ButtonType.Primary"
+                        Danger
+                        OnClick="@(() => _showDeleteConfirm = true)">
+                    Delete Account
+                </Button>
+            </div>
+        </div>
+    </CardBody>
+</Card>
+
+<Modal Title="Delete Account"
+       Visible="@_showDeleteConfirm"
+       OnOk="HandleDeleteAccount"
+       OnCancel="@(() => _showDeleteConfirm = false)"
+       OkText="Delete"
+       OkButtonProps="@(new ButtonProps { Danger = true })">
+    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+</Modal>
+
+@code {
+    [Parameter]
+    public EventCallback OnSaved { get; set; }
+
+    private bool _loading = true;
+    private bool _showDeleteConfirm;
+    private UserSettingsDto _userSettings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserSettings();
+    }
+
+    private async Task LoadUserSettings()
+    {
+        try
+        {
+            _loading = true;
+            _userSettings = await AuthService.GetUserSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            await MessageService.Error("Failed to load account settings");
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task DisableTwoFactorAsync()
+    {
+        if (await FormStatus.ConfirmAsync("Are you sure you want to disable two-factor authentication?", "This will make your account less secure."))
+        {
+            try
+            {
+                await AuthService.DisableTwoFactorAsync();
+                await MessageService.Success("Two-factor authentication disabled");
+                await LoadUserSettings();
+                await OnSaved.InvokeAsync();
+            }
+            catch
+            {
+                await MessageService.Error("Failed to disable two-factor authentication");
+            }
+        }
+    }
+
+    private async Task HandleDeleteAccount()
+    {
+        try
+        {
+            await AuthService.DeleteAccountAsync();
+            await MessageService.Success("Account deleted successfully");
+            NavigationManager.NavigateTo("/");
+        }
+        catch
+        {
+            await MessageService.Error("Failed to delete account");
+        }
+        finally
+        {
+            _showDeleteConfirm = false;
+        }
+    }
+}

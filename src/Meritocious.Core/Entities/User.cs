@@ -28,6 +28,8 @@ namespace Meritocious.Core.Entities
         public bool IsEmailVerified { get; set; }
         public DateTime? LastActivityAt { get; set; }
         public DateTime? LastActiveAt { get; set; }
+        public bool TwoFactorRequired { get; set; }
+        public bool TwoFactorEnabled { get; set; }
         public virtual ICollection<Tag> FollowedTags { get; set; } = new List<Tag>();
 
         private readonly List<Post> posts;
