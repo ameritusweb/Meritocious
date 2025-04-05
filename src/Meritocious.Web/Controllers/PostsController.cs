@@ -5,12 +5,13 @@ using Meritocious.Core.Features.Posts.Commands;
 using Meritocious.Core.Features.Posts.Queries;
 using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Features.Comments.Queries;
+using Meritocious.Core.Features.Comments.Commands;
 
 namespace Meritocious.Web.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PostsController : ControllerBase
+public class PostsController : ApiControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<PostsController> _logger;
@@ -110,7 +111,9 @@ public class PostsController : ControllerBase
     public async Task<ActionResult<CommentDto>> AddComment(Guid id, AddCommentCommand command)
     {
         if (id != command.PostId)
+        {
             return BadRequest("ID mismatch");
+        }
 
         var result = await _mediator.Send(command);
         return HandleResult(result);

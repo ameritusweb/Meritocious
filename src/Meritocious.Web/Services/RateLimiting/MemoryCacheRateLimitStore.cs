@@ -37,7 +37,7 @@ public class MemoryCacheRateLimitStore : IRateLimitCounterStore
         await Task.CompletedTask;
     }
 
-    public async Task SetAsync(string id, RateLimitCounter counter, TimeSpan expirationTime, 
+    public async Task SetAsync(string id, RateLimitCounter? counter, TimeSpan? expirationTime, 
         CancellationToken token = default)
     {
         var options = new MemoryCacheEntryOptions

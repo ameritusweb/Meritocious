@@ -13,10 +13,8 @@ public class ClientRateLimitMiddleware : IClientResolveContributor
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public Task<string> ResolveClientAsync()
+    public Task<string> ResolveClientAsync(HttpContext httpContext)
     {
-        var httpContext = _httpContextAccessor.HttpContext;
-        
         // First check for API key in header
         var apiKey = httpContext?.Request.Headers["X-API-Key"].FirstOrDefault();
         if (!string.IsNullOrEmpty(apiKey))

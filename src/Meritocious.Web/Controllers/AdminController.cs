@@ -4,6 +4,7 @@ using Meritocious.Common.DTOs.Auth;
 using Meritocious.Core.Features.Merit.Queries;
 using Meritocious.Core.Features.Moderation.Queries;
 using MediatR;
+using Meritocious.Core.Results;
 
 namespace Meritocious.Web.Controllers
 {
@@ -37,7 +38,7 @@ namespace Meritocious.Web.Controllers
                     TotalUsers = stats.TotalUsers,
                     ActiveUsers24h = stats.ActiveUsers24h,
                     PostsToday = stats.PostsToday,
-                    ActiveModerations = modStats.ActiveModerations
+                    ActiveModerations = modStats.ActiveModerations,
                 });
             }
             catch (Exception ex)

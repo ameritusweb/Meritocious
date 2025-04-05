@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Meritocious.Common.DTOs.Auth;
 using Meritocious.Core.Features.Security.Queries;
 using MediatR;
+using Meritocious.Core.Results;
+using Meritocious.Common.DTOs.Security;
 
 namespace Meritocious.Web.Controllers
 {
@@ -39,7 +41,7 @@ namespace Meritocious.Web.Controllers
         {
             try
             {
-                var query = new GetAdminActionsQuery(queryParams);
+                var query = new GetAdminActionsQuery(queryParams.StartDate, queryParams.EndDate, queryParams.Page, queryParams.PageSize);
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
@@ -55,7 +57,7 @@ namespace Meritocious.Web.Controllers
         {
             try
             {
-                var query = new GetSecurityEventsQuery(queryParams);
+                var query = new GetSecurityEventsQuery(queryParams.StartDate, queryParams.EndDate, queryParams.Page, queryParams.PageSize);
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
@@ -71,7 +73,7 @@ namespace Meritocious.Web.Controllers
         {
             try
             {
-                var query = new GetLoginAttemptsQuery(queryParams);
+                var query = new GetLoginAttemptsQuery(queryParams.StartDate, queryParams.EndDate, queryParams.Page, queryParams.PageSize);
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
@@ -87,7 +89,7 @@ namespace Meritocious.Web.Controllers
         {
             try
             {
-                var query = new GetApiUsageQuery(queryParams);
+                var query = new GetApiUsageQuery(queryParams.StartDate, queryParams.EndDate);
                 var result = await _mediator.Send(query);
                 return Ok(result);
             }
@@ -106,7 +108,7 @@ namespace Meritocious.Web.Controllers
         {
             try
             {
-                var query = new GetAuditLogExportQuery(startDate, endDate, category);
+                var query = new GetAuditLogExportQuery(startDate.GetValueOrDefault(), endDate.GetValueOrDefault(), category);
                 var fileBytes = await _mediator.Send(query);
                 
                 var fileName = $"audit-logs-{DateTime.UtcNow:yyyyMMdd}.csv";

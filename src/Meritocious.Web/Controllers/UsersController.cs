@@ -9,6 +9,10 @@ using Meritocious.Core.Features.Notifications.Commands;
 using Meritocious.Core.Features.Notifications.Queries;
 using Meritocious.Core.Features.Posts.Queries;
 using Meritocious.Common.DTOs.Notifications;
+using Meritocious.Common.DTOs.Merit;
+using Meritocious.Core.Features.Merit.Queries;
+using Meritocious.Core.Entities;
+using Meritocious.Common.DTOs.Contributions;
 
 namespace Meritocious.Web.Controllers;
 
@@ -108,7 +112,7 @@ public class UsersController : ApiControllerBase
     public async Task<ActionResult<UserProfileDto>> GetCurrentUserProfile()
     {
         var userId = GetUserId();
-        var query = new GetUserProfileQuery { UserId = userId };
+        var query = new GetUserProfileQuery { UserId = Guid.Parse(userId) };
         var result = await _mediator.Send(query);
         return HandleResult(result);
     }
@@ -116,7 +120,7 @@ public class UsersController : ApiControllerBase
     [HttpGet("{id}/merit-score")]
     public async Task<ActionResult<MeritScoreDto>> GetUserMeritScore(Guid id)
     {
-        var query = new GetUserMeritScoreQuery { UserId = id };
+        var query = new GetUserMeritScoreQuery { UserId = id.ToString() };
         var result = await _mediator.Send(query);
         return HandleResult(result);
     }
@@ -165,7 +169,7 @@ public class UsersController : ApiControllerBase
     {
         var query = new GetUserContributionsQuery 
         { 
-            UserId = id,
+            UserId = id.ToString(),
             Page = page,
             PageSize = pageSize
         };

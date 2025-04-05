@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Meritocious.Web.Filters;
+using AspNetCoreRateLimit;
+using Meritocious.Web.Middleware;
+using Meritocious.Web.Hubs;
+using Meritocious.Web.ExceptionHandling;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,10 +40,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add services to the container.
-builder.Services.AddControllers(options =>
-{
-    options.Filters.Add<RateLimitExceededFilter>();
-})
+builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -55,7 +56,6 @@ builder.Services.AddMediatR(
     cfg => 
     {
         cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
-        cfg.RegisterServicesFromAssembly(typeof(Meritocious.Core.Class1).Assembly);
     });
 
 // Add infrastructure services

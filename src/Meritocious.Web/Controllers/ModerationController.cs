@@ -107,6 +107,7 @@ public class ModerationStatsDto
     public Dictionary<string, int> ReportsByType { get; set; } = new();
     public Dictionary<string, int> ActionsTaken { get; set; } = new();
     public decimal AverageResolutionTime { get; set; }
+    public int ActiveModerations { get; set; }
 }
 
 public record GetModerationHistoryQuery : IRequest<Result<List<ModerationHistoryDto>>>

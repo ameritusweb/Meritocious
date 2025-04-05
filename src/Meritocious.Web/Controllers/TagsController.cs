@@ -5,6 +5,9 @@ using Meritocious.Core.Interfaces;
 using Meritocious.Common.DTOs.Content;
 using Meritocious.Core.Features.Discovery.Queries;
 using Meritocious.Core.Results;
+using Meritocious.Core.Features.Tags.Commands;
+using Meritocious.Common.DTOs.Tags;
+using Meritocious.Core.Features.Tags.Queries;
 
 namespace Meritocious.Web.Controllers;
 
@@ -192,11 +195,12 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult> FollowTag(string name)
     {
         var userId = GetUserId();
-        var command = new FollowTagCommand 
-        { 
+        var command = new FollowTagCommand
+        {
             UserId = userId,
-            TagName = name
+            TagName = name,
         };
+
         var result = await _mediator.Send(command);
         return HandleResult(result);
     }
@@ -205,11 +209,12 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult> UnfollowTag(string name)
     {
         var userId = GetUserId();
-        var command = new UnfollowTagCommand 
-        { 
+        var command = new UnfollowTagCommand
+        {
             UserId = userId,
-            TagName = name
+            TagName = name,
         };
+
         var result = await _mediator.Send(command);
         return HandleResult(result);
     }
