@@ -17,23 +17,20 @@ public class AddTagSynonymCommandHandler : IRequestHandler<AddTagSynonymCommand,
 
     public async Task<TagSynonymDto> Handle(AddTagSynonymCommand request, CancellationToken cancellationToken)
     {
-        var synonym = new Core.Entities.TagSynonym
-        {
-            SourceTagId = request.SourceTagId,
-            TargetTagId = request.TargetTagId,
-            CreatedBy = request.CreatedBy,
-            CreatedAt = DateTime.UtcNow,
-            Status = "Pending"
-        };
+        var user = await context.Users.FirstOrDefaultAsync(x => x.Id == request.CreatedBy);
+        var synonym = Core.Entities.TagSynonym.Create(
+            Guid.Parse(request.SourceTagId),
+            Guid.Parse(request.TargetTagId),
+            user);
 
         context.TagSynonyms.Add(synonym);
         await context.SaveChangesAsync(cancellationToken);
 
         return new TagSynonymDto
         {
-            SourceTagId = synonym.SourceTagId,
-            TargetTagId = synonym.TargetTagId,
-            CreatedBy = synonym.CreatedBy,
+            SourceTagId = synonym.SourceTagId.ToString(),
+            TargetTagId = synonym.TargetTagId.ToString(),
+            CreatedBy = synonym.CreatedBy.Id.ToString(),
             CreatedAt = synonym.CreatedAt,
             Status = synonym.Status
         };

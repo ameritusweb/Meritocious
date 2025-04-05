@@ -8,37 +8,40 @@ namespace Meritocious.Core.Entities
 {
     public class TagSynonym : BaseEntity
     {
-        public Guid TagId { get; private set; }
-        public Tag Tag { get; private set; }
-        public string Name { get; private set; }
-        public string Slug { get; private set; }
-        public Guid CreatorId { get; private set; }
-        public User Creator { get; private set; }
-        public int UseCount { get; private set; }
+        public Guid SourceTagId { get; private set; }
+        public Tag SourceTag { get; private set; }
+
+        public Guid TargetTagId { get; private set; }
+        public Tag TargetTag { get; private set; }
+
+        public Guid CreatedById { get; private set; }
+        public User CreatedBy { get; private set; }
+
+        public string Status { get; private set; } = "Pending";
+
+        public DateTime CreatedAt { get; private set; }
+
+        // Optional approval workflow
         public bool IsApproved { get; private set; }
         public DateTime? ApprovedAt { get; private set; }
         public Guid? ApprovedById { get; private set; }
-        public User ApprovedBy { get; private set; }
-        public string SourceTagId { get; internal set; }
-        public string TargetTagId { get; internal set; }
+        public User? ApprovedBy { get; private set; }
 
         private TagSynonym()
         {
         }
 
-        public static TagSynonym Create(Tag tag, string name, User creator)
+        public static TagSynonym Create(Guid sourceTagId, Guid targetTagId, User creator)
         {
             return new TagSynonym
             {
-                TagId = tag.Id,
-                Tag = tag,
-                Name = name,
-                Slug = Tag.GenerateSlug(name),
-                CreatorId = Guid.Parse(creator.Id),
-                Creator = creator,
-                UseCount = 0,
-                IsApproved = false,
+                SourceTagId = sourceTagId,
+                TargetTagId = targetTagId,
+                CreatedById = Guid.Parse(creator.Id),
+                CreatedBy = creator,
                 CreatedAt = DateTime.UtcNow,
+                Status = "Pending",
+                IsApproved = false
             };
         }
 
@@ -48,13 +51,7 @@ namespace Meritocious.Core.Entities
             ApprovedAt = DateTime.UtcNow;
             ApprovedById = Guid.Parse(approver.Id);
             ApprovedBy = approver;
-            UpdatedAt = DateTime.UtcNow;
-        }
-
-        public void IncrementUseCount()
-        {
-            UseCount++;
-            UpdatedAt = DateTime.UtcNow;
+            Status = "Approved";
         }
     }
 }

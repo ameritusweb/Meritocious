@@ -152,7 +152,9 @@ namespace Meritocious.Infrastructure.Data.Extensions
             async Task BuildHierarchyAsync(Guid tagId, string path)
             {
                 if (visited.Contains(tagId))
+                {
                     return;
+                }
 
                 visited.Add(tagId);
                 var children = await repository.GetChildTagsAsync(tagId);
