@@ -1,6 +1,6 @@
 namespace Meritocious.Core.Entities
 {
-    public class LoginAttempt : BaseEntity
+    public class LoginAttempt : BaseEntity<LoginAttempt>
     {
         public string Username { get; set; } = string.Empty;
         public bool Success { get; set; }

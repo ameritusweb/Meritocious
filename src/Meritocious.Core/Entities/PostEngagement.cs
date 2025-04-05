@@ -3,7 +3,7 @@ using Meritocious.Common.DTOs.Remix;
 
 namespace Meritocious.Core.Entities
 {
-    public class PostEngagement : BaseEntity
+    public class PostEngagement : BaseEntity<PostEngagement>
     {
         // Basic metrics
         public int Views { get; internal set; }

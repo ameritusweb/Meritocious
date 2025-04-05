@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace Meritocious.Core.Entities
 {
-    public class User : IdentityUser
+    public class User : IdentityUser<User>
     {
         public decimal MeritScore { get; private set; }
         public DateTime? LastCalculated { get; private set; }

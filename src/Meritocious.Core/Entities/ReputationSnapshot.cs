@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class ReputationSnapshot : BaseEntity
+    public class ReputationSnapshot : BaseEntity<ReputationSnapshot>
     {
         public string UserId { get; private set; }
         public User User { get; private set; }

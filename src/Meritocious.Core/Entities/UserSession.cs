@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class UserSession : BaseEntity
+    public class UserSession : BaseEntity<UserSession>
     {
         public string UserId { get; set; }
         public User User { get; set; } = null!;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class MeritScoreType : BaseEntity
+    public class MeritScoreType : BaseEntity<MeritScoreType>
     {
         public string Name { get; internal set; }
         public string Description { get; internal set; }

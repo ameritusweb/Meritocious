@@ -1,6 +1,6 @@
 namespace Meritocious.Core.Entities;
 
-public class SecurityEvent : BaseEntity
+public class SecurityEvent : BaseEntity<SecurityEvent>
 {
     public string EventType { get; private set; }
 

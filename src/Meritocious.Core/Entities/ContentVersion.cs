@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class ContentVersion : BaseEntity
+    public class ContentVersion : BaseEntity<ContentVersion>
     {
         public Guid ContentId { get; private set; }
         public ContentType ContentType { get; private set; }

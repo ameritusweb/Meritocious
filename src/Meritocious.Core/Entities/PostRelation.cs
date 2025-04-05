@@ -1,6 +1,6 @@
 namespace Meritocious.Core.Entities;
 
-public class PostRelation : BaseEntity
+public class PostRelation : BaseEntity<PostRelation>
 {
     public Guid ParentId { get; private set; }
     public Guid ChildId { get; private set; }

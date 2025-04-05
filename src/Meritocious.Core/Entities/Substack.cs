@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Meritocious.Core.Entities;
 
-public class Substack : BaseEntity
+public class Substack : BaseEntity<Substack>
 {
     [Required]
     public string Name { get; set; }

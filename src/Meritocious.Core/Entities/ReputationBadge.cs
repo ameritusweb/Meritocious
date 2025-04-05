@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class ReputationBadge : BaseEntity
+    public class ReputationBadge : BaseEntity<ReputationBadge>
     {
         public string UserId { get; private set; }
         public User User { get; private set; }

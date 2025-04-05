@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class BlockedIpAddress : BaseEntity
+    public class BlockedIpAddress : BaseEntity<BlockedIpAddress>
     {
         public string IpAddress { get; set; } = string.Empty;
         public string Reason { get; set; } = string.Empty;

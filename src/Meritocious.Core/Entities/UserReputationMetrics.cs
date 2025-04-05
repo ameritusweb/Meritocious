@@ -1,7 +1,7 @@
 ﻿using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Reputation.Models;
 
-public class UserReputationMetrics : BaseEntity
+public class UserReputationMetrics : BaseEntity<UserReputationMetrics>
 {
     public string UserId { get; private set; }
     public User User { get; private set; }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class Tag : BaseEntity
+    public class Tag : BaseEntity<Tag>
     {
         public string Name { get; private set; }
         public string Slug { get; private set; }

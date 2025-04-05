@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class Comment : BaseEntity
+    public class Comment : BaseEntity<Comment>
     {
         public string Content { get; private set; }
         public Guid PostId { get; private set; }

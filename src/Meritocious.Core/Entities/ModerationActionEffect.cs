@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class ModerationActionEffect : BaseEntity
+    public class ModerationActionEffect : BaseEntity<ModerationActionEffect>
     {
         public Guid ModerationActionId { get; private set; }
         public ModerationAction ModerationAction { get; private set; }

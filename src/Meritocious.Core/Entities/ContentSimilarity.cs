@@ -2,7 +2,7 @@ using System;
 
 namespace Meritocious.Core.Entities
 {
-    public class ContentSimilarity : BaseEntity
+    public class ContentSimilarity : BaseEntity<ContentSimilarity>
     {
         public Guid ContentId1 { get; set; }
         public Guid ContentId2 { get; set; }

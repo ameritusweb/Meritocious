@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Meritocious.Core.Entities
 {
-    public class ApiUsageLog : BaseEntity
+    public class ApiUsageLog : BaseEntity<ApiUsageLog>
     {
         public string Endpoint { get; set; } = string.Empty;
         public string Method { get; set; } = string.Empty;

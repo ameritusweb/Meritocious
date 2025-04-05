@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class ModerationAppeal : BaseEntity
+    public class ModerationAppeal : BaseEntity<ModerationAppeal>
     {
         public Guid ModerationActionId { get; private set; }
         public ModerationAction ModerationAction { get; private set; }

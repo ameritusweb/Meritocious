@@ -1,6 +1,6 @@
 namespace Meritocious.Core.Entities;
 
-public class Note : BaseEntity
+public class Note : BaseEntity<Note>
 {
     public Guid PostId { get; private set; }
 

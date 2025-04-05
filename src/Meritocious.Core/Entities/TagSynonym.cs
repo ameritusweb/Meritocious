@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class TagSynonym : BaseEntity
+    public class TagSynonym : BaseEntity<TagSynonym>
     {
         public Guid SourceTagId { get; private set; }
         public Tag SourceTag { get; private set; }

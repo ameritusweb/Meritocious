@@ -1,6 +1,6 @@
 namespace Meritocious.Core.Entities;
 
-public class QuoteLocation : BaseEntity
+public class QuoteLocation : BaseEntity<QuoteLocation>
 {
     public Guid PostSourceId { get; set; }
     public Post PostSource { get; set; }

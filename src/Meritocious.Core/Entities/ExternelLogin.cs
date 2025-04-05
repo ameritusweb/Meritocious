@@ -3,7 +3,7 @@ using Meritocious.Core.Entities;
 
 namespace Meritocious.Core.Entities
 {
-    public class ExternalLogin : BaseEntity
+    public class ExternalLogin : BaseEntity<ExternalLogin>
     {
         public string UserId { get; private set; }
 

@@ -1,6 +1,6 @@
 namespace Meritocious.Core.Entities;
 
-public class Notification : BaseEntity
+public class Notification : BaseEntity<Notification>
 {
     public string UserId { get; private set; }
     public User User { get; private set; }

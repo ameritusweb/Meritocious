@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class TagWiki : BaseEntity
+    public class TagWiki : BaseEntity<TagWiki>
     {
         public Guid TagId { get; private set; }
 

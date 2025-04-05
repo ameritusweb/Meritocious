@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Meritocious.Core.Entities
 {
-    public class SecurityAuditLog : BaseEntity
+    public class SecurityAuditLog : BaseEntity<SecurityAuditLog>
     {
         public string EventType { get; set; } = string.Empty;
         public string Severity { get; set; } = string.Empty;

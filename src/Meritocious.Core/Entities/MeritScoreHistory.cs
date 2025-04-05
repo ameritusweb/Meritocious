@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class MeritScoreHistory : BaseEntity
+    public class MeritScoreHistory : BaseEntity<MeritScoreHistory>
     {
         public Guid ContentId { get; private set; }
         public ContentType ContentType { get; private set; }

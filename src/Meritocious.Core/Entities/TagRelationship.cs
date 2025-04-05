@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public class TagRelationship : BaseEntity
+    public class TagRelationship : BaseEntity<TagRelationship>
     {
         public Guid SourceTagId { get; private set; }
         public Tag SourceTag { get; private set; }
