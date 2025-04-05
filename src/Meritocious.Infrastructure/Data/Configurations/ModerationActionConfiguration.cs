@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Entities;
+using System.Text.Json;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -24,10 +25,16 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasMaxLength(1000);
 
             builder.Property(a => a.ToxicityScores)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(a => a.AutomatedAnalysis)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<string>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(a => a.ModeratorNotes)
                 .HasMaxLength(2000);
@@ -72,7 +79,10 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasMaxLength(50);
 
             builder.Property(e => e.EffectData)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(e => e.RevertReason)
                 .HasMaxLength(500);

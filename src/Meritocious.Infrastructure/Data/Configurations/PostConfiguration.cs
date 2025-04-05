@@ -5,6 +5,7 @@ namespace Meritocious.Infrastructure.Data.Configurations
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Meritocious.Core.Entities;
+    using System.Text.Json;
 
     public class PostConfiguration : IEntityTypeConfiguration<Post>
     {
@@ -92,8 +93,10 @@ namespace Meritocious.Infrastructure.Data.Configurations
             
             // Merit components as JSONB for efficient component queries
             builder.Property(p => p.MeritComponents)
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             // TODO: 
             // builder.HasIndex(p => p.MeritComponents)

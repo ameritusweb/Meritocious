@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -24,7 +25,10 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasColumnType("ntext");
 
             builder.Property(n => n.RelatedSourceIds)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<List<Guid>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(n => n.Confidence)
                 .HasPrecision(5, 2);

@@ -51,13 +51,22 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasPrecision(5, 2);
 
             builder.Property(m => m.CategoryScores)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(m => m.ContributionCounts)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, int>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(m => m.TopicExpertise)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(m => m.Level)
                 .IsRequired()
@@ -70,7 +79,10 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasPrecision(5, 2);
 
             builder.Property(m => m.BadgeProgress)
-                .HasColumnType("jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.HasOne(m => m.User)
                 .WithMany()

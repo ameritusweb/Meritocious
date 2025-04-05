@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -43,24 +44,34 @@ namespace Meritocious.Infrastructure.Data.Configurations
 
             // Dictionary properties as JSON
             builder.Property(e => e.ViewsByRegion)
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, int>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(e => e.ViewsByPlatform)
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, int>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(e => e.ViewTrend)
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<DateTime, int>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(e => e.SourceInfluenceScores)
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'{}'::jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(e => e.TopEngagementSources)
-                .HasColumnType("jsonb")
-                .HasDefaultValueSql("'[]'::jsonb");
+                .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.HasOne(e => e.Post)
                 .WithOne(p => p.Engagement)

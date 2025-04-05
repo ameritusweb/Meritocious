@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Meritocious.Common.DTOs.Auth
 {
     public class AdminActionLogDto
@@ -9,7 +11,7 @@ namespace Meritocious.Common.DTOs.Auth
         public string Details { get; set; } = string.Empty;
         public string IpAddress { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
-        public Dictionary<string, object> Metadata { get; set; } = new();
+        public Dictionary<string, JsonElement> Metadata { get; set; } = new();
     }
 
     public class SecurityAuditLogDto
@@ -22,7 +24,7 @@ namespace Meritocious.Common.DTOs.Auth
         public string? Username { get; set; }
         public string? UserAgent { get; set; }
         public DateTime Timestamp { get; set; }
-        public Dictionary<string, object> Context { get; set; } = new();
+        public Dictionary<string, JsonElement> Context { get; set; } = new();
     }
 
     public class ApiUsageLogDto
