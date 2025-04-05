@@ -14,14 +14,14 @@ namespace Meritocious.Core.Services
 
     public class CommentService : ICommentService
     {
-        private readonly CommentRepository commentRepository;
-        private readonly PostRepository postRepository;
+        private readonly ICommentRepository commentRepository;
+        private readonly IPostRepository postRepository;
         private readonly IMeritScorer meritScorer;
         private readonly ILogger<CommentService> logger;
 
         public CommentService(
-            CommentRepository commentRepository,
-            PostRepository postRepository,
+            ICommentRepository commentRepository,
+            IPostRepository postRepository,
             IMeritScorer meritScorer,
             ILogger<CommentService> logger)
         {

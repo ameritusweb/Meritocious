@@ -15,13 +15,13 @@ namespace Meritocious.Core.Services
 
     public class TagService : ITagService
     {
-        private readonly TagRepository tagRepository;
-        private readonly PostRepository postRepository;
+        private readonly ITagRepository tagRepository;
+        private readonly IPostRepository postRepository;
         private readonly ILogger<TagService> logger;
 
         public TagService(
-            TagRepository tagRepository,
-            PostRepository postRepository,
+            ITagRepository tagRepository,
+            IPostRepository postRepository,
             ILogger<TagService> logger)
         {
             this.tagRepository = tagRepository;

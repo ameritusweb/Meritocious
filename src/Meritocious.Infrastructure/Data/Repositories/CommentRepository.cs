@@ -3,8 +3,9 @@ namespace Meritocious.Infrastructure.Data.Repositories
 {
     using Microsoft.EntityFrameworkCore;
     using Meritocious.Core.Entities;
+    using Meritocious.Core.Interfaces;
 
-    public interface ICommentRepository
+    public interface ICommentRepository : IRepository<Comment>
     {
         Task<List<Comment>> GetCommentsByPostAsync(Guid postId);
         Task<List<Comment>> GetCommentsByUserAsync(Guid userId);

@@ -58,15 +58,11 @@ namespace Meritocious.Infrastructure
 
             // Register Repositories
             services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
-            services.AddScoped<UserRepository>();
-            services.AddScoped<PostRepository>();
-            services.AddScoped<CommentRepository>();
-            services.AddScoped<TagRepository>();
-            services.AddScoped<ContentSimilarityRepository>();
-            services.AddScoped<ContentTopicRepository>();
-            services.AddScoped<UserTopicPreferenceRepository>();
-            services.AddScoped<TrendingContentRepository>();
-            services.AddScoped<MeritScoreHistoryRepository>();
+            services.Scan(scan => scan
+                .FromAssemblyOf<PostRepository>()
+                .AddClasses(classes => classes.AssignableTo(typeof(IRepository<>)))
+                .AsImplementedInterfaces()
+                .WithScopedLifetime());
 
             // Register Core Services
             services.AddScoped<IUserService, UserService>();

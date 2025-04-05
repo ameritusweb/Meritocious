@@ -30,7 +30,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         Task<bool> IsEmailUniqueAsync(string email);
     }
 
-    public class UserRepository : GenericRepository<User>
+    public class UserRepository : GenericRepository<User>, IUserRepository
     {
         private readonly UserManager<User> userManager;
 

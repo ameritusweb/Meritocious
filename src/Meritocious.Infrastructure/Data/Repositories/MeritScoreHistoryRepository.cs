@@ -3,10 +3,11 @@ using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Features.Reputation.Models;
+using Meritocious.Core.Interfaces;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
-    public interface IMeritScoreHistoryRepository
+    public interface IMeritScoreHistoryRepository : IRepository<MeritScoreHistory>
     {
         Task<List<MeritScoreHistory>> GetContentScoreHistoryAsync(Guid contentId, ContentType contentType);
         Task<MeritScoreHistory> GetLatestScoreAsync(Guid contentId, ContentType contentType);
@@ -14,7 +15,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         Task<Dictionary<string, decimal>> GetAverageComponentScoresAsync(DateTime start, DateTime end);
     }
 
-    public class MeritScoreHistoryRepository : GenericRepository<MeritScoreHistory>
+    public class MeritScoreHistoryRepository : GenericRepository<MeritScoreHistory>, IMeritScoreHistoryRepository
     {
         public MeritScoreHistoryRepository(MeritociousDbContext context) : base(context)
         {

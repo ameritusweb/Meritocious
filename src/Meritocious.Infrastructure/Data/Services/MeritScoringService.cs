@@ -17,18 +17,18 @@ namespace Meritocious.Core.Services
     public class MeritScoringService : IMeritScoringService
     {
         private readonly IMeritScorer meritScorer;
-        private readonly UserRepository userRepository;
-        private readonly PostRepository postRepository;
-        private readonly CommentRepository commentRepository;
-        private readonly MeritScoreHistoryRepository meritScoreHistoryRepository;
+        private readonly IUserRepository userRepository;
+        private readonly IPostRepository postRepository;
+        private readonly ICommentRepository commentRepository;
+        private readonly IMeritScoreHistoryRepository meritScoreHistoryRepository;
         private readonly ILogger<MeritScoringService> logger;
 
         public MeritScoringService(
             IMeritScorer meritScorer,
-            UserRepository userRepository,
-            PostRepository postRepository,
-            CommentRepository commentRepository,
-            MeritScoreHistoryRepository meritScoreHistoryRepository,
+            IUserRepository userRepository,
+            IPostRepository postRepository,
+            ICommentRepository commentRepository,
+            IMeritScoreHistoryRepository meritScoreHistoryRepository,
             ILogger<MeritScoringService> logger)
         {
             this.meritScorer = meritScorer;

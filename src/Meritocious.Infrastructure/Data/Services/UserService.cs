@@ -16,10 +16,10 @@ namespace Meritocious.Core.Services
 
     public class UserService : IUserService
     {
-        private readonly UserRepository userRepository;
+        private readonly IUserRepository userRepository;
         private readonly ILogger<UserService> logger;
 
-        public UserService(UserRepository userRepository, ILogger<UserService> logger)
+        public UserService(IUserRepository userRepository, ILogger<UserService> logger)
         {
             this.userRepository = userRepository;
             this.logger = logger;

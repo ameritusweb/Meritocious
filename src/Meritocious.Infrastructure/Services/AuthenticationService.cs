@@ -13,14 +13,14 @@ namespace Meritocious.Infrastructure.Services
 {
     public class AuthenticationService : Core.Interfaces.IAuthenticationService
     {
-        private readonly UserRepository userRepository;
+        private readonly IUserRepository userRepository;
         private readonly ITokenService tokenService;
         private readonly GoogleAuthSettings googleSettings;
         private readonly ILogger<AuthenticationService> logger;
         private readonly UserManager<User> userManager;
 
         public AuthenticationService(
-            UserRepository userRepository,
+            IUserRepository userRepository,
             ITokenService tokenService,
             IOptions<GoogleAuthSettings> googleSettings,
             UserManager<User> userManager,

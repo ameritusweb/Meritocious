@@ -3,11 +3,13 @@ using Meritocious.Core.Features.Tags.Models;
 using Meritocious.Infrastructure.Data.Repositories;
 using Meritocious.Core.Entities;
 using System.Threading.Tasks;
+using Meritocious.Core.Interfaces;
 
 namespace Meritocious.Infrastructure.Data.Repositories
 {
-    public interface ITagRepository
+    public interface ITagRepository : IRepository<Tag>
     {
+        Task<Tag> GetByNameAsync(string name);
         Task<Tag> GetBySlugAsync(string slug);
         Task<List<Tag>> GetPopularTagsAsync(int count = 10);
         Task<List<Tag>> GetTagsByCategoryAsync(TagCategory category);
@@ -17,7 +19,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         Task<List<Tag>> GetTagsWithMinimumMeritAsync(decimal minMeritScore);
     }
 
-    public class TagRepository : GenericRepository<Tag>
+    public class TagRepository : GenericRepository<Tag>, ITagRepository
     {
         public TagRepository(MeritociousDbContext context) : base(context)
         {

@@ -14,14 +14,14 @@ namespace Meritocious.Core.Services
 
     public class PostService : IPostService
     {
-        private readonly PostRepository postRepository;
-        private readonly UserRepository userRepository;
+        private readonly IPostRepository postRepository;
+        private readonly IUserRepository userRepository;
         private readonly IMeritScorer meritScorer;
         private readonly ILogger<PostService> logger;
 
         public PostService(
-            PostRepository postRepository,
-            UserRepository userRepository,
+            IPostRepository postRepository,
+            IUserRepository userRepository,
             IMeritScorer meritScorer,
             ILogger<PostService> logger)
         {
