@@ -26,18 +26,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasPrecision(5, 2)
                 .HasDefaultValue(0.00m);
 
-            builder.Property(p => p.ViewCount)
-                .HasDefaultValue(0);
-
-            builder.Property(p => p.UniqueViewCount)
-                .HasDefaultValue(0);
-
-            builder.Property(p => p.LikeCount)
-                .HasDefaultValue(0);
-
-            builder.Property(p => p.ShareCount)
-                .HasDefaultValue(0);
-
             builder.Property(p => p.AverageTimeSpentSeconds)
                 .HasPrecision(10, 2)
                 .HasDefaultValue(0.00m);

@@ -110,7 +110,7 @@ public class SubstackController : ApiControllerBase
     }
 
     [HttpPost("import")]
-    public async Task<ActionResult<Guid>> ImportSubstackPost(SubstackPostImportRequest request)
+    public async Task<ActionResult<string>> ImportSubstackPost(SubstackPostImportRequest request)
     {
         var command = new ImportSubstackPostCommand
         {

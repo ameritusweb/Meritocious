@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace Meritocious.Core.Entities
     {
         public string ContentId { get; private set; }
         public string ContentType { get; private set; }
-        public string ScoreTypeId { get; private set; }
+        public UlidId<MeritScoreType> ScoreTypeId { get; private set; }
         public decimal Score { get; private set; }
 
         // Navigation properties

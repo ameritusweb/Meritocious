@@ -22,37 +22,78 @@ namespace Meritocious.Core.Extensions
                 }
 
                 // Look for the UlidId property (not Id anymore)
-                var ulidProp = entityType.FindProperty("UlidId");
-                if (ulidProp == null)
+                var clrProperty = clrType.GetProperty("UlidId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (clrProperty == null)
                 {
                     continue;
                 }
 
-                var ulidType = ulidProp.ClrType;
+                var entityBuilder = modelBuilder.Entity(clrType);
 
-                if (!ulidType.IsGenericType || ulidType.GetGenericTypeDefinition() != typeof(UlidId<>))
+                var propertyType = clrProperty.PropertyType;
+                if (!propertyType.IsGenericType || propertyType.GetGenericTypeDefinition() != typeof(UlidId<>))
                 {
                     continue;
                 }
 
-                // Create a ValueConverter<UlidId<T>, string>
-                var converterType = typeof(ValueConverter<,>).MakeGenericType(ulidType, typeof(string));
-                var constructor = converterType.GetConstructor(new[] { typeof(Func<,>).MakeGenericType(ulidType, typeof(string)), typeof(Func<,>).MakeGenericType(typeof(string), ulidType) });
+                // Create ValueConverter<UlidId<T>, string>
+                var toString = CreateToStringLambda(propertyType);
+                var fromString = CreateFromStringLambda(propertyType);
 
-                if (constructor == null)
+                var converterType = typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string));
+                var converter = Activator.CreateInstance(
+                    typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string)),
+                    toString,
+                    fromString,
+                    null);
+
+                entityBuilder
+                    .Property(clrProperty.PropertyType, clrProperty.Name)
+                    .HasConversion((ValueConverter)converter!)
+                    .HasMaxLength(26)
+                    .IsUnicode(false)
+                    .IsRequired();
+            }
+        }
+
+        public static void IgnoreReadOnlyProperties(this ModelBuilder modelBuilder)
+        {
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes().ToList())
+            {
+                var clrType = entityType.ClrType;
+
+                // Skip shadow/entity types with no CLR type
+                if (clrType == null || entityType.IsPropertyBag)
                 {
-                    throw new InvalidOperationException("Could not find appropriate constructor for ValueConverter.");
+                    continue;
                 }
 
-                // Create conversion expressions dynamically
-                var toStringExpr = CreateToStringLambda(ulidType);
-                var fromStringExpr = CreateFromStringLambda(ulidType);
+                // Get all public instance properties
+                var props = clrType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-                var converter = constructor.Invoke(new object[] { toStringExpr, fromStringExpr }) as ValueConverter;
-                ulidProp.SetValueConverter(converter);
-                ulidProp.SetMaxLength(26);
-                ulidProp.SetIsUnicode(false);
-                ulidProp.IsNullable = false;
+                foreach (var prop in props)
+                {
+                    // Skip if property has a setter (it's writable)
+                    if (prop.SetMethod != null)
+                    {
+                        continue;
+                    }
+
+                    // Skip if it's an indexer or compiler-generated
+                    if (prop.GetIndexParameters().Length > 0)
+                    {
+                        continue;
+                    }
+
+                    // Skip if already ignored/mapped (just to be safe)
+                    if (entityType.FindProperty(prop.Name) != null)
+                    {
+                        continue;
+                    }
+
+                    // Ignore it
+                    modelBuilder.Entity(clrType).Ignore(prop.Name);
+                }
             }
         }
 
@@ -74,18 +115,23 @@ namespace Meritocious.Core.Extensions
         private static object CreateToStringLambda(Type ulidType)
         {
             var param = Expression.Parameter(ulidType, "v");
-            var body = Expression.Property(param, "Value");
-            var lambdaType = typeof(Func<,>).MakeGenericType(ulidType, typeof(string));
-            return Expression.Lambda(lambdaType, body, param);
+            var valueProp = Expression.Property(param, "Value");
+            var delegateType = typeof(Func<,>).MakeGenericType(ulidType, typeof(string));
+            return Expression.Lambda(delegateType, valueProp, param);
         }
 
         private static object CreateFromStringLambda(Type ulidType)
         {
             var param = Expression.Parameter(typeof(string), "v");
             var ctor = ulidType.GetConstructor(new[] { typeof(string) });
-            var body = Expression.New(ctor, param);
-            var lambdaType = typeof(Func<,>).MakeGenericType(typeof(string), ulidType);
-            return Expression.Lambda(lambdaType, body, param);
+            if (ctor == null)
+            {
+                throw new InvalidOperationException($"No string constructor found on {ulidType.Name}");
+            }
+
+            var newExpr = Expression.New(ctor, param);
+            var delegateType = typeof(Func<,>).MakeGenericType(typeof(string), ulidType);
+            return Expression.Lambda(delegateType, newExpr, param);
         }
     }
 }

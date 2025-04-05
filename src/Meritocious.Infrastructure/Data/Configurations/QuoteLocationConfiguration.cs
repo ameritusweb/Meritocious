@@ -35,8 +35,8 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Add shadow properties for the PostRelation relationship
-            builder.Property<Guid>("PostRelationParentId");
-            builder.Property<Guid>("PostRelationChildId");
+            builder.Property<string>("PostRelationParentId");
+            builder.Property<string>("PostRelationChildId");
 
             // Create index on the relationship
             builder.HasIndex(new[] { "PostRelationParentId", "PostRelationChildId" });

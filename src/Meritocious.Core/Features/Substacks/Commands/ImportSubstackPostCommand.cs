@@ -9,7 +9,7 @@ using Meritocious.Core.Commands;
 
 namespace Meritocious.Core.Features.Substacks.Commands;
 
-public class ImportSubstackPostCommand : IRequest<Result<Guid>>
+public class ImportSubstackPostCommand : IRequest<Result<string>>
 {
     public string PostUrl { get; set; }
     public string SubstackName { get; set; }
@@ -18,7 +18,7 @@ public class ImportSubstackPostCommand : IRequest<Result<Guid>>
     public string RemixNotes { get; set; }
 }
 
-public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPostCommand, Result<Guid>>
+public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPostCommand, Result<string>>
 {
     private readonly ISubstackFeedService substackService;
     private readonly IMediator mediator;
@@ -34,21 +34,21 @@ public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPo
         this.logger = logger;
     }
 
-    public async Task<Result<Guid>> Handle(ImportSubstackPostCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(ImportSubstackPostCommand request, CancellationToken cancellationToken)
     {
         try
         {
             // Validate the URL
             if (!await substackService.ValidateSubstackUrlAsync(request.PostUrl))
             {
-                return Result<Guid>.Failure("Invalid Substack post URL");
+                return Result<string>.Failure("Invalid Substack post URL");
             }
 
             // Get the post content
             var content = await substackService.GetPostContentAsync(request.PostUrl);
             if (string.IsNullOrEmpty(content))
             {
-                return Result<Guid>.Failure("Failed to fetch post content");
+                return Result<string>.Failure("Failed to fetch post content");
             }
 
             // Clean up the HTML content
@@ -87,11 +87,11 @@ public class ImportSubstackPostCommandHandler : IRequestHandler<ImportSubstackPo
         catch (Exception ex)
         {
             logger.LogError(ex, "Error importing Substack post from {Url}", request.PostUrl);
-            return Result<Guid>.Failure("Failed to import Substack post");
+            return Result<string>.Failure("Failed to import Substack post");
         }
 
         // TODO: Remove this.
-        return Result<Guid>.Success(Guid.NewGuid());
+        return Result<string>.Success(Ulid.NewUlid().ToString());
     }
 
     private string CleanHtmlContent(string html)
