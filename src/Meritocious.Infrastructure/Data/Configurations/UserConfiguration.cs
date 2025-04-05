@@ -41,6 +41,12 @@
                 .WithOne(c => c.Author)
                 .HasForeignKey(c => c.AuthorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(u => u.MeritScoreHistories)
+                .WithOne()
+                .HasForeignKey("UserId")
+                .HasPrincipalKey(u => u.Id)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

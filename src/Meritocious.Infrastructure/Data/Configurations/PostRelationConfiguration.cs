@@ -30,11 +30,10 @@ public class PostRelationConfiguration : IEntityTypeConfiguration<PostRelation>
         builder.Property(r => r.OrderIndex)
             .HasDefaultValue(0);
 
-        // Quotes collection as JSON
-        builder.Property(r => r.Quotes)
-            .HasColumnType("jsonb");
-
-        // Relationships are configured in PostConfiguration to avoid cycles
+        builder.HasMany(r => r.Quotes)
+           .WithOne()
+           .HasForeignKey("PostRelationParentId", "PostRelationChildId")
+           .OnDelete(DeleteBehavior.Cascade);
 
         // Core relationship indexes
         builder.HasIndex(r => new { r.ParentId, r.RelationType })
@@ -68,11 +67,6 @@ public class PostRelationConfiguration : IEntityTypeConfiguration<PostRelation>
         builder.HasIndex(r => new { r.RelationType, r.RelevanceScore })
             .HasFilter("RelationType = 'remix'")
             .IncludeProperties(r => new { r.Role });
-
-        // Quote search
-        builder.Property(r => r.Quotes)
-            .HasColumnType("jsonb")
-            .HasDefaultValueSql("'[]'::jsonb");
 
         // TODO: Figure this out.
         // builder.HasIndex(r => r.Quotes)

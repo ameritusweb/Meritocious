@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Features.Recommendations.Models;
 using ContentSimilarity = Meritocious.Core.Entities.ContentSimilarity;
+using Meritocious.Infrastructure.Data.Configurations;
 
 namespace Meritocious.Infrastructure.Data
 {

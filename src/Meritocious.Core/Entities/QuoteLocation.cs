@@ -8,4 +8,8 @@ public class QuoteLocation : BaseEntity
     public int StartPosition { get; set; }
     public int EndPosition { get; set; }
     public string Context { get; set; } // Surrounding text for context
+
+    public Guid PostRelationParentId { get; set; }
+    public Guid PostRelationChildId { get; set; }
+    public PostRelation PostRelation { get; set; }
 }

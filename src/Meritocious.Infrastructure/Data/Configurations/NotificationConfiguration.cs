@@ -32,6 +32,21 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(n => n.Link)
                 .HasMaxLength(255);
 
+            builder.HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(n => n.Post)
+                .WithMany()
+                .HasForeignKey(n => n.PostId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(n => n.Comment)
+                .WithMany()
+                .HasForeignKey(n => n.CommentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             // Create indexes for commonly queried fields
             builder.HasIndex(n => n.UserId);  // Used for getting user's notifications
             builder.HasIndex(n => n.CreatedAt);  // Used for sorting by date

@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Meritocious.Core.Entities
 {
     public class ApiUsageLog : BaseEntity
@@ -10,7 +12,7 @@ namespace Meritocious.Core.Entities
         public DateTime Timestamp { get; set; }
         public int DurationMs { get; set; }
         public long ResponseSize { get; set; }
-        public Dictionary<string, object> RequestMetadata { get; set; } = new();
+        public Dictionary<string, JsonElement> RequestMetadata { get; set; } = new();
         
         // Navigation properties
         public User? User { get; set; }

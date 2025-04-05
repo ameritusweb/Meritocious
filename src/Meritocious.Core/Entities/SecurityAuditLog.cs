@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Meritocious.Core.Entities
 {
     public class SecurityAuditLog : BaseEntity
@@ -9,7 +11,7 @@ namespace Meritocious.Core.Entities
         public Guid? UserId { get; set; }
         public string? UserAgent { get; set; }
         public DateTime Timestamp { get; set; }
-        public Dictionary<string, object> Context { get; set; } = new();
+        public Dictionary<string, JsonElement> Context { get; set; } = new();
 
         public string Level { get; set; } = string.Empty;
         public string Message { get; set; } = string.Empty;

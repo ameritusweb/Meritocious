@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Core.Entities;
+using System.Text.Json;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -93,8 +94,11 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(s => s.OverallMeritScore)
                 .HasPrecision(5, 2);
 
-            builder.Property(s => s.MetricSnapshots)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.MetricSnapshots)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(s => s.Level)
                 .IsRequired()
@@ -130,11 +134,17 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasMaxLength(50);
 
-            builder.Property(b => b.Criteria)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.Criteria)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
-            builder.Property(b => b.Progress)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.Progress)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(b => b.AwardReason)
                 .HasMaxLength(500);

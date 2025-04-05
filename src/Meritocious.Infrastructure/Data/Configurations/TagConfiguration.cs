@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Core.Features.Tags.Models;
 using Meritocious.Core.Entities;
+using System.Text.Json;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -33,8 +34,11 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasConversion<string>();
 
-            builder.Property(t => t.Metadata)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.Metadata)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.HasOne(t => t.ParentTag)
                 .WithMany(t => t.ChildTags)

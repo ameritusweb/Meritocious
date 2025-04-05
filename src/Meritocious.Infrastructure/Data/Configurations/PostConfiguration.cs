@@ -56,6 +56,18 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasForeignKey(r => r.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasMany(p => p.MeritScores)
+            .WithOne()
+            .HasForeignKey("ContentId")
+            .HasPrincipalKey(p => p.Id)
+            .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(p => p.MeritScoreHistories)
+                .WithOne()
+                .HasForeignKey("ContentId")
+                .HasPrincipalKey(p => p.Id)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Indexes for common queries
             builder.HasIndex(p => p.AuthorId);
             builder.HasIndex(p => p.IsDeleted);

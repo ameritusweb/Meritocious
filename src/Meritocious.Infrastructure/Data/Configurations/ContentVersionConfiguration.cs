@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Core.Features.Versioning;
 using Meritocious.Core.Entities;
+using System.Text.Json;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -31,8 +32,11 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(v => v.MeritScore)
                 .HasPrecision(5, 2);
 
-            builder.Property(v => v.MeritScoreComponents)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.MeritScoreComponents)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(v => v.ModeratorNotes)
                 .HasMaxLength(1000);
@@ -59,18 +63,26 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             builder.HasKey(d => d.Id);
 
-            builder.Property(d => d.DiffData)
-                .IsRequired()
-                .HasColumnType("jsonb");
+            builder.Property(e => e.DiffData)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<string>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
-            builder.Property(d => d.TitleDiff)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.TitleDiff)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<string>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(d => d.MeritScoreDiff)
                 .HasPrecision(5, 2);
 
-            builder.Property(d => d.ComponentDiffs)
-                .HasColumnType("jsonb");
+            builder.Property(e => e.ComponentDiffs)
+               .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.HasOne(d => d.ContentVersion)
                 .WithMany()
