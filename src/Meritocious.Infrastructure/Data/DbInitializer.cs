@@ -6,6 +6,8 @@
     using System;
     using System.Threading.Tasks;
     using Meritocious.Core.Entities;
+    using Microsoft.AspNetCore.Identity;
+    using System.Data;
 
     public static class DbInitializer
     {
@@ -39,6 +41,57 @@
             public static readonly Guid Contribution = new("30C34G2E-BG6H-6D3E-BG1G-H2777DCHH1E4");
             public static readonly Guid Civility = new("40D45H3F-CH7I-7E4F-CH2H-I3888EDII2F5");
             public static readonly Guid Relevance = new("50E56I4G-DI8J-8F5G-DI3I-J4999FEJJ3G6");
+        }
+
+        public static async Task SeedAdminUserAsync(IServiceProvider serviceProvider)
+        {
+            using var scope = serviceProvider.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("SeedAdmin");
+
+            var adminEmail = "admin@meritocious.com";
+            var adminPassword = "GuessablePassword";
+            var adminRoleName = "Admin";
+
+            // Create role if it doesn't exist
+            if (!await roleManager.RoleExistsAsync(adminRoleName))
+            {
+                var role = new Role();
+                role.Name = adminRoleName;
+                var roleResult = await roleManager.CreateAsync(role);
+                if (!roleResult.Succeeded)
+                {
+                    logger.LogError("Failed to create role {Role}: {Errors}", adminRoleName, string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    return;
+                }
+            }
+
+            // Create admin user if not exists
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
+            {
+                adminUser = User.Create(adminEmail, adminEmail, Guid.NewGuid().ToString());
+
+                var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+                if (!createResult.Succeeded)
+                {
+                    logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                    return;
+                }
+            }
+
+            // Assign to Admin role if not already
+            if (!await userManager.IsInRoleAsync(adminUser, adminRoleName))
+            {
+                var addToRole = await userManager.AddToRoleAsync(adminUser, adminRoleName);
+                if (!addToRole.Succeeded)
+                {
+                    logger.LogError("Failed to add admin to role: {Errors}", string.Join(", ", addToRole.Errors.Select(e => e.Description)));
+                }
+            }
+
+            logger.LogInformation("Admin user seeded successfully.");
         }
 
         private static async Task SeedDataAsync(MeritociousDbContext context, ILogger logger)

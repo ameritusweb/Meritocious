@@ -161,5 +161,6 @@ app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Initialize the database
 await Meritocious.Infrastructure.Data.DbInitializer.InitializeAsync(app.Services);
+await Meritocious.Infrastructure.Data.DbInitializer.SeedAdminUserAsync(app.Services);
 
 app.Run();

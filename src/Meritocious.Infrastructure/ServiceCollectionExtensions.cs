@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure
                     b => b.MigrationsAssembly(typeof(MeritociousDbContext).Assembly.FullName)));
 
             // Add Identity
-            services.AddIdentity<User, IdentityRole<Guid>>(options =>
+            services.AddIdentity<User, IdentityRole>(options =>
             {
                 options.Password.RequiredLength = 8;
                 options.Password.RequireDigit = true;
