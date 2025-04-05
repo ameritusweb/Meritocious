@@ -8,21 +8,21 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetRecommendedSubstacksQueryHandler : IRequestHandler<GetRecommendedSubstacksQuery, List<SubstackDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetRecommendedSubstacksQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<List<SubstackDto>> Handle(GetRecommendedSubstacksQuery request, CancellationToken cancellationToken)
     {
-        var userInterests = await _context.UserTopicPreferences
+        var userInterests = await context.UserTopicPreferences
             .Where(p => p.UserId == request.UserId)
             .Select(p => p.TopicId)
             .ToListAsync(cancellationToken);
 
-        return await _context.Substacks
+        return await context.Substacks
             .Where(s => s.Topics.Any(t => userInterests.Contains(t.TopicId)))
             .OrderByDescending(s => s.AvgMeritScore)
             .Take(request.Limit)

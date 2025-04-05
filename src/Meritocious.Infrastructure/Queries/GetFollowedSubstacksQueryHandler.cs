@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetFollowedSubstacksQueryHandler : IRequestHandler<GetFollowedSubstacksQuery, List<SubstackDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetFollowedSubstacksQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<List<SubstackDto>> Handle(GetFollowedSubstacksQuery request, CancellationToken cancellationToken)
     {
-        return await _context.Users
+        return await context.Users
             .Where(u => u.Id == request.UserId)
             .SelectMany(u => u.FollowedSubstacks)
             .OrderByDescending(s => s.LastPostDate)
@@ -25,7 +25,7 @@ public class GetFollowedSubstacksQueryHandler : IRequestHandler<GetFollowedSubst
             .Take(request.Limit)
             .Select(s => new SubstackDto
             {
-                Id = s.Id,
+                Id = s.Id.ToString(),
                 Name = s.Name,
                 Subdomain = s.Subdomain,
                 CustomDomain = s.CustomDomain,

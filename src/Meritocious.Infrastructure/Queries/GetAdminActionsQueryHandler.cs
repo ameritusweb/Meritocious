@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetAdminActionsQueryHandler : IRequestHandler<GetAdminActionsQuery, IEnumerable<AdminActionDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetAdminActionsQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<AdminActionDto>> Handle(GetAdminActionsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.AdminActions.AsQueryable();
+        var query = context.AdminActions.AsQueryable();
 
         if (request.StartDate.HasValue)
             query = query.Where(a => a.Timestamp >= request.StartDate.Value);

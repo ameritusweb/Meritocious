@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetFollowedTagsQueryHandler : IRequestHandler<GetFollowedTagsQuery, IEnumerable<TagDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetFollowedTagsQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<TagDto>> Handle(GetFollowedTagsQuery request, CancellationToken cancellationToken)
     {
-        return await _context.Users
+        return await context.Users
             .Where(u => u.Id == request.UserId)
             .SelectMany(u => u.FollowedTags)
             .Select(t => new TagDto

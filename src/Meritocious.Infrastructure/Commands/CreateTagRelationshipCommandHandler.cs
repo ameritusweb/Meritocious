@@ -8,11 +8,11 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class CreateTagRelationshipCommandHandler : IRequestHandler<CreateTagRelationshipCommand, TagRelationshipDto>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public CreateTagRelationshipCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<TagRelationshipDto> Handle(CreateTagRelationshipCommand request, CancellationToken cancellationToken)
@@ -26,8 +26,8 @@ public class CreateTagRelationshipCommandHandler : IRequestHandler<CreateTagRela
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.TagRelationships.Add(relationship);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.TagRelationships.Add(relationship);
+        await context.SaveChangesAsync(cancellationToken);
 
         return new TagRelationshipDto
         {

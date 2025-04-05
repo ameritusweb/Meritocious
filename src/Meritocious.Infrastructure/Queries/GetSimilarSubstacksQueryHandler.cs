@@ -18,12 +18,12 @@ public class GetSimilarSubstacksQueryHandler : IRequestHandler<GetSimilarSubstac
     public async Task<List<SubstackDto>> Handle(GetSimilarSubstacksQuery request, CancellationToken cancellationToken)
     {
         var substackTopics = await _context.Substacks
-            .Where(s => s.Id == request.SubstackId)
+            .Where(s => s.Id.ToString() == request.SubstackId)
             .SelectMany(s => s.Topics.Select(t => t.TopicId))
             .ToListAsync(cancellationToken);
 
         return await _context.Substacks
-            .Where(s => s.Id != request.SubstackId && s.Topics.Any(t => substackTopics.Contains(t.TopicId)))
+            .Where(s => s.Id.ToString() != request.SubstackId && s.Topics.Any(t => substackTopics.Contains(t.TopicId)))
             .OrderByDescending(s => s.Topics.Count(t => substackTopics.Contains(t.TopicId)))
             .ThenByDescending(s => s.AvgMeritScore)
             .Take(request.Limit)
