@@ -36,7 +36,7 @@ namespace Meritocious.Infrastructure.Commands
                     return Result.Failure<CommentDto>($"Comment {request.CommentId} not found");
                 }
 
-                if (comment.AuthorId != request.EditorId)
+                if (comment.AuthorId != request.EditorId.ToString())
                 {
                     return Result.Failure<CommentDto>("Only the author can edit this comment");
                 }

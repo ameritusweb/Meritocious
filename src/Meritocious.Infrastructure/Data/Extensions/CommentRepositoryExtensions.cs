@@ -110,7 +110,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
         {
             return await repository.DbSet
                 .Include(c => c.Post)
-                .Where(c => c.AuthorId == userId && !c.IsDeleted)
+                .Where(c => c.AuthorId == userId.ToString() && !c.IsDeleted)
                 .OrderByDescending(c => c.MeritScore)
                 .Take(count)
                 .ToListAsync();
