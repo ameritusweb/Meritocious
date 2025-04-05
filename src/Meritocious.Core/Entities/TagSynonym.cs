@@ -14,7 +14,7 @@ namespace Meritocious.Core.Entities
         public Guid TargetTagId { get; private set; }
         public Tag TargetTag { get; private set; }
 
-        public Guid CreatedById { get; private set; }
+        public string CreatedById { get; private set; }
         public User CreatedBy { get; private set; }
 
         public string Status { get; private set; } = "Pending";
@@ -24,7 +24,7 @@ namespace Meritocious.Core.Entities
         // Optional approval workflow
         public bool IsApproved { get; private set; }
         public DateTime? ApprovedAt { get; private set; }
-        public Guid? ApprovedById { get; private set; }
+        public string? ApprovedById { get; private set; }
         public User? ApprovedBy { get; private set; }
         public string Name => SourceTag?.Name ?? "(unknown)";
 
@@ -38,7 +38,7 @@ namespace Meritocious.Core.Entities
             {
                 SourceTagId = sourceTagId,
                 TargetTagId = targetTagId,
-                CreatedById = Guid.Parse(creator.Id),
+                CreatedById = creator.Id,
                 CreatedBy = creator,
                 CreatedAt = DateTime.UtcNow,
                 Status = "Pending",
@@ -50,7 +50,7 @@ namespace Meritocious.Core.Entities
         {
             IsApproved = true;
             ApprovedAt = DateTime.UtcNow;
-            ApprovedById = Guid.Parse(approver.Id);
+            ApprovedById = approver.Id;
             ApprovedBy = approver;
             Status = "Approved";
         }

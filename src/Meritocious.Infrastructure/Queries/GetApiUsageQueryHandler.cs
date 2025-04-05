@@ -41,7 +41,7 @@ public class GetApiUsageQueryHandler : IRequestHandler<GetApiUsageQuery, IEnumer
 
         if (!string.IsNullOrEmpty(request.ClientId))
         {
-            query = query.Where(a => a.UserId.ToString() == request.ClientId);
+            query = query.Where(a => a.UserId == request.ClientId);
         }
 
         // Group + aggregate

@@ -19,14 +19,20 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasPrecision(5, 2);
 
             builder.Property(h => h.Components)
-                .HasColumnType("jsonb");
+                 .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(h => h.ModelVersion)
                 .IsRequired()
                 .HasMaxLength(20);
 
             builder.Property(h => h.Explanations)
-                .HasColumnType("jsonb");
+                 .HasConversion(
+                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
+               .HasColumnType("nvarchar(max)");
 
             builder.Property(h => h.Context)
                 .HasColumnType("ntext");

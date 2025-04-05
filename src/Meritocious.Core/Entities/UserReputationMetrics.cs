@@ -3,7 +3,7 @@ using Meritocious.Core.Features.Reputation.Models;
 
 public class UserReputationMetrics : BaseEntity
 {
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; }
     public User User { get; private set; }
     public decimal OverallMeritScore { get; private set; }
     public Dictionary<string, decimal> CategoryScores { get; private set; }
@@ -29,7 +29,7 @@ public class UserReputationMetrics : BaseEntity
     {
         return new UserReputationMetrics
         {
-            UserId = Guid.Parse(user.Id),
+            UserId = user.Id,
             User = user,
             OverallMeritScore = 0,
             Level = ReputationLevel.Newcomer,

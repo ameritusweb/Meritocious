@@ -16,7 +16,7 @@ namespace Meritocious.Core.Entities
 
         public int VersionNumber { get; private set; }
 
-        public Guid EditorId { get; private set; }
+        public string EditorId { get; private set; }
 
         public User Editor { get; private set; }
 
@@ -26,7 +26,7 @@ namespace Meritocious.Core.Entities
 
         public DateTime? ApprovedAt { get; private set; }
 
-        public Guid? ApprovedById { get; private set; }
+        public string? ApprovedById { get; private set; }
 
         public User ApprovedBy { get; private set; }
 
@@ -46,7 +46,7 @@ namespace Meritocious.Core.Entities
                 Tag = tag,
                 Content = content,
                 VersionNumber = tag.WikiVersions.Count + 1,
-                EditorId = Guid.Parse(editor.Id),
+                EditorId = editor.Id,
                 Editor = editor,
                 EditReason = editReason,
                 IsApproved = false,
@@ -58,7 +58,7 @@ namespace Meritocious.Core.Entities
         {
             IsApproved = true;
             ApprovedAt = DateTime.UtcNow;
-            ApprovedById = Guid.Parse(approver.Id);
+            ApprovedById = approver.Id;
             ApprovedBy = approver;
             UpdatedAt = DateTime.UtcNow;
         }

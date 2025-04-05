@@ -13,7 +13,7 @@ namespace Meritocious.Core.Entities
         public DateTime BlockedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
 
-        public Guid? BlockedByUserId { get; set; }
+        public string BlockedByUserId { get; set; }
         public User? BlockedByUser { get; set; }
     }
 }

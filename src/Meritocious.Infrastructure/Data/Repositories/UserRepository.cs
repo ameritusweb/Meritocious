@@ -80,7 +80,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             return await context.Set<ExternalLogin>()
                 .Include(e => e.User)
                 .FirstOrDefaultAsync(e =>
-                    e.UserId == userId &&
+                    e.UserId == userId.ToString() &&
                     e.Provider == provider);
         }
 
@@ -88,7 +88,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             return await context.Set<ExternalLogin>()
                 .Include(e => e.User)
-                .Where(e => e.UserId == userId)
+                .Where(e => e.UserId == userId.ToString())
                 .ToListAsync();
         }
 
@@ -133,7 +133,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         public async Task<bool> HasExternalLoginAsync(Guid userId, string provider)
         {
             return await context.Set<ExternalLogin>()
-                .AnyAsync(e => e.UserId == userId && e.Provider == provider);
+                .AnyAsync(e => e.UserId == userId.ToString() && e.Provider == provider);
         }
 
         public async Task<List<User>> GetTopContributorsAsync(int count, DateTime? since = null)

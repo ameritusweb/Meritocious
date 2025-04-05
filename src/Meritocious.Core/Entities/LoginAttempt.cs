@@ -6,7 +6,7 @@ namespace Meritocious.Core.Entities
         public bool Success { get; set; }
         public bool IsSuspicious { get; set; }
         public string IpAddress { get; set; } = string.Empty;
-        public Guid? UserId { get; set; }
+        public string UserId { get; set; }
         public string? UserAgent { get; set; }
         public string? FailureReason { get; set; }
         public DateTime Timestamp { get; set; }

@@ -31,7 +31,7 @@ public class GetAdminActionsQueryHandler : IRequestHandler<GetAdminActionsQuery,
 
         if (!string.IsNullOrEmpty(request.AdminId))
         {
-            query = query.Where(a => a.AdminUserId.ToString() == request.AdminId);
+            query = query.Where(a => a.AdminUserId == request.AdminId);
         }
 
         if (!string.IsNullOrEmpty(request.ActionType))

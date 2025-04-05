@@ -19,7 +19,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             return await dbSet
                 .Include(b => b.User)
-                .Where(b => b.UserId == userId)
+                .Where(b => b.UserId == userId.ToString())
                 .OrderByDescending(b => b.Level)
                 .ThenByDescending(b => b.AwardedAt)
                 .ToListAsync();
@@ -88,7 +88,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             return await dbSet
                 .Where(b =>
-                    b.UserId == userId &&
+                    b.UserId == userId.ToString() &&
                     !b.AwardedAt.HasValue &&
                     b.Progress.Values.Any(p => p >= minimumProgress))
                 .OrderByDescending(b => b.Progress.Values.Max())

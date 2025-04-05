@@ -30,7 +30,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             return await dbSet
                 .Include(a => a.ModerationAction)
                 .Include(a => a.Reviewer)
-                .Where(a => a.AppealerId == userId)
+                .Where(a => a.AppealerId == userId.ToString())
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
         }

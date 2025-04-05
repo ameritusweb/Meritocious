@@ -16,8 +16,10 @@ public class ContentModerationEventConfiguration : IEntityTypeConfiguration<Cont
         builder.Property(e => e.ContentType)
             .HasConversion<string>();
 
-        builder.Property(e => e.Action)
-            .HasConversion<string>();
+        builder.HasOne(e => e.Action)
+            .WithOne(e => e.ModerationEvent)
+            .HasForeignKey<ContentModerationEvent>(e => e.ActionId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(e => e.Reason)
             .HasMaxLength(1000);

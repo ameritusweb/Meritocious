@@ -21,7 +21,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             DateTime? end = null)
         {
             var query = dbSet
-                .Where(s => s.UserId == userId && s.TimeFrame == timeFrame);
+                .Where(s => s.UserId == userId.ToString() && s.TimeFrame == timeFrame);
 
             if (start.HasValue)
             {
@@ -58,7 +58,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             string timeFrame)
         {
             return await dbSet
-                .Where(s => s.UserId == userId && s.TimeFrame == timeFrame)
+                .Where(s => s.UserId == userId.ToString() && s.TimeFrame == timeFrame)
                 .OrderByDescending(s => s.EndDate)
                 .FirstOrDefaultAsync();
         }
@@ -71,7 +71,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             var snapshots = await dbSet
                 .Where(s =>
-                    s.UserId == userId &&
+                    s.UserId == userId.ToString() &&
                     s.TimeFrame == timeFrame &&
                     s.StartDate >= start &&
                     s.EndDate <= end)

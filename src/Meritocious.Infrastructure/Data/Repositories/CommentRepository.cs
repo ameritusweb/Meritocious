@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             return await dbSet
                 .Include(c => c.Post)
-                .Where(c => c.AuthorId == userId && !c.IsDeleted)
+                .Where(c => c.AuthorId == userId.ToString() && !c.IsDeleted)
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync();
         }

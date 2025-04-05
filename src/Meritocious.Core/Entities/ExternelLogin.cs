@@ -5,7 +5,7 @@ namespace Meritocious.Core.Entities
 {
     public class ExternalLogin : BaseEntity
     {
-        public Guid UserId { get; private set; }
+        public string UserId { get; private set; }
 
         public User User { get; private set; }
 
@@ -41,7 +41,7 @@ namespace Meritocious.Core.Entities
         {
             return new ExternalLogin
             {
-                UserId = Guid.Parse(user.Id),
+                UserId = user.Id,
                 User = user,
                 Provider = provider,
                 ProviderKey = providerKey,

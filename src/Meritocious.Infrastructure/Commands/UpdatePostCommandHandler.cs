@@ -45,7 +45,7 @@ namespace Meritocious.Core.Features.Posts.Commands
                 return Result.Failure<Post>($"Post {request.PostId} not found");
             }
 
-            if (post.AuthorId != request.EditorId)
+            if (post.AuthorId != request.EditorId.ToString())
             {
                 return Result.Failure<Post>("Only the author can edit this post");
             }

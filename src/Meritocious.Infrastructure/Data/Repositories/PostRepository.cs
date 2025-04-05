@@ -62,7 +62,7 @@
         {
             return await dbSet
                 .Include(p => p.Tags)
-                .Where(p => p.AuthorId == userId && !p.IsDeleted)
+                .Where(p => p.AuthorId == userId.ToString() && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -300,7 +300,7 @@
             var query = dbSet
                 .Include(p => p.ParentRelations)
                     .ThenInclude(r => r.Parent)
-                .Where(p => p.AuthorId == userId && 
+                .Where(p => p.AuthorId == userId.ToString() && 
                           p.ParentRelations.Any(r => r.RelationType == "remix"));
 
             if (!includeDrafts)
@@ -370,7 +370,7 @@
         public async Task<bool> HasUserRemixedPostAsync(Guid userId, Guid postId)
         {
             return await dbSet
-                .AnyAsync(p => p.AuthorId == userId && 
+                .AnyAsync(p => p.AuthorId == userId.ToString() && 
                              p.ParentRelations.Any(r => r.ParentId == postId && 
                                                       r.RelationType == "remix"));
         }
@@ -569,7 +569,7 @@
                     .ThenInclude(r => r.Child)
                         .ThenInclude(p => p.Author)
                 .Include(p => p.Notes)
-                .Where(p => p.AuthorId == userId && !p.IsDeleted);
+                .Where(p => p.AuthorId == userId.ToString() && !p.IsDeleted);
 
             // Apply draft filter
             if (!includeDrafts)

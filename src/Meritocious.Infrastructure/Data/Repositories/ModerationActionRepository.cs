@@ -31,7 +31,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             var query = dbSet
                 .Include(a => a.Effects)
-                .Where(a => a.ModeratorId == moderatorId);
+                .Where(a => a.ModeratorId == moderatorId.ToString());
 
             if (since.HasValue)
             {

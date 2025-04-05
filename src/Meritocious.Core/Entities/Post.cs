@@ -13,13 +13,13 @@ namespace Meritocious.Core.Entities
     {
         public string Title { get; internal set; }
         public string Content { get; internal set; }
-        public Guid AuthorId { get; internal set; }
+        public string AuthorId { get; internal set; }
         public User Author { get; internal set; }
         public Guid? ParentPostId { get; internal set; }
         public Post ParentPost { get; internal set; }
         public bool IsDeleted { get; internal set; }
         public bool IsDraft { get; internal set; }
-        public string SubstackId { get; internal set; }
+        public Guid SubstackId { get; internal set; }
         public Substack Substack { get; internal set; }
         public decimal EngagementScore { get; internal set; }
 
@@ -205,11 +205,11 @@ namespace Meritocious.Core.Entities
             {
                 Title = title,
                 Content = content,
-                AuthorId = Guid.Parse(author?.Id),
+                AuthorId = author?.Id,
                 Author = author,
                 ParentPostId = parent?.Id,
                 ParentPost = parent,
-                SubstackId = substack?.Id.ToString(),
+                SubstackId = substack?.Id ?? Guid.Empty,
                 Substack = substack,
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow

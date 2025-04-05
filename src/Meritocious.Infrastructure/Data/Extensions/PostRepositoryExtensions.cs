@@ -92,14 +92,14 @@ namespace Meritocious.Infrastructure.Data.Extensions
         {
             // Get posts the user has interacted with
             var posts = await repository.DbSet
-                .Include(p => p.Comments.Where(c => c.AuthorId == userId))
-                .Where(p => p.AuthorId == userId || p.Comments.Any(c => c.AuthorId == userId))
+                .Include(p => p.Comments.Where(c => c.AuthorId == userId.ToString()))
+                .Where(p => p.AuthorId == userId.ToString() || p.Comments.Any(c => c.AuthorId == userId.ToString()))
                 .ToListAsync();
 
             var history = new List<UserInteractionHistory>();
 
             // Add authored posts
-            foreach (var post in posts.Where(p => p.AuthorId == userId))
+            foreach (var post in posts.Where(p => p.AuthorId == userId.ToString()))
             {
                 history.Add(new UserInteractionHistory
                 {

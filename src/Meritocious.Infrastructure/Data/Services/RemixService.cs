@@ -67,8 +67,8 @@ public class RemixService : IRemixService
         {
             Title = request.Title,
             Content = request.InitialContent,
-            AuthorId = request.AuthorId,
-            SubstackId = request.SubstackId.ToString(),
+            AuthorId = request.AuthorId.ToString(),
+            SubstackId = request.SubstackId ?? Guid.Empty,
             IsDraft = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -191,11 +191,11 @@ public class RemixService : IRemixService
             Title = post.Title,
             Content = post.Content,
             AuthorUsername = post.Author.UserName,
-            AuthorId = post.AuthorId,
+            AuthorId = Guid.Parse(post.AuthorId),
             MeritScore = post.MeritScore,
             Sources = sources,
             Tags = post.Tags.Select(t => t.Name).ToList(),
-            SubstackId = Guid.Parse(post.SubstackId),
+            SubstackId = post.SubstackId,
             IsDraft = post.IsDraft,
             PublishedAt = post.PublishedAt,
             CreatedAt = post.CreatedAt,
@@ -207,7 +207,7 @@ public class RemixService : IRemixService
     public async Task<bool> DeleteRemixAsync(Guid remixId, Guid userId)
     {
         var post = await postRepository.GetByIdAsync(remixId);
-        if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId)
+        if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId.ToString())
         {
             return false;
         }
@@ -219,7 +219,7 @@ public class RemixService : IRemixService
     public async Task<RemixDto> PublishRemixAsync(Guid remixId, Guid userId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
-        if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId)
+        if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId.ToString())
         {
             throw new ArgumentException("Remix post not found or unauthorized");
         }

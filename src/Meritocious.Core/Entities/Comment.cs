@@ -11,7 +11,7 @@ namespace Meritocious.Core.Entities
         public string Content { get; private set; }
         public Guid PostId { get; private set; }
         public Post Post { get; private set; }
-        public Guid AuthorId { get; private set; }
+        public string AuthorId { get; private set; }
         public User Author { get; private set; }
         public Guid? ParentCommentId { get; private set; }
         public Comment ParentComment { get; private set; }
@@ -33,7 +33,7 @@ namespace Meritocious.Core.Entities
                 Content = content,
                 PostId = post.Id,
                 Post = post,
-                AuthorId = Guid.Parse(author.Id),
+                AuthorId = author.Id,
                 Author = author,
                 ParentCommentId = parent?.Id,
                 ParentComment = parent,

@@ -153,7 +153,7 @@ namespace Meritocious.Infrastructure.Data.Services
                 {
                     if (Guid.TryParse(authorId, out var authorGuid))
                     {
-                        query = query.Where(p => p.AuthorId == authorGuid);
+                        query = query.Where(p => p.AuthorId == authorGuid.ToString());
                     }
                 }
 
@@ -181,7 +181,7 @@ namespace Meritocious.Infrastructure.Data.Services
                 Type = ContentType.Post,
                 Title = p.Title,
                 Excerpt = GetExcerpt(p.Content, searchTerm),
-                AuthorId = p.AuthorId,
+                AuthorId = Guid.Parse(p.AuthorId),
                 AuthorUsername = p.Author.UserName,
                 MeritScore = p.MeritScore,
                 CreatedAt = p.CreatedAt,

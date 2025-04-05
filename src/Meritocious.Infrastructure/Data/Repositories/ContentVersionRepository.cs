@@ -86,7 +86,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
             var query = dbSet
                 .Include(v => v.Editor)
-                .Where(v => v.EditorId == userId);
+                .Where(v => v.EditorId == userId.ToString());
 
             if (since.HasValue)
             {

@@ -33,7 +33,7 @@ namespace Meritocious.Web.Middleware
                 // Store audit record
                 var audit = new AdminActionLog
                 {
-                    AdminUserId = Guid.Parse(userId ?? string.Empty),
+                    AdminUserId = userId,
                     Action = action,
                     IpAddress = ipAddress ?? "unknown",
                     Timestamp = DateTime.UtcNow,

@@ -18,7 +18,7 @@ namespace Meritocious.Core.Extensions
                 Id = post.Id,
                 Title = post.Title,
                 Content = post.Content,
-                AuthorId = post.AuthorId,
+                AuthorId = Guid.Parse(post.AuthorId),
                 AuthorUsername = post.Author?.UserName ?? "Unknown",
                 CreatedAt = post.CreatedAt,
                 UpdatedAt = post.UpdatedAt,
@@ -32,7 +32,7 @@ namespace Meritocious.Core.Extensions
         {
             return new MeritScoreDto
             {
-                UserId = post.AuthorId,
+                UserId = Guid.Parse(post.AuthorId),
                 CurrentScore = post.MeritScore,
                 LastCalculated = post.UpdatedAt ?? DateTime.UtcNow,
                 ScoreHistory = post.MeritScoreHistories.Select(h => h.ToDto()).ToList()

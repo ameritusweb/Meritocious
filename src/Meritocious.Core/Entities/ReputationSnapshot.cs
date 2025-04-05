@@ -9,7 +9,7 @@ namespace Meritocious.Core.Entities
 {
     public class ReputationSnapshot : BaseEntity
     {
-        public Guid UserId { get; private set; }
+        public string UserId { get; private set; }
         public User User { get; private set; }
         public decimal OverallMeritScore { get; private set; }
         public Dictionary<string, decimal> MetricSnapshots { get; private set; }
@@ -34,7 +34,7 @@ namespace Meritocious.Core.Entities
         {
             return new ReputationSnapshot
             {
-                UserId = Guid.Parse(user.Id),
+                UserId = user.Id,
                 User = user,
                 OverallMeritScore = overallScore,
                 MetricSnapshots = metrics,

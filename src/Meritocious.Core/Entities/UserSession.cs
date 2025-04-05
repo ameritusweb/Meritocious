@@ -8,7 +8,7 @@ namespace Meritocious.Core.Entities
 {
     public class UserSession : BaseEntity
     {
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
         public User User { get; set; } = null!;
 
         public string SessionId { get; set; } = Guid.NewGuid().ToString();

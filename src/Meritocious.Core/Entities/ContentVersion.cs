@@ -17,7 +17,7 @@ namespace Meritocious.Core.Entities
         public Guid PostId { get; private set; }
         public string Title { get; private set; }
         public string Content { get; private set; }
-        public Guid EditorId { get; private set; }
+        public string EditorId { get; private set; }
         public User Editor { get; private set; }
         public string EditReason { get; private set; }
         public decimal MeritScore { get; private set; }
@@ -52,7 +52,7 @@ namespace Meritocious.Core.Entities
                 VersionNumber = versionNumber,
                 Title = title,
                 Content = content,
-                EditorId = Guid.Parse(editor.Id),
+                EditorId = editor.Id,
                 Editor = editor,
                 EditReason = editReason,
                 MeritScore = meritScore,

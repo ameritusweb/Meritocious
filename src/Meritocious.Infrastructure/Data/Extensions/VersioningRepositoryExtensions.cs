@@ -19,7 +19,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
             return await repository.DbSet
                 .Include(v => v.Editor)
                 .Where(v =>
-                    v.EditorId == userId &&
+                    v.EditorId == userId.ToString() &&
                     v.CreatedAt >= start &&
                     v.CreatedAt <= end)
                 .OrderByDescending(v => v.CreatedAt)
@@ -53,7 +53,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
         {
             var outcomes = await repository.DbSet
                 .Where(a =>
-                    a.ModeratorId == moderatorId &&
+                    a.ModeratorId == moderatorId.ToString() &&
                     a.ReviewedAt.HasValue)
                 .GroupBy(a => a.Outcome)
                 .Select(g => new
@@ -101,7 +101,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
         {
             var badges = await repository.DbSet
                 .Where(b =>
-                    b.UserId == userId &&
+                    b.UserId == userId.ToString() &&
                     b.AwardedAt.HasValue)
                 .GroupBy(b => b.BadgeType)
                 .ToDictionaryAsync(

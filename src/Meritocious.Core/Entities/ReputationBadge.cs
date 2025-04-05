@@ -8,7 +8,7 @@ namespace Meritocious.Core.Entities
 {
     public class ReputationBadge : BaseEntity
     {
-        public Guid UserId { get; private set; }
+        public string UserId { get; private set; }
         public User User { get; private set; }
         public string BadgeType { get; private set; }
         public string Category { get; private set; }
@@ -33,7 +33,7 @@ namespace Meritocious.Core.Entities
         {
             return new ReputationBadge
             {
-                UserId = Guid.Parse(user.Id),
+                UserId = user.Id,
                 User = user,
                 BadgeType = badgeType,
                 Category = category,

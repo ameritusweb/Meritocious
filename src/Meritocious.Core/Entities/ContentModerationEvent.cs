@@ -15,11 +15,13 @@ namespace Meritocious.Core.Entities
 
         public ModerationAction Action { get; private set; }
 
+        public Guid ActionId { get; private set; }
+
         public string Reason { get; private set; }
 
         public bool IsAutomated { get; private set; }
 
-        public Guid? ModeratorId { get; private set; }
+        public string ModeratorId { get; private set; }
 
         public User Moderator { get; private set; }
 
@@ -44,7 +46,7 @@ namespace Meritocious.Core.Entities
                 Action = action,
                 Reason = reason,
                 IsAutomated = isAutomated,
-                ModeratorId = moderatorId,
+                ModeratorId = moderatorId.ToString(),
                 ModeratedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow
             };

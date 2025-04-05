@@ -12,7 +12,7 @@ namespace Meritocious.Core.Entities
     {
         public Guid ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
-        public Guid ModeratorId { get; private set; }
+        public string ModeratorId { get; private set; }
         public User Moderator { get; private set; }
         public ModerationActionType ActionType { get; private set; }
         public string Reason { get; private set; }
@@ -25,10 +25,11 @@ namespace Meritocious.Core.Entities
         public List<ModerationActionEffect> Effects { get; private set; }
         public Guid? AppealId { get; private set; }
         public DateTime? ReviewedAt { get; private set; }
-        public Guid? ReviewedById { get; private set; }
+        public string? ReviewedById { get; private set; }
         public User ReviewedBy { get; private set; }
         public string ReviewNotes { get; private set; }
         public string Status { get; internal set; }
+        public ContentModerationEvent ModerationEvent { get; private set; }
 
         private ModerationAction()
         {
@@ -52,7 +53,7 @@ namespace Meritocious.Core.Entities
             {
                 ContentId = contentId,
                 ContentType = contentType,
-                ModeratorId = Guid.Parse(moderator.Id),
+                ModeratorId = moderator.Id,
                 Moderator = moderator,
                 ActionType = actionType,
                 Reason = reason,
@@ -85,7 +86,7 @@ namespace Meritocious.Core.Entities
                 ContentId = tag.Id,
                 ContentType = ContentType.Tag,
                 TagId = tag.Id,
-                ModeratorId = Guid.Parse(moderator.Id),
+                ModeratorId = moderator.Id,
                 Moderator = moderator,
                 ActionType = ModerationActionType.TagChange,
                 Action = action,
@@ -110,7 +111,7 @@ namespace Meritocious.Core.Entities
             ModerationDecisionOutcome outcome,
             string notes)
         {
-            ReviewedById = Guid.Parse(reviewer.Id);
+            ReviewedById = reviewer.Id;
             ReviewedBy = reviewer;
             ReviewedAt = DateTime.UtcNow;
             ReviewNotes = notes;
