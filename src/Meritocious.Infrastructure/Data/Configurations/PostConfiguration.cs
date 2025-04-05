@@ -66,11 +66,10 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.HasIndex(p => new { p.IsDeleted, p.MeritScore });
             builder.HasIndex(p => new { p.IsDeleted, p.CreatedAt });
             
-            // Full-text search indexes
-            builder.HasIndex(p => p.Title)
-                .HasMethod("GIN") // PostgreSQL GIN index for text search
-                .IsTsVectorExpressionIndex("english");
-            
+            // TODO: 
+            // builder.HasIndex(p => p.Title)
+            //    .HasMethod("GIN") // PostgreSQL GIN index for text search
+            //    .IsTsVectorExpressionIndex("english");
             // Metrics indexes for analytics
             builder.HasIndex(p => new { p.IsDeleted, p.ViewCount });
             builder.HasIndex(p => new { p.IsDeleted, p.LikeCount });
@@ -84,9 +83,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasColumnType("jsonb")
                 .HasDefaultValueSql("'{}'::jsonb");
 
-            builder.HasIndex(p => p.MeritComponents)
-                .HasMethod("GIN"); // PostgreSQL GIN index for JSONB
-
+            // TODO: 
+            // builder.HasIndex(p => p.MeritComponents)
+            //    .HasMethod("GIN"); // PostgreSQL GIN index for JSONB
             builder.HasMany(p => p.Comments)
                 .WithOne(c => c.Post)
                 .HasForeignKey(c => c.PostId)

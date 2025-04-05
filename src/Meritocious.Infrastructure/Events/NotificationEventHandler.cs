@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Meritocious.Core.Features.Notifications.Events
+﻿namespace Meritocious.Core.Features.Notifications.Events
 {
     using MediatR;
-    using Meritocious.Core.Features.Notifications.Models;
+    using Meritocious.Core.Entities;
     using Meritocious.Core.Interfaces;
     using Microsoft.Extensions.Logging;
 
@@ -29,7 +23,7 @@ namespace Meritocious.Core.Features.Notifications.Events
             try
             {
                 var notif = Notification.Create(
-                    notification.UserId,
+                    notification.UserId.ToString(),
                     notification.Type,
                     notification.Title,
                     notification.Message,

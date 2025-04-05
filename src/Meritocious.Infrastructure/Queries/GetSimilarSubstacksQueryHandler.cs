@@ -8,28 +8,28 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetSimilarSubstacksQueryHandler : IRequestHandler<GetSimilarSubstacksQuery, List<SubstackDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetSimilarSubstacksQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<List<SubstackDto>> Handle(GetSimilarSubstacksQuery request, CancellationToken cancellationToken)
     {
-        var substackTopics = await _context.Substacks
+        var substackTopics = await context.Substacks
             .Where(s => s.Id.ToString() == request.SubstackId)
-            .SelectMany(s => s.Topics.Select(t => t.TopicId))
+            .SelectMany(s => s.Topics.Select(t => t.ContentId))
             .ToListAsync(cancellationToken);
 
-        return await _context.Substacks
-            .Where(s => s.Id.ToString() != request.SubstackId && s.Topics.Any(t => substackTopics.Contains(t.TopicId)))
-            .OrderByDescending(s => s.Topics.Count(t => substackTopics.Contains(t.TopicId)))
+        return await context.Substacks
+            .Where(s => s.Id.ToString() != request.SubstackId && s.Topics.Any(t => substackTopics.Contains(t.ContentId)))
+            .OrderByDescending(s => s.Topics.Count(t => substackTopics.Contains(t.ContentId)))
             .ThenByDescending(s => s.AvgMeritScore)
             .Take(request.Limit)
             .Select(s => new SubstackDto
             {
-                Id = s.Id,
+                Id = s.Id.ToString(),
                 Name = s.Name,
                 Subdomain = s.Subdomain,
                 CustomDomain = s.CustomDomain,

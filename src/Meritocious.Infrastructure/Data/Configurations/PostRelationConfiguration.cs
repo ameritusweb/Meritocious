@@ -74,8 +74,9 @@ public class PostRelationConfiguration : IEntityTypeConfiguration<PostRelation>
             .HasColumnType("jsonb")
             .HasDefaultValueSql("'[]'::jsonb");
 
-        builder.HasIndex(r => r.Quotes)
-            .HasMethod("GIN")
-            .HasFilter("RelationType = 'remix'");
+        // TODO: Figure this out.
+        // builder.HasIndex(r => r.Quotes)
+        //    .HasMethod("GIN")
+        //    .HasFilter("RelationType = 'remix'");
     }
 }

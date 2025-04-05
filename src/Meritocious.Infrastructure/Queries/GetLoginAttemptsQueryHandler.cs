@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetLoginAttemptsQueryHandler : IRequestHandler<GetLoginAttemptsQuery, IEnumerable<LoginAttemptDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetLoginAttemptsQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<LoginAttemptDto>> Handle(GetLoginAttemptsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.LoginAttempts.AsQueryable();
+        var query = context.LoginAttempts.AsQueryable();
 
         if (request.StartDate.HasValue)
         {
@@ -31,7 +31,7 @@ public class GetLoginAttemptsQueryHandler : IRequestHandler<GetLoginAttemptsQuer
 
         if (!string.IsNullOrEmpty(request.UserId))
         {
-            query = query.Where(l => l.UserId == request.UserId);
+            query = query.Where(l => l.UserId.ToString() == request.UserId);
         }
 
         if (request.Success.HasValue)
@@ -52,9 +52,9 @@ public class GetLoginAttemptsQueryHandler : IRequestHandler<GetLoginAttemptsQuer
             .Take(request.PageSize)
             .Select(l => new LoginAttemptDto
             {
-                Id = l.Id,
-                UserId = l.UserId,
-                UserName = l.UserName,
+                Id = l.Id.ToString(),
+                UserId = l.UserId == null ? string.Empty : l.UserId.ToString(),
+                UserName = l.Username,
                 Success = l.Success,
                 FailureReason = l.FailureReason,
                 IpAddress = l.IpAddress,

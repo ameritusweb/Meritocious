@@ -9,20 +9,20 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetSubstackQueryHandler : IRequestHandler<GetSubstackQuery, SubstackDto>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetSubstackQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<SubstackDto> Handle(GetSubstackQuery request, CancellationToken cancellationToken)
     {
-        var substack = await _context.Substacks
+        var substack = await context.Substacks
             .Where(s => s.Id.ToString() == request.SubstackId)
             .Select(s => new SubstackDto
             {
-                Id = s.Id,
+                Id = s.Id.ToString(),
                 Name = s.Name,
                 Subdomain = s.Subdomain,
                 CustomDomain = s.CustomDomain,

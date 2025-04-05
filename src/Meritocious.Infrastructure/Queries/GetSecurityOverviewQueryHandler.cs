@@ -8,11 +8,11 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetSecurityOverviewQueryHandler : IRequestHandler<GetSecurityOverviewQuery, SecurityOverviewDto>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetSecurityOverviewQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<SecurityOverviewDto> Handle(GetSecurityOverviewQuery request, CancellationToken cancellationToken)
@@ -20,27 +20,27 @@ public class GetSecurityOverviewQueryHandler : IRequestHandler<GetSecurityOvervi
         var now = DateTime.UtcNow;
         var last24Hours = now.AddHours(-24);
 
-        var totalUsers = await _context.Users.CountAsync(cancellationToken);
-        var activeUsers = await _context.Users.CountAsync(u => u.LastActivityAt >= last24Hours, cancellationToken);
-        var lockedAccounts = await _context.Users.CountAsync(u => u.IsLocked, cancellationToken);
-        var unverifiedAccounts = await _context.Users.CountAsync(u => !u.IsEmailVerified, cancellationToken);
+        var totalUsers = await context.Users.CountAsync(cancellationToken);
+        var activeUsers = await context.Users.CountAsync(u => u.LastActivityAt >= last24Hours, cancellationToken);
+        var lockedAccounts = await context.Users.CountAsync(u => u.IsLocked, cancellationToken);
+        var unverifiedAccounts = await context.Users.CountAsync(u => !u.IsEmailVerified, cancellationToken);
 
-        var failedLogins = await _context.LoginAttempts
+        var failedLogins = await context.LoginAttempts
             .CountAsync(l => !l.Success && l.Timestamp >= last24Hours, cancellationToken);
 
-        var securityIncidents = await _context.SecurityEvents
+        var securityIncidents = await context.SecurityEvents
             .CountAsync(e => e.Timestamp >= last24Hours, cancellationToken);
 
-        var pendingModerationActions = await _context.ModerationActions
+        var pendingModerationActions = await context.ModerationActions
             .CountAsync(m => m.Status == "Pending", cancellationToken);
 
-        var blockedIps = await _context.BlockedIpAddresses
+        var blockedIps = await context.BlockedIpAddresses
             .CountAsync(b => b.ExpiresAt > now, cancellationToken);
 
-        var activeSessions = await _context.UserSessions
+        var activeSessions = await context.UserSessions
             .CountAsync(s => s.LastActivityAt >= last24Hours, cancellationToken);
 
-        var apiRequests = await _context.ApiUsageLogs
+        var apiRequests = await context.ApiUsageLogs
             .Where(a => a.Timestamp >= last24Hours)
             .CountAsync(cancellationToken);
 

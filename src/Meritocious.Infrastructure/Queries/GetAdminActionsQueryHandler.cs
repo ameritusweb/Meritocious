@@ -17,19 +17,27 @@ public class GetAdminActionsQueryHandler : IRequestHandler<GetAdminActionsQuery,
 
     public async Task<IEnumerable<AdminActionDto>> Handle(GetAdminActionsQuery request, CancellationToken cancellationToken)
     {
-        var query = context.AdminActions.AsQueryable();
+        var query = context.AdminActionLogs.AsQueryable();
 
         if (request.StartDate.HasValue)
+        {
             query = query.Where(a => a.Timestamp >= request.StartDate.Value);
+        }
 
         if (request.EndDate.HasValue)
+        {
             query = query.Where(a => a.Timestamp <= request.EndDate.Value);
+        }
 
         if (!string.IsNullOrEmpty(request.AdminId))
-            query = query.Where(a => a.AdminId == request.AdminId);
+        {
+            query = query.Where(a => a.AdminUserId.ToString() == request.AdminId);
+        }
 
         if (!string.IsNullOrEmpty(request.ActionType))
-            query = query.Where(a => a.ActionType == request.ActionType);
+        {
+            query = query.Where(a => a.Action == request.ActionType);
+        }
 
         var skip = (request.Page - 1) * request.PageSize;
 
@@ -39,17 +47,17 @@ public class GetAdminActionsQueryHandler : IRequestHandler<GetAdminActionsQuery,
             .Take(request.PageSize)
             .Select(a => new AdminActionDto
             {
-                Id = a.Id,
-                AdminId = a.AdminId,
-                AdminName = a.AdminName,
-                ActionType = a.ActionType,
-                TargetType = a.TargetType,
-                TargetId = a.TargetId,
+                Id = a.Id.ToString(),
+                AdminId = a.AdminUserId.ToString(),
+                AdminName = a.AdminUser.UserName, // if available
+                ActionType = a.Action,
+                TargetType = a.Metadata.ContainsKey("TargetType") ? a.Metadata["TargetType"].ToString() : null,
+                TargetId = a.Metadata.ContainsKey("TargetId") ? a.Metadata["TargetId"].ToString() : null,
                 Details = a.Details,
-                Reason = a.Reason,
+                Reason = a.Metadata.ContainsKey("Reason") ? a.Metadata["Reason"].ToString() : null,
                 Timestamp = a.Timestamp,
                 IpAddress = a.IpAddress,
-                Status = a.Status
+                Status = a.Metadata.ContainsKey("Status") ? a.Metadata["Status"].ToString() : null
             })
             .ToListAsync(cancellationToken);
     }

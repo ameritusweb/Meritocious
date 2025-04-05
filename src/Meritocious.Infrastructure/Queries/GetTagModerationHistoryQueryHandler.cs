@@ -8,27 +8,27 @@ namespace Meritocious.Infrastructure.Queries;
 
 public class GetTagModerationHistoryQueryHandler : IRequestHandler<GetTagModerationHistoryQuery, IEnumerable<TagModerationLogDto>>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public GetTagModerationHistoryQueryHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<IEnumerable<TagModerationLogDto>> Handle(GetTagModerationHistoryQuery request, CancellationToken cancellationToken)
     {
         var skip = (request.Page - 1) * request.PageSize;
 
-        return await _context.ModerationActions
-            .Where(m => m.TagId == request.TagId)
+        return await context.ModerationActions
+            .Where(m => m.TagId.ToString() == request.TagId)
             .OrderByDescending(m => m.CreatedAt)
             .Skip(skip)
             .Take(request.PageSize)
             .Select(m => new TagModerationLogDto
             {
-                Id = m.Id,
-                TagId = m.TagId,
-                ModeratorId = m.ModeratorId,
+                Id = m.Id.ToString(),
+                TagId = m.TagId.ToString(),
+                ModeratorId = m.ModeratorId.ToString(),
                 Action = m.Action,
                 Reason = m.Reason,
                 CreatedAt = m.CreatedAt,

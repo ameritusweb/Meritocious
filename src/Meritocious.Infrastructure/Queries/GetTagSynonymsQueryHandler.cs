@@ -23,11 +23,13 @@ public class GetTagSynonymsQueryHandler : IRequestHandler<GetTagSynonymsQuery, I
             {
                 SourceTagId = s.SourceTagId,
                 TargetTagId = s.TargetTagId,
-                CreatedBy = s.CreatedBy,
+                CreatedBy = s.Creator.Id.ToString(),
                 CreatedAt = s.CreatedAt,
-                ApprovedBy = s.ApprovedBy,
+                ApprovedBy = s.ApprovedBy.Id.ToString(),
                 ApprovedAt = s.ApprovedAt,
-                Status = s.Status
+                
+                // TODO: Create status.
+                // Status = s.Status
             })
             .ToListAsync(cancellationToken);
     }

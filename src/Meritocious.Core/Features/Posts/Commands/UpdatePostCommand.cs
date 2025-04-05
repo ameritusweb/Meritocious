@@ -10,6 +10,7 @@ namespace Meritocious.Core.Features.Posts.Commands
     using FluentValidation;
     using Meritocious.Core.Entities;
     using Meritocious.Core.Results;
+    using Meritocious.Core.Features.Tags.Models;
 
     public record UpdatePostCommand : IRequest<Result<Post>>
     {
@@ -18,6 +19,7 @@ namespace Meritocious.Core.Features.Posts.Commands
         public string Title { get; init; }
         public string Content { get; init; }
         public List<string> Tags { get; init; } = new();
+        public List<TagCategory> TagCategories { get; init; } = new();
     }
 
     public class UpdatePostCommandValidator : AbstractValidator<UpdatePostCommand>

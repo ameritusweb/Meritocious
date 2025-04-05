@@ -22,7 +22,8 @@ namespace Meritocious.Common.DTOs.Moderation
         Delete,
         Hide,
         Flag,
-        None
+        None,
+        TagChange
     }
 
     public enum ModerationDecisionOutcome

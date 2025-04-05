@@ -3,53 +3,40 @@ using Microsoft.EntityFrameworkCore;
 using Meritocious.Core.Features.Tags.Commands;
 using Meritocious.Common.DTOs.Tags;
 using Meritocious.Infrastructure.Data;
+using Meritocious.Core.Entities;
 
 namespace Meritocious.Infrastructure.Commands;
 
 public class UpdateTagWikiCommandHandler : IRequestHandler<UpdateTagWikiCommand, TagWikiDto>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public UpdateTagWikiCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<TagWikiDto> Handle(UpdateTagWikiCommand request, CancellationToken cancellationToken)
     {
-        var tagWiki = await _context.TagWikis
-            .FirstOrDefaultAsync(w => w.TagId == request.TagId, cancellationToken);
+        var tag = await context.Tags
+        .Include(t => t.WikiVersions)
+        .FirstOrDefaultAsync(t => t.Id.ToString() == request.TagId, cancellationToken);
 
-        var revisionNumber = 1;
-        if (tagWiki != null)
-        {
-            revisionNumber = tagWiki.RevisionNumber + 1;
-        }
-        else
-        {
-            tagWiki = new Core.Entities.TagWiki
-            {
-                TagId = request.TagId
-            };
-            _context.TagWikis.Add(tagWiki);
-        }
+        var editor = await context.Users.FindAsync(Guid.Parse(request.EditedBy));
 
-        tagWiki.Content = request.Content;
-        tagWiki.LastEditedBy = request.EditedBy;
-        tagWiki.LastEditedAt = DateTime.UtcNow;
-        tagWiki.EditSummary = request.EditSummary;
-        tagWiki.RevisionNumber = revisionNumber;
+        var newWiki = TagWiki.Create(tag, request.Content, editor, request.EditSummary);
+        context.TagWikis.Add(newWiki);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return new TagWikiDto
         {
-            TagId = tagWiki.TagId,
-            Content = tagWiki.Content,
-            LastEditedBy = tagWiki.LastEditedBy,
-            LastEditedAt = tagWiki.LastEditedAt,
-            EditSummary = tagWiki.EditSummary,
-            RevisionNumber = tagWiki.RevisionNumber
+            TagId = newWiki.TagId.ToString(),
+            Content = newWiki.Content,
+            LastEditedBy = editor.DisplayName, // assuming that’s a field
+            LastEditedAt = newWiki.CreatedAt,
+            EditSummary = newWiki.EditReason,
+            RevisionNumber = newWiki.VersionNumber
         };
     }
 }

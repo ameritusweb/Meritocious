@@ -23,14 +23,14 @@ public class GetUserTagsQueryHandler : IRequestHandler<GetUserTagsQuery, IEnumer
             .GroupBy(t => t.Id)
             .Select(g => new TagDto
             {
-                Id = g.Key,
+                Id = g.Key.ToString(),
                 Name = g.First().Name,
                 Description = g.First().Description,
                 UsageCount = g.Count(),
                 FollowerCount = g.First().FollowerCount,
                 CreatedAt = g.First().CreatedAt,
-                LastModified = g.First().LastModified,
-                IsModerated = g.First().IsModerated
+                LastModified = g.First().UpdatedAt,
+                IsModerated = g.First().Status == Core.Features.Tags.Models.TagStatus.Moderated
             })
             .OrderByDescending(t => t.UsageCount)
             .ToListAsync(cancellationToken);

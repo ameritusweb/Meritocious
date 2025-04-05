@@ -26,6 +26,7 @@ namespace Meritocious.Core.Features.Tags.Models
         Active,
         Deprecated,
         Merged,
+        Moderated,
         Blacklisted
     }
 

@@ -31,39 +31,43 @@ public class GetApiUsageQueryHandler : IRequestHandler<GetApiUsageQuery, IEnumer
 
         if (!string.IsNullOrEmpty(request.EndpointPath))
         {
-            query = query.Where(a => a.EndpointPath == request.EndpointPath);
+            query = query.Where(a => a.Endpoint == request.EndpointPath);
         }
 
         if (!string.IsNullOrEmpty(request.HttpMethod))
         {
-            query = query.Where(a => a.HttpMethod == request.HttpMethod);
+            query = query.Where(a => a.Method == request.HttpMethod);
         }
 
         if (!string.IsNullOrEmpty(request.ClientId))
         {
-            query = query.Where(a => a.ClientId == request.ClientId);
+            query = query.Where(a => a.UserId.ToString() == request.ClientId);
         }
 
-        var skip = (request.Page - 1) * request.PageSize;
+        // Group + aggregate
+        var groupedQuery = query
+            .GroupBy(a => new { a.Endpoint, a.Method })
+            .Select(g => new ApiUsageDto
+            {
+                EndpointPath = g.Key.Endpoint,
+                HttpMethod = g.Key.Method,
+                TotalRequests = g.Count(),
+                SuccessfulRequests = g.Count(x => x.StatusCode >= 200 && x.StatusCode < 300),
+                FailedRequests = g.Count(x => x.StatusCode >= 400),
+                AverageResponseTime = g.Average(x => x.DurationMs),
+                ErrorRate = g.Count(x => x.StatusCode >= 400) * 1.0 / g.Count(),
+                TimeStamp = g.Max(x => x.Timestamp),
+                ClientId = null // Optional if grouping by endpoint
+            });
 
-        return await query
-            .OrderByDescending(a => a.TimeStamp)
+        // Apply paging on aggregated results
+        var skip = (request.Page - 1) * request.PageSize;
+        var pagedResult = await groupedQuery
+            .OrderByDescending(a => a.TotalRequests)
             .Skip(skip)
             .Take(request.PageSize)
-            .Select(a => new ApiUsageDto
-            {
-                EndpointPath = a.EndpointPath,
-                HttpMethod = a.HttpMethod,
-                TotalRequests = a.TotalRequests,
-                SuccessfulRequests = a.SuccessfulRequests,
-                FailedRequests = a.FailedRequests,
-                AverageResponseTime = a.AverageResponseTime,
-                ErrorRate = a.ErrorRate,
-                ResponseStatusCodes = a.ResponseStatusCodes,
-                ErrorTypes = a.ErrorTypes,
-                TimeStamp = a.TimeStamp,
-                ClientId = a.ClientId
-            })
             .ToListAsync(cancellationToken);
+
+        return pagedResult;
     }
 }

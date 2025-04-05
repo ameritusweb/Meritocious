@@ -31,7 +31,7 @@ public class GetSecurityEventsQueryHandler : IRequestHandler<GetSecurityEventsQu
 
         if (!string.IsNullOrEmpty(request.Severity))
         {
-            query = query.Where(e => e.Severity == request.Severity);
+            query = query.Where(e => string.Empty + e.Severity == request.Severity);
         }
 
         if (!string.IsNullOrEmpty(request.EventType))
@@ -52,19 +52,22 @@ public class GetSecurityEventsQueryHandler : IRequestHandler<GetSecurityEventsQu
             .Take(request.PageSize)
             .Select(e => new SecurityEventDto
             {
-                Id = e.Id,
+                Id = e.Id.ToString(),
                 EventType = e.EventType,
-                Severity = e.Severity,
+                Severity = string.Empty + e.Severity,
                 UserId = e.UserId,
-                UserName = e.UserName,
+
+                // UserName = e.UserName,
                 Description = e.Description,
                 IpAddress = e.IpAddress,
                 UserAgent = e.UserAgent,
                 Timestamp = e.Timestamp,
-                RelatedEntityType = e.RelatedEntityType,
-                RelatedEntityId = e.RelatedEntityId,
+                
+                // RelatedEntityType = e.RelatedEntityType,
+                // RelatedEntityId = e.RelatedEntityId,
                 RequiresAction = e.RequiresAction,
-                Status = e.Status
+                
+                // Status = e.Status
             })
             .ToListAsync(cancellationToken);
     }

@@ -7,7 +7,7 @@ namespace Meritocious.Common.DTOs.Auth
         public string Source { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
         public string? Exception { get; set; }
-        public Dictionary<string, object>? AdditionalData { get; set; }
+        public string? AdditionalData { get; set; }
     }
 
     public class LogQueryParams

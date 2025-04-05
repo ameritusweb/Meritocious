@@ -66,6 +66,39 @@ namespace Meritocious.Core.Entities
             };
         }
 
+        public Guid? TagId { get; private set; }
+        public string? PreviousState { get; private set; }
+        public string? NewState { get; private set; }
+        public string? Action { get; private set; }
+
+        public static ModerationAction CreateTagModeration(
+            Tag tag,
+            User moderator,
+            string action,
+            string reason,
+            string previousState,
+            string newState,
+            ModerationSeverity severity)
+        {
+            return new ModerationAction
+            {
+                ContentId = tag.Id,
+                ContentType = ContentType.Tag,
+                TagId = tag.Id,
+                ModeratorId = Guid.Parse(moderator.Id),
+                Moderator = moderator,
+                ActionType = ModerationActionType.TagChange,
+                Action = action,
+                Reason = reason,
+                PreviousState = previousState,
+                NewState = newState,
+                Severity = severity,
+                IsAutomated = false,
+                Outcome = ModerationDecisionOutcome.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
         public void AddEffect(ModerationActionEffect effect)
         {
             Effects.Add(effect);

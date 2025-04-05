@@ -58,9 +58,9 @@ namespace Meritocious.Core.Features.Posts.Commands
             post.UpdateMeritScore(contentScore.FinalScore);
 
             // Update tags
-            foreach (var tagName in request.Tags)
+            foreach (var tagNameAndCategory in request.Tags.Zip(request.TagCategories))
             {
-                await tagService.AddTagToPostAsync(post.Id, tagName);
+                await tagService.AddTagToPostAsync(post.Id, tagNameAndCategory.First, tagNameAndCategory.Second);
             }
 
             await postRepository.UpdateAsync(post);

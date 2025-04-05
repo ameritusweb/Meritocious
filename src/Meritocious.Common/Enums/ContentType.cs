@@ -10,6 +10,7 @@ namespace Meritocious.Common.Enums
     {
         Post,
         Comment,
-        Thread
+        Thread,
+        Tag
     }
 }

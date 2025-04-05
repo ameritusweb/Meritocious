@@ -14,6 +14,8 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<PostRelation> PostRelations { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<ExternalLogin> ExternalLogins { get; set; }
+        public DbSet<BlockedIpAddress> BlockedIpAddresses { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
 
         // Recommendations
         public DbSet<UserContentInteraction> UserContentInteractions { get; set; }

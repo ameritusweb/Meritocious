@@ -3,7 +3,6 @@
     using MediatR;
     using Meritocious.Common.DTOs.Notifications;
     using Meritocious.Core.Extensions;
-    using Meritocious.Core.Features.Notifications.Models;
     using Meritocious.Core.Features.Notifications.Queries;
     using Meritocious.Core.Interfaces;
     using System;

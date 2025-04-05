@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Meritocious.Core.Features.Tags.Queries;
 using Meritocious.Common.DTOs.Tags;
 using Meritocious.Infrastructure.Data;
+using Meritocious.Core.Features.Tags.Models;
 
 namespace Meritocious.Infrastructure.Queries;
 
@@ -21,14 +22,14 @@ public class GetTagStatsQueryHandler : IRequestHandler<GetTagStatsQuery, TagDto>
             .Where(t => t.Id.ToString() == request.TagId)
             .Select(t => new TagDto
             {
-                Id = t.Id,
+                Id = t.Id.ToString(),
                 Name = t.Name,
                 Description = t.Description,
-                UsageCount = t.UsageCount,
+                UsageCount = t.UseCount,
                 FollowerCount = t.FollowerCount,
                 CreatedAt = t.CreatedAt,
-                LastModified = t.LastModified,
-                IsModerated = t.IsModerated
+                LastModified = t.UpdatedAt,
+                IsModerated = t.Status == TagStatus.Moderated
             })
             .FirstOrDefaultAsync(cancellationToken);
     }

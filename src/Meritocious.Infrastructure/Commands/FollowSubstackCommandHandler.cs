@@ -8,16 +8,16 @@ namespace Meritocious.Infrastructure.Commands;
 
 public class FollowSubstackCommandHandler : IRequestHandler<FollowSubstackCommand, bool>
 {
-    private readonly MeritociousDbContext _context;
+    private readonly MeritociousDbContext context;
 
     public FollowSubstackCommandHandler(MeritociousDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<bool> Handle(FollowSubstackCommand request, CancellationToken cancellationToken)
     {
-        var user = await _context.Users
+        var user = await context.Users
             .Include(u => u.FollowedSubstacks)
             .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
@@ -26,15 +26,15 @@ public class FollowSubstackCommandHandler : IRequestHandler<FollowSubstackComman
             throw new ResourceNotFoundException($"User with ID {request.UserId} not found");
         }
 
-        var substack = await _context.Substacks
-            .FirstOrDefaultAsync(s => s.Id == request.SubstackId, cancellationToken);
+        var substack = await context.Substacks
+            .FirstOrDefaultAsync(s => s.Id.ToString() == request.SubstackId, cancellationToken);
 
         if (substack == null)
         {
             throw new ResourceNotFoundException($"Substack with ID {request.SubstackId} not found");
         }
 
-        if (user.FollowedSubstacks.Any(s => s.Id == request.SubstackId))
+        if (user.FollowedSubstacks.Any(s => s.Id.ToString() == request.SubstackId))
         {
             return false;
         }
@@ -42,7 +42,7 @@ public class FollowSubstackCommandHandler : IRequestHandler<FollowSubstackComman
         user.FollowedSubstacks.Add(substack);
         substack.FollowerCount++;
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

@@ -23,8 +23,8 @@ public class GetTagRelationshipsQueryHandler : IRequestHandler<GetTagRelationshi
             {
                 ParentTagId = r.ParentTagId,
                 ChildTagId = r.ChildTagId,
-                RelationType = r.RelationType,
-                CreatedBy = r.CreatedBy,
+                RelationType = r.RelationType.ToString(),
+                CreatedBy = r.Creator.Id.ToString(),
                 CreatedAt = r.CreatedAt
             })
             .ToListAsync(cancellationToken);
