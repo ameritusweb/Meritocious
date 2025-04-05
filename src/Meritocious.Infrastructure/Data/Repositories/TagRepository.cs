@@ -89,7 +89,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                     (t.Name.ToLower().Contains(searchableText) ||
                      t.Description.ToLower().Contains(searchableText) ||
                      (includeSynonyms && t.Synonyms.Any(s =>
-                         s.Name.ToLower().Contains(searchableText)))))
+                         s.SourceTag.Name.ToLower().Contains(searchableText)))))
                 .OrderByDescending(t => t.UseCount)
                 .ToListAsync();
         }
@@ -133,18 +133,18 @@ namespace Meritocious.Infrastructure.Data.Repositories
         public async Task<List<TagSynonym>> GetTagSynonymsAsync(Guid tagId)
         {
             return await dbSet
-                .Include(s => s.Creator)
+                .Include(s => s.CreatedBy)
                 .Include(s => s.ApprovedBy)
-                .Where(s => s.TagId == tagId)
-                .OrderByDescending(s => s.UseCount)
+                .Where(s => s.SourceTagId == tagId)
+                .OrderByDescending(s => s.CreatedAt)
                 .ToListAsync();
         }
 
         public async Task<List<TagSynonym>> GetPendingApprovalAsync()
         {
             return await dbSet
-                .Include(s => s.Tag)
-                .Include(s => s.Creator)
+                .Include(s => s.SourceTag)
+                .Include(s => s.CreatedBy)
                 .Where(s => !s.IsApproved)
                 .OrderBy(s => s.CreatedAt)
                 .ToListAsync();
@@ -153,9 +153,9 @@ namespace Meritocious.Infrastructure.Data.Repositories
         public async Task<TagSynonym> FindSynonymAsync(string name)
         {
             return await dbSet
-                .Include(s => s.Tag)
+                .Include(s => s.SourceTag)
                 .FirstOrDefaultAsync(s =>
-                    s.Name.ToLower() == name.ToLower() &&
+                    s.SourceTag.Name.ToLower() == name.ToLower() &&
                     s.IsApproved);
         }
     }

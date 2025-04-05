@@ -26,6 +26,7 @@ namespace Meritocious.Core.Entities
         public DateTime? ApprovedAt { get; private set; }
         public Guid? ApprovedById { get; private set; }
         public User? ApprovedBy { get; private set; }
+        public string Name => SourceTag?.Name ?? "(unknown)";
 
         private TagSynonym()
         {

@@ -13,21 +13,25 @@ namespace Meritocious.Core.Features.Posts.Commands
     using Meritocious.Infrastructure.Data.Repositories;
     using Meritocious.AI.MeritScoring.Interfaces;
     using Meritocious.Core.Events;
+    using Meritocious.Infrastructure.Data.Resolvers;
 
     public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, Result<Post>>
     {
         private readonly PostRepository postRepository;
+        private readonly IMeritScoreTypeResolver meritScoreTypeResolver;
         private readonly ITagService tagService;
         private readonly IMeritScorer meritScorer;
         private readonly IMediator mediator;
 
         public UpdatePostCommandHandler(
             PostRepository postRepository,
+            IMeritScoreTypeResolver meritScoreTypeResolver,
             ITagService tagService,
             IMeritScorer meritScorer,
             IMediator mediator)
         {
             this.postRepository = postRepository;
+            this.meritScoreTypeResolver = meritScoreTypeResolver;
             this.tagService = tagService;
             this.meritScorer = meritScorer;
             this.mediator = mediator;
@@ -55,7 +59,7 @@ namespace Meritocious.Core.Features.Posts.Commands
 
             // Update post
             post.UpdateContent(request.Title, request.Content);
-            post.UpdateMeritScore(contentScore.FinalScore);
+            post.UpdateMeritScore(contentScore, this.meritScoreTypeResolver.GetByName);
 
             // Update tags
             foreach (var tagNameAndCategory in request.Tags.Zip(request.TagCategories))

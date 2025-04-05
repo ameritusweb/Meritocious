@@ -16,7 +16,6 @@ namespace Meritocious.Infrastructure
     using MediatR;
     using Meritocious.Core.Behaviors;
     using Meritocious.Core.Extensions;
-    using Meritocious.Core.Features.Notifications.Models;
     using Meritocious.Core.Entities;
     using Meritocious.Infrastructure.Data.Services;
     using Microsoft.AspNetCore.Identity;

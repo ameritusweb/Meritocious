@@ -56,33 +56,33 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             builder.HasKey(s => s.Id);
 
-            builder.Property(s => s.Name)
-                .IsRequired()
-                .HasMaxLength(100);
+            // TODO: Cleanup
+            // builder.Property(s => s.Name)
+            //    .IsRequired()
+            //    .HasMaxLength(100);
 
-            builder.Property(s => s.Slug)
-                .IsRequired()
-                .HasMaxLength(100);
+            // builder.Property(s => s.Slug)
+            //    .IsRequired()
+            //    .HasMaxLength(100);
 
-            builder.HasOne(s => s.Tag)
-                .WithMany(t => t.Synonyms)
-                .HasForeignKey(s => s.TagId)
-                .OnDelete(DeleteBehavior.Cascade);
+            // builder.HasOne(s => s.Tag)
+            //    .WithMany(t => t.Synonyms)
+            //    .HasForeignKey(s => s.TagId)
+            //    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(s => s.Creator)
-                .WithMany()
-                .HasForeignKey(s => s.CreatorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
+            // builder.HasOne(s => s.Creator)
+            //    .WithMany()
+            //    .HasForeignKey(s => s.CreatorId)
+            //    .OnDelete(DeleteBehavior.Restrict);
             builder.HasOne(s => s.ApprovedBy)
                 .WithMany()
                 .HasForeignKey(s => s.ApprovedById)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Create indexes
-            builder.HasIndex(s => new { s.TagId, s.Name }).IsUnique();
-            builder.HasIndex(s => s.Slug);
-            builder.HasIndex(s => s.UseCount);
+            // builder.HasIndex(s => new { s.TagId, s.Name }).IsUnique();
+            // builder.HasIndex(s => s.Slug);
+            // builder.HasIndex(s => s.UseCount);
             builder.HasIndex(s => s.IsApproved);
         }
     }

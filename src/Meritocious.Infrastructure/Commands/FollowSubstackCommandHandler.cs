@@ -39,7 +39,7 @@ public class FollowSubstackCommandHandler : IRequestHandler<FollowSubstackComman
             return false;
         }
 
-        user.FollowedSubstacks.Add(substack);
+        user.FollowSubstack(substack);
         substack.FollowerCount++;
 
         await context.SaveChangesAsync(cancellationToken);

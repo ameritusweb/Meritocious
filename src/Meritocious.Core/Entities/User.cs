@@ -38,8 +38,21 @@ namespace Meritocious.Core.Entities
         private readonly List<MeritScoreHistory> meritScoreHistories;
         public IReadOnlyCollection<MeritScoreHistory> MeritScoreHistories  => meritScoreHistories.AsReadOnly();
 
-        private readonly List<Substack> followedSubstacks;
+        private readonly List<Substack> followedSubstacks = new();
         public IReadOnlyCollection<Substack> FollowedSubstacks => followedSubstacks.AsReadOnly();
+
+        public void FollowSubstack(Substack substack)
+        {
+            if (!followedSubstacks.Contains(substack))
+            {
+                followedSubstacks.Add(substack);
+            }
+        }
+
+        public bool UnfollowSubstack(Substack substack)
+        {
+            return followedSubstacks.Remove(substack);
+        }
 
         private User()
         {

@@ -5,6 +5,7 @@ using Meritocious.Core.Features.Merit.Commands;
 using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
 using Meritocious.Infrastructure.Data.Repositories;
+using Meritocious.Infrastructure.Data.Resolvers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,17 +17,20 @@ namespace Meritocious.Infrastructure.Commands
     public class RecalculateMeritScoreCommandHandler : IRequestHandler<RecalculateMeritScoreCommand, Result<decimal>>
     {
         private readonly IMeritScoringService meritScoringService;
+        private readonly IMeritScoreTypeResolver meritScoreTypeResolver;
         private readonly PostRepository postRepository;
         private readonly CommentRepository commentRepository;
         private readonly IMediator mediator;
 
         public RecalculateMeritScoreCommandHandler(
             IMeritScoringService meritScoringService,
+            IMeritScoreTypeResolver meritScoreTypeResolver,
             PostRepository postRepository,
             CommentRepository commentRepository,
             IMediator mediator)
         {
             this.meritScoringService = meritScoringService;
+            this.meritScoreTypeResolver = meritScoreTypeResolver;
             this.postRepository = postRepository;
             this.commentRepository = commentRepository;
             this.mediator = mediator;
@@ -73,7 +77,7 @@ namespace Meritocious.Infrastructure.Commands
                 {
                     case ContentType.Post:
                         var post = await postRepository.GetByIdAsync(request.ContentId);
-                        post.UpdateMeritScore(score.FinalScore);
+                        post.UpdateMeritScore(score, this.meritScoreTypeResolver.GetByName);
                         await postRepository.UpdateAsync(post);
                         break;
 

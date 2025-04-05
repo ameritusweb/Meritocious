@@ -16,6 +16,7 @@ namespace Meritocious.Infrastructure.Data
         public DbSet<ExternalLogin> ExternalLogins { get; set; }
         public DbSet<BlockedIpAddress> BlockedIpAddresses { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
+        public DbSet<MeritScoreType> MeritScoreTypes { get; set; }
 
         // Recommendations
         public DbSet<UserContentInteraction> UserContentInteractions { get; set; }

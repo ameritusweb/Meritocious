@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Meritocious.Core.Features.Notifications.Models;
 using System;
+using Meritocious.Core.Entities;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -29,7 +29,7 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasMaxLength(500);
 
-            builder.Property(n => n.ActionUrl)
+            builder.Property(n => n.Link)
                 .HasMaxLength(255);
 
             // Create indexes for commonly queried fields

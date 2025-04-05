@@ -24,6 +24,7 @@ namespace Meritocious.Core.Entities
         public Dictionary<string, string> Metadata { get; private set; }
         public List<TagWiki> WikiVersions { get; private set; }
         public int FollowerCount { get; internal set; }
+        public List<Post> Posts { get; private set; } = new();
 
         private Tag()
         {
@@ -54,15 +55,6 @@ namespace Meritocious.Core.Entities
                 Status = TagStatus.Active,
                 CreatedAt = DateTime.UtcNow
             };
-        }
-
-        public void AddSynonym(string synonym, User creator)
-        {
-            if (!Synonyms.Any(s => s.Name == synonym))
-            {
-                Synonyms.Add(TagSynonym.Create(this, synonym, creator));
-                UpdatedAt = DateTime.UtcNow;
-            }
         }
 
         public void AddRelatedTag(

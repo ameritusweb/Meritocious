@@ -34,7 +34,7 @@ public class UnfollowSubstackCommandHandler : IRequestHandler<UnfollowSubstackCo
             throw new ResourceNotFoundException($"Substack with ID {request.SubstackId} not found");
         }
 
-        var removed = user.FollowedSubstacks.Remove(substack);
+        var removed = user.UnfollowSubstack(substack);
         if (removed)
         {
             substack.FollowerCount--;
