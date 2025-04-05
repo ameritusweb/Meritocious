@@ -6,9 +6,9 @@ namespace Meritocious.Core.Features.Recommendations.Models
 {
     public class UserContentInteraction : BaseEntity<UserContentInteraction>
     {
-        public Guid UserId { get; private set; }
+        public string UserId { get; private set; }
         public User User { get; private set; }
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
         public string InteractionType { get; private set; }
         public decimal EngagementScore { get; private set; }
@@ -20,14 +20,14 @@ namespace Meritocious.Core.Features.Recommendations.Models
 
         public static UserContentInteraction Create(
             User user,
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             string interactionType,
             decimal engagementScore)
         {
             return new UserContentInteraction
             {
-                UserId = Guid.Parse(user.Id),
+                UserId = user.Id,
                 User = user,
                 ContentId = contentId,
                 ContentType = contentType,
@@ -47,7 +47,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
 
     public class ContentTopic : BaseEntity<ContentTopic>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
         public string Topic { get; private set; }
         public decimal Relevance { get; private set; }
@@ -58,7 +58,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         }
 
         public static ContentTopic Create(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             string topic,
             decimal relevance)
@@ -79,7 +79,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
 
     public class UserTopicPreference : BaseEntity<UserTopicPreference>
     {
-        public Guid UserId { get; private set; }
+        public string UserId { get; private set; }
         public User User { get; private set; }
         public string Topic { get; private set; }
         public decimal Weight { get; private set; }
@@ -96,7 +96,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         {
             return new UserTopicPreference
             {
-                UserId = Guid.Parse(user.Id),
+                UserId = user.Id,
                 User = user,
                 Topic = topic,
                 Weight = weight,
@@ -115,8 +115,8 @@ namespace Meritocious.Core.Features.Recommendations.Models
 
     public class ContentSimilarity : BaseEntity<ContentSimilarity>
     {
-        public Guid ContentId1 { get; private set; }
-        public Guid ContentId2 { get; private set; }
+        public string ContentId1 { get; private set; }
+        public string ContentId2 { get; private set; }
         public decimal SimilarityScore { get; private set; }
         public DateTime CalculatedAt { get; private set; }
 
@@ -125,8 +125,8 @@ namespace Meritocious.Core.Features.Recommendations.Models
         }
 
         public static ContentSimilarity Create(
-            Guid contentId1,
-            Guid contentId2,
+            string contentId1,
+            string contentId2,
             decimal similarityScore)
         {
             return new ContentSimilarity
@@ -142,7 +142,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
 
     public class TrendingContent : BaseEntity<TrendingContent>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
         public decimal TrendingScore { get; private set; }
         public int ViewCount { get; private set; }
@@ -156,7 +156,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         }
 
         public static TrendingContent Create(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             TimeSpan windowSize)
         {

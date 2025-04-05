@@ -10,8 +10,8 @@ namespace Meritocious.Core.Interfaces
         Task<Tag> GetTagByNameAsync(string name);
         Task<List<Tag>> GetPopularTagsAsync(int count = 10);
         Task<List<Tag>> SearchTagsAsync(string searchTerm);
-        Task AddTagToPostAsync(Guid postId, string tagName, TagCategory category);
-        Task RemoveTagFromPostAsync(Guid postId, string tagName);
+        Task AddTagToPostAsync(string postId, string tagName, TagCategory category);
+        Task RemoveTagFromPostAsync(string postId, string tagName);
         Task<IEnumerable<Tag>> GetOrCreateTagsAsync(IEnumerable<string> tagNames);
         Task<IEnumerable<Tag>> GetRelatedTagsAsync(string topic);
     }

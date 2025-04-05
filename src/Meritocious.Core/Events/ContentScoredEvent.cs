@@ -11,12 +11,12 @@ namespace Meritocious.Core.Events
 
     public class ContentScoredEvent
     {
-        public Guid ContentId { get; }
+        public string ContentId { get; }
         public ContentType ContentType { get; }
         public MeritScoreDto Score { get; }
         public DateTime ScoredAt { get; }
 
-        public ContentScoredEvent(Guid contentId, ContentType contentType, MeritScoreDto score)
+        public ContentScoredEvent(string contentId, ContentType contentType, MeritScoreDto score)
         {
             ContentId = contentId;
             ContentType = contentType;

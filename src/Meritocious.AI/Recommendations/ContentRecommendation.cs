@@ -8,7 +8,7 @@ namespace Meritocious.AI.Recommendations
 {
     public class ContentRecommendation
     {
-        public Guid ContentId { get; set; }
+        public string ContentId { get; set; }
         public string RecommendationType { get; set; }
         public decimal RelevanceScore { get; set; }
         public string Reason { get; set; }

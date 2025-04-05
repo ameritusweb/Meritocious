@@ -13,14 +13,14 @@ namespace Meritocious.Core.Features.Discovery.Queries
 
     public record GetRecommendedPostsQuery : IRequest<List<PostRecommendationDto>>
     {
-        public Guid UserId { get; init; }
+        public string UserId { get; init; }
         public int Count { get; init; } = 10;
         public List<string> ExcludedPostIds { get; init; } = new();
     }
 
     public class PostRecommendationDto
     {
-        public Guid PostId { get; set; }
+        public string PostId { get; set; }
         public string Title { get; set; }
         public string AuthorUsername { get; set; }
         public decimal MeritScore { get; set; }

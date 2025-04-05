@@ -151,7 +151,7 @@ namespace Meritocious.Infrastructure.Data.Services
             {
                 if (filters.TryGetValue("authorId", out var authorId))
                 {
-                    if (Guid.TryParse(authorId, out var authorGuid))
+                    if (Ulid.TryParse(authorId, out var authorGuid))
                     {
                         query = query.Where(p => p.AuthorId == authorGuid.ToString());
                     }
@@ -181,7 +181,7 @@ namespace Meritocious.Infrastructure.Data.Services
                 Type = ContentType.Post,
                 Title = p.Title,
                 Excerpt = GetExcerpt(p.Content, searchTerm),
-                AuthorId = Guid.Parse(p.AuthorId),
+                AuthorId = p.AuthorId,
                 AuthorUsername = p.Author.UserName,
                 MeritScore = p.MeritScore,
                 CreatedAt = p.CreatedAt,
@@ -202,7 +202,7 @@ namespace Meritocious.Infrastructure.Data.Services
             {
                 if (filters.TryGetValue("authorId", out var authorId))
                 {
-                    if (Guid.TryParse(authorId, out var authorGuid))
+                    if (Ulid.TryParse(authorId, out var authorGuid))
                     {
                         query = query.Where(c => c.AuthorId == authorGuid.ToString());
                     }
@@ -218,9 +218,9 @@ namespace Meritocious.Infrastructure.Data.Services
 
                 if (filters.TryGetValue("postId", out var postId))
                 {
-                    if (Guid.TryParse(postId, out var postGuid))
+                    if (Ulid.TryParse(postId, out var postGuid))
                     {
-                        query = query.Where(c => c.PostId == postGuid);
+                        query = query.Where(c => c.PostId == postGuid.ToString());
                     }
                 }
             }
@@ -236,7 +236,7 @@ namespace Meritocious.Infrastructure.Data.Services
                 Type = ContentType.Comment,
                 Title = $"Comment on {c.Post.Title}",
                 Excerpt = GetExcerpt(c.Content, searchTerm),
-                AuthorId = Guid.Parse(c.AuthorId),
+                AuthorId = c.AuthorId,
                 AuthorUsername = c.Author.UserName,
                 MeritScore = c.MeritScore,
                 CreatedAt = c.CreatedAt,

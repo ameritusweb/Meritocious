@@ -44,7 +44,7 @@ namespace Meritocious.AI.Recommendations.Services
         }
 
         public async Task<List<ContentRecommendation>> GetRecommendationsAsync(
-            Guid userId,
+            string userId,
             List<UserInteractionHistory> userHistory,
             int count = 10,
             List<string> excludedContentIds = null)
@@ -91,7 +91,7 @@ namespace Meritocious.AI.Recommendations.Services
         }
 
         private async Task<UserProfile> BuildUserProfileAsync(
-            Guid userId,
+            string userId,
             List<UserInteractionHistory> userHistory)
         {
             var profile = new UserProfile
@@ -226,7 +226,7 @@ namespace Meritocious.AI.Recommendations.Services
             var recommendations = new List<ContentRecommendation>();
 
             // Get embeddings for user's positive interactions
-            var interactionEmbeddings = new List<(Guid contentId, ReadOnlyMemory<float> embedding)>();
+            var interactionEmbeddings = new List<(string contentId, ReadOnlyMemory<float> embedding)>();
 
             foreach (var interaction in userProfile.InteractionHistory
                 .Where(h => h.EngagementLevel > 0.7m)
@@ -404,14 +404,14 @@ namespace Meritocious.AI.Recommendations.Services
 
                 foreach (var user in users.Where(u => u.Id != userProfile.UserId.ToString()))
                 {
-                    var userPrefs = await preferenceRepo.GetUserTopicWeightsAsync(Guid.Parse(user.Id));
+                    var userPrefs = await preferenceRepo.GetUserTopicWeightsAsync(user.Id);
                     var similarity = CalculatePreferenceSimilarity(
                         userProfile.TopicPreferences,
                         userPrefs);
 
                     similarUsers.Add(new SimilarUser
                     {
-                        UserId = Guid.Parse(user.Id),
+                        UserId = user.Id,
                         Similarity = similarity
                     });
                 }
@@ -423,7 +423,7 @@ namespace Meritocious.AI.Recommendations.Services
                 .ToList();
         }
 
-        private async Task<List<ContentInteraction>> GetUserPositiveInteractionsAsync(Guid userId)
+        private async Task<List<ContentInteraction>> GetUserPositiveInteractionsAsync(string userId)
         {
             var interactions = await interactionRepo.GetUserInteractionsAsync(
                 userId,
@@ -464,7 +464,7 @@ namespace Meritocious.AI.Recommendations.Services
             return result;
         }
 
-        private async Task<string> GetContentByIdAsync(Guid contentId)
+        private async Task<string> GetContentByIdAsync(string contentId)
         {
             var post = await postRepo.GetByIdAsync(contentId);
             return post?.Content ?? string.Empty;
@@ -512,7 +512,7 @@ namespace Meritocious.AI.Recommendations.Services
             return (decimal)(dotProduct / (norm1 * norm2));
         }
 
-        Task<List<Core.Interfaces.ContentRecommendation>> IRecommendationService.GetRecommendationsAsync(Guid userId, List<UserInteractionHistory> userHistory, int count, List<string> excludedContentIds)
+        Task<List<Core.Interfaces.ContentRecommendation>> IRecommendationService.GetRecommendationsAsync(string userId, List<UserInteractionHistory> userHistory, int count, List<string> excludedContentIds)
         {
             // TODO: Implement this.
             throw new NotImplementedException();
@@ -524,7 +524,7 @@ namespace Meritocious.AI.Recommendations.Services
 
         private class UserProfile
         {
-            public Guid UserId { get; set; }
+            public string UserId { get; set; }
             public List<UserInteractionHistory> InteractionHistory { get; set; }
             public Dictionary<string, decimal> TopicPreferences { get; set; }
             public Dictionary<string, decimal> InteractionPatterns { get; set; }
@@ -532,26 +532,26 @@ namespace Meritocious.AI.Recommendations.Services
 
         private class SimilarUser
         {
-            public Guid UserId { get; set; }
+            public string UserId { get; set; }
             public decimal Similarity { get; set; }
         }
 
         private class ContentInteraction
         {
-            public Guid ContentId { get; set; }
+            public string ContentId { get; set; }
             public decimal EngagementScore { get; set; }
         }
 
         private class Content
         {
-            public Guid ContentId { get; set; }
+            public string ContentId { get; set; }
             public string Value { get; set; }
             public DateTime CreatedAt { get; set; }
         }
 
         private class TrendingContent
         {
-            public Guid ContentId { get; set; }
+            public string ContentId { get; set; }
             public decimal TrendingScore { get; set; }
         }
 

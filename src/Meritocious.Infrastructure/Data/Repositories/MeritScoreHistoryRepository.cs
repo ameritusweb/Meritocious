@@ -9,9 +9,9 @@ namespace Meritocious.Infrastructure.Data.Repositories
 {
     public interface IMeritScoreHistoryRepository : IRepository<MeritScoreHistory>
     {
-        Task<List<MeritScoreHistory>> GetContentScoreHistoryAsync(Guid contentId, ContentType contentType);
-        Task<MeritScoreHistory> GetLatestScoreAsync(Guid contentId, ContentType contentType);
-        Task<List<MeritScoreHistory>> GetRecalculationsAsync(Guid contentId, ContentType contentType);
+        Task<List<MeritScoreHistory>> GetContentScoreHistoryAsync(string contentId, ContentType contentType);
+        Task<MeritScoreHistory> GetLatestScoreAsync(string contentId, ContentType contentType);
+        Task<List<MeritScoreHistory>> GetRecalculationsAsync(string contentId, ContentType contentType);
         Task<Dictionary<string, decimal>> GetAverageComponentScoresAsync(DateTime start, DateTime end);
     }
 
@@ -22,7 +22,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<MeritScoreHistory>> GetContentScoreHistoryAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await dbSet
@@ -32,7 +32,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<MeritScoreHistory> GetLatestScoreAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await dbSet
@@ -42,7 +42,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<MeritScoreHistory>> GetRecalculationsAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await dbSet

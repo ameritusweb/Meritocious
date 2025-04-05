@@ -8,31 +8,32 @@ using Meritocious.AI.MeritScoring.Interfaces;
 using Meritocious.Core.Events;
 using Meritocious.Common.DTOs.Remix;
 using Meritocious.Common.Enums;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Infrastructure.Data.Services;
 
 public interface IRemixService
 {
     Task<RemixDto> CreateRemixAsync(CreateRemixRequest request);
-    Task<RemixDto> UpdateRemixAsync(Guid remixId, UpdateRemixRequest request);
-    Task<RemixDto> GetRemixByIdAsync(Guid remixId);
-    Task<bool> DeleteRemixAsync(Guid remixId, Guid userId);
-    Task<RemixDto> PublishRemixAsync(Guid remixId, Guid userId);
-    Task<RemixSourceDto> AddSourceAsync(Guid remixId, AddSourceRequest request);
-    Task<bool> RemoveSourceAsync(Guid remixId, Guid sourceId);
-    Task UpdateSourceOrderAsync(Guid remixId, IEnumerable<SourceOrderUpdate> updates);
-    Task<RemixSourceDto> UpdateSourceRelationshipAsync(Guid remixId, Guid sourceId, string relationship);
-    Task AddQuoteToSourceAsync(Guid sourceId, AddQuoteRequest request);
-    Task<IEnumerable<RemixDto>> GetUserRemixesAsync(Guid userId, RemixFilter filter);
-    Task<IEnumerable<RemixDto>> GetRelatedRemixesAsync(Guid remixId, int limit = 5);
+    Task<RemixDto> UpdateRemixAsync(string remixId, UpdateRemixRequest request);
+    Task<RemixDto> GetRemixByIdAsync(string remixId);
+    Task<bool> DeleteRemixAsync(string remixId, string userId);
+    Task<RemixDto> PublishRemixAsync(string remixId, string userId);
+    Task<RemixSourceDto> AddSourceAsync(string remixId, AddSourceRequest request);
+    Task<bool> RemoveSourceAsync(string remixId, string sourceId);
+    Task UpdateSourceOrderAsync(string remixId, IEnumerable<SourceOrderUpdate> updates);
+    Task<RemixSourceDto> UpdateSourceRelationshipAsync(string remixId, string sourceId, string relationship);
+    Task AddQuoteToSourceAsync(string sourceId, AddQuoteRequest request);
+    Task<IEnumerable<RemixDto>> GetUserRemixesAsync(string userId, RemixFilter filter);
+    Task<IEnumerable<RemixDto>> GetRelatedRemixesAsync(string remixId, int limit = 5);
     Task<IEnumerable<RemixDto>> GetTrendingRemixesAsync(int limit = 10);
-    Task RecordEngagementAsync(Guid remixId, RemixEngagementEvent engagementEvent);
-    Task<RemixAnalytics> GetRemixAnalyticsAsync(Guid remixId);
+    Task RecordEngagementAsync(string remixId, RemixEngagementEvent engagementEvent);
+    Task<RemixAnalytics> GetRemixAnalyticsAsync(string remixId);
     Task<IEnumerable<RemixDto>> SearchRemixesAsync(RemixSearchRequest request);
-    Task<IEnumerable<RemixNoteDto>> GenerateInsightsAsync(Guid remixId);
-    Task<string> GenerateSynthesisMapAsync(Guid remixId);
-    Task<IEnumerable<RemixNoteDto>> GetSuggestionsAsync(Guid remixId);
-    Task<RemixScoreResult> CalculateRemixScoreAsync(Guid remixId);
+    Task<IEnumerable<RemixNoteDto>> GenerateInsightsAsync(string remixId);
+    Task<string> GenerateSynthesisMapAsync(string remixId);
+    Task<IEnumerable<RemixNoteDto>> GetSuggestionsAsync(string remixId);
+    Task<RemixScoreResult> CalculateRemixScoreAsync(string remixId);
 }
 
 /// <summary>
@@ -68,7 +69,7 @@ public class RemixService : IRemixService
             Title = request.Title,
             Content = request.InitialContent,
             AuthorId = request.AuthorId.ToString(),
-            SubstackId = request.SubstackId ?? Guid.Empty,
+            SubstackId = request.SubstackId ?? string.Empty,
             IsDraft = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -111,7 +112,7 @@ public class RemixService : IRemixService
         return await GetRemixByIdAsync(post.Id);
     }
 
-    public async Task<RemixDto> UpdateRemixAsync(Guid remixId, UpdateRemixRequest request)
+    public async Task<RemixDto> UpdateRemixAsync(string remixId, UpdateRemixRequest request)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")
@@ -144,7 +145,7 @@ public class RemixService : IRemixService
         return await GetRemixByIdAsync(remixId);
     }
 
-    public async Task<RemixDto> GetRemixByIdAsync(Guid remixId)
+    public async Task<RemixDto> GetRemixByIdAsync(string remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")
@@ -191,7 +192,7 @@ public class RemixService : IRemixService
             Title = post.Title,
             Content = post.Content,
             AuthorUsername = post.Author.UserName,
-            AuthorId = Guid.Parse(post.AuthorId),
+            AuthorId = post.AuthorId,
             MeritScore = post.MeritScore,
             Sources = sources,
             Tags = post.Tags.Select(t => t.Name).ToList(),
@@ -204,7 +205,7 @@ public class RemixService : IRemixService
         };
     }
 
-    public async Task<bool> DeleteRemixAsync(Guid remixId, Guid userId)
+    public async Task<bool> DeleteRemixAsync(string remixId, string userId)
     {
         var post = await postRepository.GetByIdAsync(remixId);
         if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId.ToString())
@@ -216,7 +217,7 @@ public class RemixService : IRemixService
         return true;
     }
 
-    public async Task<RemixDto> PublishRemixAsync(Guid remixId, Guid userId)
+    public async Task<RemixDto> PublishRemixAsync(string remixId, string userId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix" || post.AuthorId != userId.ToString())
@@ -238,7 +239,7 @@ public class RemixService : IRemixService
         return await GetRemixByIdAsync(remixId);
     }
 
-    public async Task<RemixSourceDto> AddSourceAsync(Guid remixId, AddSourceRequest request)
+    public async Task<RemixSourceDto> AddSourceAsync(string remixId, AddSourceRequest request)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")
@@ -301,7 +302,7 @@ public class RemixService : IRemixService
         return sources;
     }
 
-    public async Task<bool> RemoveSourceAsync(Guid remixId, Guid sourceId)
+    public async Task<bool> RemoveSourceAsync(string remixId, string sourceId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")
@@ -325,13 +326,13 @@ public class RemixService : IRemixService
         return true;
     }
 
-    public async Task UpdateSourceOrderAsync(Guid remixId, IEnumerable<SourceOrderUpdate> updates)
+    public async Task UpdateSourceOrderAsync(string remixId, IEnumerable<SourceOrderUpdate> updates)
     {
         var orderUpdates = updates.Select(u => (u.SourceId, u.NewOrder));
         await postRepository.UpdateSourceOrderAsync(remixId, orderUpdates);
     }
 
-    public async Task<RemixSourceDto> UpdateSourceRelationshipAsync(Guid remixId, Guid sourceId, string relationship)
+    public async Task<RemixSourceDto> UpdateSourceRelationshipAsync(string remixId, string sourceId, string relationship)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")
@@ -372,7 +373,7 @@ public class RemixService : IRemixService
         };
     }
 
-    public async Task AddQuoteToSourceAsync(Guid sourceId, AddQuoteRequest request)
+    public async Task AddQuoteToSourceAsync(string sourceId, AddQuoteRequest request)
     {
         var relatedPosts = await postRepository.GetPostWithRelations(
             sourceId,
@@ -419,7 +420,7 @@ public class RemixService : IRemixService
         // await postRepository.UpdateAsync(relation);
     }
 
-    public async Task<IEnumerable<RemixDto>> GetUserRemixesAsync(Guid userId, RemixFilter filter)
+    public async Task<IEnumerable<RemixDto>> GetUserRemixesAsync(string userId, RemixFilter filter)
     {
         var posts = await postRepository.GetUserRemixesAsync(userId, filter.IncludeDrafts);
         
@@ -449,7 +450,7 @@ public class RemixService : IRemixService
         });
     }
 
-    public async Task<IEnumerable<RemixDto>> GetRelatedRemixesAsync(Guid remixId, int limit = 5)
+    public async Task<IEnumerable<RemixDto>> GetRelatedRemixesAsync(string remixId, int limit = 5)
     {
         var related = await postRepository.GetRelatedRemixesAsync(remixId, limit);
         return related.Select(p => new RemixDto
@@ -476,7 +477,7 @@ public class RemixService : IRemixService
     }
 
     public async Task RecordEngagementAsync(
-        Guid remixId,
+        string remixId,
         RemixEngagementEvent engagementEvent)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
@@ -517,11 +518,11 @@ public class RemixService : IRemixService
         }
 
         // Update source influence if provided
-        if (engagementEvent.SourceId.HasValue && engagementEvent.InfluenceScore.HasValue)
+        if (engagementEvent.SourceId.HasValue() && engagementEvent.InfluenceScore.HasValue)
         {
             var relation = post.ParentRelations
                 .FirstOrDefault(r => r.RelationType == "remix" && 
-                                   r.ParentId == engagementEvent.SourceId.Value);
+                                   r.ParentId == engagementEvent.SourceId);
             
             if (relation != null)
             {
@@ -540,7 +541,7 @@ public class RemixService : IRemixService
         await postRepository.UpdateAsync(post);
     }
 
-    public async Task<RemixAnalytics> GetRemixAnalyticsAsync(Guid remixId)
+    public async Task<RemixAnalytics> GetRemixAnalyticsAsync(string remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")
@@ -604,7 +605,7 @@ public class RemixService : IRemixService
             ContentType.Post,
             maxResults: request.Limit ?? 20);
 
-        var postIds = searchResults.Select(r => Guid.Parse(r.Id)).ToList();
+        var postIds = searchResults.Select(r => r.Id).ToList();
         var posts = await postRepository.GetByIdsAsync(postIds);
 
         // Filter posts
@@ -634,7 +635,7 @@ public class RemixService : IRemixService
         });
     }
 
-    public async Task<IEnumerable<RemixNoteDto>> GenerateInsightsAsync(Guid remixId)
+    public async Task<IEnumerable<RemixNoteDto>> GenerateInsightsAsync(string remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null)
@@ -682,7 +683,7 @@ public class RemixService : IRemixService
                         post.AddNote(
                             "Connection",
                             connection,
-                            new List<Guid> { source1.Id, source2.Id },
+                            new List<string> { source1.Id, source2.Id },
                             confidence);
                     }
                 }
@@ -715,7 +716,7 @@ public class RemixService : IRemixService
                 post.AddNote(
                     "Insight",
                     insight,
-                    new List<Guid> { source.Id },
+                    new List<string> { source.Id },
                     confidence);
             }
         }
@@ -803,7 +804,7 @@ public class RemixService : IRemixService
         return Math.Max(0.0m, Math.Min(1.0m, confidence));
     }
 
-    public async Task<string> GenerateSynthesisMapAsync(Guid remixId)
+    public async Task<string> GenerateSynthesisMapAsync(string remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")
@@ -1004,7 +1005,7 @@ public class RemixService : IRemixService
         public string Description { get; set; }
     }
 
-    public async Task<IEnumerable<RemixNoteDto>> GetSuggestionsAsync(Guid remixId)
+    public async Task<IEnumerable<RemixNoteDto>> GetSuggestionsAsync(string remixId)
     {
         var notes = await postRepository.GetUnusedSuggestionsAsync(remixId);
         return notes.Select(n => new RemixNoteDto
@@ -1018,7 +1019,7 @@ public class RemixService : IRemixService
         });
     }
 
-    public async Task<RemixScoreResult> CalculateRemixScoreAsync(Guid remixId)
+    public async Task<RemixScoreResult> CalculateRemixScoreAsync(string remixId)
     {
         var post = await postRepository.GetByIdWithFullDetailsAsync(remixId);
         if (post == null || post.GetPostType() != "remix")

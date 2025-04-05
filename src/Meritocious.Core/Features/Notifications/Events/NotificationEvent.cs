@@ -10,7 +10,7 @@ namespace Meritocious.Core.Features.Notifications.Events
 
     public record NotificationEvent : INotification
     {
-        public Guid UserId { get; }
+        public string UserId { get; }
         public string Type { get; }
         public string Title { get; }
         public string Message { get; }
@@ -18,7 +18,7 @@ namespace Meritocious.Core.Features.Notifications.Events
         public DateTime CreatedAt { get; }
 
         public NotificationEvent(
-            Guid userId,
+            string userId,
             string type,
             string title,
             string message,

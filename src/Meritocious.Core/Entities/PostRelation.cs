@@ -2,8 +2,8 @@ namespace Meritocious.Core.Entities;
 
 public class PostRelation : BaseEntity<PostRelation>
 {
-    public Guid ParentId { get; private set; }
-    public Guid ChildId { get; private set; }
+    public string ParentId { get; private set; }
+    public string ChildId { get; private set; }
     public string RelationType { get; private set; } // "fork" or "remix"
     public int OrderIndex { get; internal set; } // For ordering remix sources
     public string Role { get; private set; } // For remix: "support", "contrast", "example", "question"

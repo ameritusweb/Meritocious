@@ -12,8 +12,8 @@ namespace Meritocious.Core.Features.Comments.Commands
 {
     public record UpdateCommentCommand : IRequest<Result<CommentDto>>
     {
-        public Guid CommentId { get; init; }
-        public Guid EditorId { get; init; }
+        public string CommentId { get; init; }
+        public string EditorId { get; init; }
         public string Content { get; init; }
     }
 }

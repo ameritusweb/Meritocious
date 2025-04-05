@@ -9,13 +9,13 @@ namespace Meritocious.Core.Entities
 {
     public class ContentModerationEvent : BaseEntity<ContentModerationEvent>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
 
         public ContentType ContentType { get; private set; }
 
         public ModerationAction Action { get; private set; }
 
-        public Guid ActionId { get; private set; }
+        public string ActionId { get; private set; }
 
         public string Reason { get; private set; }
 
@@ -32,12 +32,12 @@ namespace Meritocious.Core.Entities
         }
 
         public static ContentModerationEvent Create(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             ModerationAction action,
             string reason,
             bool isAutomated,
-            Guid? moderatorId = null)
+            string? moderatorId = null)
         {
             return new ContentModerationEvent
             {

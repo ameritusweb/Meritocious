@@ -2,15 +2,15 @@ namespace Meritocious.Common.DTOs.Content;
 
 public class RemixDto
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     public string Title { get; set; }
     public string Content { get; set; }
     public string AuthorUsername { get; set; }
-    public Guid AuthorId { get; set; }
+    public string AuthorId { get; set; }
     public decimal MeritScore { get; set; }
     public List<RemixSourceDto> Sources { get; set; } = new();
     public List<string> Tags { get; set; } = new();
-    public Guid? SubstackId { get; set; }
+    public string? SubstackId { get; set; }
     public bool IsDraft { get; set; }
     public DateTime? PublishedAt { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -21,7 +21,7 @@ public class RemixDto
 
 public class RemixSourceDto
 {
-    public Guid SourcePostId { get; set; }
+    public string SourcePostId { get; set; }
     public string PostTitle { get; set; }
     public string AuthorUsername { get; set; }
     public string Relationship { get; set; }
@@ -41,10 +41,10 @@ public class QuoteDto
 
 public class RemixNoteDto
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     public string Type { get; set; }
     public string Content { get; set; }
-    public List<Guid> RelatedSourceIds { get; set; } = new();
+    public List<string> RelatedSourceIds { get; set; } = new();
     public decimal Confidence { get; set; }
     public bool IsApplied { get; set; }
 }
@@ -57,7 +57,7 @@ public class SynthesisMapDto
 
 public class SynthesisNodeDto
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     public string Type { get; set; } // Source, Insight, Connection
     public string Label { get; set; }
     public Dictionary<string, object> Properties { get; set; } = new();
@@ -65,8 +65,8 @@ public class SynthesisNodeDto
 
 public class SynthesisConnectionDto
 {
-    public Guid FromId { get; set; }
-    public Guid ToId { get; set; }
+    public string FromId { get; set; }
+    public string ToId { get; set; }
     public string Type { get; set; } // Support, Contrast, Example, etc.
     public decimal Strength { get; set; }
     public string Label { get; set; }

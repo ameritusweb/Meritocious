@@ -12,11 +12,11 @@ namespace Meritocious.Core.Interfaces
     public interface IUserService
     {
         Task<User> CreateUserAsync(string username, string email, string password);
-        Task<User> GetUserByIdAsync(Guid id);
+        Task<User> GetUserByIdAsync(string id);
         Task<User> GetUserByUsernameAsync(string username);
         Task<User> GetUserByEmailAsync(string email);
-        Task UpdateUserProfileAsync(Guid userId, UserProfileDto profile);
-        Task UpdateUserMeritScoreAsync(Guid userId, decimal newScore);
+        Task UpdateUserProfileAsync(string userId, UserProfileDto profile);
+        Task UpdateUserMeritScoreAsync(string userId, decimal newScore);
         Task<bool> ValidateUserCredentialsAsync(string email, string password);
         Task<IEnumerable<User>> GetModeratorsAsync();
     }

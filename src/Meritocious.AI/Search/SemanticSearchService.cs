@@ -47,7 +47,7 @@ namespace Meritocious.AI.Search
             }
         }
 
-        public async Task IndexContentAsync(Guid contentId, ContentType contentType, string content)
+        public async Task IndexContentAsync(string contentId, ContentType contentType, string content)
         {
             try
             {
@@ -101,7 +101,7 @@ namespace Meritocious.AI.Search
         }
 
         public async Task<List<SearchResult>> FindSimilarContentAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             int maxResults = 10)
         {
@@ -129,7 +129,7 @@ namespace Meritocious.AI.Search
             }
         }
 
-        public async Task UpdateContentAsync(Guid contentId, ContentType contentType, string newContent)
+        public async Task UpdateContentAsync(string contentId, ContentType contentType, string newContent)
         {
             try
             {
@@ -160,7 +160,7 @@ namespace Meritocious.AI.Search
             }
         }
 
-        public async Task DeleteContentAsync(Guid contentId, ContentType contentType)
+        public async Task DeleteContentAsync(string contentId, ContentType contentType)
         {
             try
             {
@@ -178,7 +178,7 @@ namespace Meritocious.AI.Search
             }
         }
 
-        public async Task<float[]> GetContentEmbeddingAsync(Guid contentId, ContentType contentType)
+        public async Task<float[]> GetContentEmbeddingAsync(string contentId, ContentType contentType)
         {
             try
             {
@@ -205,8 +205,8 @@ namespace Meritocious.AI.Search
         }
 
         public async Task<decimal> CalculateContentSimilarityAsync(
-            Guid contentId1,
-            Guid contentId2,
+            string contentId1,
+            string contentId2,
             ContentType contentType)
         {
             try
@@ -229,7 +229,7 @@ namespace Meritocious.AI.Search
             }
         }
 
-        public async Task<List<(Guid contentId, decimal similarity)>> FindSemanticDuplicatesAsync(
+        public async Task<List<(string contentId, decimal similarity)>> FindSemanticDuplicatesAsync(
             string content,
             ContentType contentType,
             decimal similarityThreshold = 0.95m)
@@ -246,7 +246,7 @@ namespace Meritocious.AI.Search
 
                 return results
                     .Where(r => r.Score >= (float)similarityThreshold)
-                    .Select(r => (Guid.Parse(r.Id), (decimal)r.Score))
+                    .Select(r => (r.Id, (decimal)r.Score))
                     .ToList();
             }
             catch (Exception ex)

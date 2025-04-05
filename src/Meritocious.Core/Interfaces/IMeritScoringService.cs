@@ -12,8 +12,8 @@ namespace Meritocious.Core.Interfaces
     public interface IMeritScoringService
     {
         Task<MeritScoreDto> CalculateContentScoreAsync(string content, ContentType type, string context = null);
-        Task<decimal> CalculateUserMeritScoreAsync(Guid userId);
-        Task<List<MeritScoreDto>> GetContentScoreHistoryAsync(Guid contentId, ContentType type);
+        Task<decimal> CalculateUserMeritScoreAsync(string userId);
+        Task<List<MeritScoreDto>> GetContentScoreHistoryAsync(string contentId, ContentType type);
         Task<bool> ValidateContentQualityAsync(string content, ContentType type);
     }
 }

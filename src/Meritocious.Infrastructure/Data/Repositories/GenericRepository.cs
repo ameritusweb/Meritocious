@@ -37,7 +37,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             dbSet = context.Set<T>();
         }
 
-        public virtual async Task<T> GetByIdAsync(Guid id)
+        public virtual async Task<T> GetByIdAsync(string id)
         {
             return await dbSet.FindAsync(id);
         }

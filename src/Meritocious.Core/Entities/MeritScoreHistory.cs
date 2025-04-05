@@ -9,7 +9,7 @@ namespace Meritocious.Core.Entities
 {
     public class MeritScoreHistory : BaseEntity<MeritScoreHistory>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
         public decimal Score { get; private set; }
         public Dictionary<string, decimal> Components { get; private set; }
@@ -29,7 +29,7 @@ namespace Meritocious.Core.Entities
         }
 
         public static MeritScoreHistory Create(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             decimal score,
             Dictionary<string, decimal> components,

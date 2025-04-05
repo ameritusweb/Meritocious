@@ -63,7 +63,7 @@ namespace Meritocious.Core.Services
             return await tagRepository.SearchTagsAsync(searchTerm);
         }
 
-        public async Task AddTagToPostAsync(Guid postId, string tagName, TagCategory category)
+        public async Task AddTagToPostAsync(string postId, string tagName, TagCategory category)
         {
             var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
@@ -81,7 +81,7 @@ namespace Meritocious.Core.Services
             await postRepository.UpdateAsync(post);
         }
 
-        public async Task RemoveTagFromPostAsync(Guid postId, string tagName)
+        public async Task RemoveTagFromPostAsync(string postId, string tagName)
         {
             var post = await postRepository.GetByIdAsync(postId);
             if (post == null)

@@ -28,7 +28,7 @@ public class GetUserMeritScoreQueryHandler : IRequestHandler<GetUserMeritScoreQu
 
         return new MeritScoreDto
         {
-            UserId = Guid.Parse(user.Id),
+            UserId = user.Id,
             CurrentScore = user.MeritScore,
             LastCalculated = user.LastCalculated.GetValueOrDefault(),
             ScoreHistory = user.MeritScoreHistories.Select(h => new MeritScoreHistoryDto

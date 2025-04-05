@@ -12,7 +12,7 @@ namespace Meritocious.Core.Features.Comments.Queries
 {
     public record GetCommentRepliesQuery : IRequest<Result<List<CommentDto>>>
     {
-        public Guid CommentId { get; init; }
+        public string CommentId { get; init; }
         public string SortBy { get; init; } = "merit"; // merit, date
         public int? Page { get; init; }
         public int? PageSize { get; init; }

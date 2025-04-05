@@ -13,7 +13,7 @@ namespace Meritocious.Core.Features.Posts.Queries
 
     public record GetPostQuery : IRequest<Result<Post>>
     {
-        public Guid PostId { get; init; }
+        public string PostId { get; init; }
     }
 
     public class GetPostQueryHandler : IRequestHandler<GetPostQuery, Result<Post>>

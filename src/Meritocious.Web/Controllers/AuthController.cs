@@ -60,15 +60,15 @@ namespace Meritocious.Web.Controllers
             return HandleResult(result);
         }
 
-        private Guid GetCurrentUserId()
+        private string GetCurrentUserId()
         {
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            if (userIdClaim == null || !Ulid.TryParse(userIdClaim.Value, out var userId))
             {
                 throw new UnauthorizedAccessException("Invalid user ID in token");
             }
 
-            return userId;
+            return userId.ToString();
         }
     }
 

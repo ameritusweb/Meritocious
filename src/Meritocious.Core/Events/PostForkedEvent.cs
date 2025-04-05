@@ -8,12 +8,12 @@ namespace Meritocious.Core.Events
 {
     public class PostForkedEvent
     {
-        public Guid OriginalPostId { get; }
-        public Guid ForkedPostId { get; }
-        public Guid ForkedByUserId { get; }
+        public string OriginalPostId { get; }
+        public string ForkedPostId { get; }
+        public string ForkedByUserId { get; }
         public DateTime ForkedAt { get; }
 
-        public PostForkedEvent(Guid originalPostId, Guid forkedPostId, Guid forkedByUserId)
+        public PostForkedEvent(string originalPostId, string forkedPostId, string forkedByUserId)
         {
             OriginalPostId = originalPostId;
             ForkedPostId = forkedPostId;

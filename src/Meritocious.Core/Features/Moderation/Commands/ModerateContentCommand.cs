@@ -13,10 +13,10 @@ namespace Meritocious.Core.Features.Moderation.Commands
 
     public record ModerateContentCommand : IRequest<Result<ModerationResult>>
     {
-        public Guid ContentId { get; init; }
+        public string ContentId { get; init; }
         public ContentType ContentType { get; init; }
         public bool IsAutomated { get; init; } = true;
-        public Guid? ModeratorId { get; init; }
+        public string? ModeratorId { get; init; }
     }
 
     public class ModerationResult

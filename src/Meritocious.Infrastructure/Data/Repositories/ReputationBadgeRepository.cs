@@ -15,7 +15,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
         }
 
-        public async Task<List<ReputationBadge>> GetUserBadgesAsync(Guid userId)
+        public async Task<List<ReputationBadge>> GetUserBadgesAsync(string userId)
         {
             return await dbSet
                 .Include(b => b.User)
@@ -83,7 +83,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ReputationBadge>> GetProgressingBadgesAsync(
-            Guid userId,
+            string userId,
             decimal minimumProgress = 0.5m)
         {
             return await dbSet

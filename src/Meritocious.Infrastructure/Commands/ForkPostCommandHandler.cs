@@ -46,7 +46,7 @@ namespace Meritocious.Core.Features.Posts.Commands
             await postRepository.AddAsync(forkedPost);
 
             await mediator.Publish(
-                new PostForkedEvent(originalPost.Id, forkedPost.Id, Guid.Parse(newAuthor.Id)),
+                new PostForkedEvent(originalPost.Id, forkedPost.Id, newAuthor.Id),
                 cancellationToken);
 
             return Result.Success(forkedPost);

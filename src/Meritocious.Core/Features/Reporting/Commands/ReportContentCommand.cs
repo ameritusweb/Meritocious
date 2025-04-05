@@ -14,9 +14,9 @@ namespace Meritocious.Core.Features.Reporting.Commands
 
     public record ReportContentCommand : IRequest<Result>
     {
-        public Guid ContentId { get; init; }
+        public string ContentId { get; init; }
         public ContentType ContentType { get; init; }
-        public Guid ReporterId { get; init; }
+        public string ReporterId { get; init; }
         public string ReportType { get; init; }
         public string Description { get; init; }
     }

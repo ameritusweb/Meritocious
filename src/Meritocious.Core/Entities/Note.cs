@@ -2,13 +2,13 @@ namespace Meritocious.Core.Entities;
 
 public class Note : BaseEntity<Note>
 {
-    public Guid PostId { get; private set; }
+    public string PostId { get; private set; }
 
     public string Type { get; private set; }  // "Connection", "Insight", "Suggestion"
 
     public string Content { get; private set; }
 
-    public List<Guid> RelatedSourceIds { get; private set; } = new();
+    public List<string> RelatedSourceIds { get; private set; } = new();
 
     public decimal Confidence { get; private set; }
 
@@ -24,7 +24,7 @@ public class Note : BaseEntity<Note>
         Post post,
         string type,
         string content,
-        List<Guid> relatedSourceIds,
+        List<string> relatedSourceIds,
         decimal confidence)
     {
         return new Note

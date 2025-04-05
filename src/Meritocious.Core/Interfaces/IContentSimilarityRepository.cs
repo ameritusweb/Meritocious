@@ -9,11 +9,11 @@ namespace Meritocious.Core.Interfaces
 {
     public interface IContentSimilarityRepository
     {
-        Task<List<ContentSimilarity>> GetSimilarContentAsync(Guid contentId, decimal minSimilarity = 0.7m);
-        Task<decimal> GetContentSimilarityAsync(Guid contentId1, Guid contentId2);
-        Task<List<(Guid id1, Guid id2)>> GetContentPairsForUpdateAsync(int batchSize = 100);
-        Task MarkForUpdateAsync(Guid contentId, int priority = 0);
+        Task<List<ContentSimilarity>> GetSimilarContentAsync(string contentId, decimal minSimilarity = 0.7m);
+        Task<decimal> GetContentSimilarityAsync(string contentId1, string contentId2);
+        Task<List<(string id1, string id2)>> GetContentPairsForUpdateAsync(int batchSize = 100);
+        Task MarkForUpdateAsync(string contentId, int priority = 0);
         Task MarkOldSimilaritiesForUpdateAsync(TimeSpan age, int priority = 0);
-        Task CreateMissingSimilaritiesAsync(List<Guid> contentIds);
+        Task CreateMissingSimilaritiesAsync(List<string> contentIds);
     }
 }

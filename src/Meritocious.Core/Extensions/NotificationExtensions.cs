@@ -15,7 +15,7 @@ namespace Meritocious.Core.Extensions
             return new NotificationDto
             {
                 Id = notification.Id,
-                UserId = Guid.Parse(notification.UserId),
+                UserId = notification.UserId,
                 Type = notification.Type,
                 Title = notification.Title,
                 Message = notification.Message,

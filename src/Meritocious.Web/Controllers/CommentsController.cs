@@ -27,7 +27,7 @@ public class CommentsController : ApiControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<CommentDto>> UpdateComment(Guid id, UpdateCommentCommand command)
+    public async Task<ActionResult<CommentDto>> UpdateComment(string id, UpdateCommentCommand command)
     {
         if (id != command.CommentId)
         {
@@ -39,7 +39,7 @@ public class CommentsController : ApiControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteComment(Guid id)
+    public async Task<ActionResult> DeleteComment(string id)
     {
         var command = new DeleteCommentCommand { CommentId = id };
         var result = await mediator.Send(command);
@@ -48,7 +48,7 @@ public class CommentsController : ApiControllerBase
 
     [HttpGet("{id}/replies")]
     public async Task<ActionResult<List<CommentDto>>> GetReplies(
-        Guid id,
+        string id,
         [FromQuery] string sortBy = "merit",
         [FromQuery] int? page = null,
         [FromQuery] int? pageSize = null)
@@ -65,7 +65,7 @@ public class CommentsController : ApiControllerBase
     }
 
     [HttpPost("{id}/report")]
-    public async Task<ActionResult> ReportComment(Guid id, ReportContentCommand command)
+    public async Task<ActionResult> ReportComment(string id, ReportContentCommand command)
     {
         if (id != command.ContentId)
         {

@@ -15,8 +15,8 @@ namespace Meritocious.Core.Features.Reporting.Commands
 
     public record ResolveReportCommand : IRequest<Result>
     {
-        public Guid ReportId { get; init; }
-        public Guid ModeratorId { get; init; }
+        public string ReportId { get; init; }
+        public string ModeratorId { get; init; }
         public string Resolution { get; init; }
         public string Notes { get; init; }
         public ModerationAction Action { get; init; }

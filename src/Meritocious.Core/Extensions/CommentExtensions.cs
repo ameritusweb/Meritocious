@@ -18,7 +18,7 @@ namespace Meritocious.Core.Extensions
                 Content = comment.Content,
                 PostId = comment.PostId,
                 PostTitle = comment.Post?.Title ?? "Unknown Post",
-                AuthorId = Guid.Parse(comment.AuthorId),
+                AuthorId = comment.AuthorId,
                 AuthorUsername = comment.Author?.UserName ?? "Unknown User",
                 ParentCommentId = comment.ParentCommentId,
                 MeritScore = comment.MeritScore,

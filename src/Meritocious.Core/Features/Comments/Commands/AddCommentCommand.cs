@@ -14,10 +14,10 @@ namespace Meritocious.Core.Features.Comments.Commands
 
     public record AddCommentCommand : IRequest<Result<CommentDto>>
     {
-        public Guid PostId { get; init; }
-        public Guid AuthorId { get; init; }
+        public string PostId { get; init; }
+        public string AuthorId { get; init; }
         public string Content { get; init; }
-        public Guid? ParentCommentId { get; init; }
+        public string? ParentCommentId { get; init; }
     }
 
     public class AddCommentCommandValidator : AbstractValidator<AddCommentCommand>

@@ -17,7 +17,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<UserContentInteraction>> GetUserInteractionsAsync(
-            Guid userId,
+            string userId,
             DateTime? since = null)
         {
             var query = dbSet
@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<UserContentInteraction>> GetContentInteractionsAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             DateTime? since = null)
         {
@@ -53,7 +53,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Dictionary<string, decimal>> GetUserInteractionPatternsAsync(Guid userId)
+        public async Task<Dictionary<string, decimal>> GetUserInteractionPatternsAsync(string userId)
         {
             var interactions = await dbSet
                 .Where(i => i.UserId == userId)

@@ -11,10 +11,10 @@ namespace Meritocious.Core.Events
 {
     public class UserRegisteredEvent : INotification
     {
-        public Guid UserId { get; }
+        public string UserId { get; }
         public DateTime RegisteredAt { get; }
 
-        public UserRegisteredEvent(Guid userId)
+        public UserRegisteredEvent(string userId)
         {
             UserId = userId;
             RegisteredAt = DateTime.UtcNow;

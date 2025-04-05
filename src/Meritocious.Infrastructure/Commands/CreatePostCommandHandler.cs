@@ -10,6 +10,7 @@ namespace Meritocious.Core.Commands
     using Meritocious.Core.Entities;
     using Meritocious.Core.Events;
     using Meritocious.Core.Exceptions;
+    using Meritocious.Core.Extensions;
     using Meritocious.Core.Interfaces;
     using Meritocious.Infrastructure.Data.Repositories;
 
@@ -38,9 +39,9 @@ namespace Meritocious.Core.Commands
                 ?? throw new ResourceNotFoundException($"User {request.AuthorId} not found");
 
             Post parent = null;
-            if (request.ParentPostId.HasValue)
+            if (request.ParentPostId.HasValue())
             {
-                parent = await postService.GetPostByIdAsync(request.ParentPostId.Value)
+                parent = await postService.GetPostByIdAsync(request.ParentPostId)
                     ?? throw new ResourceNotFoundException($"Parent post {request.ParentPostId} not found");
             }
 
@@ -53,7 +54,7 @@ namespace Meritocious.Core.Commands
             }
 
             // Publish domain event
-            await mediator.Publish(new PostCreatedEvent(post.Id, Guid.Parse(author.Id)), cancellationToken);
+            await mediator.Publish(new PostCreatedEvent(post.Id, author.Id), cancellationToken);
 
             return post;
         }

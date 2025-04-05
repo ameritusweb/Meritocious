@@ -11,7 +11,7 @@ namespace Meritocious.Core.Features.Notifications.Queries
 
     public record GetUserNotificationsQuery : IRequest<List<NotificationDto>>
     {
-        public Guid UserId { get; init; }
+        public string UserId { get; init; }
         public bool UnreadOnly { get; init; } = false;
         public int? Count { get; init; }
     }

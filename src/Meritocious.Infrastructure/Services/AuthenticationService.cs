@@ -183,7 +183,7 @@ namespace Meritocious.Infrastructure.Services
             }
         }
 
-        public async Task<Result> LinkGoogleAccountAsync(Guid userId, string idToken)
+        public async Task<Result> LinkGoogleAccountAsync(string userId, string idToken)
         {
             try
             {
@@ -234,7 +234,7 @@ namespace Meritocious.Infrastructure.Services
             }
         }
 
-        public async Task<Result> UnlinkGoogleAccountAsync(Guid userId)
+        public async Task<Result> UnlinkGoogleAccountAsync(string userId)
         {
             try
             {
@@ -254,7 +254,7 @@ namespace Meritocious.Infrastructure.Services
             }
         }
 
-        public async Task<Result<bool>> RequiresTwoFactorAsync(Guid userId)
+        public async Task<Result<bool>> RequiresTwoFactorAsync(string userId)
         {
             try
             {
@@ -274,7 +274,7 @@ namespace Meritocious.Infrastructure.Services
             }
         }
 
-        public async Task<Result<TwoFactorSetupResult>> SetupTwoFactorAsync(Guid userId)
+        public async Task<Result<TwoFactorSetupResult>> SetupTwoFactorAsync(string userId)
         {
             try
             {
@@ -311,7 +311,7 @@ namespace Meritocious.Infrastructure.Services
             }
         }
 
-        public async Task<Result<bool>> ValidateTwoFactorCodeAsync(Guid userId, string code)
+        public async Task<Result<bool>> ValidateTwoFactorCodeAsync(string userId, string code)
         {
             try
             {

@@ -9,10 +9,10 @@ namespace Meritocious.Common.DTOs.Moderation
 {
     public class ModerationActionDto
     {
-        public Guid Id { get; set; }
-        public Guid ContentId { get; set; }
+        public string Id { get; set; }
+        public string ContentId { get; set; }
         public ContentType ContentType { get; set; }
-        public Guid ModeratorId { get; set; }
+        public string ModeratorId { get; set; }
         public string ModeratorUsername { get; set; }
         public ModerationActionType ActionType { get; set; }
         public string Reason { get; set; }
@@ -23,9 +23,9 @@ namespace Meritocious.Common.DTOs.Moderation
         public ModerationDecisionOutcome Outcome { get; set; }
         public ModerationSeverity Severity { get; set; }
         public List<ModerationActionEffectDto> Effects { get; set; } = new List<ModerationActionEffectDto>();
-        public Guid? AppealId { get; set; }
+        public string? AppealId { get; set; }
         public DateTime? ReviewedAt { get; set; }
-        public Guid? ReviewedById { get; set; }
+        public string? ReviewedById { get; set; }
         public string ReviewerUsername { get; set; }
         public string ReviewNotes { get; set; }
         public DateTime CreatedAt { get; set; }

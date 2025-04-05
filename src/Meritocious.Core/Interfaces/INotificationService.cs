@@ -10,7 +10,7 @@ namespace Meritocious.Core.Interfaces
     public interface INotificationService
     {
         Task<Notification> SendNotificationAsync(Notification notification);
-        Task<List<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int? count = null);
-        Task MarkNotificationsAsReadAsync(Guid userId, List<Guid> notificationIds);
+        Task<List<Notification>> GetUserNotificationsAsync(string userId, bool unreadOnly = false, int? count = null);
+        Task MarkNotificationsAsReadAsync(string userId, List<string> notificationIds);
     }
 }

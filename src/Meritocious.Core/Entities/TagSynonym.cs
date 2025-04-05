@@ -8,10 +8,10 @@ namespace Meritocious.Core.Entities
 {
     public class TagSynonym : BaseEntity<TagSynonym>
     {
-        public Guid SourceTagId { get; private set; }
+        public string SourceTagId { get; private set; }
         public Tag SourceTag { get; private set; }
 
-        public Guid TargetTagId { get; private set; }
+        public string TargetTagId { get; private set; }
         public Tag TargetTag { get; private set; }
 
         public string CreatedById { get; private set; }
@@ -32,7 +32,7 @@ namespace Meritocious.Core.Entities
         {
         }
 
-        public static TagSynonym Create(Guid sourceTagId, Guid targetTagId, User creator)
+        public static TagSynonym Create(string sourceTagId, string targetTagId, User creator)
         {
             return new TagSynonym
             {

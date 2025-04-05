@@ -13,7 +13,7 @@ public class ImportSubstackPostCommand : IRequest<Result<Guid>>
 {
     public string PostUrl { get; set; }
     public string SubstackName { get; set; }
-    public Guid UserId { get; set; }
+    public string UserId { get; set; }
     public bool ImportAsRemix { get; set; }
     public string RemixNotes { get; set; }
 }

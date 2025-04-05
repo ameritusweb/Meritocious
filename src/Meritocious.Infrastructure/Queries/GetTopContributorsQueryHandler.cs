@@ -31,7 +31,7 @@ public class GetTopContributorsQueryHandler : IRequestHandler<GetTopContributors
 
         return users.Select(u => new UserProfileDto
         {
-            Id = Guid.Parse(u.Id),
+            Id = u.Id,
             Username = u.UserName,
             MeritScore = u.MeritScore,
             CreatedAt = u.CreatedAt,

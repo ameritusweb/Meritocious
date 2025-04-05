@@ -8,8 +8,8 @@ namespace Meritocious.Common.DTOs.Notifications
 {
     public class NotificationDto
     {
-        public Guid Id { get; set; }
-        public Guid UserId { get; set; }
+        public string Id { get; set; }
+        public string UserId { get; set; }
         public string Type { get; set; }
         public string Title { get; set; }
         public string Message { get; set; }

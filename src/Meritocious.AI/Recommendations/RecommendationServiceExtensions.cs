@@ -66,7 +66,7 @@ namespace Meritocious.AI.Recommendations
                     processedContentIds.Add(content.Id);
                     recommendations.Add(new ContentRecommendation
                     {
-                        ContentId = Guid.Parse(content.Id),
+                        ContentId = content.Id,
                         RecommendationType = "semantic",
                         RelevanceScore = (decimal)content.Score,
                         Reason = "Similar to content you've engaged with positively"
@@ -99,7 +99,7 @@ namespace Meritocious.AI.Recommendations
                     processedContentIds.Add(content.Id);
                     recommendations.Add(new ContentRecommendation
                     {
-                        ContentId = Guid.Parse(content.Id),
+                        ContentId = content.Id,
                         RecommendationType = "topic_semantic",
                         RelevanceScore = (decimal)content.Score * topic.Value,
                         Reason = $"Matches your interest in {topic.Key}"
@@ -206,7 +206,7 @@ namespace Meritocious.AI.Recommendations
                         processedContentIds.Add(content.Id);
                         recommendations.Add(new ContentRecommendation
                         {
-                            ContentId = Guid.Parse(content.Id),
+                            ContentId = content.Id,
                             RecommendationType = "serendipitous",
                             RelevanceScore = (decimal)content.Score * 0.8m,
                             Reason = $"Something different based on your interest in {topic.Key}"

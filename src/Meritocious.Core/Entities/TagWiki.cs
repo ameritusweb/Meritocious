@@ -8,7 +8,7 @@ namespace Meritocious.Core.Entities
 {
     public class TagWiki : BaseEntity<TagWiki>
     {
-        public Guid TagId { get; private set; }
+        public string TagId { get; private set; }
 
         public Tag Tag { get; private set; }
 

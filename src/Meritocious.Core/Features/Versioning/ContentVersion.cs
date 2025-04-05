@@ -22,8 +22,8 @@ namespace Meritocious.Core.Features.Versioning
 
     public class ContentDiff
     {
-        public Guid Id { get; private set; }
-        public Guid ContentVersionId { get; private set; }
+        public string Id { get; private set; }
+        public string ContentVersionId { get; private set; }
         public ContentVersion ContentVersion { get; private set; }
         public string DiffData { get; private set; }  // JSON diff data
         public string TitleDiff { get; private set; }
@@ -45,7 +45,7 @@ namespace Meritocious.Core.Features.Versioning
         {
             return new ContentDiff
             {
-                Id = Guid.NewGuid(),
+                Id = Ulid.NewUlid().ToString(),
                 ContentVersionId = version.Id,
                 ContentVersion = version,
                 DiffData = diffData,
@@ -59,7 +59,7 @@ namespace Meritocious.Core.Features.Versioning
 
     public interface IVersionable
     {
-        Guid Id { get; }
+        string Id { get; }
         int CurrentVersion { get; }
         DateTime LastEditedAt { get; }
         List<ContentVersion> Versions { get; }

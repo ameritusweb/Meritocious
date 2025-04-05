@@ -20,9 +20,9 @@ namespace Meritocious.Infrastructure.Data.Services
         }
 
         public async Task<ContentReport> CreateReportAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
-            Guid reporterId,
+            string reporterId,
             string reportType,
             string description)
         {
@@ -61,7 +61,7 @@ namespace Meritocious.Infrastructure.Data.Services
             }
         }
 
-        public async Task<ContentReport> GetReportByIdAsync(Guid reportId)
+        public async Task<ContentReport> GetReportByIdAsync(string reportId)
         {
             try
             {
@@ -123,8 +123,8 @@ namespace Meritocious.Infrastructure.Data.Services
         }
 
         public async Task<ContentReport> ResolveReportAsync(
-            Guid reportId,
-            Guid moderatorId,
+            string reportId,
+            string moderatorId,
             string resolution,
             string notes)
         {

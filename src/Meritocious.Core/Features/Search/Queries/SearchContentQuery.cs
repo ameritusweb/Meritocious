@@ -31,11 +31,11 @@ namespace Meritocious.Core.Features.Search.Queries
 
     public class SearchItemDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public ContentType Type { get; set; }
         public string Title { get; set; }
         public string Excerpt { get; set; }
-        public Guid AuthorId { get; set; }
+        public string AuthorId { get; set; }
         public string AuthorUsername { get; set; }
         public decimal MeritScore { get; set; }
         public DateTime CreatedAt { get; set; }

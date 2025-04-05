@@ -9,11 +9,11 @@ namespace Meritocious.Core.Entities
 {
     public class ContentReport : BaseEntity<ContentReport>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
 
         public ContentType ContentType { get; private set; }
 
-        public Guid ReporterId { get; private set; }
+        public string ReporterId { get; private set; }
 
         public User Reporter { get; private set; }
 
@@ -23,7 +23,7 @@ namespace Meritocious.Core.Entities
 
         public string Status { get; private set; }
 
-        public Guid? ModeratorId { get; private set; }
+        public string? ModeratorId { get; private set; }
 
         public User Moderator { get; private set; }
 
@@ -38,9 +38,9 @@ namespace Meritocious.Core.Entities
         }
 
         public static ContentReport Create(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
-            Guid reporterId,
+            string reporterId,
             string reportType,
             string description)
         {
@@ -56,7 +56,7 @@ namespace Meritocious.Core.Entities
             };
         }
 
-        public void Resolve(Guid moderatorId, string resolution, string notes)
+        public void Resolve(string moderatorId, string resolution, string notes)
         {
             ModeratorId = moderatorId;
             Resolution = resolution;

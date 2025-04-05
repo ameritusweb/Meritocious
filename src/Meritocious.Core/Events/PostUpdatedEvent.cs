@@ -9,11 +9,11 @@ namespace Meritocious.Core.Events
 {
     public class PostUpdatedEvent : INotification
     {
-        public Guid PostId { get; }
-        public Guid EditorId { get; }
+        public string PostId { get; }
+        public string EditorId { get; }
         public DateTime UpdatedAt { get; }
 
-        public PostUpdatedEvent(Guid postId, Guid editorId)
+        public PostUpdatedEvent(string postId, string editorId)
         {
             PostId = postId;
             EditorId = editorId;

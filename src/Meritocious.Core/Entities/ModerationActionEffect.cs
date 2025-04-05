@@ -8,7 +8,7 @@ namespace Meritocious.Core.Entities
 {
     public class ModerationActionEffect : BaseEntity<ModerationActionEffect>
     {
-        public Guid ModerationActionId { get; private set; }
+        public string ModerationActionId { get; private set; }
         public ModerationAction ModerationAction { get; private set; }
         public string EffectType { get; private set; }
         public Dictionary<string, string> EffectData { get; private set; }

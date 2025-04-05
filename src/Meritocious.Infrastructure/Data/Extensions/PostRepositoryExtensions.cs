@@ -88,7 +88,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
 
         public static async Task<List<UserInteractionHistory>> GetUserInteractionHistoryAsync(
             this PostRepository repository,
-            Guid userId)
+            string userId)
         {
             // Get posts the user has interacted with
             var posts = await repository.DbSet

@@ -8,7 +8,7 @@ namespace Meritocious.Common.DTOs.Contributions
 {
     public class ContributionSummaryDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string Type { get; set; }
         public string Title { get; set; }
         public decimal MeritScore { get; set; }

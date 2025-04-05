@@ -22,7 +22,7 @@ public class UpdateTagWikiCommandHandler : IRequestHandler<UpdateTagWikiCommand,
         .Include(t => t.WikiVersions)
         .FirstOrDefaultAsync(t => t.Id.ToString() == request.TagId, cancellationToken);
 
-        var editor = await context.Users.FindAsync(Guid.Parse(request.EditorId));
+        var editor = await context.Users.FindAsync(request.EditorId);
 
         var newWiki = TagWiki.Create(tag, request.Content, editor, request.EditReason);
         context.TagWikis.Add(newWiki);

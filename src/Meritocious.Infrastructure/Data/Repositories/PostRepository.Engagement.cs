@@ -11,7 +11,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
 {
     public partial class PostRepository
     {
-        public async Task<List<Post>> GetByIdsWithEngagementAsync(IEnumerable<Guid> postIds)
+        public async Task<List<Post>> GetByIdsWithEngagementAsync(IEnumerable<string> postIds)
         {
             return await dbSet
                 .Include(p => p.Engagement)
@@ -20,7 +20,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task RecordEngagementAsync(
-            Guid postId,
+            string postId,
             string region,
             string platform,
             bool isUnique,
@@ -39,7 +39,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task UpdateEngagementMetricsAsync(
-            Guid postId,
+            string postId,
             Action<Post> updateAction)
         {
             var post = await dbSet
@@ -53,7 +53,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<RemixEngagementMetricsDto> GetEngagementMetricsAsync(Guid postId)
+        public async Task<RemixEngagementMetricsDto> GetEngagementMetricsAsync(string postId)
         {
             var post = await dbSet
                 .Include(p => p.Engagement)
@@ -62,8 +62,8 @@ namespace Meritocious.Infrastructure.Data.Repositories
             return post?.Engagement?.ToDto() ?? new RemixEngagementMetricsDto();
         }
 
-        public async Task<Dictionary<Guid, RemixEngagementMetricsDto>> GetBulkEngagementMetricsAsync(
-            IEnumerable<Guid> postIds)
+        public async Task<Dictionary<string, RemixEngagementMetricsDto>> GetBulkEngagementMetricsAsync(
+            IEnumerable<string> postIds)
         {
             var posts = await dbSet
                 .Include(p => p.Engagement)
@@ -75,7 +75,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 p => p.Engagement?.ToDto() ?? new RemixEngagementMetricsDto());
         }
 
-        public async Task<PostEngagement> GetEngagementAsync(Guid postId)
+        public async Task<PostEngagement> GetEngagementAsync(string postId)
         {
             var post = await GetByIdAsync(postId);
             if (post == null)
@@ -86,7 +86,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             return await GetOrCreateEngagementAsync(post);
         }
 
-        public async Task RecordEngagementMetricsAsync(Guid postId,
+        public async Task RecordEngagementMetricsAsync(string postId,
             string region,
             string platform,
             bool isUnique,
@@ -104,7 +104,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task RecordInteractionAsync(Guid postId, string interactionType)
+        public async Task RecordInteractionAsync(string postId, string interactionType)
         {
             var post = await GetByIdAsync(postId);
             if (post == null)
@@ -156,7 +156,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             return engagement;
         }
 
-        internal async Task<IEnumerable<Post>> GetTopPostsByUserAsync(Guid userId, int v)
+        internal async Task<IEnumerable<Post>> GetTopPostsByUserAsync(string userId, int v)
         {
             // TODO: Implement this.
             throw new NotImplementedException();

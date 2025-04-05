@@ -13,7 +13,7 @@ namespace Meritocious.Core.Features.Comments.Queries
 
     public record GetPostCommentsQuery : IRequest<Result<List<Comment>>>
     {
-        public Guid PostId { get; init; }
+        public string PostId { get; init; }
         public string SortBy { get; init; } = "merit"; // merit, date, thread
         public int? Page { get; init; }
         public int? PageSize { get; init; }

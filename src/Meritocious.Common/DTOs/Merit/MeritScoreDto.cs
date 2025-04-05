@@ -17,14 +17,14 @@ namespace Meritocious.Common.DTOs.Merit
         public decimal FinalScore { get; set; }
         public string ModelVersion { get; set; } = string.Empty;
         public Dictionary<string, string> Explanations { get; set; } = new();
-        public Guid ContentId { get; set; }
+        public string ContentId { get; set; }
         public ContentType ContentType { get; set; }
         public string Context { get; set; }
         public DateTime Timestamp { get; set; }
         public bool IsRecalculation { get; set; }
         public string RecalculationReason { get; set; }
         public Dictionary<string, decimal> Components { get; set; } = new();
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
         public decimal CurrentScore { get; set; }
         public DateTime LastCalculated { get; set; }
         public List<MeritScoreHistoryDto> ScoreHistory { get; set; }

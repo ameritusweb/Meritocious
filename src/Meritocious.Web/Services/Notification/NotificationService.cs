@@ -24,7 +24,7 @@ namespace Meritocious.Web.Services.Notification
             this.logger = logger;
         }
 
-        public async Task SendNotificationAsync(Guid userId, NotificationDto notification)
+        public async Task SendNotificationAsync(string userId, NotificationDto notification)
         {
             try
             {
@@ -89,13 +89,13 @@ namespace Meritocious.Web.Services.Notification
             }
         }
 
-        public async Task MarkAsReadAsync(Guid userId, string notificationId)
+        public async Task MarkAsReadAsync(string userId, string notificationId)
         {
             try
             {
                 // Update database
                 var notification = await dbContext.Notifications
-                    .FirstOrDefaultAsync(n => n.Id == Guid.Parse(notificationId) && n.UserId == userId.ToString());
+                    .FirstOrDefaultAsync(n => n.Id == notificationId && n.UserId == userId.ToString());
 
                 if (notification == null)
                 {
@@ -126,7 +126,7 @@ namespace Meritocious.Web.Services.Notification
             }
         }
 
-        public async Task<List<NotificationDto>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false)
+        public async Task<List<NotificationDto>> GetUserNotificationsAsync(string userId, bool unreadOnly = false)
         {
             var query = dbContext.Notifications
                 .Where(n => n.UserId == userId.ToString());
@@ -144,7 +144,7 @@ namespace Meritocious.Web.Services.Notification
             return notifications.Select(n => new NotificationDto
             {
                 Id = n.Id,
-                UserId = Guid.Parse(n.UserId),
+                UserId = n.UserId,
                 Title = n.Title,
                 Message = n.Message,
                 Type = n.Type,
@@ -154,7 +154,7 @@ namespace Meritocious.Web.Services.Notification
             }).ToList();
         }
 
-        public Task MarkNotificationsAsReadAsync(Guid userId, List<Guid> notificationIds)
+        public Task MarkNotificationsAsReadAsync(string userId, List<string> notificationIds)
         {
             throw new NotImplementedException(); // TODO: Implement this
         }
@@ -164,7 +164,7 @@ namespace Meritocious.Web.Services.Notification
             throw new NotImplementedException(); // TODO: Implement this
         }
 
-        Task<List<Core.Entities.Notification>> INotificationService.GetUserNotificationsAsync(Guid userId, bool unreadOnly, int? count)
+        Task<List<Core.Entities.Notification>> INotificationService.GetUserNotificationsAsync(string userId, bool unreadOnly, int? count)
         {
             throw new NotImplementedException(); // TODO: Implement this
         }

@@ -10,10 +10,10 @@ namespace Meritocious.Common.DTOs.Remix
     {
         public string Title { get; set; }
         public string InitialContent { get; set; }
-        public Guid AuthorId { get; set; }
-        public Guid? SubstackId { get; set; }
+        public string AuthorId { get; set; }
+        public string? SubstackId { get; set; }
         public List<string> Tags { get; set; } = new();
-        public List<Guid> InitialSourceIds { get; set; } = new();
+        public List<string> InitialSourceIds { get; set; } = new();
     }
 
     public class UpdateRemixRequest
@@ -26,7 +26,7 @@ namespace Meritocious.Common.DTOs.Remix
 
     public class AddSourceRequest
     {
-        public Guid PostId { get; set; }
+        public string PostId { get; set; }
         public string Relationship { get; set; }
         public string Context { get; set; }
         public List<string> InitialQuotes { get; set; }
@@ -34,7 +34,7 @@ namespace Meritocious.Common.DTOs.Remix
 
     public class SourceOrderUpdate
     {
-        public Guid SourceId { get; set; }
+        public string SourceId { get; set; }
         public int NewOrder { get; set; }
     }
 

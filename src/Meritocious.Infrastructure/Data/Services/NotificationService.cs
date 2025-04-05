@@ -39,7 +39,7 @@ namespace Meritocious.Infrastructure.Data.Services
         }
 
         public async Task<List<Meritocious.Core.Entities.Notification>> GetUserNotificationsAsync(
-            Guid userId,
+            string userId,
             bool unreadOnly = false,
             int? count = null)
         {
@@ -69,7 +69,7 @@ namespace Meritocious.Infrastructure.Data.Services
             }
         }
 
-        public async Task MarkNotificationsAsReadAsync(Guid userId, List<Guid> notificationIds)
+        public async Task MarkNotificationsAsReadAsync(string userId, List<string> notificationIds)
         {
             try
             {

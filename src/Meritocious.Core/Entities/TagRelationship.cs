@@ -9,9 +9,9 @@ namespace Meritocious.Core.Entities
 {
     public class TagRelationship : BaseEntity<TagRelationship>
     {
-        public Guid SourceTagId { get; private set; }
+        public string SourceTagId { get; private set; }
         public Tag SourceTag { get; private set; }
-        public Guid RelatedTagId { get; private set; }
+        public string RelatedTagId { get; private set; }
         public Tag RelatedTag { get; private set; }
         public TagRelationType RelationType { get; private set; }
         public decimal Strength { get; private set; }

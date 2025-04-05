@@ -11,7 +11,7 @@ namespace Meritocious.Core.Features.Notifications.Commands
 
     public record MarkNotificationsAsReadCommand : IRequest<Result>
     {
-        public Guid UserId { get; init; }
-        public List<Guid> NotificationIds { get; init; } = new();
+        public string UserId { get; init; }
+        public List<string> NotificationIds { get; init; } = new();
     }
 }

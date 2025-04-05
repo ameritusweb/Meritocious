@@ -2,8 +2,8 @@ namespace Meritocious.Common.DTOs.Content
 {
     public class PostVersionDto
     {        
-        public Guid Id { get; set; }
-        public Guid PostId { get; set; }
+        public string Id { get; set; }
+        public string PostId { get; set; }
         public int VersionNumber { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
@@ -20,8 +20,8 @@ namespace Meritocious.Common.DTOs.Content
         public int ModifiedLines { get; set; }
         
         // Navigation properties
-        public Guid? ParentVersionId { get; set; }
-        public Guid? NextVersionId { get; set; }
+        public string? ParentVersionId { get; set; }
+        public string? NextVersionId { get; set; }
     }
 
     public class PostVersionComparisonDto

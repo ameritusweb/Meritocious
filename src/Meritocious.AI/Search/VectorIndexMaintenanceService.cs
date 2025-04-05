@@ -150,7 +150,7 @@ namespace Meritocious.AI.Search
 
         public class IndexingJob
         {
-            public Guid ContentId { get; set; }
+            public string ContentId { get; set; }
             public ContentType ContentType { get; set; }
             public string Content { get; set; }
             public IndexOperation Operation { get; set; }

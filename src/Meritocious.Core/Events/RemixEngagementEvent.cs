@@ -18,7 +18,7 @@ public class RemixEngagementEvent
     public bool Bounced { get; set; }
     
     // Source-related properties
-    public Guid? SourceId { get; set; }
+    public string? SourceId { get; set; }
     public decimal? InfluenceScore { get; set; }
     
     // Sentiment-related properties

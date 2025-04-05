@@ -9,7 +9,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
 {
     public class UserInteractionHistory
     {
-        public Guid ContentId { get; set; }
+        public string ContentId { get; set; }
         public ContentType ContentType { get; set; }
         public string InteractionType { get; set; } // view, like, comment, etc.
         public DateTime Timestamp { get; set; }

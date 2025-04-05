@@ -7,7 +7,7 @@ namespace Meritocious.Core.Features.Moderation.Queries
 {
     public record GetModerationHistoryQuery : IRequest<Result<List<ModerationHistoryDto>>>
     {
-        public Guid ContentId { get; init; }
+        public string ContentId { get; init; }
         public ContentType ContentType { get; init; }
     }
 }

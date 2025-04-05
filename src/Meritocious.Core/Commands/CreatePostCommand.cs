@@ -15,8 +15,8 @@ namespace Meritocious.Core.Commands
     {
         public string Title { get; set; }
         public string Content { get; set; }
-        public Guid AuthorId { get; set; }
-        public Guid? ParentPostId { get; set; }
+        public string AuthorId { get; set; }
+        public string? ParentPostId { get; set; }
         public List<string> Tags { get; set; } = new();
         public List<TagCategory> TagCategories { get; set; } = new();
     }

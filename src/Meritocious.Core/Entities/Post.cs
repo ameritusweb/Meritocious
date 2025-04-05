@@ -15,11 +15,11 @@ namespace Meritocious.Core.Entities
         public string Content { get; internal set; }
         public string AuthorId { get; internal set; }
         public User Author { get; internal set; }
-        public Guid? ParentPostId { get; internal set; }
+        public string? ParentPostId { get; internal set; }
         public Post ParentPost { get; internal set; }
         public bool IsDeleted { get; internal set; }
         public bool IsDraft { get; internal set; }
-        public Guid SubstackId { get; internal set; }
+        public string SubstackId { get; internal set; }
         public Substack Substack { get; internal set; }
         public decimal EngagementScore { get; internal set; }
 
@@ -134,7 +134,7 @@ namespace Meritocious.Core.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
-        public void UpdateMeritScores(Dictionary<Guid, decimal> scores)
+        public void UpdateMeritScores(Dictionary<string, decimal> scores)
         {
             foreach (var (scoreTypeId, score) in scores)
             {
@@ -175,12 +175,12 @@ namespace Meritocious.Core.Entities
             return meritComponents.TryGetValue(component, out var score) ? score : 0m;
         }
 
-        public MeritScore GetMeritScore(Guid scoreTypeId)
+        public MeritScore GetMeritScore(string scoreTypeId)
         {
             return meritScores.FirstOrDefault(s => s.ScoreTypeId == scoreTypeId);
         }
 
-        public bool HasMeritScore(Guid scoreTypeId)
+        public bool HasMeritScore(string scoreTypeId)
         {
             return meritScores.Any(s => s.ScoreTypeId == scoreTypeId);
         }
@@ -192,7 +192,7 @@ namespace Meritocious.Core.Entities
             notes = new List<Note>();
         }
 
-        public void AddNote(string type, string content, List<Guid> relatedSourceIds, decimal confidence)
+        public void AddNote(string type, string content, List<string> relatedSourceIds, decimal confidence)
         {
             var note = Note.Create(this, type, content, relatedSourceIds, confidence);
             notes.Add(note);
@@ -209,7 +209,7 @@ namespace Meritocious.Core.Entities
                 Author = author,
                 ParentPostId = parent?.Id,
                 ParentPost = parent,
-                SubstackId = substack?.Id ?? Guid.Empty,
+                SubstackId = substack?.Id ?? string.Empty,
                 Substack = substack,
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow

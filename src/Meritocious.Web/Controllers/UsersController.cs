@@ -35,7 +35,7 @@ public class UsersController : ApiControllerBase
     }
 
     [HttpGet("{id}/profile")]
-    public async Task<ActionResult<UserProfileDto>> GetProfile(Guid id)
+    public async Task<ActionResult<UserProfileDto>> GetProfile(string id)
     {
         var query = new GetUserProfileQuery { UserId = id };
         var result = await mediator.Send(query);
@@ -57,7 +57,7 @@ public class UsersController : ApiControllerBase
     }
 
     [HttpGet("{id}/posts")]
-    public async Task<ActionResult<List<PostDto>>> GetUserPosts(Guid id)
+    public async Task<ActionResult<List<PostDto>>> GetUserPosts(string id)
     {
         var query = new GetPostsByUserQuery { UserId = id };
         var result = await mediator.Send(query);
@@ -66,7 +66,7 @@ public class UsersController : ApiControllerBase
 
     [HttpGet("{id}/notifications")]
     public async Task<ActionResult<List<NotificationDto>>> GetNotifications(
-        Guid id,
+        string id,
         [FromQuery] bool unreadOnly = false,
         [FromQuery] int? count = null)
     {
@@ -82,8 +82,8 @@ public class UsersController : ApiControllerBase
 
     [HttpPost("{id}/notifications/mark-read")]
     public async Task<ActionResult> MarkNotificationsAsRead(
-        Guid id,
-        [FromBody] List<Guid> notificationIds)
+        string id,
+        [FromBody] List<string> notificationIds)
     {
         var command = new MarkNotificationsAsReadCommand
         {
@@ -96,7 +96,7 @@ public class UsersController : ApiControllerBase
 
     [HttpGet("{id}/recommended-posts")]
     public async Task<ActionResult<List<PostRecommendationDto>>> GetRecommendedPosts(
-        Guid id,
+        string id,
         [FromQuery] int count = 10)
     {
         var query = new GetRecommendedPostsQuery
@@ -112,13 +112,13 @@ public class UsersController : ApiControllerBase
     public async Task<ActionResult<UserProfileDto>> GetCurrentUserProfile()
     {
         var userId = GetUserId();
-        var query = new GetUserProfileQuery { UserId = Guid.Parse(userId) };
+        var query = new GetUserProfileQuery { UserId = userId };
         var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
     [HttpGet("{id}/merit-score")]
-    public async Task<ActionResult<MeritScoreDto>> GetUserMeritScore(Guid id)
+    public async Task<ActionResult<MeritScoreDto>> GetUserMeritScore(string id)
     {
         var query = new GetUserMeritScoreQuery(id.ToString());
         var result = await mediator.Send(query);
@@ -127,7 +127,7 @@ public class UsersController : ApiControllerBase
 
     [HttpGet("{id}/merit-history")]
     public async Task<ActionResult<List<ReputationSnapshot>>> GetUserMeritHistory(
-        Guid id,
+        string id,
         [FromQuery] string timeFrame = "monthly",
         [FromQuery] DateTime? start = null,
         [FromQuery] DateTime? end = null)
@@ -163,7 +163,7 @@ public class UsersController : ApiControllerBase
 
     [HttpGet("{id}/contributions")]
     public async Task<ActionResult<List<ContributionSummaryDto>>> GetUserContributions(
-        Guid id,
+        string id,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {

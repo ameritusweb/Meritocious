@@ -11,10 +11,10 @@ namespace Meritocious.Core.Entities
 {
     public class ContentVersion : BaseEntity<ContentVersion>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
         public int VersionNumber { get; private set; }
-        public Guid PostId { get; private set; }
+        public string PostId { get; private set; }
         public string Title { get; private set; }
         public string Content { get; private set; }
         public string EditorId { get; private set; }
@@ -32,7 +32,7 @@ namespace Meritocious.Core.Entities
         }
 
         public static ContentVersion Create(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             int versionNumber,
             string title,

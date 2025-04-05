@@ -6,14 +6,14 @@ namespace Meritocious.Infrastructure.Data.Repositories
 {
     public interface IUserRepository
     {
-        Task<User?> GetByIdAsync(Guid id);
+        Task<User?> GetByIdAsync(string id);
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByUsernameAsync(string username);
 
         Task<ExternalLogin?> GetExternalLoginAsync(string provider, string providerKey);
         Task<ExternalLogin?> GetExternalLoginByRefreshTokenAsync(string refreshToken);
-        Task<ExternalLogin?> GetExternalLoginByUserIdAsync(Guid userId, string provider);
-        Task<List<ExternalLogin>> GetExternalLoginsForUserAsync(Guid userId);
+        Task<ExternalLogin?> GetExternalLoginByUserIdAsync(string userId, string provider);
+        Task<List<ExternalLogin>> GetExternalLoginsForUserAsync(string userId);
 
         Task AddAsync(User user);
         Task UpdateAsync(User user);
@@ -22,8 +22,8 @@ namespace Meritocious.Infrastructure.Data.Repositories
         Task UpdateExternalLoginAsync(ExternalLogin login);
         Task RemoveExternalLoginAsync(ExternalLogin login);
 
-        Task<List<string>> GetUserRolesAsync(Guid userId);
-        Task<bool> HasExternalLoginAsync(Guid userId, string provider);
+        Task<List<string>> GetUserRolesAsync(string userId);
+        Task<bool> HasExternalLoginAsync(string userId, string provider);
 
         Task<List<User>> GetTopContributorsAsync(int count, DateTime? since = null);
         Task<bool> IsUsernameUniqueAsync(string username);
@@ -39,7 +39,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             this.userManager = userManager;
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(string id)
         {
             return await context.Users
                 .FirstOrDefaultAsync(u => u.Id == id.ToString());
@@ -75,7 +75,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                     e.RefreshTokenExpiresAt > DateTime.UtcNow);
         }
 
-        public async Task<ExternalLogin> GetExternalLoginByUserIdAsync(Guid userId, string provider)
+        public async Task<ExternalLogin> GetExternalLoginByUserIdAsync(string userId, string provider)
         {
             return await context.Set<ExternalLogin>()
                 .Include(e => e.User)
@@ -84,7 +84,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                     e.Provider == provider);
         }
 
-        public async Task<List<ExternalLogin>> GetExternalLoginsForUserAsync(Guid userId)
+        public async Task<List<ExternalLogin>> GetExternalLoginsForUserAsync(string userId)
         {
             return await context.Set<ExternalLogin>()
                 .Include(e => e.User)
@@ -122,7 +122,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task<List<string>> GetUserRolesAsync(Guid userId)
+        public async Task<List<string>> GetUserRolesAsync(string userId)
         {
             var user = await userManager.FindByIdAsync(userId.ToString());
             return user == null
@@ -130,7 +130,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 : (await userManager.GetRolesAsync(user)).ToList();
         }
 
-        public async Task<bool> HasExternalLoginAsync(Guid userId, string provider)
+        public async Task<bool> HasExternalLoginAsync(string userId, string provider)
         {
             return await context.Set<ExternalLogin>()
                 .AnyAsync(e => e.UserId == userId.ToString() && e.Provider == provider);

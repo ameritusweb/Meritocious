@@ -10,7 +10,7 @@ namespace Meritocious.Core.Features.Comments.Commands
 {
     public record DeleteCommentCommand : IRequest<Result>
     {
-        public Guid CommentId { get; init; }
-        public Guid? DeletedByUserId { get; init; }
+        public string CommentId { get; init; }
+        public string? DeletedByUserId { get; init; }
     }
 }

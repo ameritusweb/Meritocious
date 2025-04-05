@@ -12,21 +12,21 @@ namespace Meritocious.Core.Features.Moderation.Events
 
     public record ContentModeratedEvent : INotification
     {
-        public Guid ContentId { get; }
+        public string ContentId { get; }
         public ContentType ContentType { get; }
         public ModerationAction Action { get; }
         public string Reason { get; }
         public bool IsAutomated { get; }
-        public Guid? ModeratorId { get; }
+        public string? ModeratorId { get; }
         public DateTime ModeratedAt { get; }
 
         public ContentModeratedEvent(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             ModerationAction action,
             string reason,
             bool isAutomated,
-            Guid? moderatorId)
+            string? moderatorId)
         {
             ContentId = contentId;
             ContentType = contentType;

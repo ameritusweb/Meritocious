@@ -13,7 +13,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ModerationAction>> GetContentModerationHistoryAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await dbSet
@@ -26,7 +26,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ModerationAction>> GetModeratorActionsAsync(
-            Guid moderatorId,
+            string moderatorId,
             DateTime? since = null)
         {
             var query = dbSet
@@ -73,7 +73,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ModerationActionEffect>> GetActiveEffectsAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await context.Set<ModerationActionEffect>()

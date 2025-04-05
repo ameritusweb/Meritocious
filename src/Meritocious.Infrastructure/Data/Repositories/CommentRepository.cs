@@ -4,15 +4,16 @@ namespace Meritocious.Infrastructure.Data.Repositories
     using Microsoft.EntityFrameworkCore;
     using Meritocious.Core.Entities;
     using Meritocious.Core.Interfaces;
+    using Meritocious.Core.Extensions;
 
     public interface ICommentRepository : IRepository<Comment>
     {
-        Task<List<Comment>> GetCommentsByPostAsync(Guid postId);
-        Task<List<Comment>> GetCommentsByUserAsync(Guid userId);
-        Task<List<Comment>> GetRepliesAsync(Guid parentCommentId);
-        Task<List<Comment>> GetCommentsByPostOrderedByMeritAsync(Guid postId, int? page = null, int? pageSize = null);
-        Task<List<Comment>> GetCommentsByPostOrderedByDateAsync(Guid postId, int? page = null, int? pageSize = null);
-        Task<List<Comment>> GetCommentsByPostThreadedAsync(Guid postId, int? page = null, int? pageSize = null);
+        Task<List<Comment>> GetCommentsByPostAsync(string postId);
+        Task<List<Comment>> GetCommentsByUserAsync(string userId);
+        Task<List<Comment>> GetRepliesAsync(string parentCommentId);
+        Task<List<Comment>> GetCommentsByPostOrderedByMeritAsync(string postId, int? page = null, int? pageSize = null);
+        Task<List<Comment>> GetCommentsByPostOrderedByDateAsync(string postId, int? page = null, int? pageSize = null);
+        Task<List<Comment>> GetCommentsByPostThreadedAsync(string postId, int? page = null, int? pageSize = null);
     }
 
     public class CommentRepository : GenericRepository<Comment>, ICommentRepository
@@ -21,7 +22,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
         }
 
-        public async Task<List<Comment>> GetCommentsByPostAsync(Guid postId)
+        public async Task<List<Comment>> GetCommentsByPostAsync(string postId)
         {
             return await dbSet
                 .Include(c => c.Author)
@@ -31,7 +32,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Comment>> GetCommentsByUserAsync(Guid userId)
+        public async Task<List<Comment>> GetCommentsByUserAsync(string userId)
         {
             return await dbSet
                 .Include(c => c.Post)
@@ -40,7 +41,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Comment>> GetRepliesAsync(Guid parentCommentId)
+        public async Task<List<Comment>> GetRepliesAsync(string parentCommentId)
         {
             return await dbSet
                 .Include(c => c.Author)
@@ -50,7 +51,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<Comment>> GetCommentsByPostOrderedByMeritAsync(
-    Guid postId,
+    string postId,
     int? page = null,
     int? pageSize = null)
         {
@@ -71,7 +72,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<Comment>> GetCommentsByPostOrderedByDateAsync(
-            Guid postId,
+            string postId,
             int? page = null,
             int? pageSize = null)
         {
@@ -92,7 +93,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<Comment>> GetCommentsByPostThreadedAsync(
-            Guid postId,
+            string postId,
             int? page = null,
             int? pageSize = null)
         {
@@ -101,7 +102,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .Include(c => c.Replies)
                 .Where(c => c.PostId == postId &&
                            !c.IsDeleted &&
-                           !c.ParentCommentId.HasValue)  // Root comments only
+                           !c.ParentCommentId.HasValue())  // Root comments only
                 .OrderByDescending(c => c.MeritScore);
 
             if (page.HasValue && pageSize.HasValue)

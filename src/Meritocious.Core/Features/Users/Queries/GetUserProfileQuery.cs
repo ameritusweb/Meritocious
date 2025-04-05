@@ -12,6 +12,6 @@ namespace Meritocious.Core.Features.Users.Queries
 
     public record GetUserProfileQuery : IRequest<Result<UserProfileDto>>
     {
-        public Guid UserId { get; init; }
+        public string UserId { get; init; }
     }
 }

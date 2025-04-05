@@ -12,7 +12,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
     {
         public static async Task<List<ContentVersion>> GetUserEditsInPeriodAsync(
             this ContentVersionRepository repository,
-            Guid userId,
+            string userId,
             DateTime start,
             DateTime end)
         {
@@ -28,7 +28,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
 
         public static async Task<Dictionary<ContentEditType, int>> GetEditTypeDistributionAsync(
             this ContentVersionRepository repository,
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             var distribution = await repository.DbSet
@@ -49,7 +49,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
     {
         public static async Task<Dictionary<ModerationDecisionOutcome, int>> GetModeratorEffectivenessAsync(
             this ModerationActionRepository repository,
-            Guid moderatorId)
+            string moderatorId)
         {
             var outcomes = await repository.DbSet
                 .Where(a =>
@@ -97,7 +97,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
 
         public static async Task<Dictionary<string, List<ReputationBadge>>> GetUserBadgesByTypeAsync(
             this ReputationBadgeRepository repository,
-            Guid userId)
+            string userId)
         {
             var badges = await repository.DbSet
                 .Where(b =>
@@ -144,12 +144,12 @@ namespace Meritocious.Infrastructure.Data.Extensions
 
         public static async Task<Dictionary<string, List<Tag>>> GetTagHierarchyAsync(
             this TagRepository repository,
-            Guid rootTagId)
+            string rootTagId)
         {
             var hierarchy = new Dictionary<string, List<Tag>>();
-            var visited = new HashSet<Guid>();
+            var visited = new HashSet<string>();
 
-            async Task BuildHierarchyAsync(Guid tagId, string path)
+            async Task BuildHierarchyAsync(string tagId, string path)
             {
                 if (visited.Contains(tagId))
                 {

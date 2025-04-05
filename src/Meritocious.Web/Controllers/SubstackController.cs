@@ -116,7 +116,7 @@ public class SubstackController : ApiControllerBase
         {
             PostUrl = request.PostUrl,
             SubstackName = request.SubstackName,
-            UserId = Guid.Parse(GetUserId()),
+            UserId = GetUserId(),
             ImportAsRemix = request.ImportAsRemix,
             RemixNotes = request.RemixNotes
         };

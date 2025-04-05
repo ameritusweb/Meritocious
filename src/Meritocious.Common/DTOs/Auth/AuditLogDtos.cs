@@ -4,7 +4,7 @@ namespace Meritocious.Common.DTOs.Auth
 {
     public class AdminActionLogDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string AdminUsername { get; set; } = string.Empty;
         public string Action { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;
@@ -16,7 +16,7 @@ namespace Meritocious.Common.DTOs.Auth
 
     public class SecurityAuditLogDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string EventType { get; set; } = string.Empty;
         public string Severity { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
@@ -29,7 +29,7 @@ namespace Meritocious.Common.DTOs.Auth
 
     public class ApiUsageLogDto
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
         public string Endpoint { get; set; } = string.Empty;
         public string Method { get; set; } = string.Empty;
         public int StatusCode { get; set; }

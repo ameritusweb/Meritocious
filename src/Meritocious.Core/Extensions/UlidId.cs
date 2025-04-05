@@ -14,5 +14,4 @@ namespace Meritocious.Core.Extensions
         public static implicit operator string(UlidId<T> id) => id.Value;
         public static implicit operator UlidId<T>(string value) => new(value);
     }
-
 }

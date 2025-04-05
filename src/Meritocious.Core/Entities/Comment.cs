@@ -9,11 +9,11 @@ namespace Meritocious.Core.Entities
     public class Comment : BaseEntity<Comment>
     {
         public string Content { get; private set; }
-        public Guid PostId { get; private set; }
+        public string PostId { get; private set; }
         public Post Post { get; private set; }
         public string AuthorId { get; private set; }
         public User Author { get; private set; }
-        public Guid? ParentCommentId { get; private set; }
+        public string? ParentCommentId { get; private set; }
         public Comment ParentComment { get; private set; }
         public decimal MeritScore { get; private set; }
         public bool IsDeleted { get; private set; }

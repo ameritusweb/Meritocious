@@ -15,7 +15,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ContentSimilarity>> GetSimilarContentAsync(
-            Guid contentId,
+            string contentId,
             decimal minSimilarity = 0.7m)
         {
             return await dbSet
@@ -25,7 +25,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<decimal> GetContentSimilarityAsync(Guid contentId1, Guid contentId2)
+        public async Task<decimal> GetContentSimilarityAsync(string contentId1, string contentId2)
         {
             var similarity = await dbSet
                 .FirstOrDefaultAsync(s =>
@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             return similarity?.SimilarityScore ?? 0;
         }
 
-        public async Task<List<(Guid id1, Guid id2)>> GetContentPairsForUpdateAsync(int batchSize = 100)
+        public async Task<List<(string id1, string id2)>> GetContentPairsForUpdateAsync(int batchSize = 100)
         {
             var result = await dbSet
                 .Where(s => s.NeedsUpdate)
@@ -50,7 +50,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToList();
         }
 
-        public async Task MarkForUpdateAsync(Guid contentId, int priority = 0)
+        public async Task MarkForUpdateAsync(string contentId, int priority = 0)
         {
             // Mark all pairs involving this content
             var similarities = await dbSet
@@ -80,7 +80,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task CreateMissingSimilaritiesAsync(List<Guid> contentIds)
+        public async Task CreateMissingSimilaritiesAsync(List<string> contentIds)
         {
             // Find all existing pairs
             var existingPairs = await dbSet
@@ -115,7 +115,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
             }
         }
 
-        private static string GetPairKey(Guid id1, Guid id2)
+        private static string GetPairKey(string id1, string id2)
         {
             // Ensure consistent ordering
             var ordered = new[] { id1, id2 }.OrderBy(id => id).ToList();

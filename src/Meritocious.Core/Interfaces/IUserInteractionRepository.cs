@@ -10,8 +10,8 @@ namespace Meritocious.Core.Interfaces
 {
     public interface IUserInteractionRepository
     {
-        Task<List<UserContentInteraction>> GetUserInteractionsAsync(Guid userId, DateTime? since = null);
-        Task<List<UserContentInteraction>> GetContentInteractionsAsync(Guid contentId, ContentType contentType, DateTime? since = null);
-        Task<Dictionary<string, decimal>> GetUserInteractionPatternsAsync(Guid userId);
+        Task<List<UserContentInteraction>> GetUserInteractionsAsync(string userId, DateTime? since = null);
+        Task<List<UserContentInteraction>> GetContentInteractionsAsync(string contentId, ContentType contentType, DateTime? since = null);
+        Task<Dictionary<string, decimal>> GetUserInteractionPatternsAsync(string userId);
     }
 }

@@ -4,8 +4,8 @@ namespace Meritocious.Core.Entities
 {
     public class ContentSimilarity : BaseEntity<ContentSimilarity>
     {
-        public Guid ContentId1 { get; set; }
-        public Guid ContentId2 { get; set; }
+        public string ContentId1 { get; set; }
+        public string ContentId2 { get; set; }
         public decimal SimilarityScore { get; set; }
         public string Algorithm { get; set; } = "semantic-kernel-v1";
         public DateTime LastUpdated { get; set; }
@@ -17,8 +17,8 @@ namespace Meritocious.Core.Entities
         public Post Content2 { get; set; }
 
         public static ContentSimilarity Create(
-            Guid contentId1,
-            Guid contentId2,
+            string contentId1,
+            string contentId2,
             decimal similarityScore)
         {
             return new ContentSimilarity

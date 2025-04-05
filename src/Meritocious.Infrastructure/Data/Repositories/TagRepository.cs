@@ -13,9 +13,9 @@ namespace Meritocious.Infrastructure.Data.Repositories
         Task<Tag> GetBySlugAsync(string slug);
         Task<List<Tag>> GetPopularTagsAsync(int count = 10);
         Task<List<Tag>> GetTagsByCategoryAsync(TagCategory category);
-        Task<List<Tag>> GetChildTagsAsync(Guid parentTagId);
+        Task<List<Tag>> GetChildTagsAsync(string parentTagId);
         Task<List<Tag>> SearchTagsAsync(string searchTerm, bool includeSynonyms = true);
-        Task<List<Tag>> GetRelatedTagsAsync(Guid tagId, TagRelationType? relationType = null);
+        Task<List<Tag>> GetRelatedTagsAsync(string tagId, TagRelationType? relationType = null);
         Task<List<Tag>> GetTagsWithMinimumMeritAsync(decimal minMeritScore);
     }
 
@@ -63,7 +63,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Tag>> GetChildTagsAsync(Guid parentTagId)
+        public async Task<List<Tag>> GetChildTagsAsync(string parentTagId)
         {
             return await dbSet
                 .Where(t =>
@@ -97,7 +97,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<Tag>> GetRelatedTagsAsync(
-            Guid tagId,
+            string tagId,
             TagRelationType? relationType = null)
         {
             var query = context.Set<TagRelationship>()
@@ -132,7 +132,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
         }
 
-        public async Task<List<TagSynonym>> GetTagSynonymsAsync(Guid tagId)
+        public async Task<List<TagSynonym>> GetTagSynonymsAsync(string tagId)
         {
             return await dbSet
                 .Include(s => s.CreatedBy)
@@ -169,7 +169,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<TagRelationship>> GetTagRelationshipsAsync(
-            Guid tagId,
+            string tagId,
             bool includeIncoming = true)
         {
             var query = dbSet
@@ -225,7 +225,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
         }
 
-        public async Task<List<TagWiki>> GetTagWikiHistoryAsync(Guid tagId)
+        public async Task<List<TagWiki>> GetTagWikiHistoryAsync(string tagId)
         {
             return await dbSet
                 .Include(w => w.Editor)
@@ -235,7 +235,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<TagWiki> GetLatestWikiVersionAsync(Guid tagId)
+        public async Task<TagWiki> GetLatestWikiVersionAsync(string tagId)
         {
             return await dbSet
                 .Include(w => w.Editor)
@@ -255,7 +255,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<int> GetNextVersionNumberAsync(Guid tagId)
+        public async Task<int> GetNextVersionNumberAsync(string tagId)
         {
             var maxVersion = await dbSet
                 .Where(w => w.TagId == tagId)

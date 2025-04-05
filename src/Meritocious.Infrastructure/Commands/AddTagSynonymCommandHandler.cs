@@ -19,8 +19,8 @@ public class AddTagSynonymCommandHandler : IRequestHandler<AddTagSynonymCommand,
     {
         var user = await context.Users.FirstOrDefaultAsync(x => x.Id == request.CreatedBy);
         var synonym = Core.Entities.TagSynonym.Create(
-            Guid.Parse(request.SourceTagId),
-            Guid.Parse(request.TargetTagId),
+            request.SourceTagId,
+            request.TargetTagId,
             user);
 
         context.TagSynonyms.Add(synonym);

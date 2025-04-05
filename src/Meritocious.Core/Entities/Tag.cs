@@ -13,7 +13,7 @@ namespace Meritocious.Core.Entities
         public string Name { get; private set; }
         public string Slug { get; private set; }
         public string Description { get; private set; }
-        public Guid? ParentTagId { get; private set; }
+        public string? ParentTagId { get; private set; }
         public Tag ParentTag { get; private set; }
         public TagCategory Category { get; private set; }
         public int UseCount { get; private set; }

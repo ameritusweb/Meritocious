@@ -8,9 +8,9 @@ namespace Meritocious.Core.Entities
 {
     public class MeritScore : BaseEntity<MeritScore>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
         public string ContentType { get; private set; }
-        public Guid ScoreTypeId { get; private set; }
+        public string ScoreTypeId { get; private set; }
         public decimal Score { get; private set; }
 
         // Navigation properties
@@ -21,7 +21,7 @@ namespace Meritocious.Core.Entities
         } // For EF Core
 
         public static MeritScore Create(
-            Guid contentId,
+            string contentId,
             string contentType,
             MeritScoreType scoreType,
             decimal score)

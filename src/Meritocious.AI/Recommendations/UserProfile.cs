@@ -9,7 +9,7 @@ namespace Meritocious.AI.Recommendations
 {
     public class UserProfile
     {
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
         public List<UserInteractionHistory> InteractionHistory { get; set; } = new List<UserInteractionHistory>();
         public Dictionary<string, decimal> TopicPreferences { get; set; } = new Dictionary<string, decimal>();
         public Dictionary<string, decimal> InteractionPatterns { get; set; } = new Dictionary<string, decimal>();

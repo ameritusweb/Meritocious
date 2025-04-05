@@ -47,7 +47,7 @@ public class ModerationController : ApiControllerBase
     }
 
     [HttpPut("reports/{id}/resolve")]
-    public async Task<ActionResult> ResolveReport(Guid id, ResolveReportCommand command)
+    public async Task<ActionResult> ResolveReport(string id, ResolveReportCommand command)
     {
         if (id != command.ReportId)
         {
@@ -83,7 +83,7 @@ public class ModerationController : ApiControllerBase
 
     [HttpGet("content/{id}/history")]
     public async Task<ActionResult<List<ModerationHistoryDto>>> GetModerationHistory(
-        Guid id,
+        string id,
         [FromQuery] ContentType contentType)
     {
         var query = new GetModerationHistoryQuery
@@ -114,7 +114,7 @@ public class ModerationStatsDto
 
 public record GetModerationHistoryQuery : IRequest<Result<List<ModerationHistoryDto>>>
 {
-    public Guid ContentId { get; init; }
+    public string ContentId { get; init; }
     public ContentType ContentType { get; init; }
 }
 

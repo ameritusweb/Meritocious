@@ -13,8 +13,8 @@ namespace Meritocious.Core.Features.Posts.Commands
 
     public record ForkPostCommand : IRequest<Result<Post>>
     {
-        public Guid OriginalPostId { get; init; }
-        public Guid NewAuthorId { get; init; }
+        public string OriginalPostId { get; init; }
+        public string NewAuthorId { get; init; }
         public string NewTitle { get; init; }
     }
 

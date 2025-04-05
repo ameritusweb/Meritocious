@@ -12,7 +12,7 @@
         {
         }
 
-        public async Task<Post> GetByIdAsync(Guid id)
+        public async Task<Post> GetByIdAsync(string id)
         {
             return await dbSet
                 .Include(p => p.Author)
@@ -38,7 +38,7 @@
             await context.SaveChangesAsync();
         }
 
-        public async Task<List<Post>> GetByIdsAsync(IEnumerable<Guid> ids)
+        public async Task<List<Post>> GetByIdsAsync(IEnumerable<string> ids)
         {
             return await dbSet
                 .Include(p => p.Author)
@@ -58,7 +58,7 @@
                 .ToListAsync();
         }
 
-        public async Task<List<Post>> GetPostsByUserAsync(Guid userId)
+        public async Task<List<Post>> GetPostsByUserAsync(string userId)
         {
             return await dbSet
                 .Include(p => p.Tags)
@@ -77,7 +77,7 @@
                 .ToListAsync();
         }
 
-        public async Task<List<Post>> GetForkedPostsAsync(Guid parentPostId)
+        public async Task<List<Post>> GetForkedPostsAsync(string parentPostId)
         {
             return await dbSet
                 .Include(p => p.Author)
@@ -90,7 +90,7 @@
                 .ToListAsync();
         }
 
-        public async Task<List<Post>> GetRemixSourcesAsync(Guid remixId)
+        public async Task<List<Post>> GetRemixSourcesAsync(string remixId)
         {
             return await dbSet
                 .Include(p => p.Author)
@@ -103,7 +103,7 @@
                 .ToListAsync();
         }
 
-        public async Task<List<Post>> GetRemixesAsync(Guid sourcePostId)
+        public async Task<List<Post>> GetRemixesAsync(string sourcePostId)
         {
             return await dbSet
                 .Include(p => p.Author)
@@ -137,7 +137,7 @@
                 .ToListAsync();
         }
 
-        public async Task<List<UserInteractionHistory>> GetUserInteractionHistoryAsync(Guid userId)
+        public async Task<List<UserInteractionHistory>> GetUserInteractionHistoryAsync(string userId)
         {
             var interactions = await context.UserContentInteractions
                 .Where(i => i.UserId == userId)
@@ -156,7 +156,7 @@
         }
 
         public async Task<IList<Post>> GetPostWithRelations(
-    Guid postId,
+    string postId,
     DateTime? startDate = null,
     DateTime? endDate = null,
     decimal? minMeritScore = null,
@@ -257,7 +257,7 @@
         }
 
         public async Task<int> GetRelationCountAsync(
-            Guid postId, 
+            string postId, 
             string relationType,
             bool asParent = true,
             CancellationToken cancellationToken = default)
@@ -281,7 +281,7 @@
         }
 
         // Migrated from RemixRepository
-        public async Task<Post> GetByIdWithFullDetailsAsync(Guid id)
+        public async Task<Post> GetByIdWithFullDetailsAsync(string id)
         {
             return await dbSet
                 .Include(p => p.ParentRelations)
@@ -295,7 +295,7 @@
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<IEnumerable<Post>> GetUserRemixesAsync(Guid userId, bool includeDrafts = false)
+        public async Task<IEnumerable<Post>> GetUserRemixesAsync(string userId, bool includeDrafts = false)
         {
             var query = dbSet
                 .Include(p => p.ParentRelations)
@@ -313,7 +313,7 @@
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Post>> GetRelatedRemixesAsync(Guid remixId, int limit = 5)
+        public async Task<IEnumerable<Post>> GetRelatedRemixesAsync(string remixId, int limit = 5)
         {
             // Get tags of the current post
             var currentTags = await dbSet
@@ -356,7 +356,7 @@
                 .ToListAsync();
         }
 
-        public async Task<Dictionary<Guid, int>> GetSourceCountsAsync(IEnumerable<Guid> postIds)
+        public async Task<Dictionary<string, int>> GetSourceCountsAsync(IEnumerable<string> postIds)
         {
             var counts = await context.PostRelations
                 .Where(r => postIds.Contains(r.ChildId) && r.RelationType == "remix")
@@ -367,7 +367,7 @@
             return counts.ToDictionary(x => x.PostId, x => x.Count);
         }
 
-        public async Task<bool> HasUserRemixedPostAsync(Guid userId, Guid postId)
+        public async Task<bool> HasUserRemixedPostAsync(string userId, string postId)
         {
             return await dbSet
                 .AnyAsync(p => p.AuthorId == userId.ToString() && 
@@ -388,7 +388,7 @@
                 .ToListAsync();
         }
 
-        public async Task UpdateSynthesisMapAsync(Guid postId, string synthesisMap)
+        public async Task UpdateSynthesisMapAsync(string postId, string synthesisMap)
         {
             var post = await dbSet.FirstOrDefaultAsync(p => p.Id == postId);
             if (post != null)
@@ -398,7 +398,7 @@
             }
         }
 
-        public async Task AddSourceAsync(Guid remixId, PostRelation source)
+        public async Task AddSourceAsync(string remixId, PostRelation source)
         {
             var post = await dbSet
                 .Include(p => p.ParentRelations)
@@ -412,7 +412,7 @@
             }
         }
 
-        public async Task RemoveSourceAsync(Guid remixId, Guid sourceId)
+        public async Task RemoveSourceAsync(string remixId, string sourceId)
         {
             var relation = await context.PostRelations
                 .FirstOrDefaultAsync(r => r.ChildId == remixId && 
@@ -426,7 +426,7 @@
             }
         }
 
-        public async Task UpdateSourceOrderAsync(Guid remixId, IEnumerable<(Guid SourceId, int NewOrder)> orderUpdates)
+        public async Task UpdateSourceOrderAsync(string remixId, IEnumerable<(string SourceId, int NewOrder)> orderUpdates)
         {
             var relations = await context.PostRelations
                 .Where(r => r.ChildId == remixId && r.RelationType == "remix")
@@ -445,7 +445,7 @@
         }
 
         // Note-related methods
-        public async Task<IEnumerable<Note>> GetNotesByPostIdAsync(Guid postId)
+        public async Task<IEnumerable<Note>> GetNotesByPostIdAsync(string postId)
         {
             var post = await dbSet
                 .Include(p => p.Notes)
@@ -454,7 +454,7 @@
             return post?.Notes.OrderByDescending(n => n.Confidence) ?? Enumerable.Empty<Note>();
         }
 
-        public async Task<IEnumerable<Note>> GetNotesBySourceIdAsync(Guid sourceId)
+        public async Task<IEnumerable<Note>> GetNotesBySourceIdAsync(string sourceId)
         {
             var post = await dbSet
                 .Include(p => p.Notes)
@@ -465,7 +465,7 @@
                             ?? Enumerable.Empty<Note>();
         }
 
-        public async Task<IEnumerable<Note>> GetHighConfidenceNotesAsync(Guid postId, decimal minConfidence = 0.8m)
+        public async Task<IEnumerable<Note>> GetHighConfidenceNotesAsync(string postId, decimal minConfidence = 0.8m)
         {
             var post = await dbSet
                 .Include(p => p.Notes)
@@ -476,7 +476,7 @@
                             ?? Enumerable.Empty<Note>();
         }
 
-        public async Task<IEnumerable<Note>> GetUnusedSuggestionsAsync(Guid postId)
+        public async Task<IEnumerable<Note>> GetUnusedSuggestionsAsync(string postId)
         {
             var post = await dbSet
                 .Include(p => p.Notes)
@@ -487,7 +487,7 @@
                             ?? Enumerable.Empty<Note>();
         }
 
-        public async Task MarkNoteAppliedAsync(Guid noteId, bool isApplied)
+        public async Task MarkNoteAppliedAsync(string noteId, bool isApplied)
         {
             var post = await dbSet
                 .Include(p => p.Notes)
@@ -501,7 +501,7 @@
             }
         }
 
-        public async Task<Dictionary<string, int>> GetNoteTypeDistributionAsync(Guid postId)
+        public async Task<Dictionary<string, int>> GetNoteTypeDistributionAsync(string postId)
         {
             var post = await dbSet
                 .Include(p => p.Notes)
@@ -513,7 +513,7 @@
         }
 
         // Migrated from RemixSourceRepository
-        public async Task UpdateQuotesAsync(Guid relationId, IEnumerable<string> quotes)
+        public async Task UpdateQuotesAsync(string relationId, IEnumerable<string> quotes)
         {
             var relation = await context.PostRelations
                 .Include(r => r.Quotes)
@@ -531,7 +531,7 @@
             }
         }
 
-        public async Task UpdateRelevanceScoresAsync(Guid relationId, Dictionary<string, decimal> scores)
+        public async Task UpdateRelevanceScoresAsync(string relationId, Dictionary<string, decimal> scores)
         {
             var relation = await context.PostRelations.FirstOrDefaultAsync(r => r.Id == relationId);
             if (relation != null)
@@ -545,7 +545,7 @@
             }
         }
 
-        public async Task<Dictionary<string, int>> GetRelationshipDistributionAsync(Guid postId)
+        public async Task<Dictionary<string, int>> GetRelationshipDistributionAsync(string postId)
         {
             var distribution = await context.PostRelations
                 .Where(r => r.ChildId == postId)
@@ -556,7 +556,7 @@
             return distribution.ToDictionary(x => x.RelationType, x => x.Count);
         }
 
-        public async Task<List<Post>> GetByIdsWithFullDetailsAsync(Guid userId, bool includeDrafts = false)
+        public async Task<List<Post>> GetByIdsWithFullDetailsAsync(string userId, bool includeDrafts = false)
         {
             // Start with base query including all key relationships
             var query = dbSet
@@ -626,7 +626,7 @@
             return posts;
         }
 
-        public async Task<List<Post>> GetByIdsWithFullDetailsAsync(IEnumerable<Guid> postIds)
+        public async Task<List<Post>> GetByIdsWithFullDetailsAsync(IEnumerable<string> postIds)
         {
             // Similar to above but filtering by postIds instead of userId
             var query = dbSet

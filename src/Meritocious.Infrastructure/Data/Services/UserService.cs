@@ -45,7 +45,7 @@ namespace Meritocious.Core.Services
             return user;
         }
 
-        public async Task<User> GetUserByIdAsync(Guid id)
+        public async Task<User> GetUserByIdAsync(string id)
         {
             var user = await userRepository.GetByIdAsync(id);
             if (user == null)
@@ -68,7 +68,7 @@ namespace Meritocious.Core.Services
                 ?? throw new KeyNotFoundException("User not found");
         }
 
-        public async Task UpdateUserProfileAsync(Guid userId, UserProfileDto profile)
+        public async Task UpdateUserProfileAsync(string userId, UserProfileDto profile)
         {
             var user = await GetUserByIdAsync(userId);
 
@@ -77,7 +77,7 @@ namespace Meritocious.Core.Services
             await userRepository.UpdateAsync(user);
         }
 
-        public async Task UpdateUserMeritScoreAsync(Guid userId, decimal newScore)
+        public async Task UpdateUserMeritScoreAsync(string userId, decimal newScore)
         {
             var user = await GetUserByIdAsync(userId);
             user.UpdateMeritScore(newScore);

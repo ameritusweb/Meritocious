@@ -27,7 +27,7 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(n => n.RelatedSourceIds)
                 .HasConversion(
                    v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<List<Guid>>(v, (JsonSerializerOptions?)null))
+                   v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null))
                .HasColumnType("nvarchar(max)");
 
             builder.Property(n => n.Confidence)

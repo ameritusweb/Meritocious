@@ -39,7 +39,7 @@ namespace Meritocious.Core.EventHandlers
                 await meritScoringService.CalculateUserMeritScoreAsync(notification.AuthorId);
 
                 // Get recently active posts for initial similarity comparison
-                var recentPosts = new List<Guid>();
+                var recentPosts = new List<string>();
                 
                 // TODO: Get recent posts.
                 // await postRepository.Query

@@ -83,14 +83,14 @@ public class TagsController : ApiControllerBase
     }
 
     [HttpPost("{name}/posts/{postId}")]
-    public async Task<ActionResult> AddTagToPost(string name, Guid postId, int category)
+    public async Task<ActionResult> AddTagToPost(string name, string postId, int category)
     {
         await tagService.AddTagToPostAsync(postId, name, (TagCategory)category);
         return NoContent();
     }
 
     [HttpDelete("{name}/posts/{postId}")]
-    public async Task<ActionResult> RemoveTagFromPost(string name, Guid postId)
+    public async Task<ActionResult> RemoveTagFromPost(string name, string postId)
     {
         await tagService.RemoveTagFromPostAsync(postId, name);
         return NoContent();
@@ -119,7 +119,7 @@ public class TagsController : ApiControllerBase
     }
 
     [HttpGet("user/{userId}")]
-    public async Task<ActionResult<List<TagDto>>> GetUserTags(Guid userId)
+    public async Task<ActionResult<List<TagDto>>> GetUserTags(string userId)
     {
         var query = new GetUserTagsQuery(userId.ToString());
         var result = await mediator.Send(query);

@@ -15,7 +15,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ReputationSnapshot>> GetUserSnapshotsAsync(
-            Guid userId,
+            string userId,
             string timeFrame,
         DateTime? start = null,
             DateTime? end = null)
@@ -54,7 +54,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<ReputationSnapshot> GetLatestSnapshotAsync(
-        Guid userId,
+        string userId,
             string timeFrame)
         {
             return await dbSet
@@ -64,7 +64,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<Dictionary<string, decimal>> GetMetricTrendsAsync(
-            Guid userId,
+            string userId,
             string timeFrame,
         DateTime start,
             DateTime end)

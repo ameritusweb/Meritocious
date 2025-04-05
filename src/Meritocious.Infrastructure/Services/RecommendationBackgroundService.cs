@@ -152,12 +152,12 @@ namespace Meritocious.Infrastructure.Services
             }
         }
 
-        private async Task<List<(Guid id1, string content1, Guid id2, string content2)>> GetContentPairsForUpdateAsync(
+        private async Task<List<(string id1, string content1, string id2, string content2)>> GetContentPairsForUpdateAsync(
             IServiceScope scope)
         {
             var postRepo = scope.ServiceProvider.GetRequiredService<PostRepository>();
             var similarityRepo = scope.ServiceProvider.GetRequiredService<ContentSimilarityRepository>();
-            var results = new List<(Guid id1, string content1, Guid id2, string content2)>();
+            var results = new List<(string id1, string content1, string id2, string content2)>();
 
             try
             {

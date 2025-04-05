@@ -9,7 +9,7 @@ namespace Meritocious.Core.Entities
 {
     public class ModerationAppeal : BaseEntity<ModerationAppeal>
     {
-        public Guid ModerationActionId { get; private set; }
+        public string ModerationActionId { get; private set; }
         public ModerationAction ModerationAction { get; private set; }
         public string AppealerId { get; private set; }
         public User Appealer { get; private set; }

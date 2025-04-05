@@ -12,7 +12,7 @@ namespace Meritocious.Core.Extensions
                 Id = action.Id,
                 ContentId = action.ContentId,
                 ContentType = action.ContentType,
-                ModeratorId = Guid.Parse(action.ModeratorId),
+                ModeratorId = action.ModeratorId,
                 ModeratorUsername = action.Moderator?.UserName ?? "System",
                 ActionType = action.ActionType,
                 Reason = action.Reason,
@@ -25,7 +25,7 @@ namespace Meritocious.Core.Extensions
                 Effects = action.Effects?.Select(e => e.ToDto()).ToList() ?? new List<ModerationActionEffectDto>(),
                 AppealId = action.AppealId,
                 ReviewedAt = action.ReviewedAt,
-                ReviewedById = action.ReviewedById == null ? Guid.Empty : Guid.Parse(action.ReviewedById),
+                ReviewedById = action.ReviewedById == null ? string.Empty : action.ReviewedById,
                 ReviewerUsername = action.ReviewedBy?.UserName,
                 ReviewNotes = action.ReviewNotes,
                 CreatedAt = action.CreatedAt

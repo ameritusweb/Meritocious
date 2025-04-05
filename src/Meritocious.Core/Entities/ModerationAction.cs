@@ -10,7 +10,7 @@ namespace Meritocious.Core.Entities
 {
     public class ModerationAction : BaseEntity<ModerationAction>
     {
-        public Guid ContentId { get; private set; }
+        public string ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
         public string ModeratorId { get; private set; }
         public User Moderator { get; private set; }
@@ -23,7 +23,7 @@ namespace Meritocious.Core.Entities
         public ModerationDecisionOutcome Outcome { get; private set; }
         public ModerationSeverity Severity { get; private set; }
         public List<ModerationActionEffect> Effects { get; private set; }
-        public Guid? AppealId { get; private set; }
+        public string? AppealId { get; private set; }
         public DateTime? ReviewedAt { get; private set; }
         public string? ReviewedById { get; private set; }
         public User ReviewedBy { get; private set; }
@@ -38,7 +38,7 @@ namespace Meritocious.Core.Entities
         }
 
         public static ModerationAction Create(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             User moderator,
             ModerationActionType actionType,
@@ -67,7 +67,7 @@ namespace Meritocious.Core.Entities
             };
         }
 
-        public Guid? TagId { get; private set; }
+        public string? TagId { get; private set; }
         public string? PreviousState { get; private set; }
         public string? NewState { get; private set; }
         public string? Action { get; private set; }

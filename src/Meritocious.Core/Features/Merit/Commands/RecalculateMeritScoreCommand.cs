@@ -14,7 +14,7 @@ namespace Meritocious.Core.Features.Merit.Commands
 
     public record RecalculateMeritScoreCommand : IRequest<Result<decimal>>
     {
-        public Guid ContentId { get; init; }
+        public string ContentId { get; init; }
         public ContentType ContentType { get; init; }
     }
 }

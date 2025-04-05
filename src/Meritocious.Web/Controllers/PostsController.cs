@@ -31,7 +31,7 @@ public class PostsController : ApiControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<PostDto>> GetPost(Guid id)
+    public async Task<ActionResult<PostDto>> GetPost(string id)
     {
         var query = new GetPostQuery { PostId = id };
         var result = await mediator.Send(query);
@@ -52,7 +52,7 @@ public class PostsController : ApiControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<PostDto>> UpdatePost(Guid id, UpdatePostCommand command)
+    public async Task<ActionResult<PostDto>> UpdatePost(string id, UpdatePostCommand command)
     {
         if (id != command.PostId)
         {
@@ -70,7 +70,7 @@ public class PostsController : ApiControllerBase
     }
 
     [HttpPost("{id}/fork")]
-    public async Task<ActionResult<PostDto>> ForkPost(Guid id, ForkPostCommand command)
+    public async Task<ActionResult<PostDto>> ForkPost(string id, ForkPostCommand command)
     {
         if (id != command.OriginalPostId)
         {
@@ -88,7 +88,7 @@ public class PostsController : ApiControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeletePost(Guid id)
+    public async Task<ActionResult> DeletePost(string id)
     {
         await mediator.Send(new DeletePostCommand { PostId = id });
         return NoContent();
@@ -96,7 +96,7 @@ public class PostsController : ApiControllerBase
 
     [HttpGet("{id}/comments")]
     public async Task<ActionResult<List<CommentDto>>> GetPostComments(
-        Guid id,
+        string id,
         [FromQuery] string sortBy = "merit",
         [FromQuery] int? page = null,
         [FromQuery] int? pageSize = null)
@@ -120,7 +120,7 @@ public class PostsController : ApiControllerBase
     }
 
     [HttpPost("{id}/comments")]
-    public async Task<ActionResult<CommentDto>> AddComment(Guid id, AddCommentCommand command)
+    public async Task<ActionResult<CommentDto>> AddComment(string id, AddCommentCommand command)
     {
         if (id != command.PostId)
         {
@@ -153,7 +153,7 @@ public class PostsController : ApiControllerBase
 
     [HttpGet("{id}/history")]
     public async Task<ActionResult<List<PostVersionDto>>> GetPostHistory(
-        Guid id,
+        string id,
         [FromQuery] int? startVersion = null,
         [FromQuery] int? endVersion = null,
         [FromQuery] bool includeContent = true)
@@ -172,7 +172,7 @@ public class PostsController : ApiControllerBase
     }
 
     [HttpGet("{id}/versions/{versionNumber}")]
-    public async Task<ActionResult<PostVersionDto>> GetPostVersion(Guid id, int versionNumber)
+    public async Task<ActionResult<PostVersionDto>> GetPostVersion(string id, int versionNumber)
     {
         try
         {
@@ -196,7 +196,7 @@ public class PostsController : ApiControllerBase
 
     [HttpGet("{id}/versions/compare")]
     public async Task<ActionResult<PostVersionComparisonDto>> CompareVersions(
-        Guid id,
+        string id,
         [FromQuery] int version1,
         [FromQuery] int version2)
     {

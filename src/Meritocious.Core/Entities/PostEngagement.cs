@@ -37,7 +37,7 @@ namespace Meritocious.Core.Entities
         public List<string> TopEngagementSources { get; internal set; } = new();
 
         // Navigation properties
-        public Guid PostId { get; internal set; }
+        public string PostId { get; internal set; }
         public Post Post { get; internal set; }
 
         internal PostEngagement()

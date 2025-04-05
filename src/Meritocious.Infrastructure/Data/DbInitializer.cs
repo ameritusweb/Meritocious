@@ -36,11 +36,11 @@
 
         public static class DefaultMeritScoreTypes
         {
-            public static readonly Guid Clarity = new("10A12E0C-9E4F-4B1C-9E9E-F0555BAFF9C2");
-            public static readonly Guid Novelty = new("20B23F1D-AF5G-5C2D-AF0F-G1666CBGG0D3");
-            public static readonly Guid Contribution = new("30C34G2E-BG6H-6D3E-BG1G-H2777DCHH1E4");
-            public static readonly Guid Civility = new("40D45H3F-CH7I-7E4F-CH2H-I3888EDII2F5");
-            public static readonly Guid Relevance = new("50E56I4G-DI8J-8F5G-DI3I-J4999FEJJ3G6");
+            public static readonly string Clarity = new("10A12E0C-9E4F-4B1C-9E9E-F0555BAFF9C2");
+            public static readonly string Novelty = new("20B23F1D-AF5G-5C2D-AF0F-G1666CBGG0D3");
+            public static readonly string Contribution = new("30C34G2E-BG6H-6D3E-BG1G-H2777DCHH1E4");
+            public static readonly string Civility = new("40D45H3F-CH7I-7E4F-CH2H-I3888EDII2F5");
+            public static readonly string Relevance = new("50E56I4G-DI8J-8F5G-DI3I-J4999FEJJ3G6");
         }
 
         public static async Task SeedAdminUserAsync(IServiceProvider serviceProvider)

@@ -26,7 +26,7 @@ public class RemixController : ApiControllerBase
     [ProducesResponseType(typeof(RemixDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateRemix([FromBody] CreateRemixRequest request)
     {
-        request.AuthorId = Guid.Parse(GetUserId());
+        request.AuthorId = GetUserId();
         var remix = await remixService.CreateRemixAsync(request);
         return CreatedAtAction(nameof(GetRemix), new { id = remix.Id }, remix);
     }
@@ -37,7 +37,7 @@ public class RemixController : ApiControllerBase
     [HttpGet("{id}")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(RemixDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetRemix(Guid id)
+    public async Task<IActionResult> GetRemix(string id)
     {
         var remix = await remixService.GetRemixByIdAsync(id);
         return Ok(remix);
@@ -48,7 +48,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(RemixDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> UpdateRemix(Guid id, [FromBody] UpdateRemixRequest request)
+    public async Task<IActionResult> UpdateRemix(string id, [FromBody] UpdateRemixRequest request)
     {
         var remix = await remixService.GetRemixByIdAsync(id);
         if (remix.AuthorId.ToString() != GetUserId())
@@ -65,9 +65,9 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> DeleteRemix(Guid id)
+    public async Task<IActionResult> DeleteRemix(string id)
     {
-        var success = await remixService.DeleteRemixAsync(id, Guid.Parse(GetUserId()));
+        var success = await remixService.DeleteRemixAsync(id, GetUserId());
         return success ? NoContent() : NotFound();
     }
 
@@ -76,9 +76,9 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpPost("{id}/publish")]
     [ProducesResponseType(typeof(RemixDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> PublishRemix(Guid id)
+    public async Task<IActionResult> PublishRemix(string id)
     {
-        var published = await remixService.PublishRemixAsync(id, Guid.Parse(GetUserId()));
+        var published = await remixService.PublishRemixAsync(id, GetUserId());
         return Ok(published);
     }
 
@@ -87,7 +87,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpPost("{id}/sources")]
     [ProducesResponseType(typeof(RemixSourceDto), StatusCodes.Status201Created)]
-    public async Task<IActionResult> AddSource(Guid id, [FromBody] AddSourceRequest request)
+    public async Task<IActionResult> AddSource(string id, [FromBody] AddSourceRequest request)
     {
         var source = await remixService.AddSourceAsync(id, request);
         return CreatedAtAction(nameof(GetRemix), new { id }, source);
@@ -98,7 +98,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpDelete("{id}/sources/{sourceId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> RemoveSource(Guid id, Guid sourceId)
+    public async Task<IActionResult> RemoveSource(string id, string sourceId)
     {
         var success = await remixService.RemoveSourceAsync(id, sourceId);
         return success ? NoContent() : NotFound();
@@ -109,7 +109,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpPut("{id}/sources")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> UpdateSources(Guid id, [FromBody] UpdateSourcesRequest request)
+    public async Task<IActionResult> UpdateSources(string id, [FromBody] UpdateSourcesRequest request)
     {
         if (request.OrderUpdates != null)
         {
@@ -132,7 +132,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpPost("{id}/sources/{sourceId}/quotes")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> AddQuote(Guid id, Guid sourceId, [FromBody] AddQuoteRequest request)
+    public async Task<IActionResult> AddQuote(string id, string sourceId, [FromBody] AddQuoteRequest request)
     {
         await remixService.AddQuoteToSourceAsync(sourceId, request);
         return NoContent();
@@ -145,7 +145,7 @@ public class RemixController : ApiControllerBase
     [ProducesResponseType(typeof(IEnumerable<RemixDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyRemixes([FromQuery] RemixFilter filter)
     {
-        var remixes = await remixService.GetUserRemixesAsync(Guid.Parse(GetUserId()), filter);
+        var remixes = await remixService.GetUserRemixesAsync(GetUserId(), filter);
         return Ok(remixes);
     }
 
@@ -155,7 +155,7 @@ public class RemixController : ApiControllerBase
     [HttpGet("{id}/related")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(IEnumerable<RemixDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetRelatedRemixes(Guid id, [FromQuery] int limit = 5)
+    public async Task<IActionResult> GetRelatedRemixes(string id, [FromQuery] int limit = 5)
     {
         var related = await remixService.GetRelatedRemixesAsync(id, limit);
         return Ok(related);
@@ -179,7 +179,7 @@ public class RemixController : ApiControllerBase
     [HttpGet("{id}/analytics")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(RemixAnalytics), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAnalytics(Guid id)
+    public async Task<IActionResult> GetAnalytics(string id)
     {
         var analytics = await remixService.GetRemixAnalyticsAsync(id);
         return Ok(analytics);
@@ -202,7 +202,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpPost("{id}/insights")]
     [ProducesResponseType(typeof(IEnumerable<RemixNoteDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GenerateInsights(Guid id)
+    public async Task<IActionResult> GenerateInsights(string id)
     {
         var insights = await remixService.GenerateInsightsAsync(id);
         return Ok(insights);
@@ -213,7 +213,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpGet("{id}/suggestions")]
     [ProducesResponseType(typeof(IEnumerable<RemixNoteDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSuggestions(Guid id)
+    public async Task<IActionResult> GetSuggestions(string id)
     {
         var suggestions = await remixService.GetSuggestionsAsync(id);
         return Ok(suggestions);
@@ -224,7 +224,7 @@ public class RemixController : ApiControllerBase
     /// </summary>
     [HttpGet("{id}/score")]
     [ProducesResponseType(typeof(RemixScoreResult), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetScore(Guid id)
+    public async Task<IActionResult> GetScore(string id)
     {
         var score = await remixService.CalculateRemixScoreAsync(id);
         return Ok(score);
@@ -239,6 +239,6 @@ public class UpdateSourcesRequest
 
 public class RelationshipUpdate
 {
-    public Guid SourceId { get; set; }
+    public string SourceId { get; set; }
     public string Relationship { get; set; }
 }

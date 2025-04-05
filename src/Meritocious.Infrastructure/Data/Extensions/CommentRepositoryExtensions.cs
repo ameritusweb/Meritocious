@@ -12,7 +12,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
     {
         public static async Task<List<Comment>> GetCommentsByPostOrderedByMeritAsync(
             this CommentRepository repository,
-            Guid postId,
+            string postId,
             int? page = null,
             int? pageSize = null)
         {
@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
 
         public static async Task<List<Comment>> GetCommentsByPostOrderedByDateAsync(
             this CommentRepository repository,
-            Guid postId,
+            string postId,
             int? page = null,
             int? pageSize = null)
         {
@@ -58,7 +58,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
 
         public static async Task<List<Comment>> GetCommentsByPostThreadedAsync(
             this CommentRepository repository,
-            Guid postId,
+            string postId,
             int? page = null,
             int? pageSize = null)
         {
@@ -105,7 +105,7 @@ namespace Meritocious.Infrastructure.Data.Extensions
 
         public static async Task<List<Comment>> GetTopCommentsByUserAsync(
             this CommentRepository repository,
-            Guid userId,
+            string userId,
             int count = 5)
         {
             return await repository.DbSet

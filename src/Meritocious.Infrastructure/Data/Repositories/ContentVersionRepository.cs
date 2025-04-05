@@ -7,13 +7,13 @@ namespace Meritocious.Infrastructure.Data.Repositories
 {
     public interface IContentVersionRepository
     {
-        Task<List<ContentVersion>> GetVersionHistoryAsync(Guid contentId, ContentType contentType, bool includeDiffs = false);
-        Task<ContentVersion> GetVersionAsync(Guid contentId, ContentType contentType, int versionNumber);
-        Task<ContentVersion> GetLatestVersionAsync(Guid contentId, ContentType contentType);
-        Task<List<ContentVersion>> GetModerationEditsAsync(Guid contentId, ContentType contentType);
-        Task<List<ContentVersion>> GetUserEditsAsync(Guid userId, DateTime? since = null);
-        Task<ContentDiff> GetVersionDiffAsync(Guid versionId);
-        Task<int> GetNextVersionNumberAsync(Guid contentId, ContentType contentType);
+        Task<List<ContentVersion>> GetVersionHistoryAsync(string contentId, ContentType contentType, bool includeDiffs = false);
+        Task<ContentVersion> GetVersionAsync(string contentId, ContentType contentType, int versionNumber);
+        Task<ContentVersion> GetLatestVersionAsync(string contentId, ContentType contentType);
+        Task<List<ContentVersion>> GetModerationEditsAsync(string contentId, ContentType contentType);
+        Task<List<ContentVersion>> GetUserEditsAsync(string userId, DateTime? since = null);
+        Task<ContentDiff> GetVersionDiffAsync(string versionId);
+        Task<int> GetNextVersionNumberAsync(string contentId, ContentType contentType);
         Task SaveDiffAsync(ContentDiff diff);
     }
 
@@ -24,7 +24,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ContentVersion>> GetVersionHistoryAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             bool includeDiffs = false)
         {
@@ -43,7 +43,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<ContentVersion> GetVersionAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
             int versionNumber)
         {
@@ -56,7 +56,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<ContentVersion> GetLatestVersionAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await dbSet
@@ -67,7 +67,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ContentVersion>> GetModerationEditsAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await dbSet
@@ -81,7 +81,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ContentVersion>> GetUserEditsAsync(
-            Guid userId,
+            string userId,
             DateTime? since = null)
         {
             var query = dbSet
@@ -98,7 +98,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<ContentDiff> GetVersionDiffAsync(Guid versionId)
+        public async Task<ContentDiff> GetVersionDiffAsync(string versionId)
         {
             return await context.Set<ContentDiff>()
                 .Include(d => d.ContentVersion)
@@ -106,7 +106,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<int> GetNextVersionNumberAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             var maxVersion = await dbSet

@@ -34,7 +34,7 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
 
         return Result.Success(new UserProfileDto
         {
-            Id = Guid.Parse(user.Id),
+            Id = user.Id,
             DisplayName = user.DisplayName,
             Bio = user.Bio,
             AvatarUrl = user.AvatarUrl,

@@ -8,8 +8,8 @@ namespace Meritocious.Common.DTOs.Moderation
 {
     public class ModerationActionEffectDto
     {
-        public Guid Id { get; set; }
-        public Guid ModerationActionId { get; set; }
+        public string Id { get; set; }
+        public string ModerationActionId { get; set; }
         public string EffectType { get; set; }
         public Dictionary<string, string> EffectData { get; set; } = new Dictionary<string, string>();
         public DateTime? ExpiresAt { get; set; }

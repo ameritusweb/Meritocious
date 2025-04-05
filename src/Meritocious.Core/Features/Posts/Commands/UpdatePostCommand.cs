@@ -14,8 +14,8 @@ namespace Meritocious.Core.Features.Posts.Commands
 
     public record UpdatePostCommand : IRequest<Result<Post>>
     {
-        public Guid PostId { get; init; }
-        public Guid EditorId { get; init; }
+        public string PostId { get; init; }
+        public string EditorId { get; init; }
         public string Title { get; init; }
         public string Content { get; init; }
         public List<string> Tags { get; init; } = new();

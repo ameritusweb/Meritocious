@@ -10,12 +10,12 @@ namespace Meritocious.Core.Features.Comments.Events
 
     public record CommentAddedEvent : INotification
     {
-        public Guid CommentId { get; }
-        public Guid PostId { get; }
-        public Guid AuthorId { get; }
+        public string CommentId { get; }
+        public string PostId { get; }
+        public string AuthorId { get; }
         public DateTime CreatedAt { get; }
 
-        public CommentAddedEvent(Guid commentId, Guid postId, Guid authorId)
+        public CommentAddedEvent(string commentId, string postId, string authorId)
         {
             CommentId = commentId;
             PostId = postId;

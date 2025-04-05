@@ -10,10 +10,10 @@ namespace Meritocious.Core.Interfaces
 
     public interface ICommentService
     {
-        Task<Comment> AddCommentAsync(string content, Guid postId, User author, Guid? parentCommentId = null);
-        Task<Comment> UpdateCommentAsync(Guid commentId, string content);
-        Task DeleteCommentAsync(Guid commentId);
-        Task<List<Comment>> GetCommentsByPostAsync(Guid postId);
-        Task<List<Comment>> GetCommentsByUserAsync(Guid userId);
+        Task<Comment> AddCommentAsync(string content, string postId, User author, string? parentCommentId = null);
+        Task<Comment> UpdateCommentAsync(string commentId, string content);
+        Task DeleteCommentAsync(string commentId);
+        Task<List<Comment>> GetCommentsByPostAsync(string postId);
+        Task<List<Comment>> GetCommentsByUserAsync(string userId);
     }
 }

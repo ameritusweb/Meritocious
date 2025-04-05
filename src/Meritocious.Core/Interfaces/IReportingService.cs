@@ -6,13 +6,13 @@ namespace Meritocious.Core.Interfaces
     public interface IReportingService
     {
         Task<ContentReport> CreateReportAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType,
-            Guid reporterId,
+            string reporterId,
             string reportType,
             string description);
 
-        Task<ContentReport> GetReportByIdAsync(Guid reportId);
+        Task<ContentReport> GetReportByIdAsync(string reportId);
 
         Task<List<ContentReport>> GetReportsAsync(
             string status = "pending",
@@ -21,8 +21,8 @@ namespace Meritocious.Core.Interfaces
             int? pageSize = null);
 
         Task<ContentReport> ResolveReportAsync(
-            Guid reportId,
-            Guid moderatorId,
+            string reportId,
+            string moderatorId,
             string resolution,
             string notes);
 

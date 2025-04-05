@@ -17,7 +17,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ContentTopic>> GetContentTopicsAsync(
-            Guid contentId,
+            string contentId,
             ContentType contentType)
         {
             return await dbSet
@@ -33,7 +33,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         }
 
         public async Task<List<ContentTopic>> GetTopicsForContentListAsync(
-            List<Guid> contentIds,
+            List<string> contentIds,
             ContentType contentType)
         {
             return await dbSet

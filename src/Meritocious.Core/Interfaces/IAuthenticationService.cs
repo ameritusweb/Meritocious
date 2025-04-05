@@ -10,11 +10,11 @@ namespace Meritocious.Core.Interfaces
         Task<Result<AuthenticationResult>> AuthenticateGoogleUserAsync(string idToken);
         Task<Result<AuthenticationResult>> RefreshTokenAsync(string refreshToken);
         Task<Result> RevokeTokenAsync(string refreshToken);
-        Task<Result> LinkGoogleAccountAsync(Guid userId, string idToken);
-        Task<Result> UnlinkGoogleAccountAsync(Guid userId);
-        Task<Result<TwoFactorSetupResult>> SetupTwoFactorAsync(Guid userId);
-        Task<Result<bool>> ValidateTwoFactorCodeAsync(Guid userId, string code);
-        Task<Result<bool>> RequiresTwoFactorAsync(Guid userId);
+        Task<Result> LinkGoogleAccountAsync(string userId, string idToken);
+        Task<Result> UnlinkGoogleAccountAsync(string userId);
+        Task<Result<TwoFactorSetupResult>> SetupTwoFactorAsync(string userId);
+        Task<Result<bool>> ValidateTwoFactorCodeAsync(string userId, string code);
+        Task<Result<bool>> RequiresTwoFactorAsync(string userId);
     }
 
     public class AuthenticationResult

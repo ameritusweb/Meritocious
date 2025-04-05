@@ -25,7 +25,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<ModerationAppeal>> GetUserAppealsAsync(Guid userId)
+        public async Task<List<ModerationAppeal>> GetUserAppealsAsync(string userId)
         {
             return await dbSet
                 .Include(a => a.ModerationAction)
@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<ModerationAppeal>> GetActionAppealsAsync(Guid moderationActionId)
+        public async Task<List<ModerationAppeal>> GetActionAppealsAsync(string moderationActionId)
         {
             return await dbSet
                 .Include(a => a.Appealer)
@@ -45,7 +45,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<bool> HasPendingAppealAsync(Guid moderationActionId)
+        public async Task<bool> HasPendingAppealAsync(string moderationActionId)
         {
             return await dbSet
                 .AnyAsync(a =>

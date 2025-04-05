@@ -11,6 +11,7 @@ namespace Meritocious.Core.Services
     using Meritocious.Infrastructure.Data.Repositories;
     using Meritocious.AI.MeritScoring.Interfaces;
     using Microsoft.Extensions.Logging;
+    using Meritocious.Core.Extensions;
 
     public class CommentService : ICommentService
     {
@@ -33,9 +34,9 @@ namespace Meritocious.Core.Services
 
         public async Task<Comment> AddCommentAsync(
             string content,
-            Guid postId,
+            string postId,
             User author,
-            Guid? parentCommentId = null)
+            string? parentCommentId = null)
         {
             var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
@@ -44,9 +45,9 @@ namespace Meritocious.Core.Services
             }
 
             Comment parentComment = null;
-            if (parentCommentId.HasValue)
+            if (parentCommentId.HasValue())
             {
-                parentComment = await commentRepository.GetByIdAsync(parentCommentId.Value);
+                parentComment = await commentRepository.GetByIdAsync(parentCommentId);
                 if (parentComment == null)
                 {
                     throw new KeyNotFoundException("Parent comment not found");
@@ -67,7 +68,7 @@ namespace Meritocious.Core.Services
             return comment;
         }
 
-        public async Task<Comment> UpdateCommentAsync(Guid commentId, string content)
+        public async Task<Comment> UpdateCommentAsync(string commentId, string content)
         {
             var comment = await commentRepository.GetByIdAsync(commentId);
             if (comment == null)
@@ -89,7 +90,7 @@ namespace Meritocious.Core.Services
             return comment;
         }
 
-        public async Task DeleteCommentAsync(Guid commentId)
+        public async Task DeleteCommentAsync(string commentId)
         {
             var comment = await commentRepository.GetByIdAsync(commentId);
             if (comment == null)
@@ -101,12 +102,12 @@ namespace Meritocious.Core.Services
             await commentRepository.UpdateAsync(comment);
         }
 
-        public async Task<List<Comment>> GetCommentsByPostAsync(Guid postId)
+        public async Task<List<Comment>> GetCommentsByPostAsync(string postId)
         {
             return await commentRepository.GetCommentsByPostAsync(postId);
         }
 
-        public async Task<List<Comment>> GetCommentsByUserAsync(Guid userId)
+        public async Task<List<Comment>> GetCommentsByUserAsync(string userId)
         {
             return await commentRepository.GetCommentsByUserAsync(userId);
         }

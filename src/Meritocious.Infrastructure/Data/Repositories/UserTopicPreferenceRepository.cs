@@ -16,7 +16,7 @@ namespace Meritocious.Infrastructure.Data.Repositories
         {
         }
 
-        public async Task<List<UserTopicPreference>> GetUserPreferencesAsync(Guid userId)
+        public async Task<List<UserTopicPreference>> GetUserPreferencesAsync(string userId)
         {
             return await dbSet
                 .Include(p => p.User)
@@ -38,14 +38,14 @@ namespace Meritocious.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public Task<Dictionary<string, decimal>> GetUserTopicWeightsAsync(Guid userId)
+        public Task<Dictionary<string, decimal>> GetUserTopicWeightsAsync(string userId)
         {
             // TODO: Implement this.
             throw new NotImplementedException();
         }
 
         public async Task UpdateUserPreferencesAsync(
-            Guid userId,
+            string userId,
             Dictionary<string, decimal> preferences)
         {
             var existing = await dbSet

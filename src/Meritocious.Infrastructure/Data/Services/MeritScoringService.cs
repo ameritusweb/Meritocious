@@ -13,6 +13,7 @@ namespace Meritocious.Core.Services
     using Meritocious.Infrastructure.Data.Repositories;
     using Microsoft.Extensions.Logging;
     using Meritocious.Core.Entities;
+    using Meritocious.Core.Extensions;
 
     public class MeritScoringService : IMeritScoringService
     {
@@ -43,7 +44,7 @@ namespace Meritocious.Core.Services
             string content,
             ContentType type,
             string context = null,
-            Guid? contentId = null,
+            string? contentId = null,
             bool isRecalculation = false,
             string recalculationReason = null)
         {
@@ -52,10 +53,10 @@ namespace Meritocious.Core.Services
                 var score = await meritScorer.ScoreContentAsync(content, context);
 
                 // Store score history if contentId is provided
-                if (contentId.HasValue)
+                if (contentId.HasValue())
                 {
                     var history = MeritScoreHistory.Create(
-                        contentId.Value,
+                        contentId,
                         type,
                         score.FinalScore,
                         score.Components,
@@ -77,7 +78,7 @@ namespace Meritocious.Core.Services
             }
         }
 
-        public async Task<decimal> CalculateUserMeritScoreAsync(Guid userId)
+        public async Task<decimal> CalculateUserMeritScoreAsync(string userId)
         {
             var user = await userRepository.GetByIdAsync(userId);
             if (user == null)
@@ -131,7 +132,7 @@ namespace Meritocious.Core.Services
             }
         }
 
-        public async Task<List<MeritScoreDto>> GetContentScoreHistoryAsync(Guid contentId, ContentType type)
+        public async Task<List<MeritScoreDto>> GetContentScoreHistoryAsync(string contentId, ContentType type)
         {
             try
             {

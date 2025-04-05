@@ -25,7 +25,7 @@ public class NotificationsController : ApiControllerBase
         var userId = GetUserId();
         var query = new GetUserNotificationsQuery
         {
-            UserId = Guid.Parse(userId),
+            UserId = userId,
             UnreadOnly = unreadOnly
         };
 
@@ -39,7 +39,7 @@ public class NotificationsController : ApiControllerBase
         var userId = GetUserId();
         var query = new GetUserNotificationsQuery
         {
-            UserId = Guid.Parse(userId),
+            UserId = userId,
             UnreadOnly = true
         };
 
@@ -48,13 +48,13 @@ public class NotificationsController : ApiControllerBase
     }
 
     [HttpPost("{id}/read")]
-    public async Task<IActionResult> MarkAsRead(Guid id)
+    public async Task<IActionResult> MarkAsRead(string id)
     {
         var userId = GetUserId();
         var command = new MarkNotificationsAsReadCommand
         {
-            UserId = Guid.Parse(userId),
-            NotificationIds = new List<Guid> { id }
+            UserId = userId,
+            NotificationIds = new List<string> { id }
         };
 
         await mediator.Send(command);
@@ -67,7 +67,7 @@ public class NotificationsController : ApiControllerBase
         var userId = GetUserId();
         var notifications = await mediator.Send(new GetUserNotificationsQuery
         {
-            UserId = Guid.Parse(userId),
+            UserId = userId,
             UnreadOnly = true
         });
 
@@ -75,7 +75,7 @@ public class NotificationsController : ApiControllerBase
         {
             var command = new MarkNotificationsAsReadCommand
             {
-                UserId = Guid.Parse(userId),
+                UserId = userId,
                 NotificationIds = notifications.Select(n => n.Id).ToList()
             };
 

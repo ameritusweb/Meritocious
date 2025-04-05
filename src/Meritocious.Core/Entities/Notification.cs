@@ -12,10 +12,10 @@ public class Notification : BaseEntity<Notification>
     public bool IsRead { get; private set; }
     
     // Optional related entities
-    public Guid PostId { get; private set; }
+    public string PostId { get; private set; }
     public Post Post { get; private set; }
     
-    public Guid CommentId { get; private set; }
+    public string CommentId { get; private set; }
     public Comment Comment { get; private set; }
     
     private Notification()
@@ -38,9 +38,9 @@ public class Notification : BaseEntity<Notification>
             Title = title,
             Message = message,
             Link = link,
-            PostId = post?.Id ?? Guid.Empty,
+            PostId = post?.Id ?? string.Empty,
             Post = post,
-            CommentId = comment?.Id ?? Guid.Empty,
+            CommentId = comment?.Id ?? string.Empty,
             Comment = comment,
             IsRead = false,
             CreatedAt = DateTime.UtcNow

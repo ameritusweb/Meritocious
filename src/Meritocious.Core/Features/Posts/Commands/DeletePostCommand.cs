@@ -10,7 +10,7 @@ namespace Meritocious.Core.Features.Posts.Commands
 {
     public record DeletePostCommand : IRequest<Result>
     {
-        public Guid PostId { get; init; }
-        public Guid? DeletedByUserId { get; init; }
+        public string PostId { get; init; }
+        public string? DeletedByUserId { get; init; }
     }
 }

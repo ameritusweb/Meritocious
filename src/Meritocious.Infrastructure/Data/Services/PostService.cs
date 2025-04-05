@@ -48,7 +48,7 @@ namespace Meritocious.Core.Services
             return post;
         }
 
-        public async Task<Post> UpdatePostAsync(Guid postId, string title, string content)
+        public async Task<Post> UpdatePostAsync(string postId, string title, string content)
         {
             var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
@@ -71,7 +71,7 @@ namespace Meritocious.Core.Services
             return post;
         }
 
-        public async Task<Post> ForkPostAsync(Guid postId, User newAuthor, string newTitle = null)
+        public async Task<Post> ForkPostAsync(string postId, User newAuthor, string newTitle = null)
         {
             var originalPost = await postRepository.GetByIdAsync(postId);
             if (originalPost == null)
@@ -85,7 +85,7 @@ namespace Meritocious.Core.Services
             return forkedPost;
         }
 
-        public async Task DeletePostAsync(Guid postId)
+        public async Task DeletePostAsync(string postId)
         {
             var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
@@ -102,7 +102,7 @@ namespace Meritocious.Core.Services
             return await postRepository.GetTopPostsAsync(count);
         }
 
-        public async Task<List<Post>> GetPostsByUserAsync(Guid userId)
+        public async Task<List<Post>> GetPostsByUserAsync(string userId)
         {
             return await postRepository.GetPostsByUserAsync(userId);
         }
@@ -112,7 +112,7 @@ namespace Meritocious.Core.Services
             return await postRepository.GetPostsByTagAsync(tagName);
         }
 
-        public async Task<Post> GetPostByIdAsync(Guid postId)
+        public async Task<Post> GetPostByIdAsync(string postId)
         {
             var post = await postRepository.GetByIdAsync(postId);
             if (post == null)
@@ -123,7 +123,7 @@ namespace Meritocious.Core.Services
             return post;
         }
 
-        public Task UpdatePostActivityAsync(Guid postId)
+        public Task UpdatePostActivityAsync(string postId)
         {
             // TODO: Implement this.
             throw new NotImplementedException();
