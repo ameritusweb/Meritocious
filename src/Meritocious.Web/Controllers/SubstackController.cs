@@ -14,11 +14,11 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class SubstackController : ApiControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMediator mediator;
 
     public SubstackController(IMediator mediator) : base()
     {
-        _mediator = mediator;
+        this.mediator = mediator;
     }
 
     [HttpGet("trending")]
@@ -26,7 +26,7 @@ public class SubstackController : ApiControllerBase
         [FromQuery] int limit = 10,
         [FromQuery] int skip = 0)
     {
-        var result = await _mediator.Send(new GetTrendingSubstacksQuery(limit, skip));
+        var result = await mediator.Send(new GetTrendingSubstacksQuery(limit, skip));
         return HandleResult(result);
     }
 
@@ -35,8 +35,8 @@ public class SubstackController : ApiControllerBase
         [FromQuery] int limit = 10)
     {
         var userId = GetUserId();
-        var result = await _mediator.Send(new GetRecommendedSubstacksQuery(userId, limit));
-        return HandleResult(result);
+        var result = await mediator.Send(new GetRecommendedSubstacksQuery(userId, limit));
+        return Ok(result);
     }
 
     [HttpGet("{id}/similar")]
@@ -44,8 +44,8 @@ public class SubstackController : ApiControllerBase
         string id,
         [FromQuery] int limit = 5)
     {
-        var result = await Mediator.Send(new GetSimilarSubstacksQuery(id, limit));
-        return HandleResult(result);
+        var result = await mediator.Send(new GetSimilarSubstacksQuery(id, limit));
+        return Ok(result);
     }
 
     [HttpGet("following")]
@@ -54,22 +54,22 @@ public class SubstackController : ApiControllerBase
         [FromQuery] int skip = 0)
     {
         var userId = GetUserId();
-        var result = await Mediator.Send(new GetFollowedSubstacksQuery(userId, limit, skip));
-        return HandleResult(result);
+        var result = await mediator.Send(new GetFollowedSubstacksQuery(userId, limit, skip));
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<SubstackDto>> GetSubstack(string id)
     {
-        var result = await Mediator.Send(new GetSubstackQuery(id));
-        return HandleResult(result);
+        var result = await mediator.Send(new GetSubstackQuery(id));
+        return Ok(result);
     }
 
     [HttpPost]
     public async Task<ActionResult<SubstackDto>> CreateSubstack(CreateSubstackCommand command)
     {
-        var result = await Mediator.Send(command);
-        return HandleResult(result);
+        var result = await mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
@@ -78,33 +78,35 @@ public class SubstackController : ApiControllerBase
         UpdateSubstackCommand command)
     {
         if (id != command.SubstackId)
+        {
             return BadRequest("ID mismatch");
+        }
 
-        var result = await Mediator.Send(command);
-        return HandleResult(result);
+        var result = await mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpPost("{id}/follow")]
     public async Task<ActionResult<bool>> FollowSubstack(string id)
     {
         var userId = GetUserId();
-        var result = await Mediator.Send(new FollowSubstackCommand(userId, id));
-        return HandleResult(result);
+        var result = await mediator.Send(new FollowSubstackCommand(userId, id));
+        return Ok(result);
     }
 
     [HttpDelete("{id}/follow")]
     public async Task<ActionResult<bool>> UnfollowSubstack(string id)
     {
         var userId = GetUserId();
-        var result = await Mediator.Send(new UnfollowSubstackCommand(userId, id));
-        return HandleResult(result);
+        var result = await mediator.Send(new UnfollowSubstackCommand(userId, id));
+        return Ok(result);
     }
 
     [HttpGet("{id}/metrics")]
     public async Task<ActionResult<SubstackMetricsDto>> GetSubstackMetrics(string id)
     {
-        var result = await Mediator.Send(new GetSubstackMetricsQuery(id));
-        return HandleResult(result);
+        var result = await mediator.Send(new GetSubstackMetricsQuery(id));
+        return Ok(result);
     }
 
     [HttpPost("import")]
@@ -114,11 +116,11 @@ public class SubstackController : ApiControllerBase
         {
             PostUrl = request.PostUrl,
             SubstackName = request.SubstackName,
-            UserId = GetUserId(),
+            UserId = Guid.Parse(GetUserId()),
             ImportAsRemix = request.ImportAsRemix,
             RemixNotes = request.RemixNotes
         };
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 

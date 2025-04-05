@@ -3,5 +3,8 @@ using Meritocious.Common.DTOs.Auth;
 
 namespace Meritocious.Core.Features.Users.Commands;
 
-public record UpdateUserSettingsCommand(string UserId, UserSettingsDto Settings)
-    : IRequest<bool>;
+public class UpdateUserSettingsCommand : IRequest<bool>
+{
+    public string UserId { get; set; }
+    public UserSettingsDto Settings { get; set; }
+}

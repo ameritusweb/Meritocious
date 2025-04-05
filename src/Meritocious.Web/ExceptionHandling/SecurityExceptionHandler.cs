@@ -6,11 +6,11 @@ namespace Meritocious.Web.ExceptionHandling
 {
     public class SecurityExceptionHandler : IExceptionHandler
     {
-        private readonly ILogger<SecurityExceptionHandler> _logger;
+        private readonly ILogger<SecurityExceptionHandler> logger;
 
         public SecurityExceptionHandler(ILogger<SecurityExceptionHandler> logger)
         {
-            _logger = logger;
+            this.logger = logger;
         }
 
         public async ValueTask<bool> TryHandleAsync(
@@ -49,7 +49,7 @@ namespace Meritocious.Web.ExceptionHandling
             };
 
             var eventId = new EventId(exception.HResult);
-            _logger.LogError(
+            logger.LogError(
                 eventId,
                 exception,
                 "Security error {ErrorCode}: {Message}",

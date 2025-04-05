@@ -12,13 +12,13 @@ namespace Meritocious.Web.Controllers
     [Route("api/security")]
     public class SecurityAuditController : ApiControllerBase
     {
-        private readonly ILogger<SecurityAuditController> _logger;
-        private readonly IMediator _mediator;
+        private readonly ILogger<SecurityAuditController> logger;
+        private readonly IMediator mediator;
 
         public SecurityAuditController(ILogger<SecurityAuditController> logger, IMediator mediator)
         {
-            _logger = logger;
-            _mediator = mediator;
+            this.logger = logger;
+            this.mediator = mediator;
         }
 
         [HttpGet("overview")]
@@ -26,12 +26,12 @@ namespace Meritocious.Web.Controllers
         {
             try
             {
-                var overview = await _mediator.Send(new GetSecurityOverviewQuery());
+                var overview = await mediator.Send(new GetSecurityOverviewQuery());
                 return Ok(overview);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting security overview");
+                logger.LogError(ex, "Error getting security overview");
                 return StatusCode(500, "Error retrieving security overview");
             }
         }
@@ -42,12 +42,12 @@ namespace Meritocious.Web.Controllers
             try
             {
                 var query = new GetAdminActionsQuery(queryParams.StartDate, queryParams.EndDate, queryParams.Page, queryParams.PageSize);
-                var result = await _mediator.Send(query);
+                var result = await mediator.Send(query);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting admin actions");
+                logger.LogError(ex, "Error getting admin actions");
                 return StatusCode(500, "Error retrieving admin actions");
             }
         }
@@ -58,12 +58,12 @@ namespace Meritocious.Web.Controllers
             try
             {
                 var query = new GetSecurityEventsQuery(queryParams.StartDate, queryParams.EndDate, queryParams.Page, queryParams.PageSize);
-                var result = await _mediator.Send(query);
+                var result = await mediator.Send(query);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting security events");
+                logger.LogError(ex, "Error getting security events");
                 return StatusCode(500, "Error retrieving security events");
             }
         }
@@ -74,12 +74,12 @@ namespace Meritocious.Web.Controllers
             try
             {
                 var query = new GetLoginAttemptsQuery(queryParams.StartDate, queryParams.EndDate, queryParams.Page, queryParams.PageSize);
-                var result = await _mediator.Send(query);
+                var result = await mediator.Send(query);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting login attempts");
+                logger.LogError(ex, "Error getting login attempts");
                 return StatusCode(500, "Error retrieving login attempts");
             }
         }
@@ -90,12 +90,12 @@ namespace Meritocious.Web.Controllers
             try
             {
                 var query = new GetApiUsageQuery(queryParams.StartDate, queryParams.EndDate);
-                var result = await _mediator.Send(query);
+                var result = await mediator.Send(query);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting API usage logs");
+                logger.LogError(ex, "Error getting API usage logs");
                 return StatusCode(500, "Error retrieving API usage logs");
             }
         }
@@ -109,14 +109,14 @@ namespace Meritocious.Web.Controllers
             try
             {
                 var query = new GetAuditLogExportQuery(startDate.GetValueOrDefault(), endDate.GetValueOrDefault(), category);
-                var fileBytes = await _mediator.Send(query);
+                var fileBytes = await mediator.Send(query);
                 
                 var fileName = $"audit-logs-{DateTime.UtcNow:yyyyMMdd}.csv";
                 return File(fileBytes, "text/csv", fileName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error exporting audit logs");
+                logger.LogError(ex, "Error exporting audit logs");
                 return StatusCode(500, "Error generating audit log export");
             }
         }

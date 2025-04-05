@@ -1,3 +1,4 @@
+using Meritocious.Core.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
@@ -6,13 +7,13 @@ namespace Meritocious.Web.Middleware
 {
     public class AuditLoggingMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<AuditLoggingMiddleware> _logger;
+        private readonly RequestDelegate next;
+        private readonly ILogger<AuditLoggingMiddleware> logger;
 
         public AuditLoggingMiddleware(RequestDelegate next, ILogger<AuditLoggingMiddleware> logger)
         {
-            _next = next;
-            _logger = logger;
+            this.next = next;
+            this.logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -25,7 +26,7 @@ namespace Meritocious.Web.Middleware
                 var ipAddress = context.Connection.RemoteIpAddress?.ToString();
                 var userAgent = context.Request.Headers["User-Agent"].ToString();
 
-                _logger.LogInformation(
+                logger.LogInformation(
                     "Audit: {Action} by User {UserId} from {IpAddress} using {UserAgent}",
                     action, userId, ipAddress, userAgent);
 
@@ -39,11 +40,12 @@ namespace Meritocious.Web.Middleware
                     Details = $"User-Agent: {userAgent}"
                 };
 
-                var auditService = context.RequestServices.GetRequiredService<ISecurityAuditService>();
-                await auditService.LogAdminActionAsync(audit);
+                // TODO: Make security audit service
+                // var auditService = context.RequestServices.GetRequiredService<ISecurityAuditService>();
+                // await auditService.LogAdminActionAsync(audit);
             }
 
-            await _next(context);
+            await next(context);
         }
     }
 

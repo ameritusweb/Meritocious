@@ -13,20 +13,20 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class PostsController : ApiControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly ILogger<PostsController> _logger;
+    private readonly IMediator mediator;
+    private readonly ILogger<PostsController> logger;
 
     public PostsController(IMediator mediator, ILogger<PostsController> logger)
     {
-        _mediator = mediator;
-        _logger = logger;
+        this.mediator = mediator;
+        this.logger = logger;
     }
 
     [HttpGet]
     public async Task<ActionResult<List<PostDto>>> GetTopPosts([FromQuery] int count = 10, [FromQuery] string sortBy = "merit")
     {
         var query = new GetTopPostsQuery { Count = count, SortBy = sortBy };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -34,10 +34,12 @@ public class PostsController : ApiControllerBase
     public async Task<ActionResult<PostDto>> GetPost(Guid id)
     {
         var query = new GetPostQuery { PostId = id };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
 
         if (result.IsFailure)
+        {
             return NotFound(result.Error);
+        }
 
         return Ok(result.Value);
     }
@@ -45,7 +47,7 @@ public class PostsController : ApiControllerBase
     [HttpPost]
     public async Task<ActionResult<PostDto>> CreatePost(CreatePostCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return CreatedAtAction(nameof(GetPost), new { id = result.Id }, result);
     }
 
@@ -53,12 +55,16 @@ public class PostsController : ApiControllerBase
     public async Task<ActionResult<PostDto>> UpdatePost(Guid id, UpdatePostCommand command)
     {
         if (id != command.PostId)
+        {
             return BadRequest("ID mismatch");
+        }
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
 
         if (result.IsFailure)
+        {
             return NotFound(result.Error);
+        }
 
         return Ok(result.Value);
     }
@@ -67,12 +73,16 @@ public class PostsController : ApiControllerBase
     public async Task<ActionResult<PostDto>> ForkPost(Guid id, ForkPostCommand command)
     {
         if (id != command.OriginalPostId)
+        {
             return BadRequest("ID mismatch");
+        }
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
 
         if (result.IsFailure)
+        {
             return NotFound(result.Error);
+        }
 
         return CreatedAtAction(nameof(GetPost), new { id = result.Value.Id }, result.Value);
     }
@@ -80,7 +90,7 @@ public class PostsController : ApiControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeletePost(Guid id)
     {
-        await _mediator.Send(new DeletePostCommand { PostId = id });
+        await mediator.Send(new DeletePostCommand { PostId = id });
         return NoContent();
     }
 
@@ -99,10 +109,12 @@ public class PostsController : ApiControllerBase
             PageSize = pageSize
         };
 
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
 
         if (result.IsFailure)
+        {
             return NotFound(result.Error);
+        }
 
         return Ok(result.Value);
     }
@@ -115,7 +127,7 @@ public class PostsController : ApiControllerBase
             return BadRequest("ID mismatch");
         }
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -129,12 +141,12 @@ public class PostsController : ApiControllerBase
         try
         {
             var query = new GetTrendingPostsQuery(timeFrame, category, limit, minMeritScore);
-            var posts = await _mediator.Send(query);
+            var posts = await mediator.Send(query);
             return Ok(posts);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting trending posts");
+            logger.LogError(ex, "Error getting trending posts");
             return StatusCode(500, "Error retrieving trending posts");
         }
     }
@@ -149,12 +161,12 @@ public class PostsController : ApiControllerBase
         try
         {
             var query = new GetPostHistoryQuery(id, startVersion, endVersion, includeContent);
-            var history = await _mediator.Send(query);
+            var history = await mediator.Send(query);
             return Ok(history);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting post history for post {PostId}", id);
+            logger.LogError(ex, "Error getting post history for post {PostId}", id);
             return StatusCode(500, "Error retrieving post history");
         }
     }
@@ -165,7 +177,7 @@ public class PostsController : ApiControllerBase
         try
         {
             var query = new GetPostHistoryQuery(id, versionNumber, versionNumber);
-            var versions = await _mediator.Send(query);
+            var versions = await mediator.Send(query);
             var version = versions.FirstOrDefault();
                 
             if (version == null)
@@ -177,7 +189,7 @@ public class PostsController : ApiControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting version {Version} for post {PostId}", versionNumber, id);
+            logger.LogError(ex, "Error getting version {Version} for post {PostId}", versionNumber, id);
             return StatusCode(500, "Error retrieving post version");
         }
     }
@@ -195,7 +207,7 @@ public class PostsController : ApiControllerBase
                 Math.Min(version1, version2), 
                 Math.Max(version1, version2));
                 
-            var versions = await _mediator.Send(query);
+            var versions = await mediator.Send(query);
                 
             var oldVersion = versions.FirstOrDefault(v => v.VersionNumber == Math.Min(version1, version2));
             var newVersion = versions.FirstOrDefault(v => v.VersionNumber == Math.Max(version1, version2));
@@ -217,7 +229,7 @@ public class PostsController : ApiControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error comparing versions {V1} and {V2} for post {PostId}", 
+            logger.LogError(ex, "Error comparing versions {V1} and {V2} for post {PostId}", 
                 version1, version2, id);
             return StatusCode(500, "Error comparing post versions");
         }

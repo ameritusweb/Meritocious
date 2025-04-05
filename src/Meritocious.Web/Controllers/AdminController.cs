@@ -12,13 +12,13 @@ namespace Meritocious.Web.Controllers
     [Route("api/admin")]
     public class AdminController : ApiControllerBase
     {
-        private readonly ILogger<AdminController> _logger;
-        private readonly IMediator _mediator;
+        private readonly ILogger<AdminController> logger;
+        private readonly IMediator mediator;
 
         public AdminController(ILogger<AdminController> logger, IMediator mediator)
         {
-            _logger = logger;
-            _mediator = mediator;
+            this.logger = logger;
+            this.mediator = mediator;
         }
 
         [HttpGet("dashboard/stats")]
@@ -26,8 +26,8 @@ namespace Meritocious.Web.Controllers
         {
             try
             {
-                var statsTask = _mediator.Send(new GetAdminStatsQuery());
-                var moderationStatsTask = _mediator.Send(new GetModerationStatsQuery());
+                var statsTask = mediator.Send(new GetAdminStatsQuery());
+                var moderationStatsTask = mediator.Send(new GetModerationStatsQuery());
                 
                 await Task.WhenAll(statsTask, moderationStatsTask);
                 var stats = await statsTask;
@@ -43,7 +43,7 @@ namespace Meritocious.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting admin dashboard stats");
+                logger.LogError(ex, "Error getting admin dashboard stats");
                 return StatusCode(500, "Error retrieving dashboard statistics");
             }
         }
@@ -59,15 +59,14 @@ namespace Meritocious.Web.Controllers
                     queryParams.Level,
                     queryParams.SearchText,
                     queryParams.StartDate,
-                    queryParams.EndDate
-                );
+                    queryParams.EndDate);
 
-                var result = await _mediator.Send(query);
+                var result = await mediator.Send(query);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting system logs");
+                logger.LogError(ex, "Error getting system logs");
                 return StatusCode(500, "Error retrieving system logs");
             }
         }
@@ -78,12 +77,12 @@ namespace Meritocious.Web.Controllers
             try
             {
                 var query = new GetRecentLogsQuery(count);
-                var result = await _mediator.Send(query);
+                var result = await mediator.Send(query);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting recent logs");
+                logger.LogError(ex, "Error getting recent logs");
                 return StatusCode(500, "Error retrieving recent logs");
             }
         }
@@ -98,12 +97,12 @@ namespace Meritocious.Web.Controllers
             try
             {
                 var query = new GetLogExportUrlQuery(level, startDate, endDate, searchText);
-                var result = await _mediator.Send(query);
+                var result = await mediator.Send(query);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating log export URL");
+                logger.LogError(ex, "Error generating log export URL");
                 return StatusCode(500, "Error generating export URL");
             }
         }

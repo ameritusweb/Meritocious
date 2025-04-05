@@ -12,8 +12,10 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class NotificationsController : ApiControllerBase
 {
-    public NotificationsController(IMediator mediator) : base(mediator)
+    private readonly IMediator mediator;
+    public NotificationsController(IMediator mediator) : base()
     {
+        this.mediator = mediator;
     }
 
     [HttpGet]
@@ -23,11 +25,11 @@ public class NotificationsController : ApiControllerBase
         var userId = GetUserId();
         var query = new GetUserNotificationsQuery
         {
-            UserId = userId,
+            UserId = Guid.Parse(userId),
             UnreadOnly = unreadOnly
         };
 
-        var notifications = await Mediator.Send(query);
+        var notifications = await mediator.Send(query);
         return Ok(notifications);
     }
 
@@ -37,11 +39,11 @@ public class NotificationsController : ApiControllerBase
         var userId = GetUserId();
         var query = new GetUserNotificationsQuery
         {
-            UserId = userId,
+            UserId = Guid.Parse(userId),
             UnreadOnly = true
         };
 
-        var notifications = await Mediator.Send(query);
+        var notifications = await mediator.Send(query);
         return Ok(notifications.Count);
     }
 
@@ -51,11 +53,11 @@ public class NotificationsController : ApiControllerBase
         var userId = GetUserId();
         var command = new MarkNotificationsAsReadCommand
         {
-            UserId = userId,
+            UserId = Guid.Parse(userId),
             NotificationIds = new List<Guid> { id }
         };
 
-        await Mediator.Send(command);
+        await mediator.Send(command);
         return Ok();
     }
 
@@ -63,9 +65,9 @@ public class NotificationsController : ApiControllerBase
     public async Task<IActionResult> MarkAllAsRead()
     {
         var userId = GetUserId();
-        var notifications = await Mediator.Send(new GetUserNotificationsQuery
+        var notifications = await mediator.Send(new GetUserNotificationsQuery
         {
-            UserId = userId,
+            UserId = Guid.Parse(userId),
             UnreadOnly = true
         });
 
@@ -73,11 +75,11 @@ public class NotificationsController : ApiControllerBase
         {
             var command = new MarkNotificationsAsReadCommand
             {
-                UserId = userId,
+                UserId = Guid.Parse(userId),
                 NotificationIds = notifications.Select(n => n.Id).ToList()
             };
 
-            await Mediator.Send(command);
+            await mediator.Send(command);
         }
 
         return Ok();

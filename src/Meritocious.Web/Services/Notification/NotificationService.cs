@@ -32,7 +32,7 @@ namespace Meritocious.Web.Services.Notification
 
                 // Create and store notification in database
                 var entity = Meritocious.Core.Entities.Notification.Create(
-                    user,
+                    user.Id.ToString(),
                     notification.Type,
                     notification.Title,
                     notification.Message,

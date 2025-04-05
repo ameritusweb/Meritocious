@@ -17,19 +17,19 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class TagsController : ApiControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly ITagService _tagService;
+    private readonly IMediator mediator;
+    private readonly ITagService tagService;
 
     public TagsController(IMediator mediator, ITagService tagService)
     {
-        _mediator = mediator;
-        _tagService = tagService;
+        this.mediator = mediator;
+        this.tagService = tagService;
     }
 
     [HttpGet("popular")]
     public async Task<ActionResult<List<Tag>>> GetPopularTags([FromQuery] int count = 10)
     {
-        var tags = await _tagService.GetPopularTagsAsync(count);
+        var tags = await tagService.GetPopularTagsAsync(count);
         return Ok(tags);
     }
 
@@ -37,9 +37,11 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<List<Tag>>> SearchTags([FromQuery] string searchTerm)
     {
         if (string.IsNullOrWhiteSpace(searchTerm))
+        {
             return BadRequest("Search term is required");
+        }
 
-        var tags = await _tagService.SearchTagsAsync(searchTerm);
+        var tags = await tagService.SearchTagsAsync(searchTerm);
         return Ok(tags);
     }
 
@@ -57,23 +59,25 @@ public class TagsController : ApiControllerBase
             Page = page,
             PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
     [HttpPost]
     public async Task<ActionResult<Tag>> CreateTag(CreateTagCommand command)
     {
-        var tag = await _tagService.CreateTagAsync(command.Name, (TagCategory)command.Category, command.Description);
+        var tag = await tagService.CreateTagAsync(command.Name, (TagCategory)command.Category, command.Description);
         return CreatedAtAction(nameof(GetTag), new { name = tag.Name }, tag);
     }
 
     [HttpGet("{name}")]
     public async Task<ActionResult<Tag>> GetTag(string name)
     {
-        var tag = await _tagService.GetTagByNameAsync(name);
+        var tag = await tagService.GetTagByNameAsync(name);
         if (tag == null)
+        {
             return NotFound();
+        }
 
         return Ok(tag);
     }
@@ -81,14 +85,14 @@ public class TagsController : ApiControllerBase
     [HttpPost("{name}/posts/{postId}")]
     public async Task<ActionResult> AddTagToPost(string name, Guid postId, int category)
     {
-        await _tagService.AddTagToPostAsync(postId, name, (TagCategory)category);
+        await tagService.AddTagToPostAsync(postId, name, (TagCategory)category);
         return NoContent();
     }
 
     [HttpDelete("{name}/posts/{postId}")]
     public async Task<ActionResult> RemoveTagFromPost(string name, Guid postId)
     {
-        await _tagService.RemoveTagFromPostAsync(postId, name);
+        await tagService.RemoveTagFromPostAsync(postId, name);
         return NoContent();
     }
 
@@ -102,7 +106,7 @@ public class TagsController : ApiControllerBase
             Count = count,
             TimeFrame = timeFrame
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -110,7 +114,7 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<List<Tag>>> GetRelatedTags(string id)
     {
         var query = new GetRelatedTagsQuery { TagId = id };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
@@ -118,7 +122,7 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<List<TagDto>>> GetUserTags(Guid userId)
     {
         var query = new GetUserTagsQuery(userId.ToString());
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -126,7 +130,7 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<List<TagSynonymDto>>> GetTagSynonyms(string id)
     {
         var query = new GetTagSynonymsQuery(id);
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -138,7 +142,7 @@ public class TagsController : ApiControllerBase
             return BadRequest("Tag ID mismatch");
         }
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 
@@ -146,7 +150,7 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<TagWikiDto>> GetTagWiki(string id)
     {
         var query = new GetTagWikiQuery { TagId = id };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
@@ -155,7 +159,7 @@ public class TagsController : ApiControllerBase
     {
         command.TagId = id;
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 
@@ -163,14 +167,14 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<List<TagRelationshipDto>>> GetTagRelationships(string id)
     {
         var query = new GetTagRelationshipsQuery(id);
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
     [HttpPost("relationships")]
     public async Task<ActionResult> AddTagRelationship(CreateTagRelationshipCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 
@@ -178,7 +182,7 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult> RemoveTagRelationship(string parentTagId, string childTagId)
     {
         var command = new RemoveTagRelationshipCommand(parentTagId, childTagId);
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 
@@ -186,7 +190,7 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<TagDto>> GetTagStats(string id)
     {
         var query = new GetTagStatsQuery(id);
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -196,7 +200,7 @@ public class TagsController : ApiControllerBase
         var userId = GetUserId();
         var command = new FollowTagCommand(userId, id);
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 
@@ -206,7 +210,7 @@ public class TagsController : ApiControllerBase
         var userId = GetUserId();
         var command = new UnfollowTagCommand(userId, id);
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return Ok(result);
     }
 
@@ -215,7 +219,7 @@ public class TagsController : ApiControllerBase
     {
         var userId = GetUserId();
         var query = new GetFollowedTagsQuery(userId);
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -223,7 +227,7 @@ public class TagsController : ApiControllerBase
     public async Task<ActionResult<List<TagModerationLogDto>>> GetTagModerationHistory(string id)
     {
         var query = new GetTagModerationHistoryQuery(id, 1, 20);
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 }

@@ -14,17 +14,17 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class ModerationController : ApiControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMediator mediator;
 
     public ModerationController(IMediator mediator)
     {
-        _mediator = mediator;
+        this.mediator = mediator;
     }
 
     [HttpPost("reports")]
     public async Task<ActionResult> ReportContent(ReportContentCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -42,7 +42,7 @@ public class ModerationController : ApiControllerBase
             Page = page,
             PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -50,23 +50,25 @@ public class ModerationController : ApiControllerBase
     public async Task<ActionResult> ResolveReport(Guid id, ResolveReportCommand command)
     {
         if (id != command.ReportId)
+        {
             return BadRequest("ID mismatch");
+        }
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
     [HttpPost("moderate")]
     public async Task<ActionResult<ModerationResult>> ModerateContent(ModerateContentCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
     [HttpPost("recalculate-merit")]
     public async Task<ActionResult<decimal>> RecalculateMeritScore(RecalculateMeritScoreCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -75,7 +77,7 @@ public class ModerationController : ApiControllerBase
         [FromQuery] string timeFrame = "day")
     {
         var query = new GetModerationStatsQuery { TimeFrame = timeFrame };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -89,7 +91,7 @@ public class ModerationController : ApiControllerBase
             ContentId = id,
             ContentType = contentType
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 }

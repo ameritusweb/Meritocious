@@ -6,11 +6,11 @@ namespace Meritocious.Web.Services.RateLimiting;
 
 public class ClientRateLimitMiddleware : IClientResolveContributor
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IHttpContextAccessor httpContextAccessor;
 
     public ClientRateLimitMiddleware(IHttpContextAccessor httpContextAccessor)
     {
-        _httpContextAccessor = httpContextAccessor;
+        this.httpContextAccessor = httpContextAccessor;
     }
 
     public Task<string> ResolveClientAsync(HttpContext httpContext)

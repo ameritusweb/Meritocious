@@ -10,21 +10,21 @@ namespace Meritocious.Web.Controllers
     [Route("api/[controller]")]
     public class AuthController : ApiControllerBase
     {
-        private readonly IAuthenticationService _authService;
-        private readonly ILogger<AuthController> _logger;
+        private readonly IAuthenticationService authService;
+        private readonly ILogger<AuthController> logger;
 
         public AuthController(
             IAuthenticationService authService,
             ILogger<AuthController> logger)
         {
-            _authService = authService;
-            _logger = logger;
+            this.authService = authService;
+            this.logger = logger;
         }
 
         [HttpPost("google")]
         public async Task<ActionResult<AuthenticationResult>> GoogleSignIn([FromBody] GoogleSignInRequest request)
         {
-            var result = await _authService.AuthenticateGoogleUserAsync(request.IdToken);
+            var result = await authService.AuthenticateGoogleUserAsync(request.IdToken);
             return HandleResult(result);
         }
 
@@ -33,7 +33,7 @@ namespace Meritocious.Web.Controllers
         public async Task<ActionResult> LinkGoogleAccount([FromBody] GoogleSignInRequest request)
         {
             var userId = GetCurrentUserId();
-            var result = await _authService.LinkGoogleAccountAsync(userId, request.IdToken);
+            var result = await authService.LinkGoogleAccountAsync(userId, request.IdToken);
             return HandleResult(result);
         }
 
@@ -42,21 +42,21 @@ namespace Meritocious.Web.Controllers
         public async Task<ActionResult> UnlinkGoogleAccount()
         {
             var userId = GetCurrentUserId();
-            var result = await _authService.UnlinkGoogleAccountAsync(userId);
+            var result = await authService.UnlinkGoogleAccountAsync(userId);
             return HandleResult(result);
         }
 
         [HttpPost("refresh")]
         public async Task<ActionResult<AuthenticationResult>> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+            var result = await authService.RefreshTokenAsync(request.RefreshToken);
             return HandleResult(result);
         }
 
         [HttpPost("revoke")]
         public async Task<ActionResult> RevokeToken([FromBody] RefreshTokenRequest request)
         {
-            var result = await _authService.RevokeTokenAsync(request.RefreshToken);
+            var result = await authService.RevokeTokenAsync(request.RefreshToken);
             return HandleResult(result);
         }
 
@@ -67,6 +67,7 @@ namespace Meritocious.Web.Controllers
             {
                 throw new UnauthorizedAccessException("Invalid user ID in token");
             }
+
             return userId;
         }
     }

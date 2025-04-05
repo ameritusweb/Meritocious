@@ -20,17 +20,17 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class UsersController : ApiControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMediator mediator;
 
     public UsersController(IMediator mediator)
     {
-        _mediator = mediator;
+        this.mediator = mediator;
     }
 
     [HttpPost("register")]
     public async Task<ActionResult<UserProfileDto>> Register(RegisterUserCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -38,7 +38,7 @@ public class UsersController : ApiControllerBase
     public async Task<ActionResult<UserProfileDto>> GetProfile(Guid id)
     {
         var query = new GetUserProfileQuery { UserId = id };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
@@ -52,7 +52,7 @@ public class UsersController : ApiControllerBase
             Count = count,
             TimeFrame = timeFrame
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -60,7 +60,7 @@ public class UsersController : ApiControllerBase
     public async Task<ActionResult<List<PostDto>>> GetUserPosts(Guid id)
     {
         var query = new GetPostsByUserQuery { UserId = id };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
@@ -76,7 +76,7 @@ public class UsersController : ApiControllerBase
             UnreadOnly = unreadOnly,
             Count = count
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -90,7 +90,7 @@ public class UsersController : ApiControllerBase
             UserId = id,
             NotificationIds = notificationIds
         };
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -104,7 +104,7 @@ public class UsersController : ApiControllerBase
             UserId = id,
             Count = count
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -113,7 +113,7 @@ public class UsersController : ApiControllerBase
     {
         var userId = GetUserId();
         var query = new GetUserProfileQuery { UserId = Guid.Parse(userId) };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
@@ -121,7 +121,7 @@ public class UsersController : ApiControllerBase
     public async Task<ActionResult<MeritScoreDto>> GetUserMeritScore(Guid id)
     {
         var query = new GetUserMeritScoreQuery(id.ToString());
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 
@@ -139,7 +139,7 @@ public class UsersController : ApiControllerBase
             StartDate = start,
             EndDate = end
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
@@ -148,17 +148,17 @@ public class UsersController : ApiControllerBase
     {
         var userId = GetUserId();
         command.UserId = userId;
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
     [HttpPut("me/settings")]
-    public async Task<ActionResult<UserSettingsDto>> UpdateSettings(UpdateUserSettingsCommand command)
+    public async Task<ActionResult<bool>> UpdateSettings(UpdateUserSettingsCommand command)
     {
         var userId = GetUserId();
         command.UserId = userId;
-        var result = await _mediator.Send(command);
-        return HandleResult(result);
+        var result = await mediator.Send(command);
+        return Ok(result);
     }
 
     [HttpGet("{id}/contributions")]
@@ -168,7 +168,7 @@ public class UsersController : ApiControllerBase
         [FromQuery] int pageSize = 10)
     {
         var query = new GetUserContributionsQuery(id.ToString(), page, pageSize);
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 }

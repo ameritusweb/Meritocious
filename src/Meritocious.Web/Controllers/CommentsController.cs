@@ -12,17 +12,17 @@ namespace Meritocious.Web.Controllers;
 [Route("api/[controller]")]
 public class CommentsController : ApiControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMediator mediator;
 
     public CommentsController(IMediator mediator)
     {
-        _mediator = mediator;
+        this.mediator = mediator;
     }
 
     [HttpPost]
     public async Task<ActionResult<CommentDto>> AddComment(AddCommentCommand command)
     {
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -30,9 +30,11 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult<CommentDto>> UpdateComment(Guid id, UpdateCommentCommand command)
     {
         if (id != command.CommentId)
+        {
             return BadRequest("ID mismatch");
+        }
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -40,7 +42,7 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult> DeleteComment(Guid id)
     {
         var command = new DeleteCommentCommand { CommentId = id };
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 
@@ -58,7 +60,7 @@ public class CommentsController : ApiControllerBase
             Page = page,
             PageSize = pageSize
         };
-        var result = await _mediator.Send(query);
+        var result = await mediator.Send(query);
         return HandleResult(result);
     }
 
@@ -66,9 +68,11 @@ public class CommentsController : ApiControllerBase
     public async Task<ActionResult> ReportComment(Guid id, ReportContentCommand command)
     {
         if (id != command.ContentId)
+        {
             return BadRequest("ID mismatch");
+        }
 
-        var result = await _mediator.Send(command);
+        var result = await mediator.Send(command);
         return HandleResult(result);
     }
 }
