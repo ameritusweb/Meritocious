@@ -4,7 +4,7 @@ using Meritocious.Core.Entities;
 
 namespace Meritocious.Core.Features.Recommendations.Models
 {
-    public class UserContentInteraction : BaseEntity
+    public class UserContentInteraction : BaseEntity<UserContentInteraction>
     {
         public Guid UserId { get; private set; }
         public User User { get; private set; }
@@ -45,7 +45,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         }
     }
 
-    public class ContentTopic : BaseEntity
+    public class ContentTopic : BaseEntity<ContentTopic>
     {
         public Guid ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
@@ -77,7 +77,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         public virtual ICollection<Substack> Substacks { get; set; } = new List<Substack>();
     }
 
-    public class UserTopicPreference : BaseEntity
+    public class UserTopicPreference : BaseEntity<UserTopicPreference>
     {
         public Guid UserId { get; private set; }
         public User User { get; private set; }
@@ -113,7 +113,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         }
     }
 
-    public class ContentSimilarity : BaseEntity
+    public class ContentSimilarity : BaseEntity<ContentSimilarity>
     {
         public Guid ContentId1 { get; private set; }
         public Guid ContentId2 { get; private set; }
@@ -140,7 +140,7 @@ namespace Meritocious.Core.Features.Recommendations.Models
         }
     }
 
-    public class TrendingContent : BaseEntity
+    public class TrendingContent : BaseEntity<TrendingContent>
     {
         public Guid ContentId { get; private set; }
         public ContentType ContentType { get; private set; }

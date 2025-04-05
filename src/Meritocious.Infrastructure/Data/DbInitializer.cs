@@ -71,7 +71,7 @@
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
             if (adminUser == null)
             {
-                adminUser = User.Create(adminEmail, adminEmail, Guid.NewGuid().ToString());
+                adminUser = User.Create(adminEmail, adminEmail, Ulid.NewUlid().ToString());
 
                 var createResult = await userManager.CreateAsync(adminUser, adminPassword);
                 if (!createResult.Succeeded)

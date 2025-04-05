@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Recommendations.Models;
 using ContentSimilarity = Meritocious.Core.Entities.ContentSimilarity;
 using Meritocious.Infrastructure.Data.Configurations;
@@ -79,7 +80,7 @@ namespace Meritocious.Infrastructure.Data
             // Audit fields for all entities
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+                if (typeof(IUlidEntity).IsAssignableFrom(entityType.ClrType))
                 {
                     modelBuilder.Entity(entityType.ClrType)
                         .Property<DateTime>("CreatedAt")
@@ -89,21 +90,23 @@ namespace Meritocious.Infrastructure.Data
                         .Property<DateTime?>("UpdatedAt");
                 }
             }
+
+            modelBuilder.ApplyUlidIdConversions();
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             // Update audit fields
-            foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+            foreach (var entry in ChangeTracker.Entries<IUlidEntity>())
             {
-                switch (entry.State)
+                if (entry.State == EntityState.Added && string.IsNullOrWhiteSpace(entry.Entity.Id))
                 {
-                    case EntityState.Added:
-                        entry.Entity.CreatedAt = DateTime.UtcNow;
-                        break;
-                    case EntityState.Modified:
-                        entry.Entity.UpdatedAt = DateTime.UtcNow;
-                        break;
+                    entry.Entity.Id = Ulid.NewUlid().ToString();
+                }
+
+                if (entry.State == EntityState.Modified && entry.Entity is BaseEntity<object> baseEntity)
+                {
+                    baseEntity.UpdatedAt = DateTime.UtcNow;
                 }
             }
 

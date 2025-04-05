@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Meritocious.Core.Entities
 {
-    public partial class Post : BaseEntity
+    public partial class Post : BaseEntity<Post>
     {
         private PostEngagement engagement;
         public PostEngagement Engagement => engagement ?? (engagement = PostEngagement.Create(this));

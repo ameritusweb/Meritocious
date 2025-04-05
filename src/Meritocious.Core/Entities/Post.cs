@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Meritocious.Core.Entities
 {
-    public partial class Post : BaseEntity
+    public partial class Post : BaseEntity<Post>
     {
         public string Title { get; internal set; }
         public string Content { get; internal set; }
