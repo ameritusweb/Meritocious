@@ -3,5 +3,10 @@ using Meritocious.Common.DTOs.Tags;
 
 namespace Meritocious.Core.Features.Tags.Commands;
 
-public record CreateTagRelationshipCommand(string ParentTagId, string ChildTagId, int RelationType, string CreatedBy)
-    : IRequest<TagRelationshipDto>;
+public class CreateTagRelationshipCommand : IRequest<TagRelationshipDto>
+{
+    public string ParentTagId { get; set; }
+    public string ChildTagId { get; set; }
+    public int RelationType { get; set; }
+    public string CreatedBy { get; set; }
+}

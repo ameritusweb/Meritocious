@@ -3,5 +3,12 @@ using Meritocious.Common.DTOs.Tags;
 
 namespace Meritocious.Core.Features.Tags.Queries;
 
-public record GetFollowedTagsQuery(string UserId)
-    : IRequest<IEnumerable<TagDto>>;
+public class GetFollowedTagsQuery : IRequest<List<TagDto>>
+{
+    public string UserId { get; private set; }
+
+    public GetFollowedTagsQuery(string userId)
+    {
+        UserId = userId;
+    }
+}

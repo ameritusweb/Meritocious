@@ -8,6 +8,8 @@ using Meritocious.Core.Results;
 using Meritocious.Core.Features.Tags.Commands;
 using Meritocious.Common.DTOs.Tags;
 using Meritocious.Core.Features.Tags.Queries;
+using Meritocious.Infrastructure.Queries;
+using Meritocious.Core.Features.Tags.Models;
 
 namespace Meritocious.Web.Controllers;
 
@@ -62,7 +64,7 @@ public class TagsController : ApiControllerBase
     [HttpPost]
     public async Task<ActionResult<Tag>> CreateTag(CreateTagCommand command)
     {
-        var tag = await _tagService.CreateTagAsync(command.Name, command.Description);
+        var tag = await _tagService.CreateTagAsync(command.Name, (TagCategory)command.Category, command.Description);
         return CreatedAtAction(nameof(GetTag), new { name = tag.Name }, tag);
     }
 
@@ -77,9 +79,9 @@ public class TagsController : ApiControllerBase
     }
 
     [HttpPost("{name}/posts/{postId}")]
-    public async Task<ActionResult> AddTagToPost(string name, Guid postId)
+    public async Task<ActionResult> AddTagToPost(string name, Guid postId, int category)
     {
-        await _tagService.AddTagToPostAsync(postId, name);
+        await _tagService.AddTagToPostAsync(postId, name, (TagCategory)category);
         return NoContent();
     }
 
@@ -105,9 +107,9 @@ public class TagsController : ApiControllerBase
     }
 
     [HttpGet("{name}/related")]
-    public async Task<ActionResult<List<Tag>>> GetRelatedTags(string name)
+    public async Task<ActionResult<List<Tag>>> GetRelatedTags(string id)
     {
-        var query = new GetRelatedTagsQuery { TagName = name };
+        var query = new GetRelatedTagsQuery { TagId = id };
         var result = await _mediator.Send(query);
         return HandleResult(result);
     }
@@ -115,132 +117,122 @@ public class TagsController : ApiControllerBase
     [HttpGet("user/{userId}")]
     public async Task<ActionResult<List<TagDto>>> GetUserTags(Guid userId)
     {
-        var query = new GetUserTagsQuery { UserId = userId };
+        var query = new GetUserTagsQuery(userId.ToString());
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpGet("{name}/synonyms")]
-    public async Task<ActionResult<List<TagSynonymDto>>> GetTagSynonyms(string name)
+    public async Task<ActionResult<List<TagSynonymDto>>> GetTagSynonyms(string id)
     {
-        var query = new GetTagSynonymsQuery { TagName = name };
+        var query = new GetTagSynonymsQuery(id);
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpPost("{name}/synonyms")]
-    public async Task<ActionResult> AddTagSynonym(string name, AddTagSynonymCommand command)
+    public async Task<ActionResult> AddTagSynonym(string id, AddTagSynonymCommand command)
     {
-        if (name != command.TagName)
-            return BadRequest("Tag name mismatch");
-        
+        if (id != command.SourceTagId)
+        {
+            return BadRequest("Tag ID mismatch");
+        }
+
         var result = await _mediator.Send(command);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpGet("{name}/wiki")]
-    public async Task<ActionResult<TagWikiDto>> GetTagWiki(string name)
+    public async Task<ActionResult<TagWikiDto>> GetTagWiki(string id)
     {
-        var query = new GetTagWikiQuery { TagName = name };
+        var query = new GetTagWikiQuery { TagId = id };
         var result = await _mediator.Send(query);
         return HandleResult(result);
     }
 
     [HttpPut("{name}/wiki")]
-    public async Task<ActionResult> UpdateTagWiki(string name, UpdateTagWikiCommand command)
+    public async Task<ActionResult> UpdateTagWiki(string id, UpdateTagWikiCommand command)
     {
-        if (name != command.TagName)
-            return BadRequest("Tag name mismatch");
-        
+        command.TagId = id;
+
         var result = await _mediator.Send(command);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpGet("{name}/relationships")]
-    public async Task<ActionResult<List<TagRelationshipDto>>> GetTagRelationships(string name)
+    public async Task<ActionResult<List<TagRelationshipDto>>> GetTagRelationships(string id)
     {
-        var query = new GetTagRelationshipsQuery { TagName = name };
+        var query = new GetTagRelationshipsQuery(id);
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpPost("relationships")]
     public async Task<ActionResult> AddTagRelationship(CreateTagRelationshipCommand command)
     {
         var result = await _mediator.Send(command);
-        return HandleResult(result);
+        return Ok(result);
     }
 
-    [HttpDelete("relationships/{parentTag}/{childTag}")]
-    public async Task<ActionResult> RemoveTagRelationship(string parentTag, string childTag)
+    [HttpDelete("relationships/{parentTagId}/{childTagId}")]
+    public async Task<ActionResult> RemoveTagRelationship(string parentTagId, string childTagId)
     {
-        var command = new RemoveTagRelationshipCommand 
-        { 
-            ParentTag = parentTag,
-            ChildTag = childTag
-        };
+        var command = new RemoveTagRelationshipCommand(parentTagId, childTagId);
         var result = await _mediator.Send(command);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpGet("{name}/stats")]
-    public async Task<ActionResult<TagStatsDto>> GetTagStats(string name)
+    public async Task<ActionResult<TagDto>> GetTagStats(string id)
     {
-        var query = new GetTagStatsQuery { TagName = name };
+        var query = new GetTagStatsQuery(id);
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpPost("{name}/follow")]
-    public async Task<ActionResult> FollowTag(string name)
+    public async Task<ActionResult> FollowTag(string id)
     {
         var userId = GetUserId();
-        var command = new FollowTagCommand
-        {
-            UserId = userId,
-            TagName = name,
-        };
+        var command = new FollowTagCommand(userId, id);
 
         var result = await _mediator.Send(command);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpDelete("{name}/follow")]
-    public async Task<ActionResult> UnfollowTag(string name)
+    public async Task<ActionResult> UnfollowTag(string id)
     {
         var userId = GetUserId();
-        var command = new UnfollowTagCommand
-        {
-            UserId = userId,
-            TagName = name,
-        };
+        var command = new UnfollowTagCommand(userId, id);
 
         var result = await _mediator.Send(command);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpGet("following")]
     public async Task<ActionResult<List<TagDto>>> GetFollowedTags()
     {
         var userId = GetUserId();
-        var query = new GetFollowedTagsQuery { UserId = userId };
+        var query = new GetFollowedTagsQuery(userId);
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpGet("{name}/moderation-history")]
-    public async Task<ActionResult<List<TagModerationLogDto>>> GetTagModerationHistory(string name)
+    public async Task<ActionResult<List<TagModerationLogDto>>> GetTagModerationHistory(string id)
     {
-        var query = new GetTagModerationHistoryQuery { TagName = name };
+        var query = new GetTagModerationHistoryQuery(id, 1, 20);
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 }
 
 public record CreateTagCommand
 {
     public string Name { get; init; }
-    public string? Description { get; init; }
+    public int Category { get; init; }
+    public string Description { get; init; }
 }
 
 public record GetPostsByTagQuery : IRequest<Result<List<PostDto>>>
@@ -253,5 +245,5 @@ public record GetPostsByTagQuery : IRequest<Result<List<PostDto>>>
 
 public record GetRelatedTagsQuery : IRequest<Result<List<Tag>>>
 {
-    public string TagName { get; init; }
+    public string TagId { get; init; }
 }

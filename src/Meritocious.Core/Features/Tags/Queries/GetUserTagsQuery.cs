@@ -3,5 +3,12 @@ using Meritocious.Common.DTOs.Tags;
 
 namespace Meritocious.Core.Features.Tags.Queries;
 
-public record GetUserTagsQuery(string UserId)
-    : IRequest<IEnumerable<TagDto>>;
+public class GetUserTagsQuery : IRequest<List<TagDto>>
+{
+    public string UserId { get; private set; }
+
+    public GetUserTagsQuery(string userId)
+    {
+        UserId = userId;
+    }
+}

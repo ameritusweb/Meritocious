@@ -120,9 +120,9 @@ public class UsersController : ApiControllerBase
     [HttpGet("{id}/merit-score")]
     public async Task<ActionResult<MeritScoreDto>> GetUserMeritScore(Guid id)
     {
-        var query = new GetUserMeritScoreQuery { UserId = id.ToString() };
+        var query = new GetUserMeritScoreQuery(id.ToString());
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 
     [HttpGet("{id}/merit-history")]
@@ -167,13 +167,8 @@ public class UsersController : ApiControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        var query = new GetUserContributionsQuery 
-        { 
-            UserId = id.ToString(),
-            Page = page,
-            PageSize = pageSize
-        };
+        var query = new GetUserContributionsQuery(id.ToString(), page, pageSize);
         var result = await _mediator.Send(query);
-        return HandleResult(result);
+        return Ok(result);
     }
 }

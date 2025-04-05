@@ -3,5 +3,16 @@ using Meritocious.Common.DTOs.Tags;
 
 namespace Meritocious.Core.Features.Tags.Queries;
 
-public record GetTagModerationHistoryQuery(string TagId, int Page = 1, int PageSize = 20)
-    : IRequest<IEnumerable<TagModerationLogDto>>;
+public class GetTagModerationHistoryQuery : IRequest<List<TagModerationLogDto>>
+{
+    public string TagId { get; private set; }
+    public int Page { get; private set; }
+    public int PageSize { get; private set; }
+
+    public GetTagModerationHistoryQuery(string tagId, int page = 1, int pageSize = 20)
+    {
+        TagId = tagId;
+        Page = page;
+        PageSize = pageSize;
+    }
+}

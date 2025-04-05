@@ -3,5 +3,12 @@ using Meritocious.Common.DTOs.Tags;
 
 namespace Meritocious.Core.Features.Tags.Queries;
 
-public record GetTagSynonymsQuery(string TagId)
-    : IRequest<IEnumerable<TagSynonymDto>>;
+public class GetTagSynonymsQuery : IRequest<List<TagSynonymDto>>
+{
+    public string TagId { get; private set; }
+
+    public GetTagSynonymsQuery(string tagId)
+    {
+        TagId = tagId;
+    }
+}
