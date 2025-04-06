@@ -11,6 +11,28 @@ namespace Meritocious.Core.Entities
 {
     public class User : IdentityUser<UlidId<User>>
     {
+        private const int UlidLength = 26;
+        private UlidId<User> ulidId = UlidId<User>.New();
+
+        public override UlidId<User> Id
+        {
+            get => ulidId;
+            set
+            {
+                if (value == default || string.IsNullOrWhiteSpace(value.Value))
+                {
+                    ulidId = UlidId<User>.New();
+                    return;
+                }
+
+                var ulid = value.Value.Length > UlidLength
+                    ? value.Value.Substring(0, UlidLength)
+                    : value.Value;
+
+                ulidId = new UlidId<User>(ulid);
+            }
+        }
+
         public decimal MeritScore { get; private set; }
         public DateTime? LastCalculated { get; private set; }
         public DateTime? LastLoginAt { get; private set; }

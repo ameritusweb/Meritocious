@@ -6,6 +6,7 @@ using Meritocious.Core.Features.Recommendations.Models;
 using ContentSimilarity = Meritocious.Core.Entities.ContentSimilarity;
 using Meritocious.Infrastructure.Data.Configurations;
 using Meritocious.Infrastructure.Converters;
+using System.Reflection;
 
 namespace Meritocious.Infrastructure.Data
 {
@@ -161,17 +162,49 @@ namespace Meritocious.Infrastructure.Data
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            // Update audit fields
-            foreach (var entry in ChangeTracker.Entries<IUlidEntity>())
+            foreach (var entry in ChangeTracker.Entries())
             {
-                if (entry.State == EntityState.Added && string.IsNullOrWhiteSpace(entry.Entity.Id))
+                if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.Id = Ulid.NewUlid().ToString();
+                    // Handle entities implementing IUlidEntity with string Id
+                    if (entry.Entity is IUlidEntity stringIdEntity)
+                    {
+                        if (string.IsNullOrWhiteSpace(stringIdEntity.Id))
+                        {
+                            stringIdEntity.Id = Ulid.NewUlid().ToString();
+                        }
+                    }
+                    else
+                    {
+                        // Handle entities using UlidId<T> directly (e.g. IdentityUser)
+                        var idProp = entry.Entity.GetType().GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
+                        if (idProp != null &&
+                            idProp.PropertyType.IsGenericType &&
+                            idProp.PropertyType.GetGenericTypeDefinition() == typeof(UlidId<>))
+                        {
+                            var idValue = idProp.GetValue(entry.Entity);
+                            var valueProp = idProp.PropertyType.GetProperty("Value");
+
+                            string? value = valueProp?.GetValue(idValue) as string;
+
+                            if (string.IsNullOrWhiteSpace(value))
+                            {
+                                var ulidNewMethod = idProp.PropertyType.GetMethod("New", BindingFlags.Static | BindingFlags.Public);
+                                var newUlid = ulidNewMethod?.Invoke(null, null);
+                                idProp.SetValue(entry.Entity, newUlid);
+                            }
+                        }
+                    }
                 }
 
-                if (entry.State == EntityState.Modified && entry.Entity is BaseEntity<object> baseEntity)
+                if (entry.State == EntityState.Modified)
                 {
-                    baseEntity.UpdatedAt = DateTime.UtcNow;
+                    // Handle UpdatedAt logic for any entity with the property
+                    var updatedProp = entry.Entity.GetType().GetProperty("UpdatedAt", BindingFlags.Public | BindingFlags.Instance);
+                    if (updatedProp != null && updatedProp.CanWrite)
+                    {
+                        updatedProp.SetValue(entry.Entity, DateTime.UtcNow);
+                    }
                 }
             }
 

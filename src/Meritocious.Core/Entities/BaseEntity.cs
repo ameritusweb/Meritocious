@@ -11,6 +11,8 @@ namespace Meritocious.Core.Entities
 {
     public abstract class BaseEntity<T> : IUlidEntity
     {
+        private const int UlidLength = 26;
+
         [Key]
         public UlidId<T> UlidId { get; set; } = UlidId<T>.New();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -19,8 +21,25 @@ namespace Meritocious.Core.Entities
         [NotMapped]
         public string Id
         {
-            get => UlidId.Value;
-            set => UlidId = new UlidId<T>(value);
+            get
+            {
+                return UlidId.Value;
+            }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("ID cannot be null or whitespace.", nameof(value));
+                }
+
+                // Auto-truncate if longer than a ULID
+                if (value.Length > UlidLength)
+                {
+                    value = value.Substring(0, UlidLength);
+                }
+
+                UlidId = new UlidId<T>(value);
+            }
         }
     }
 }
