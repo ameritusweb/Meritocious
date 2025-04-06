@@ -36,7 +36,9 @@ namespace Meritocious.AI.Search
                 foreach (ContentType contentType in Enum.GetValues(typeof(ContentType)))
                 {
                     var collectionName = GetCollectionName(contentType);
-                    await vectorDb.CreateCollectionAsync(collectionName, VECTOR_DIMENSION);
+                    
+                    // TODO: Needs implementation.
+                    // await vectorDb.CreateCollectionAsync(collectionName, VECTOR_DIMENSION);
                     collectionNames[contentType] = collectionName;
                 }
             }
