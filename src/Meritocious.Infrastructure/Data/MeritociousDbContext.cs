@@ -81,6 +81,7 @@ namespace Meritocious.Infrastructure.Data
             {
                 b.Property(r => r.Id)
                     .HasConversion(new UlidIdValueConverter<User>())
+                    .HasField("ulidId")
                     .HasMaxLength(26)
                     .IsUnicode(false);
             });
@@ -89,6 +90,7 @@ namespace Meritocious.Infrastructure.Data
             {
                 b.Property(r => r.Id)
                     .HasConversion(new UlidIdValueConverter<User>())
+                    .HasField("ulidId")
                     .HasMaxLength(26)
                     .IsUnicode(false);
             });
