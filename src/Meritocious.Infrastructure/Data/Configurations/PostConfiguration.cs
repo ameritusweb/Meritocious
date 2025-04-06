@@ -6,11 +6,14 @@ namespace Meritocious.Infrastructure.Data.Configurations
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using Meritocious.Core.Entities;
     using System.Text.Json;
+    using Meritocious.Core.Extensions;
 
     public class PostConfiguration : IEntityTypeConfiguration<Post>
     {
         public void Configure(EntityTypeBuilder<Post> builder)
         {
+            var (converter, comparer) = EfHelpers.For<IReadOnlyDictionary<string, decimal>>();
+
             builder.HasKey(p => p.Id);
 
             builder.Property(p => p.Title)
@@ -29,10 +32,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(p => p.AverageTimeSpentSeconds)
                 .HasPrecision(10, 2)
                 .HasDefaultValue(0.00m);
-
-            // Merit components as JSON
-            builder.Property(p => p.MeritComponents)
-                .HasColumnType("jsonb");
 
             // Relationships
             builder.HasMany(p => p.ParentRelations)
@@ -81,10 +80,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
             
             // Merit components as JSONB for efficient component queries
             builder.Property(p => p.MeritComponents)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             // TODO: 
             // builder.HasIndex(p => p.MeritComponents)
@@ -94,18 +92,15 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasForeignKey(c => c.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(p => p.Tags)
-                .WithMany(t => t.Posts)
-                .UsingEntity(j => j.ToTable("PostTags"));
-
             builder
                .HasMany<Tag>(u => u.Tags)
-               .WithMany(s => s.Posts)
-               .UsingEntity<PostTag>(
-                    "PostTags",
-                   j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
-                   j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
-                   j => j.HasKey("TagId", "PostId"));
+               .WithMany(s => s.Posts);
+
+               // .UsingEntity<PostTag>(
+               //     "PostTags",
+               //    j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
+               //    j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
+               //    j => j.HasKey("TagId", "PostId"));
         }
     }
 }

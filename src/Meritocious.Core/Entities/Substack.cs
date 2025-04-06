@@ -1,3 +1,4 @@
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Recommendations.Models;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -68,7 +69,7 @@ public class Substack : BaseEntity<Substack>
     public virtual ICollection<ContentTopic> Topics { get; set; } = new List<ContentTopic>();
 }
 
-public class SubstackFollower
+public class SubstackFollower : BaseEntity<SubstackFollower>
 {
     [ForeignKey("SubstackId")]
     public string SubstackId { get; set; }

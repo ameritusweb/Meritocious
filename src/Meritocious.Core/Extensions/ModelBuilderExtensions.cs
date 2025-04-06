@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Meritocious.Core.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.VisualBasic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Reflection.Emit;
 
 namespace Meritocious.Core.Extensions
 {
@@ -22,39 +25,44 @@ namespace Meritocious.Core.Extensions
                     continue;
                 }
 
-                // Look for the UlidId property (not Id anymore)
-                var clrProperty = clrType.GetProperty("UlidId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (clrProperty == null)
-                {
-                    continue;
-                }
-
-                var entityBuilder = modelBuilder.Entity(clrType);
-
-                var propertyType = clrProperty.PropertyType;
-                if (!propertyType.IsGenericType || propertyType.GetGenericTypeDefinition() != typeof(UlidId<>))
-                {
-                    continue;
-                }
-
-                // Create ValueConverter<UlidId<T>, string>
-                var toString = CreateToStringLambda(propertyType);
-                var fromString = CreateFromStringLambda(propertyType);
-
-                var converterType = typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string));
-                var converter = Activator.CreateInstance(
-                    typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string)),
-                    toString,
-                    fromString,
-                    null);
-
-                entityBuilder
-                    .Property(clrProperty.PropertyType, clrProperty.Name)
-                    .HasConversion((ValueConverter)converter!)
-                    .HasMaxLength(26)
-                    .IsUnicode(false)
-                    .IsRequired();
+                ApplyUlidIdConversionInternal(modelBuilder, clrType);
             }
+        }
+
+        private static void ApplyUlidIdConversionInternal(ModelBuilder modelBuilder, Type clrType)
+        {
+            // Look for the UlidId property (not Id anymore)
+            var clrProperty = clrType.GetProperty("UlidId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (clrProperty == null)
+            {
+                return;
+            }
+
+            var entityBuilder = modelBuilder.Entity(clrType);
+
+            var propertyType = clrProperty.PropertyType;
+            if (!propertyType.IsGenericType || propertyType.GetGenericTypeDefinition() != typeof(UlidId<>))
+            {
+                return;
+            }
+
+            // Create ValueConverter<UlidId<T>, string>
+            var toString = CreateToStringLambda(propertyType);
+            var fromString = CreateFromStringLambda(propertyType);
+
+            var converterType = typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string));
+            var converter = Activator.CreateInstance(
+                typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string)),
+                toString,
+                fromString,
+                null);
+
+            entityBuilder
+                .Property(clrProperty.PropertyType, clrProperty.Name)
+                .HasConversion((ValueConverter)converter!)
+                .HasMaxLength(26)
+                .IsUnicode(false)
+                .IsRequired();
         }
 
         public static void AddMissingSkipNavigations(this ModelBuilder modelBuilder)

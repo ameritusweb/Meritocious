@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -14,6 +15,8 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Note> builder)
         {
+            var (converter, comparer) = EfHelpers.For<List<string>>();
+
             builder.HasKey(n => n.Id);
 
             builder.Property(n => n.Type)
@@ -25,10 +28,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasColumnType("ntext");
 
             builder.Property(n => n.RelatedSourceIds)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.Property(n => n.Confidence)
                 .HasPrecision(5, 2);

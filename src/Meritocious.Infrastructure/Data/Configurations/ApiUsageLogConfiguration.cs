@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -14,6 +15,8 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ApiUsageLog> builder)
         {
+            var (converter, comparer) = EfHelpers.For<Dictionary<string, JsonElement>>();
+
             builder.HasKey(a => a.Id);
 
             builder.Property(a => a.Endpoint)
@@ -29,10 +32,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasMaxLength(45);
 
             builder.Property(e => e.RequestMetadata)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.HasOne(a => a.User)
                 .WithMany()

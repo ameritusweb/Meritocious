@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -14,6 +15,11 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<PostEngagement> builder)
         {
+            var (converterDecimal, comparerDecimal) = EfHelpers.For<Dictionary<string, decimal>>();
+            var (converterInt, comparerInt) = EfHelpers.For<Dictionary<string, int>>();
+            var (converterDateTime, comparerDateTime) = EfHelpers.For<Dictionary<DateTime, int>>();
+            var (converter, comparer) = EfHelpers.For<List<string>>();
+
             builder.HasKey(e => e.Id);
 
             builder.Property(e => e.Views)
@@ -44,34 +50,29 @@ namespace Meritocious.Infrastructure.Data.Configurations
 
             // Dictionary properties as JSON
             builder.Property(e => e.ViewsByRegion)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, int>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converterInt)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerInt);
 
             builder.Property(e => e.ViewsByPlatform)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, int>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converterInt)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerInt);
 
             builder.Property(e => e.ViewTrend)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<DateTime, int>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converterDateTime)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerDateTime);
 
             builder.Property(e => e.SourceInfluenceScores)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converterDecimal)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerDecimal);
 
             builder.Property(e => e.TopEngagementSources)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.HasOne(e => e.Post)
                 .WithOne(p => p.Engagement)

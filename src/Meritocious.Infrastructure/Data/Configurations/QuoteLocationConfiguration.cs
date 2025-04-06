@@ -28,15 +28,16 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(q => q.EndPosition)
                 .IsRequired();
 
-            // Configure relationship to PostSource
             builder.HasOne(q => q.PostSource)
                 .WithMany()
                 .HasForeignKey(q => q.PostSourceId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Add shadow properties for the PostRelation relationship
-            builder.Property<string>("PostRelationParentId");
-            builder.Property<string>("PostRelationChildId");
+            builder.HasOne(q => q.PostRelation)
+                .WithMany(r => r.Quotes)
+                .HasForeignKey(q => new { q.PostRelationParentId, q.PostRelationChildId })
+                .HasPrincipalKey(r => new { r.ParentId, r.ChildId })
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Create index on the relationship
             builder.HasIndex(new[] { "PostRelationParentId", "PostRelationChildId" });

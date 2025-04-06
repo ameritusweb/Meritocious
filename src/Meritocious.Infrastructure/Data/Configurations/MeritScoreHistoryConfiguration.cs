@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Core.Entities;
 using System.Text.Json;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -9,6 +10,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<MeritScoreHistory> builder)
         {
+            var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
+            var (converterString, comparerString) = EfHelpers.For<Dictionary<string, string>>();
+
             builder.HasKey(h => h.Id);
 
             builder.Property(h => h.ContentType)
@@ -19,20 +23,18 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasPrecision(5, 2);
 
             builder.Property(h => h.Components)
-                 .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.Property(h => h.ModelVersion)
                 .IsRequired()
                 .HasMaxLength(20);
 
             builder.Property(h => h.Explanations)
-                 .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converterString)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerString);
 
             builder.Property(h => h.Context)
                 .HasColumnType("ntext");
@@ -51,28 +53,28 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<UserReputationMetrics> builder)
         {
+            var (converterDecimal, comparerDecimal) = EfHelpers.For<Dictionary<string, decimal>>();
+            var (converterInt, comparerInt) = EfHelpers.For<Dictionary<string, int>>();
+
             builder.HasKey(m => m.Id);
 
             builder.Property(m => m.OverallMeritScore)
                 .HasPrecision(5, 2);
 
             builder.Property(m => m.CategoryScores)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converterDecimal)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerDecimal);
 
             builder.Property(m => m.ContributionCounts)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, int>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converterInt)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerInt);
 
             builder.Property(m => m.TopicExpertise)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converterDecimal)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerDecimal);
 
             builder.Property(m => m.Level)
                 .IsRequired()
@@ -85,10 +87,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasPrecision(5, 2);
 
             builder.Property(m => m.BadgeProgress)
-                .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+                .HasConversion(converterDecimal)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerDecimal);
 
             builder.HasOne(m => m.User)
                 .WithMany()
@@ -107,16 +108,17 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ReputationSnapshot> builder)
         {
+            var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
+
             builder.HasKey(s => s.Id);
 
             builder.Property(s => s.OverallMeritScore)
                 .HasPrecision(5, 2);
 
             builder.Property(e => e.MetricSnapshots)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.Property(s => s.Level)
                 .IsRequired()
@@ -142,6 +144,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ReputationBadge> builder)
         {
+            var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
+            var (converterString, comparerString) = EfHelpers.For<Dictionary<string, string>>();
+
             builder.HasKey(b => b.Id);
 
             builder.Property(b => b.BadgeType)
@@ -153,16 +158,14 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasMaxLength(50);
 
             builder.Property(e => e.Criteria)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converterString)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerString);
 
             builder.Property(e => e.Progress)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.Property(b => b.AwardReason)
                 .HasMaxLength(500);

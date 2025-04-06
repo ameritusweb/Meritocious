@@ -50,16 +50,21 @@
 
             builder
                 .HasMany<Substack>(u => u.FollowedSubstacks)
-                .WithMany(s => s.Followers)
-                .UsingEntity<SubstackFollower>(
-                    "SubstackFollowers",
-                    j => j.HasOne<Substack>().WithMany().HasForeignKey("SubstackId"),
-                    j => j.HasOne<User>().WithMany().HasForeignKey("UserId"),
-                    j =>
-                    {
-                        j.HasKey("UserId", "SubstackId");
-                    });
+                .WithMany(s => s.Followers);
 
+                // .UsingEntity<SubstackFollower>(
+                //    "SubstackFollowers",
+                //    j => j.HasOne<Substack>().WithMany().HasForeignKey("SubstackId"),
+                //    j => j.HasOne<User>().WithMany().HasForeignKey("UserId"),
+                //    j =>
+                //    {
+                //        j.HasKey("UserId", "SubstackId");
+                //        j.Property(sf => sf.SubstackId)
+                //        .HasConversion(new UlidIdConverter<Substack>())
+                //        .HasMaxLength(26)
+                //        .IsUnicode(false)
+                //        .IsRequired();
+                //    });
             // builder.HasMany(s => s.Followers)
             // .WithMany(u => u.FollowedSubstacks)
             // .UsingEntity<Dictionary<string, object>>(

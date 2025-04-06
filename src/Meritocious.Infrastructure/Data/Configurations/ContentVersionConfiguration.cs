@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Core.Features.Versioning;
 using Meritocious.Core.Entities;
 using System.Text.Json;
+using Meritocious.Core.Extensions;
+using System;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -10,6 +12,8 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ContentVersion> builder)
         {
+            var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
+
             builder.HasKey(v => v.Id);
 
             builder.Property(v => v.ContentType)
@@ -33,10 +37,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasPrecision(5, 2);
 
             builder.Property(e => e.MeritScoreComponents)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+              .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.Property(v => v.ModeratorNotes)
                 .HasMaxLength(1000);
@@ -61,28 +64,28 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ContentDiff> builder)
         {
+            var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
+            var (converterString, comparerString) = EfHelpers.For<string>();
+
             builder.HasKey(d => d.Id);
 
             builder.Property(e => e.DiffData)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<string>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converterString)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerString);
 
             builder.Property(e => e.TitleDiff)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<string>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converterString)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparerString);
 
             builder.Property(d => d.MeritScoreDiff)
                 .HasPrecision(5, 2);
 
             builder.Property(e => e.ComponentDiffs)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, decimal>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.HasOne(d => d.ContentVersion)
                 .WithMany()

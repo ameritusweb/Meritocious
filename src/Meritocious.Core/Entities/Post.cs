@@ -1,5 +1,6 @@
 ﻿using Meritocious.Common.DTOs.Merit;
 using Meritocious.Common.Enums;
+using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -309,7 +310,7 @@ namespace Meritocious.Core.Entities
         }
     }
 
-    public class PostTag
+    public class PostTag : BaseEntity<PostTag>
     {
         [ForeignKey("PostId")]
         public string PostId { get; set; }

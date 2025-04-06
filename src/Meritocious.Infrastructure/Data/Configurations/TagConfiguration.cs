@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Core.Features.Tags.Models;
 using Meritocious.Core.Entities;
 using System.Text.Json;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -10,6 +11,8 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Tag> builder)
         {
+            var (converter, comparer) = EfHelpers.For<Dictionary<string, string>>();
+
             builder.HasKey(t => t.Id);
 
             builder.Property(t => t.Name)
@@ -35,10 +38,9 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasConversion<string>();
 
             builder.Property(e => e.Metadata)
-               .HasConversion(
-                   v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                   v => JsonSerializer.Deserialize<Dictionary<string, string>>(v, (JsonSerializerOptions?)null))
-               .HasColumnType("nvarchar(max)");
+               .HasConversion(converter)
+               .HasColumnType("nvarchar(max)")
+               .Metadata.SetValueComparer(comparer);
 
             builder.HasOne(t => t.ParentTag)
                 .WithMany(t => t.ChildTags)
@@ -47,12 +49,13 @@ namespace Meritocious.Infrastructure.Data.Configurations
 
             builder
                .HasMany<Post>(u => u.Posts)
-               .WithMany(s => s.Tags)
-               .UsingEntity<PostTag>(
-                   "PostTags",
-                   j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
-                   j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
-                   j => j.HasKey("PostId", "TagId"));
+               .WithMany(s => s.Tags);
+
+               // .UsingEntity<PostTag>(
+               //    "PostTags",
+               //    j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
+               //    j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
+               //    j => j.HasKey("PostId", "TagId"));
 
             // Create indexes
             builder.HasIndex(t => t.Name).IsUnique();
