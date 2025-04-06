@@ -117,33 +117,6 @@ namespace Meritocious.Core.Features.Recommendations.Models
         }
     }
 
-    public class ContentSimilarity : BaseEntity<ContentSimilarity>
-    {
-        public string ContentId1 { get; private set; }
-        public string ContentId2 { get; private set; }
-        public decimal SimilarityScore { get; private set; }
-        public DateTime CalculatedAt { get; private set; }
-
-        private ContentSimilarity()
-        {
-        }
-
-        public static ContentSimilarity Create(
-            string contentId1,
-            string contentId2,
-            decimal similarityScore)
-        {
-            return new ContentSimilarity
-            {
-                ContentId1 = contentId1,
-                ContentId2 = contentId2,
-                SimilarityScore = similarityScore,
-                CalculatedAt = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow
-            };
-        }
-    }
-
     public class TrendingContent : BaseEntity<TrendingContent>
     {
         public string ContentId { get; private set; }

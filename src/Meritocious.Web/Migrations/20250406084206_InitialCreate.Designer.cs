@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Meritocious.Web.Migrations
 {
     [DbContext(typeof(MeritociousDbContext))]
-    [Migration("20250406080440_InitialCreate")]
+    [Migration("20250406084206_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -400,30 +400,32 @@ namespace Meritocious.Web.Migrations
 
             modelBuilder.Entity("Meritocious.Core.Entities.ContentSimilarity", b =>
                 {
-                    b.Property<string>("UlidId")
-                        .HasMaxLength(26)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(26)");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Algorithm")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Content1UlidId")
+                    b.Property<string>("Content1Id")
                         .IsRequired()
+                        .HasMaxLength(26)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(26)");
 
-                    b.Property<string>("Content2UlidId")
+                    b.Property<string>("Content2Id")
                         .IsRequired()
+                        .HasMaxLength(26)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(26)");
 
                     b.Property<string>("ContentId1")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ContentId2")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -435,7 +437,14 @@ namespace Meritocious.Web.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal>("SimilarityScore")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("UlidId")
+                        .IsRequired()
+                        .HasMaxLength(26)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(26)");
 
                     b.Property<int>("UpdatePriority")
                         .HasColumnType("int");
@@ -443,13 +452,23 @@ namespace Meritocious.Web.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("UlidId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("Content1UlidId");
+                    b.HasIndex("Content1Id");
 
-                    b.HasIndex("Content2UlidId");
+                    b.HasIndex("Content2Id");
 
-                    b.ToTable("ContentSimilarities");
+                    b.HasIndex("LastUpdated");
+
+                    b.HasIndex("SimilarityScore");
+
+                    b.HasIndex("ContentId1", "ContentId2")
+                        .IsUnique();
+
+                    b.ToTable("ContentSimilarities", t =>
+                        {
+                            t.HasCheckConstraint("CK_ContentSimilarity_IdOrder", "ContentId1 < ContentId2");
+                        });
                 });
 
             modelBuilder.Entity("Meritocious.Core.Entities.ContentVersion", b =>
@@ -1127,7 +1146,6 @@ namespace Meritocious.Web.Migrations
                         .HasColumnType("varchar(26)");
 
                     b.Property<string>("CommentId")
-                        .IsRequired()
                         .HasMaxLength(26)
                         .IsUnicode(false)
                         .HasColumnType("varchar(26)");
@@ -1149,7 +1167,6 @@ namespace Meritocious.Web.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("PostId")
-                        .IsRequired()
                         .HasMaxLength(26)
                         .IsUnicode(false)
                         .HasColumnType("varchar(26)");
@@ -1240,10 +1257,8 @@ namespace Meritocious.Web.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ParentPostId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParentPostUlidId")
-                        .IsRequired()
+                        .HasMaxLength(26)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(26)");
 
                     b.Property<DateTime?>("PublishedAt")
@@ -1275,7 +1290,7 @@ namespace Meritocious.Web.Migrations
 
                     b.HasIndex("IsDeleted");
 
-                    b.HasIndex("ParentPostUlidId");
+                    b.HasIndex("ParentPostId");
 
                     b.HasIndex("SubstackId");
 
@@ -2665,53 +2680,6 @@ namespace Meritocious.Web.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Meritocious.Core.Features.Recommendations.Models.ContentSimilarity", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CalculatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ContentId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ContentId2")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("SimilarityScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("UlidId")
-                        .IsRequired()
-                        .HasMaxLength(26)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(26)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CalculatedAt");
-
-                    b.HasIndex("SimilarityScore");
-
-                    b.HasIndex("ContentId1", "ContentId2")
-                        .IsUnique();
-
-                    b.ToTable("ContentSimilarity", t =>
-                        {
-                            t.HasCheckConstraint("CK_ContentSimilarity_IdOrder", "ContentId1 < ContentId2");
-                        });
-                });
-
             modelBuilder.Entity("Meritocious.Core.Features.Recommendations.Models.ContentTopic", b =>
                 {
                     b.Property<string>("Id")
@@ -3166,14 +3134,14 @@ namespace Meritocious.Web.Migrations
                 {
                     b.HasOne("Meritocious.Core.Entities.Post", "Content1")
                         .WithMany()
-                        .HasForeignKey("Content1UlidId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("Content1Id")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Meritocious.Core.Entities.Post", "Content2")
                         .WithMany()
-                        .HasForeignKey("Content2UlidId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("Content2Id")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Content1");
@@ -3316,14 +3284,12 @@ namespace Meritocious.Web.Migrations
                     b.HasOne("Meritocious.Core.Entities.Comment", "Comment")
                         .WithMany()
                         .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Meritocious.Core.Entities.Post", "Post")
                         .WithMany()
                         .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Meritocious.Core.Entities.User", "User")
                         .WithMany()
@@ -3348,9 +3314,8 @@ namespace Meritocious.Web.Migrations
 
                     b.HasOne("Meritocious.Core.Entities.Post", "ParentPost")
                         .WithMany()
-                        .HasForeignKey("ParentPostUlidId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ParentPostId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Meritocious.Core.Entities.Substack", "Substack")
                         .WithMany("Posts")
@@ -3425,7 +3390,7 @@ namespace Meritocious.Web.Migrations
                     b.HasOne("Meritocious.Core.Entities.PostRelation", "PostRelation")
                         .WithMany("Quotes")
                         .HasForeignKey("PostRelationParentId", "PostRelationChildId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("PostRelation");
@@ -3567,13 +3532,13 @@ namespace Meritocious.Web.Migrations
                     b.HasOne("Meritocious.Core.Entities.Tag", "SourceTag")
                         .WithMany("Synonyms")
                         .HasForeignKey("SourceTagId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Meritocious.Core.Entities.Tag", "TargetTag")
                         .WithMany()
                         .HasForeignKey("TargetTagId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ApprovedBy");

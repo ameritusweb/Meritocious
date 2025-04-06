@@ -14,6 +14,11 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converter, comparer) = EfHelpers.For<IReadOnlyDictionary<string, decimal>>();
 
+            builder.HasOne(p => p.ParentPost)
+                       .WithMany()
+                       .HasForeignKey(p => p.ParentPostId)
+                       .OnDelete(DeleteBehavior.NoAction);
+
             builder.Property(p => p.Title)
                 .IsRequired()
                 .HasMaxLength(255);

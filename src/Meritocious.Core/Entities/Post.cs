@@ -18,8 +18,9 @@ namespace Meritocious.Core.Entities
         [ForeignKey("FK_AuthorId")]
         public UlidId<User> AuthorId { get; internal set; }
         public User Author { get; internal set; }
-        public string? ParentPostId { get; internal set; }
-        public Post ParentPost { get; internal set; }
+        [ForeignKey("FK_ParentPostId")]
+        public UlidId<Post>? ParentPostId { get; internal set; }
+        public Post? ParentPost { get; internal set; }
         public bool IsDeleted { get; internal set; }
         public bool IsDraft { get; internal set; }
         [ForeignKey("FK_SubstackId")]

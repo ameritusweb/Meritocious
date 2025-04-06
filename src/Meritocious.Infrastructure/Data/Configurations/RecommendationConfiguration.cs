@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Meritocious.Core.Features.Recommendations.Models;
+using Meritocious.Core.Entities;
 
 namespace Meritocious.Infrastructure.Data.Configurations
 {
@@ -88,13 +89,23 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(s => s.SimilarityScore)
                 .HasPrecision(5, 2);
 
+            builder.HasOne(s => s.Content1)
+                      .WithMany()
+                      .HasForeignKey(s => s.Content1Id)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(s => s.Content2)
+                     .WithMany()
+                     .HasForeignKey(s => s.Content2Id)
+                     .OnDelete(DeleteBehavior.NoAction);
+
             // Ensure consistent ordering of ContentId1 and ContentId2
             builder.HasCheckConstraint("CK_ContentSimilarity_IdOrder", "ContentId1 < ContentId2");
 
             // Create unique constraint and index for content pairs
             builder.HasIndex(s => new { s.ContentId1, s.ContentId2 }).IsUnique();
             builder.HasIndex(s => s.SimilarityScore);
-            builder.HasIndex(s => s.CalculatedAt);
+            builder.HasIndex(s => s.LastUpdated);
         }
     }
 

@@ -38,12 +38,12 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.HasOne(n => n.Post)
                 .WithMany()
                 .HasForeignKey(n => n.PostId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasOne(n => n.Comment)
                 .WithMany()
                 .HasForeignKey(n => n.CommentId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Create indexes for commonly queried fields
             builder.HasIndex(n => n.UserId);  // Used for getting user's notifications

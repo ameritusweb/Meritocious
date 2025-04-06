@@ -70,25 +70,6 @@ namespace Meritocious.Web.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ContentSimilarity",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ContentId1 = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ContentId2 = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SimilarityScore = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
-                    CalculatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UlidId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ContentSimilarity", x => x.Id);
-                    table.CheckConstraint("CK_ContentSimilarity_IdOrder", "ContentId1 < ContentId2");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ContentTopics",
                 columns: table => new
                 {
@@ -764,8 +745,7 @@ namespace Meritocious.Web.Migrations
                     Title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     Content = table.Column<string>(type: "ntext", nullable: false),
                     AuthorId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
-                    ParentPostId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ParentPostUlidId = table.Column<string>(type: "varchar(26)", nullable: false),
+                    ParentPostId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     IsDraft = table.Column<bool>(type: "bit", nullable: false),
                     SubstackId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
@@ -789,11 +769,10 @@ namespace Meritocious.Web.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Posts_Posts_ParentPostUlidId",
-                        column: x => x.ParentPostUlidId,
+                        name: "FK_Posts_Posts_ParentPostId",
+                        column: x => x.ParentPostId,
                         principalTable: "Posts",
-                        principalColumn: "UlidId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "UlidId");
                     table.ForeignKey(
                         name: "FK_Posts_Substacks_SubstackId",
                         column: x => x.SubstackId,
@@ -1060,14 +1039,12 @@ namespace Meritocious.Web.Migrations
                         name: "FK_TagSynonyms_Tags_SourceTagId",
                         column: x => x.SourceTagId,
                         principalTable: "Tags",
-                        principalColumn: "UlidId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "UlidId");
                     table.ForeignKey(
                         name: "FK_TagSynonyms_Tags_TargetTagId",
                         column: x => x.TargetTagId,
                         principalTable: "Tags",
-                        principalColumn: "UlidId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "UlidId");
                 });
 
             migrationBuilder.CreateTable(
@@ -1151,34 +1128,34 @@ namespace Meritocious.Web.Migrations
                 name: "ContentSimilarities",
                 columns: table => new
                 {
-                    UlidId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
-                    ContentId1 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ContentId2 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SimilarityScore = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ContentId1 = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ContentId2 = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SimilarityScore = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
                     Algorithm = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false),
                     NeedsUpdate = table.Column<bool>(type: "bit", nullable: false),
                     UpdatePriority = table.Column<int>(type: "int", nullable: false),
-                    Content1UlidId = table.Column<string>(type: "varchar(26)", nullable: false),
-                    Content2UlidId = table.Column<string>(type: "varchar(26)", nullable: false),
+                    Content1Id = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
+                    Content2Id = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
+                    UlidId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ContentSimilarities", x => x.UlidId);
+                    table.PrimaryKey("PK_ContentSimilarities", x => x.Id);
+                    table.CheckConstraint("CK_ContentSimilarity_IdOrder", "ContentId1 < ContentId2");
                     table.ForeignKey(
-                        name: "FK_ContentSimilarities_Posts_Content1UlidId",
-                        column: x => x.Content1UlidId,
+                        name: "FK_ContentSimilarities_Posts_Content1Id",
+                        column: x => x.Content1Id,
                         principalTable: "Posts",
-                        principalColumn: "UlidId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "UlidId");
                     table.ForeignKey(
-                        name: "FK_ContentSimilarities_Posts_Content2UlidId",
-                        column: x => x.Content2UlidId,
+                        name: "FK_ContentSimilarities_Posts_Content2Id",
+                        column: x => x.Content2Id,
                         principalTable: "Posts",
-                        principalColumn: "UlidId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "UlidId");
                 });
 
             migrationBuilder.CreateTable(
@@ -1444,8 +1421,8 @@ namespace Meritocious.Web.Migrations
                     Message = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Link = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     IsRead = table.Column<bool>(type: "bit", nullable: false),
-                    PostId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
-                    CommentId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: false),
+                    PostId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: true),
+                    CommentId = table.Column<string>(type: "varchar(26)", unicode: false, maxLength: 26, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -1462,14 +1439,12 @@ namespace Meritocious.Web.Migrations
                         name: "FK_Notifications_Comments_CommentId",
                         column: x => x.CommentId,
                         principalTable: "Comments",
-                        principalColumn: "UlidId",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "UlidId");
                     table.ForeignKey(
                         name: "FK_Notifications_Posts_PostId",
                         column: x => x.PostId,
                         principalTable: "Posts",
-                        principalColumn: "UlidId",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "UlidId");
                 });
 
             migrationBuilder.CreateTable(
@@ -1517,7 +1492,8 @@ namespace Meritocious.Web.Migrations
                         name: "FK_QuoteLocations_PostRelations_PostRelationParentId_PostRelationChildId",
                         columns: x => new { x.PostRelationParentId, x.PostRelationChildId },
                         principalTable: "PostRelations",
-                        principalColumns: new[] { "ParentId", "ChildId" });
+                        principalColumns: new[] { "ParentId", "ChildId" },
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_QuoteLocations_Posts_PostSourceId",
                         column: x => x.PostSourceId,
@@ -1715,29 +1691,29 @@ namespace Meritocious.Web.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ContentSimilarities_Content1UlidId",
+                name: "IX_ContentSimilarities_Content1Id",
                 table: "ContentSimilarities",
-                column: "Content1UlidId");
+                column: "Content1Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ContentSimilarities_Content2UlidId",
+                name: "IX_ContentSimilarities_Content2Id",
                 table: "ContentSimilarities",
-                column: "Content2UlidId");
+                column: "Content2Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ContentSimilarity_CalculatedAt",
-                table: "ContentSimilarity",
-                column: "CalculatedAt");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ContentSimilarity_ContentId1_ContentId2",
-                table: "ContentSimilarity",
+                name: "IX_ContentSimilarities_ContentId1_ContentId2",
+                table: "ContentSimilarities",
                 columns: new[] { "ContentId1", "ContentId2" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ContentSimilarity_SimilarityScore",
-                table: "ContentSimilarity",
+                name: "IX_ContentSimilarities_LastUpdated",
+                table: "ContentSimilarities",
+                column: "LastUpdated");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContentSimilarities_SimilarityScore",
+                table: "ContentSimilarities",
                 column: "SimilarityScore");
 
             migrationBuilder.CreateIndex(
@@ -2090,9 +2066,9 @@ namespace Meritocious.Web.Migrations
                 columns: new[] { "IsDeleted", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Posts_ParentPostUlidId",
+                name: "IX_Posts_ParentPostId",
                 table: "Posts",
-                column: "ParentPostUlidId");
+                column: "ParentPostId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Posts_SubstackId",
@@ -2543,9 +2519,6 @@ namespace Meritocious.Web.Migrations
 
             migrationBuilder.DropTable(
                 name: "ContentSimilarities");
-
-            migrationBuilder.DropTable(
-                name: "ContentSimilarity");
 
             migrationBuilder.DropTable(
                 name: "ExternalLogins");

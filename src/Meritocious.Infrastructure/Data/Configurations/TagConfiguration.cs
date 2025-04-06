@@ -80,7 +80,12 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.HasOne(s => s.SourceTag)
                .WithMany(t => t.Synonyms)
                .HasForeignKey(s => s.SourceTagId)
-               .OnDelete(DeleteBehavior.Cascade);
+               .OnDelete(DeleteBehavior.NoAction);
+
+            builder.HasOne(s => s.TargetTag)
+                      .WithMany()
+                      .HasForeignKey(s => s.TargetTagId)
+                      .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasOne(s => s.CreatedBy)
                .WithMany()

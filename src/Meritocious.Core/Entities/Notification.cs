@@ -17,12 +17,12 @@ public class Notification : BaseEntity<Notification>
 
     // Optional related entities
     [ForeignKey("FK_PostId")]
-    public UlidId<Post> PostId { get; private set; }
-    public Post Post { get; private set; }
+    public UlidId<Post>? PostId { get; private set; }
+    public Post? Post { get; private set; }
 
     [ForeignKey("FK_CommentId")]
-    public UlidId<Comment> CommentId { get; private set; }
-    public Comment Comment { get; private set; }
+    public UlidId<Comment>? CommentId { get; private set; }
+    public Comment? Comment { get; private set; }
     
     private Notification()
     {

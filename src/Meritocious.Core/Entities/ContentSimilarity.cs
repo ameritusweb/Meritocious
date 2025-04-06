@@ -1,4 +1,6 @@
+using Meritocious.Core.Extensions;
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Meritocious.Core.Entities
 {
@@ -13,7 +15,11 @@ namespace Meritocious.Core.Entities
         public int UpdatePriority { get; set; } // Higher number = higher priority
 
         // Navigation properties
+        [ForeignKey("FK_Content1Id")]
+        public UlidId<Post> Content1Id { get; set; }
         public Post Content1 { get; set; }
+        [ForeignKey("FK_Content2Id")]
+        public UlidId<Post> Content2Id { get; set; }
         public Post Content2 { get; set; }
 
         public static ContentSimilarity Create(
