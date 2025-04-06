@@ -5,10 +5,12 @@ using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Recommendations.Models;
 using ContentSimilarity = Meritocious.Core.Entities.ContentSimilarity;
 using Meritocious.Infrastructure.Data.Configurations;
+using Meritocious.Infrastructure.Converters;
 
 namespace Meritocious.Infrastructure.Data
 {
-    public class MeritociousDbContext : Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext<User>
+    public class MeritociousDbContext
+        : Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext<User, Role, UlidId<User>, UserClaim, UserRole, UserLogin, RoleClaim, UserToken>
     {
         // Original entities
         public override DbSet<User> Users { get; set; }
@@ -73,6 +75,67 @@ namespace Meritocious.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<User>(b =>
+            {
+                b.Property(r => r.Id)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Role>(b =>
+            {
+                b.Property(r => r.Id)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<UserRole>(b =>
+            {
+                b.Property(ur => ur.UserId)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+
+                b.Property(ur => ur.RoleId)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<UserClaim>(b =>
+            {
+                b.Property(ur => ur.UserId)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<UserLogin>(b =>
+            {
+                b.Property(ur => ur.UserId)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<RoleClaim>(b =>
+            {
+                b.Property(ur => ur.RoleId)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<UserToken>(b =>
+            {
+                b.Property(ur => ur.UserId)
+                    .HasConversion(new UlidIdValueConverter<User>())
+                    .HasMaxLength(26)
+                    .IsUnicode(false);
+            });
 
             // Apply all configurations from current assembly
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeritociousDbContext).Assembly);

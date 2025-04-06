@@ -1,12 +1,15 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using Meritocious.Common.Enums;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Core.Features.Recommendations.Models
 {
     public class UserContentInteraction : BaseEntity<UserContentInteraction>
     {
-        public string UserId { get; private set; }
+        [ForeignKey("FK_UserId")]
+        public UlidId<User> UserId { get; private set; }
         public User User { get; private set; }
         public string ContentId { get; private set; }
         public ContentType ContentType { get; private set; }
@@ -79,7 +82,8 @@ namespace Meritocious.Core.Features.Recommendations.Models
 
     public class UserTopicPreference : BaseEntity<UserTopicPreference>
     {
-        public string UserId { get; private set; }
+        [ForeignKey("FK_UserId")]
+        public UlidId<User> UserId { get; private set; }
         public User User { get; private set; }
         public string Topic { get; private set; }
         public decimal Weight { get; private set; }

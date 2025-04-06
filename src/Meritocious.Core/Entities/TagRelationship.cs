@@ -19,12 +19,14 @@ namespace Meritocious.Core.Entities
         public Tag RelatedTag { get; private set; }
         public TagRelationType RelationType { get; private set; }
         public decimal Strength { get; private set; }
-        public string CreatorId { get; private set; }
+        [ForeignKey("FK_CreatorId")]
+        public UlidId<User> CreatorId { get; private set; }
         public User Creator { get; private set; }
         public bool IsBidirectional { get; private set; }
         public bool IsApproved { get; private set; }
         public DateTime? ApprovedAt { get; private set; }
-        public string? ApprovedById { get; private set; }
+        [ForeignKey("FK_ApprovedById")]
+        public UlidId<User>? ApprovedById { get; private set; }
         public User ApprovedBy { get; private set; }
         public string ParentTagId { get; internal set; }
         public string ChildTagId { get; internal set; }

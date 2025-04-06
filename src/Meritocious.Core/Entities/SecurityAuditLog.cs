@@ -1,3 +1,5 @@
+using Meritocious.Core.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 
 namespace Meritocious.Core.Entities
@@ -8,7 +10,8 @@ namespace Meritocious.Core.Entities
         public string Severity { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string IpAddress { get; set; } = string.Empty;
-        public string? UserId { get; set; }
+        [ForeignKey("FK_UserId")]
+        public UlidId<User>? UserId { get; set; }
         public string? UserAgent { get; set; }
         public DateTime Timestamp { get; set; }
         public Dictionary<string, JsonElement> Context { get; set; } = new();

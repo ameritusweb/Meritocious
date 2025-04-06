@@ -18,7 +18,8 @@ namespace Meritocious.Core.Entities
         public UlidId<Tag> TargetTagId { get; private set; }
         public Tag TargetTag { get; private set; }
 
-        public string CreatedById { get; private set; }
+        [ForeignKey("FK_CreatedById")]
+        public UlidId<User> CreatedById { get; private set; }
         public User CreatedBy { get; private set; }
 
         public string Status { get; private set; } = "Pending";
@@ -28,7 +29,8 @@ namespace Meritocious.Core.Entities
         // Optional approval workflow
         public bool IsApproved { get; private set; }
         public DateTime? ApprovedAt { get; private set; }
-        public string? ApprovedById { get; private set; }
+        [ForeignKey("FK_ApprovedById")]
+        public UlidId<User>? ApprovedById { get; private set; }
         public User? ApprovedBy { get; private set; }
         public string Name => SourceTag?.Name ?? "(unknown)";
 

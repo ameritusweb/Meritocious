@@ -1,10 +1,14 @@
+using Meritocious.Core.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Meritocious.Core.Entities;
 
 public class SecurityEvent : BaseEntity<SecurityEvent>
 {
     public string EventType { get; private set; }
 
-    public string UserId { get; private set; }
+    [ForeignKey("FK_UserId")]
+    public UlidId<User>? UserId { get; private set; }
 
     public User User { get; private set; }
 

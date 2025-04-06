@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Meritocious.Core.Extensions;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Meritocious.Core.Entities
 {
-    public class User : IdentityUser
+    public class User : IdentityUser<UlidId<User>>
     {
         public decimal MeritScore { get; private set; }
         public DateTime? LastCalculated { get; private set; }

@@ -31,6 +31,16 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.Property(r => r.Notes)
                 .HasMaxLength(1000);
 
+            builder.HasOne(b => b.Reporter)
+                .WithMany()
+                .HasForeignKey(b => b.ReporterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(b => b.Moderator)
+                .WithMany()
+                .HasForeignKey(b => b.ModeratorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasIndex(r => new { r.ContentId, r.ContentType });
             builder.HasIndex(r => r.Status);
             builder.HasIndex(r => r.CreatedAt);

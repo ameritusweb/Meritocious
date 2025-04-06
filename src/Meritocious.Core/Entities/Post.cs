@@ -15,7 +15,8 @@ namespace Meritocious.Core.Entities
     {
         public string Title { get; internal set; }
         public string Content { get; internal set; }
-        public string AuthorId { get; internal set; }
+        [ForeignKey("FK_AuthorId")]
+        public UlidId<User> AuthorId { get; internal set; }
         public User Author { get; internal set; }
         public string? ParentPostId { get; internal set; }
         public Post ParentPost { get; internal set; }
@@ -208,7 +209,7 @@ namespace Meritocious.Core.Entities
             {
                 Title = title,
                 Content = content,
-                AuthorId = author?.Id,
+                AuthorId = author.Id,
                 Author = author,
                 ParentPostId = parent?.Id,
                 ParentPost = parent,

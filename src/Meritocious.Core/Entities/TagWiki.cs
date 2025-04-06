@@ -19,7 +19,8 @@ namespace Meritocious.Core.Entities
 
         public int VersionNumber { get; private set; }
 
-        public string EditorId { get; private set; }
+        [ForeignKey("FK_EditorId")]
+        public UlidId<User> EditorId { get; private set; }
 
         public User Editor { get; private set; }
 
@@ -29,7 +30,8 @@ namespace Meritocious.Core.Entities
 
         public DateTime? ApprovedAt { get; private set; }
 
-        public string? ApprovedById { get; private set; }
+        [ForeignKey("FK_ApprovedById")]
+        public UlidId<User>? ApprovedById { get; private set; }
 
         public User ApprovedBy { get; private set; }
 

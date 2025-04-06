@@ -24,6 +24,7 @@ namespace Meritocious.Infrastructure
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.EntityFrameworkCore.Infrastructure;
     using Meritocious.Infrastructure.Validation;
+    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
     public static class ServiceCollectionExtensions
     {
@@ -41,7 +42,7 @@ namespace Meritocious.Infrastructure
             });
 
             // Add Identity
-            services.AddIdentity<User, IdentityRole>(options =>
+            services.AddIdentity<User, Role>(options =>
             {
                 options.Password.RequiredLength = 8;
                 options.Password.RequireDigit = true;
@@ -53,6 +54,8 @@ namespace Meritocious.Infrastructure
                 options.SignIn.RequireConfirmedEmail = true;
             })
             .AddEntityFrameworkStores<MeritociousDbContext>()
+            .AddUserStore<UserStore<User, Role, MeritociousDbContext, UlidId<User>, UserClaim, UserRole, UserLogin, UserToken, RoleClaim>>()
+            .AddRoleStore<RoleStore<Role, MeritociousDbContext, UlidId<User>, UserRole, RoleClaim>>()
             .AddDefaultTokenProviders();
 
             services.Configure<IdentityOptions>(options =>

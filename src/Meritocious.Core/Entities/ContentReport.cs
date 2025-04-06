@@ -1,6 +1,8 @@
 ﻿using Meritocious.Common.Enums;
+using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +15,8 @@ namespace Meritocious.Core.Entities
 
         public ContentType ContentType { get; private set; }
 
-        public string ReporterId { get; private set; }
+        [ForeignKey("FK_ReporterId")]
+        public UlidId<User> ReporterId { get; private set; }
 
         public User Reporter { get; private set; }
 
@@ -23,7 +26,8 @@ namespace Meritocious.Core.Entities
 
         public string Status { get; private set; }
 
-        public string? ModeratorId { get; private set; }
+        [ForeignKey("FK_ModeratorId")]
+        public UlidId<User>? ModeratorId { get; private set; }
 
         public User Moderator { get; private set; }
 

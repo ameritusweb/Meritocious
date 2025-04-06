@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +10,8 @@ namespace Meritocious.Core.Entities
 {
     public class UserSession : BaseEntity<UserSession>
     {
-        public string UserId { get; set; }
+        [ForeignKey("FK_UserId")]
+        public UlidId<User> UserId { get; set; }
         public User User { get; set; } = null!;
 
         public string SessionId { get; set; } = Guid.NewGuid().ToString();

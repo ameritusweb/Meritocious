@@ -15,7 +15,7 @@ namespace Meritocious.Core.Entities
         public DateTime BlockedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
         [ForeignKey("FK_BlockedByUserId")]
-        public UlidId<User> BlockedByUserId { get; set; }
+        public UlidId<User>? BlockedByUserId { get; set; }
         public User? BlockedByUser { get; set; }
     }
 }

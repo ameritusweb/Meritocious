@@ -35,12 +35,12 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.HasMany(p => p.ParentRelations)
                 .WithOne(r => r.Child)
                 .HasForeignKey(r => r.ChildId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasMany(p => p.ChildRelations)
                 .WithOne(r => r.Parent)
                 .HasForeignKey(r => r.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.HasMany(p => p.MeritScores)
             .WithOne()

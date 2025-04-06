@@ -14,7 +14,8 @@ namespace Meritocious.Core.Entities
         [ForeignKey("FK_PostId")]
         public UlidId<Post> PostId { get; private set; }
         public Post Post { get; private set; }
-        public string AuthorId { get; private set; }
+        [ForeignKey("FK_AuthorId")]
+        public UlidId<User> AuthorId { get; private set; }
         public User Author { get; private set; }
         [ForeignKey("FK_ParentCommentId")]
         public UlidId<Comment>? ParentCommentId { get; private set; }

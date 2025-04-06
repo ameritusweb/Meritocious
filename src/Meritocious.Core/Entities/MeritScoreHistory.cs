@@ -1,6 +1,8 @@
 ﻿using Meritocious.Common.Enums;
+using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +22,9 @@ namespace Meritocious.Core.Entities
         public bool IsRecalculation { get; private set; }
         public string RecalculationReason { get; private set; }
         public DateTime Timestamp { get; private set; }
+        [ForeignKey("FK_UserId")]
+        public UlidId<User> UserId { get; private set; }
+        public User User { get; private set; }
         public string Reason { get; private set; }
 
         private MeritScoreHistory()

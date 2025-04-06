@@ -41,10 +41,9 @@
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(u => u.MeritScoreHistories)
-                .WithOne()
-                .HasForeignKey("UserId")
-                .HasPrincipalKey(u => u.Id)
-                .OnDelete(DeleteBehavior.Cascade);
+                .WithOne(c => c.User)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder
                 .HasMany<Substack>(u => u.FollowedSubstacks)

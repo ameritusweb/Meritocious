@@ -5,7 +5,8 @@ namespace Meritocious.Core.Entities;
 
 public class Notification : BaseEntity<Notification>
 {
-    public string UserId { get; private set; }
+    [ForeignKey("FK_UserId")]
+    public UlidId<User> UserId { get; private set; }
     public User User { get; private set; }
     
     public string Type { get; private set; }
