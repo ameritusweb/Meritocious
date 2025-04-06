@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.DTOs.Moderation;
+using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,14 +10,14 @@ namespace Meritocious.Core.Entities
 {
     public class ModerationAppeal : BaseEntity<ModerationAppeal>
     {
-        public string ModerationActionId { get; private set; }
+        public UlidId<ModerationAction> ModerationActionId { get; private set; }
         public ModerationAction ModerationAction { get; private set; }
-        public string AppealerId { get; private set; }
+        public UlidId<User> AppealerId { get; private set; }
         public User Appealer { get; private set; }
         public string Reason { get; private set; }
         public string AdditionalContext { get; private set; }
         public AppealStatus Status { get; private set; }
-        public string? ReviewerId { get; private set; }
+        public UlidId<User>? ReviewerId { get; private set; }
         public User Reviewer { get; private set; }
         public string ReviewerNotes { get; private set; }
         public AppealDecision? Decision { get; private set; }

@@ -1,4 +1,5 @@
 ﻿using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace Meritocious.Core.Features.Versioning
     public class ContentDiff
     {
         public string Id { get; private set; }
-        public string ContentVersionId { get; private set; }
+        public UlidId<ContentVersion> ContentVersionId { get; private set; }
         public ContentVersion ContentVersion { get; private set; }
         public string DiffData { get; private set; }  // JSON diff data
         public string TitleDiff { get; private set; }

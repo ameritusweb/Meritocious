@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.Enums;
+using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,13 +16,13 @@ namespace Meritocious.Core.Entities
 
         public ModerationAction Action { get; private set; }
 
-        public string ActionId { get; private set; }
+        public UlidId<ModerationAction> ActionId { get; private set; }
 
         public string Reason { get; private set; }
 
         public bool IsAutomated { get; private set; }
 
-        public string ModeratorId { get; private set; }
+        public UlidId<User> ModeratorId { get; private set; }
 
         public User Moderator { get; private set; }
 

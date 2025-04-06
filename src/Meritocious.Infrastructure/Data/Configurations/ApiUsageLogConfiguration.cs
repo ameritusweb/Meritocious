@@ -17,8 +17,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converter, comparer) = EfHelpers.For<Dictionary<string, JsonElement>>();
 
-            builder.HasKey(a => a.Id);
-
             builder.Property(a => a.Endpoint)
                 .IsRequired()
                 .HasMaxLength(500);

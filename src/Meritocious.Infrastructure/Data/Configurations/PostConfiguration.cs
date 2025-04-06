@@ -14,8 +14,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converter, comparer) = EfHelpers.For<IReadOnlyDictionary<string, decimal>>();
 
-            builder.HasKey(p => p.Id);
-
             builder.Property(p => p.Title)
                 .IsRequired()
                 .HasMaxLength(255);

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace Meritocious.Core.Entities
         public Post Post { get; private set; }
         public string AuthorId { get; private set; }
         public User Author { get; private set; }
-        public string? ParentCommentId { get; private set; }
+        public UlidId<Comment>? ParentCommentId { get; private set; }
         public Comment ParentComment { get; private set; }
         public decimal MeritScore { get; private set; }
         public bool IsDeleted { get; private set; }

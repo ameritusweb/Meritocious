@@ -72,10 +72,10 @@ public class Substack : BaseEntity<Substack>
 public class SubstackFollower : BaseEntity<SubstackFollower>
 {
     [ForeignKey("SubstackId")]
-    public string SubstackId { get; set; }
+    public UlidId<Substack> SubstackId { get; set; }
     public Substack Substack { get; set; }
 
     [ForeignKey("UserId")]
-    public string UserId { get; set; }
+    public UlidId<User> UserId { get; set; }
     public User User { get; set; }
 }

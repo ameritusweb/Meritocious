@@ -13,8 +13,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
             var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
             var (converterString, comparerString) = EfHelpers.For<Dictionary<string, string>>();
 
-            builder.HasKey(h => h.Id);
-
             builder.Property(h => h.ContentType)
                 .IsRequired()
                 .HasConversion<string>();
@@ -55,8 +53,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converterDecimal, comparerDecimal) = EfHelpers.For<Dictionary<string, decimal>>();
             var (converterInt, comparerInt) = EfHelpers.For<Dictionary<string, int>>();
-
-            builder.HasKey(m => m.Id);
 
             builder.Property(m => m.OverallMeritScore)
                 .HasPrecision(5, 2);
@@ -110,8 +106,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
 
-            builder.HasKey(s => s.Id);
-
             builder.Property(s => s.OverallMeritScore)
                 .HasPrecision(5, 2);
 
@@ -146,8 +140,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
             var (converterString, comparerString) = EfHelpers.For<Dictionary<string, string>>();
-
-            builder.HasKey(b => b.Id);
 
             builder.Property(b => b.BadgeType)
                 .IsRequired()

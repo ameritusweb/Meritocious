@@ -13,8 +13,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<QuoteLocation> builder)
         {
-            builder.HasKey(q => q.Id);
-
             builder.Property(q => q.Content)
                 .IsRequired()
                 .HasColumnType("ntext");

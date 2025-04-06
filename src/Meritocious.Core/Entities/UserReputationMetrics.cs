@@ -1,9 +1,10 @@
 ﻿using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Reputation.Models;
 
 public class UserReputationMetrics : BaseEntity<UserReputationMetrics>
 {
-    public string UserId { get; private set; }
+    public UlidId<User> UserId { get; private set; }
     public User User { get; private set; }
     public decimal OverallMeritScore { get; private set; }
     public Dictionary<string, decimal> CategoryScores { get; private set; }

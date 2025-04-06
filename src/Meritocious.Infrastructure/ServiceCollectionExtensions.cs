@@ -35,7 +35,7 @@ namespace Meritocious.Infrastructure
             {
                 options.UseSqlServer(
                     configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(MeritociousDbContext).Assembly.FullName));
+                    b => b.MigrationsAssembly("Meritocious.Web"));
 
                 options.ReplaceService<IModelValidator, SoftSkipNavigationValidator>();
             });

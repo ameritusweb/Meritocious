@@ -14,8 +14,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Comment> builder)
         {
-            builder.HasKey(c => c.Id);
-
             builder.Property(c => c.Content)
                 .IsRequired()
                 .HasColumnType("ntext");

@@ -8,8 +8,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ExternalLogin> builder)
         {
-            builder.HasKey(e => e.Id);
-
             builder.Property(e => e.Provider)
                 .IsRequired()
                 .HasMaxLength(50);

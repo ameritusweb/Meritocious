@@ -8,8 +8,6 @@ public class SubstackConfiguration : IEntityTypeConfiguration<Substack>
 {
     public void Configure(EntityTypeBuilder<Substack> builder)
     {
-        builder.HasKey(s => s.Id);
-
         builder.Property(s => s.Name)
             .IsRequired()
             .HasMaxLength(200);

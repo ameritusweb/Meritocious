@@ -752,7 +752,7 @@ public class RemixService : IRemixService
                     post.AddNote(
                         "Suggestion",
                         suggestion.Trim(),
-                        sources.Select(s => s.Id).ToList(),
+                        sources.Select(s => s.Id.Value).ToList(),
                         confidence);
                 }
             }

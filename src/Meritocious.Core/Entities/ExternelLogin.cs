@@ -1,11 +1,12 @@
 ﻿using System;
 using Meritocious.Core.Entities;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Core.Entities
 {
     public class ExternalLogin : BaseEntity<ExternalLogin>
     {
-        public string UserId { get; private set; }
+        public UlidId<User> UserId { get; private set; }
 
         public User User { get; private set; }
 

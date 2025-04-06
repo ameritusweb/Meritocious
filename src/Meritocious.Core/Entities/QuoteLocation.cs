@@ -1,3 +1,5 @@
+using Meritocious.Core.Extensions;
+
 namespace Meritocious.Core.Entities;
 
 public class QuoteLocation : BaseEntity<QuoteLocation>
@@ -9,7 +11,7 @@ public class QuoteLocation : BaseEntity<QuoteLocation>
     public int EndPosition { get; set; }
     public string Context { get; set; } // Surrounding text for context
 
-    public string PostRelationParentId { get; set; }
-    public string PostRelationChildId { get; set; }
+    public UlidId<Post> PostRelationParentId { get; set; }
+    public UlidId<Post> PostRelationChildId { get; set; }
     public PostRelation PostRelation { get; set; }
 }

@@ -13,8 +13,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<UserSession> builder)
         {
-            builder.HasKey(s => s.Id);
-
             builder.Property(s => s.SessionId)
                 .IsRequired()
                 .HasMaxLength(100);

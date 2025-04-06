@@ -13,8 +13,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<BlockedIpAddress> builder)
         {
-            builder.HasKey(b => b.Id);
-
             builder.Property(b => b.IpAddress)
                 .IsRequired()
                 .HasMaxLength(45);  // IPv6 addresses can be up to 45 characters

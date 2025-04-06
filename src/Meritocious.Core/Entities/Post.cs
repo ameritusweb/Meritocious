@@ -313,11 +313,11 @@ namespace Meritocious.Core.Entities
     public class PostTag : BaseEntity<PostTag>
     {
         [ForeignKey("PostId")]
-        public string PostId { get; set; }
+        public UlidId<Post> PostId { get; set; }
         public Post Post { get; set; }
 
         [ForeignKey("TagId")]
-        public string TagId { get; set; }
+        public UlidId<Tag> TagId { get; set; }
         public Tag Tag { get; set; }
     }
 

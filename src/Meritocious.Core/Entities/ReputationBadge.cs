@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace Meritocious.Core.Entities
 {
     public class ReputationBadge : BaseEntity<ReputationBadge>
     {
-        public string UserId { get; private set; }
+        public UlidId<User> UserId { get; private set; }
         public User User { get; private set; }
         public string BadgeType { get; private set; }
         public string Category { get; private set; }

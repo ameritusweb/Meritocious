@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace Meritocious.Core.Entities
 {
     public class ModerationActionEffect : BaseEntity<ModerationActionEffect>
     {
-        public string ModerationActionId { get; private set; }
+        public UlidId<ModerationAction> ModerationActionId { get; private set; }
         public ModerationAction ModerationAction { get; private set; }
         public string EffectType { get; private set; }
         public Dictionary<string, string> EffectData { get; private set; }

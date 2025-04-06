@@ -11,8 +11,6 @@ public class ContentModerationEventConfiguration : IEntityTypeConfiguration<Cont
 {
     public void Configure(EntityTypeBuilder<ContentModerationEvent> builder)
     {
-        builder.HasKey(e => e.Id);
-
         builder.Property(e => e.ContentType)
             .HasConversion<string>();
 

@@ -14,8 +14,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
 
-            builder.HasKey(v => v.Id);
-
             builder.Property(v => v.ContentType)
                 .IsRequired()
                 .HasConversion<string>();
@@ -66,8 +64,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
         {
             var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
             var (converterString, comparerString) = EfHelpers.For<string>();
-
-            builder.HasKey(d => d.Id);
 
             builder.Property(e => e.DiffData)
                .HasConversion(converterString)

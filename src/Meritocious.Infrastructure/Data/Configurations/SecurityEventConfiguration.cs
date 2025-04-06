@@ -8,8 +8,6 @@ public class SecurityEventConfiguration : IEntityTypeConfiguration<SecurityEvent
 {
     public void Configure(EntityTypeBuilder<SecurityEvent> builder)
     {
-        builder.HasKey(e => e.Id);
-
         builder.Property(e => e.EventType)
             .IsRequired()
             .HasMaxLength(50);

@@ -9,8 +9,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ContentReport> builder)
         {
-            builder.HasKey(r => r.Id);
-
             builder.Property(r => r.ContentType)
                 .IsRequired()
                 .HasConversion<string>();

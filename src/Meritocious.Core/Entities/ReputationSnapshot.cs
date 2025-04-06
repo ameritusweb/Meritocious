@@ -1,4 +1,5 @@
-﻿using Meritocious.Core.Features.Reputation.Models;
+﻿using Meritocious.Core.Extensions;
+using Meritocious.Core.Features.Reputation.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Meritocious.Core.Entities
 {
     public class ReputationSnapshot : BaseEntity<ReputationSnapshot>
     {
-        public string UserId { get; private set; }
+        public UlidId<User> UserId { get; private set; }
         public User User { get; private set; }
         public decimal OverallMeritScore { get; private set; }
         public Dictionary<string, decimal> MetricSnapshots { get; private set; }

@@ -13,8 +13,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<LoginAttempt> builder)
         {
-            builder.HasKey(a => a.Id);
-
             builder.Property(a => a.Username)
                 .IsRequired()
                 .HasMaxLength(256);

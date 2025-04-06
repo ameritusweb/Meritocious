@@ -1,4 +1,5 @@
 ﻿using Meritocious.Common.Enums;
+using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Versioning;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace Meritocious.Core.Entities
         public string PostId { get; private set; }
         public string Title { get; private set; }
         public string Content { get; private set; }
-        public string EditorId { get; private set; }
+        public UlidId<User> EditorId { get; private set; }
         public User Editor { get; private set; }
         public string EditReason { get; private set; }
         public decimal MeritScore { get; private set; }

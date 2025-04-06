@@ -8,8 +8,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<UserContentInteraction> builder)
         {
-            builder.HasKey(i => i.Id);
-
             builder.Property(i => i.ContentType)
                 .IsRequired()
                 .HasConversion<string>();

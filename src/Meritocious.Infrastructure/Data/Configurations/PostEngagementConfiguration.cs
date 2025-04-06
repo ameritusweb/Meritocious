@@ -20,8 +20,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
             var (converterDateTime, comparerDateTime) = EfHelpers.For<Dictionary<DateTime, int>>();
             var (converter, comparer) = EfHelpers.For<List<string>>();
 
-            builder.HasKey(e => e.Id);
-
             builder.Property(e => e.Views)
                 .HasDefaultValue(0);
 

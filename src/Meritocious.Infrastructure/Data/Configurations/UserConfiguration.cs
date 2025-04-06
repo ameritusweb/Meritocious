@@ -8,8 +8,6 @@
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-            builder.HasKey(u => u.Id);
-
             builder.Property(u => u.UserName)
                 .IsRequired()
                 .HasMaxLength(50);

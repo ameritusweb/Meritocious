@@ -14,8 +14,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
             var (converter, comparer) = EfHelpers.For<Dictionary<string, decimal>>();
             var (converterString, comparerString) = EfHelpers.For<string>();
 
-            builder.HasKey(a => a.Id);
-
             builder.Property(a => a.ContentType)
                 .IsRequired()
                 .HasConversion<string>();
@@ -107,8 +105,6 @@ namespace Meritocious.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ModerationAppeal> builder)
         {
-            builder.HasKey(a => a.Id);
-
             builder.Property(a => a.Reason)
                 .IsRequired()
                 .HasMaxLength(2000);

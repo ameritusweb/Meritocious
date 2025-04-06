@@ -206,8 +206,8 @@
             {
                 var relatedIds = remixPosts
                     .SelectMany(p =>
-                        p.ParentRelations.Select(r => r.ParentId)
-                        .Concat(p.ChildRelations.Select(r => r.ChildId)))
+                        p.ParentRelations.Select(r => r.ParentId.Value)
+                        .Concat(p.ChildRelations.Select(r => r.ChildId.Value)))
                     .Distinct()
                     .Except(posts.Select(p => p.Id))
                     .ToList();
@@ -359,12 +359,12 @@
         public async Task<Dictionary<string, int>> GetSourceCountsAsync(IEnumerable<string> postIds)
         {
             var counts = await context.PostRelations
-                .Where(r => postIds.Contains(r.ChildId) && r.RelationType == "remix")
+                .Where(r => postIds.Contains(r.ChildId.Value) && r.RelationType == "remix")
                 .GroupBy(r => r.ChildId)
                 .Select(g => new { PostId = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            return counts.ToDictionary(x => x.PostId, x => x.Count);
+            return counts.ToDictionary(x => x.PostId.Value, x => x.Count);
         }
 
         public async Task<bool> HasUserRemixedPostAsync(string userId, string postId)

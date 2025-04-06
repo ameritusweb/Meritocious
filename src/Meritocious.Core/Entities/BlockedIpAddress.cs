@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,7 @@ namespace Meritocious.Core.Entities
         public DateTime BlockedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
 
-        public string BlockedByUserId { get; set; }
+        public UlidId<User> BlockedByUserId { get; set; }
         public User? BlockedByUser { get; set; }
     }
 }
