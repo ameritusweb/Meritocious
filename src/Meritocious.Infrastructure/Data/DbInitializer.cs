@@ -51,8 +51,9 @@
             var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("SeedAdmin");
 
             var adminEmail = "admin@meritocious.com";
-            var adminPassword = "GuessablePassword";
+            var adminPassword = "GuessablePassword123!@#";
             var adminRoleName = "Admin";
+            var normalizedAdminRoleName = adminRoleName.ToUpper();
 
             // Create role if it doesn't exist
             if (!await roleManager.RoleExistsAsync(adminRoleName))
@@ -82,9 +83,9 @@
             }
 
             // Assign to Admin role if not already
-            if (!await userManager.IsInRoleAsync(adminUser, adminRoleName))
+            if (!await userManager.IsInRoleAsync(adminUser, normalizedAdminRoleName))
             {
-                var addToRole = await userManager.AddToRoleAsync(adminUser, adminRoleName);
+                var addToRole = await userManager.AddToRoleAsync(adminUser, normalizedAdminRoleName);
                 if (!addToRole.Succeeded)
                 {
                     logger.LogError("Failed to add admin to role: {Errors}", string.Join(", ", addToRole.Errors.Select(e => e.Description)));

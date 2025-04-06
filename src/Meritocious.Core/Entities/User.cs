@@ -37,16 +37,16 @@ namespace Meritocious.Core.Entities
         public DateTime? LastCalculated { get; private set; }
         public DateTime? LastLoginAt { get; private set; }
         public bool IsActive { get; private set; }
-        public DateTime CreatedAt { get; private set; }
-        public DateTime UpdatedAt { get; private set; }
-        public string AvatarUrl { get; set; }
-        public string DisplayName { get; set; }
-        public string Bio { get; set; }
+        public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
+        public string AvatarUrl { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string Bio { get; set; } = string.Empty;
         public bool EmailNotificationsEnabled { get; set; }
         public bool PublicProfile { get; set; }
         public List<string> PreferredTags { get; set; } = new();
-        public string TimeZone { get; set; }
-        public string Language { get; set; }
+        public string TimeZone { get; set; } = TimeZoneInfo.Local.Id;
+        public string Language { get; set; } = "en";
         public bool IsLocked { get; set; }
         public bool IsEmailVerified { get; set; }
         public DateTime? LastActivityAt { get; set; }
@@ -94,8 +94,7 @@ namespace Meritocious.Core.Entities
                 Email = email,
                 PasswordHash = passwordHash,
                 MeritScore = 0,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                IsActive = true
             };
         }
 
