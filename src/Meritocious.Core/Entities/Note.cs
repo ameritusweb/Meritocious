@@ -1,8 +1,12 @@
+using Meritocious.Core.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Meritocious.Core.Entities;
 
 public class Note : BaseEntity<Note>
 {
-    public string PostId { get; private set; }
+    [ForeignKey("FK_PostId")]
+    public UlidId<Post> PostId { get; private set; }
 
     public string Type { get; private set; }  // "Connection", "Insight", "Suggestion"
 

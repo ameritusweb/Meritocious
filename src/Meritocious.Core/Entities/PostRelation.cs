@@ -1,10 +1,13 @@
 using Meritocious.Core.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Meritocious.Core.Entities;
 
 public class PostRelation : BaseEntity<PostRelation>
 {
+    [ForeignKey("FK_ParentId")]
     public UlidId<Post> ParentId { get; private set; }
+    [ForeignKey("FK_ChildId")]
     public UlidId<Post> ChildId { get; private set; }
     public string RelationType { get; private set; } // "fork" or "remix"
     public int OrderIndex { get; internal set; } // For ordering remix sources

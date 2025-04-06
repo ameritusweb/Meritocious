@@ -2,6 +2,7 @@
 using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,12 +17,13 @@ namespace Meritocious.Core.Entities
 
         public ModerationAction Action { get; private set; }
 
+        [ForeignKey("FK_ActionId")]
         public UlidId<ModerationAction> ActionId { get; private set; }
 
         public string Reason { get; private set; }
 
         public bool IsAutomated { get; private set; }
-
+        [ForeignKey("FK_ModeratorId")]
         public UlidId<User> ModeratorId { get; private set; }
 
         public User Moderator { get; private set; }

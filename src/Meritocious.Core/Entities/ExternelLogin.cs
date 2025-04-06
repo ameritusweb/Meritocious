@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Extensions;
 
@@ -6,6 +7,7 @@ namespace Meritocious.Core.Entities
 {
     public class ExternalLogin : BaseEntity<ExternalLogin>
     {
+        [ForeignKey("FK_UserId")]
         public UlidId<User> UserId { get; private set; }
 
         public User User { get; private set; }

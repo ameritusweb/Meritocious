@@ -3,6 +3,7 @@ using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Versioning;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -18,6 +19,7 @@ namespace Meritocious.Core.Entities
         public string PostId { get; private set; }
         public string Title { get; private set; }
         public string Content { get; private set; }
+        [ForeignKey("FK_EditorId")]
         public UlidId<User> EditorId { get; private set; }
         public User Editor { get; private set; }
         public string EditReason { get; private set; }

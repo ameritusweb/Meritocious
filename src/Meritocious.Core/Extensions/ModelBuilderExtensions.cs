@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Reflection.Emit;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Meritocious.Core.Extensions
 {
@@ -25,44 +27,52 @@ namespace Meritocious.Core.Extensions
                     continue;
                 }
 
-                ApplyUlidIdConversionInternal(modelBuilder, clrType);
+                var entityBuilder = modelBuilder.Entity(clrType);
+
+                // Handle main UlidId property
+                var ulidProperty = clrType.GetProperty("UlidId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (ulidProperty != null)
+                {
+                    ApplyUlidIdConversion(entityBuilder, ulidProperty);
+                }
+
+                // Handle [ForeignKey] UlidId<T> props
+                foreach (var prop in clrType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    var type = prop.PropertyType;
+                    var underlying = Nullable.GetUnderlyingType(type);
+
+                    var effectiveType = underlying ?? type;
+
+                    if (effectiveType.IsGenericType &&
+                        effectiveType.GetGenericTypeDefinition() == typeof(UlidId<>) &&
+                        prop.GetCustomAttribute<ForeignKeyAttribute>() != null)
+                    {
+                        ApplyUlidIdConversion(entityBuilder, prop);
+                    }
+                }
             }
         }
 
-        private static void ApplyUlidIdConversionInternal(ModelBuilder modelBuilder, Type clrType)
+        private static void ApplyUlidIdConversion(EntityTypeBuilder entityBuilder, PropertyInfo property)
         {
-            // Look for the UlidId property (not Id anymore)
-            var clrProperty = clrType.GetProperty("UlidId", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (clrProperty == null)
-            {
-                return;
-            }
+            var propertyType = property.PropertyType;
+            var isNullable = Nullable.GetUnderlyingType(propertyType) != null;
 
-            var entityBuilder = modelBuilder.Entity(clrType);
+            var ulidType = isNullable ? Nullable.GetUnderlyingType(propertyType) ! : propertyType;
 
-            var propertyType = clrProperty.PropertyType;
-            if (!propertyType.IsGenericType || propertyType.GetGenericTypeDefinition() != typeof(UlidId<>))
-            {
-                return;
-            }
-
-            // Create ValueConverter<UlidId<T>, string>
-            var toString = CreateToStringLambda(propertyType);
-            var fromString = CreateFromStringLambda(propertyType);
+            var toString = CreateToStringLambda(ulidType, isNullable);
+            var fromString = CreateFromStringLambda(ulidType, isNullable);
 
             var converterType = typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string));
-            var converter = Activator.CreateInstance(
-                typeof(ValueConverter<,>).MakeGenericType(propertyType, typeof(string)),
-                toString,
-                fromString,
-                null);
+            var converter = Activator.CreateInstance(converterType, toString, fromString, null);
 
             entityBuilder
-                .Property(clrProperty.PropertyType, clrProperty.Name)
+                .Property(propertyType, property.Name)
                 .HasConversion((ValueConverter)converter!)
                 .HasMaxLength(26)
                 .IsUnicode(false)
-                .IsRequired();
+                .IsRequired(!isNullable); // optional if nullable
         }
 
         public static void AddMissingSkipNavigations(this ModelBuilder modelBuilder)
@@ -192,26 +202,45 @@ namespace Meritocious.Core.Extensions
             return false;
         }
 
-        private static object CreateToStringLambda(Type ulidType)
+        private static LambdaExpression CreateToStringLambda(Type ulidIdType, bool isNullable)
         {
-            var param = Expression.Parameter(ulidType, "v");
-            var valueProp = Expression.Property(param, "Value");
-            var delegateType = typeof(Func<,>).MakeGenericType(ulidType, typeof(string));
-            return Expression.Lambda(delegateType, valueProp, param);
-        }
+            var param = Expression.Parameter(isNullable ? typeof(Nullable<>).MakeGenericType(ulidIdType) : ulidIdType, "v");
+            Expression body;
 
-        private static object CreateFromStringLambda(Type ulidType)
-        {
-            var param = Expression.Parameter(typeof(string), "v");
-            var ctor = ulidType.GetConstructor(new[] { typeof(string) });
-            if (ctor == null)
+            if (isNullable)
             {
-                throw new InvalidOperationException($"No string constructor found on {ulidType.Name}");
+                var hasValue = Expression.Property(param, "HasValue");
+                var value = Expression.Property(param, "Value");
+                var valueProp = Expression.Property(value, "Value");
+                body = Expression.Condition(
+                    hasValue,
+                    valueProp,
+                    Expression.Constant(null, typeof(string)));
+            }
+            else
+            {
+                body = Expression.Property(param, "Value");
             }
 
-            var newExpr = Expression.New(ctor, param);
-            var delegateType = typeof(Func<,>).MakeGenericType(typeof(string), ulidType);
-            return Expression.Lambda(delegateType, newExpr, param);
+            return Expression.Lambda(body, param);
+        }
+
+        private static LambdaExpression CreateFromStringLambda(Type ulidIdType, bool isNullable)
+        {
+            var param = Expression.Parameter(typeof(string), "v");
+            var ctor = ulidIdType.GetConstructor(new[] { typeof(string) });
+
+            Expression body = Expression.New(ctor!, param);
+            if (isNullable)
+            {
+                var nullableType = typeof(Nullable<>).MakeGenericType(ulidIdType);
+                body = Expression.Condition(
+                    Expression.Equal(param, Expression.Constant(null, typeof(string))),
+                    Expression.Default(nullableType),
+                    Expression.Convert(body, nullableType));
+            }
+
+            return Expression.Lambda(body, param);
         }
     }
 }

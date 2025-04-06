@@ -1,6 +1,8 @@
-﻿using Meritocious.Core.Features.Tags.Models;
+﻿using Meritocious.Core.Extensions;
+using Meritocious.Core.Features.Tags.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -13,7 +15,8 @@ namespace Meritocious.Core.Entities
         public string Name { get; private set; }
         public string Slug { get; private set; }
         public string Description { get; private set; }
-        public string? ParentTagId { get; private set; }
+        [ForeignKey("FK_ParentTagId")]
+        public UlidId<Tag>? ParentTagId { get; private set; }
         public Tag ParentTag { get; private set; }
         public TagCategory Category { get; private set; }
         public int UseCount { get; private set; }

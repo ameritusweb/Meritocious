@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,10 +10,12 @@ namespace Meritocious.Core.Entities
 {
     public class TagSynonym : BaseEntity<TagSynonym>
     {
-        public string SourceTagId { get; private set; }
+        [ForeignKey("FK_SourceTagId")]
+        public UlidId<Tag> SourceTagId { get; private set; }
         public Tag SourceTag { get; private set; }
 
-        public string TargetTagId { get; private set; }
+        [ForeignKey("FK_TargetTagId")]
+        public UlidId<Tag> TargetTagId { get; private set; }
         public Tag TargetTag { get; private set; }
 
         public string CreatedById { get; private set; }

@@ -1,9 +1,11 @@
 ﻿using Meritocious.Core.Entities;
 using Meritocious.Core.Extensions;
 using Meritocious.Core.Features.Reputation.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
 public class UserReputationMetrics : BaseEntity<UserReputationMetrics>
 {
+    [ForeignKey("FK_UserId")]
     public UlidId<User> UserId { get; private set; }
     public User User { get; private set; }
     public decimal OverallMeritScore { get; private set; }

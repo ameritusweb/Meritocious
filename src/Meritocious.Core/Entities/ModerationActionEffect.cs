@@ -1,6 +1,7 @@
 ﻿using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace Meritocious.Core.Entities
 {
     public class ModerationActionEffect : BaseEntity<ModerationActionEffect>
     {
+        [ForeignKey("FK_ModerationActionId")]
         public UlidId<ModerationAction> ModerationActionId { get; private set; }
         public ModerationAction ModerationAction { get; private set; }
         public string EffectType { get; private set; }

@@ -1,3 +1,6 @@
+using Meritocious.Core.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Meritocious.Core.Entities;
 
 public class Notification : BaseEntity<Notification>
@@ -10,12 +13,14 @@ public class Notification : BaseEntity<Notification>
     public string Message { get; private set; }
     public string Link { get; private set; }
     public bool IsRead { get; private set; }
-    
+
     // Optional related entities
-    public string PostId { get; private set; }
+    [ForeignKey("FK_PostId")]
+    public UlidId<Post> PostId { get; private set; }
     public Post Post { get; private set; }
-    
-    public string CommentId { get; private set; }
+
+    [ForeignKey("FK_CommentId")]
+    public UlidId<Comment> CommentId { get; private set; }
     public Comment Comment { get; private set; }
     
     private Notification()

@@ -1,6 +1,8 @@
-﻿using Meritocious.Core.Features.Tags.Models;
+﻿using Meritocious.Core.Extensions;
+using Meritocious.Core.Features.Tags.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,9 +11,11 @@ namespace Meritocious.Core.Entities
 {
     public class TagRelationship : BaseEntity<TagRelationship>
     {
-        public string SourceTagId { get; private set; }
+        [ForeignKey("FK_SourceTagId")]
+        public UlidId<Tag> SourceTagId { get; private set; }
         public Tag SourceTag { get; private set; }
-        public string RelatedTagId { get; private set; }
+        [ForeignKey("FK_RelatedTagId")]
+        public UlidId<Tag> RelatedTagId { get; private set; }
         public Tag RelatedTag { get; private set; }
         public TagRelationType RelationType { get; private set; }
         public decimal Strength { get; private set; }

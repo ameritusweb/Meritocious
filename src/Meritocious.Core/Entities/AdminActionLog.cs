@@ -1,10 +1,12 @@
 using Meritocious.Core.Extensions;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 
 namespace Meritocious.Core.Entities
 {
     public class AdminActionLog : BaseEntity<AdminActionLog>
     {
+        [ForeignKey("FK_AdminUserId")]
         public UlidId<User> AdminUserId { get; set; }
         public string Action { get; set; } = string.Empty;
         public string Category { get; set; } = string.Empty;

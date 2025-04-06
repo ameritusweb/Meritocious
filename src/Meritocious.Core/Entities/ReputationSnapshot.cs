@@ -2,6 +2,7 @@
 using Meritocious.Core.Features.Reputation.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ namespace Meritocious.Core.Entities
 {
     public class ReputationSnapshot : BaseEntity<ReputationSnapshot>
     {
+        [ForeignKey("FK_UserId")]
         public UlidId<User> UserId { get; private set; }
         public User User { get; private set; }
         public decimal OverallMeritScore { get; private set; }

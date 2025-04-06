@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Meritocious.Core.Extensions;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +10,8 @@ namespace Meritocious.Core.Entities
 {
     public class TagWiki : BaseEntity<TagWiki>
     {
-        public string TagId { get; private set; }
+        [ForeignKey("FK_TagId")]
+        public UlidId<Tag> TagId { get; private set; }
 
         public Tag Tag { get; private set; }
 

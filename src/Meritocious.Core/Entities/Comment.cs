@@ -1,6 +1,7 @@
 ﻿using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,10 +11,12 @@ namespace Meritocious.Core.Entities
     public class Comment : BaseEntity<Comment>
     {
         public string Content { get; private set; }
-        public string PostId { get; private set; }
+        [ForeignKey("FK_PostId")]
+        public UlidId<Post> PostId { get; private set; }
         public Post Post { get; private set; }
         public string AuthorId { get; private set; }
         public User Author { get; private set; }
+        [ForeignKey("FK_ParentCommentId")]
         public UlidId<Comment>? ParentCommentId { get; private set; }
         public Comment ParentComment { get; private set; }
         public decimal MeritScore { get; private set; }

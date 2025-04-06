@@ -1,6 +1,7 @@
 ﻿using Meritocious.Core.Extensions;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace Meritocious.Core.Entities
     {
         public string ContentId { get; private set; }
         public string ContentType { get; private set; }
+        [ForeignKey("FK_ScoreTypeId")]
         public UlidId<MeritScoreType> ScoreTypeId { get; private set; }
         public decimal Score { get; private set; }
 

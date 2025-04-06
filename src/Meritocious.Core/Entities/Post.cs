@@ -21,7 +21,8 @@ namespace Meritocious.Core.Entities
         public Post ParentPost { get; internal set; }
         public bool IsDeleted { get; internal set; }
         public bool IsDraft { get; internal set; }
-        public string SubstackId { get; internal set; }
+        [ForeignKey("FK_SubstackId")]
+        public UlidId<Substack> SubstackId { get; internal set; }
         public Substack Substack { get; internal set; }
         public decimal EngagementScore { get; internal set; }
 
