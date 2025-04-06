@@ -97,6 +97,15 @@ namespace Meritocious.Infrastructure.Data.Configurations
             builder.HasMany(p => p.Tags)
                 .WithMany(t => t.Posts)
                 .UsingEntity(j => j.ToTable("PostTags"));
+
+            builder
+               .HasMany<Tag>(u => u.Tags)
+               .WithMany(s => s.Posts)
+               .UsingEntity<PostTag>(
+                    "PostTags",
+                   j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
+                   j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
+                   j => j.HasKey("TagId", "PostId"));
         }
     }
 }

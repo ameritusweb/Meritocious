@@ -45,6 +45,15 @@ namespace Meritocious.Infrastructure.Data.Configurations
                 .HasForeignKey(t => t.ParentTagId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder
+               .HasMany<Post>(u => u.Posts)
+               .WithMany(s => s.Tags)
+               .UsingEntity<PostTag>(
+                   "PostTags",
+                   j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
+                   j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
+                   j => j.HasKey("PostId", "TagId"));
+
             // Create indexes
             builder.HasIndex(t => t.Name).IsUnique();
             builder.HasIndex(t => t.Slug).IsUnique();

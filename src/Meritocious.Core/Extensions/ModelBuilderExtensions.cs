@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Meritocious.Core.Entities;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Meritocious.Core.Extensions
 {
@@ -56,6 +57,78 @@ namespace Meritocious.Core.Extensions
             }
         }
 
+        public static void AddMissingSkipNavigations(this ModelBuilder modelBuilder)
+        {
+            // Example: Substack.Followers ↔ User.FollowedSubstacks (only one side defined)
+            FixUnidirectionalSkipNavigation<Substack, User>(
+                modelBuilder,
+                navigationNameOnA: "Followers",
+                inverseNameOnB: "FollowedSubstacks");
+
+            FixUnidirectionalSkipNavigation<Tag, Post>(
+                modelBuilder,
+                navigationNameOnA: "Posts",
+                inverseNameOnB: "Tags");
+        }
+
+        private static void FixUnidirectionalSkipNavigation<TSource, TTarget>(
+            ModelBuilder modelBuilder,
+            string navigationNameOnA,
+            string inverseNameOnB)
+            where TSource : class
+            where TTarget : class
+        {
+            var sourceEntity = modelBuilder.Model.FindEntityType(typeof(TSource));
+            var targetEntity = modelBuilder.Model.FindEntityType(typeof(TTarget));
+
+            if (sourceEntity == null || targetEntity == null)
+            {
+                return;
+            }
+
+            var skipNav = sourceEntity.FindSkipNavigation(navigationNameOnA) as SkipNavigation;
+            if (skipNav == null || skipNav.Inverse != null)
+            {
+                return;
+            }
+
+            var onDependent = SkipNavHelper.ResolveOnDependent(
+                joinEntity: skipNav.JoinEntityType,
+                declaringEntity: sourceEntity as IEntityType,
+                targetEntity: targetEntity as IEntityType);
+
+            // Add inverse skip navigation on the target side
+            var inverse = targetEntity.AddSkipNavigation(
+                name: inverseNameOnB,
+                navigationType: typeof(ICollection<TSource>),
+                memberInfo: null,
+                targetEntityType: sourceEntity,
+                collection: true,
+                onDependent: onDependent) as SkipNavigation;
+
+            if (inverse != null)
+            {
+                inverse.SetInverse(skipNav, ConfigurationSource.Convention);
+                skipNav.SetInverse(inverse, ConfigurationSource.Convention);
+                if (inverse.ForeignKey == null)
+                {
+                    var joinEntity = inverse.JoinEntityType ?? skipNav.JoinEntityType;
+
+                    if (joinEntity != null)
+                    {
+                        var fkToTarget = joinEntity
+                            .GetForeignKeys()
+                            .FirstOrDefault(fk => fk.PrincipalEntityType == targetEntity);
+
+                        if (fkToTarget != null)
+                        {
+                            inverse.SetForeignKey(fkToTarget, ConfigurationSource.Convention);
+                        }
+                    }
+                }
+            }
+        }
+
         public static void IgnoreReadOnlyProperties(this ModelBuilder modelBuilder)
         {
             foreach (var entityType in modelBuilder.Model.GetEntityTypes().ToList())
@@ -85,8 +158,7 @@ namespace Meritocious.Core.Extensions
                         continue;
                     }
 
-                    // Skip if already ignored/mapped (just to be safe)
-                    if (entityType.FindProperty(prop.Name) != null)
+                    if (prop.PropertyType.IsGenericType)
                     {
                         continue;
                     }

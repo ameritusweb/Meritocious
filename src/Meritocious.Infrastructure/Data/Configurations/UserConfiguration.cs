@@ -47,6 +47,30 @@
                 .HasForeignKey("UserId")
                 .HasPrincipalKey(u => u.Id)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .HasMany<Substack>(u => u.FollowedSubstacks)
+                .WithMany(s => s.Followers)
+                .UsingEntity<SubstackFollower>(
+                    "SubstackFollowers",
+                    j => j.HasOne<Substack>().WithMany().HasForeignKey("SubstackId"),
+                    j => j.HasOne<User>().WithMany().HasForeignKey("UserId"),
+                    j =>
+                    {
+                        j.HasKey("UserId", "SubstackId");
+                    });
+
+            // builder.HasMany(s => s.Followers)
+            // .WithMany(u => u.FollowedSubstacks)
+            // .UsingEntity<Dictionary<string, object>>(
+            //    "SubstackFollowers",
+            //    j => j.HasOne<User>().WithMany().HasForeignKey("UserId"),
+            //    j => j.HasOne<Substack>().WithMany().HasForeignKey("SubstackId"),
+            //    j =>
+            //    {
+            //        j.HasKey("UserId", "SubstackId");
+            //        j.ToTable("SubstackFollowers");
+            //    });
         }
     }
 }

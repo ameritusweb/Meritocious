@@ -21,6 +21,9 @@ namespace Meritocious.Infrastructure
     using Microsoft.AspNetCore.Identity;
     using Meritocious.Core.Features.Substacks.Services;
     using Meritocious.Infrastructure.Services;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
+    using Microsoft.EntityFrameworkCore.Infrastructure;
+    using Meritocious.Infrastructure.Validation;
 
     public static class ServiceCollectionExtensions
     {
@@ -28,11 +31,14 @@ namespace Meritocious.Infrastructure
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            // Add DbContext
-            services.AddDbContext<MeritociousDbContext>(options =>
+            services.AddDbContext<MeritociousDbContext>((serviceProvider, options) =>
+            {
                 options.UseSqlServer(
                     configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(MeritociousDbContext).Assembly.FullName)));
+                    b => b.MigrationsAssembly(typeof(MeritociousDbContext).Assembly.FullName));
+
+                options.ReplaceService<IModelValidator, SoftSkipNavigationValidator>();
+            });
 
             // Add Identity
             services.AddIdentity<User, IdentityRole>(options =>

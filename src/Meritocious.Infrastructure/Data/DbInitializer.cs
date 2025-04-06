@@ -102,7 +102,7 @@
         private static async Task SeedDataAsync(MeritociousDbContext context, ILogger logger)
         {
             // Seed merit score types
-            if (!await context.Set<MeritScoreType>().AnyAsync())
+            if (!await context.MeritScoreTypes.AnyAsync())
             {
                 logger.LogInformation("Seeding merit score types...");
                 var defaultMeritScoreTypes = new[]

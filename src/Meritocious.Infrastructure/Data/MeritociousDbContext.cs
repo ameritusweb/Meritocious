@@ -93,6 +93,7 @@ namespace Meritocious.Infrastructure.Data
 
             modelBuilder.ApplyUlidIdConversions();
             modelBuilder.IgnoreReadOnlyProperties();
+            modelBuilder.AddMissingSkipNavigations();
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

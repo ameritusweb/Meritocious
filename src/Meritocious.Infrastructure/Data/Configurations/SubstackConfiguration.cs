@@ -40,11 +40,6 @@ public class SubstackConfiguration : IEntityTypeConfiguration<Substack>
         builder.Property(s => s.TwitterHandle)
             .HasMaxLength(50);
 
-        // Configure many-to-many relationship with User (followers)
-        builder.HasMany(s => s.Followers)
-            .WithMany(u => u.FollowedSubstacks)
-            .UsingEntity(j => j.ToTable("SubstackFollowers"));
-
         // Configure one-to-many relationship with Post
         builder.HasMany(s => s.Posts)
             .WithOne(p => p.Substack)

@@ -1,6 +1,7 @@
 using Meritocious.Core.Features.Recommendations.Models;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Meritocious.Core.Entities;
 
@@ -65,4 +66,15 @@ public class Substack : BaseEntity<Substack>
     public virtual ICollection<User> Followers { get; set; } = new List<User>();
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
     public virtual ICollection<ContentTopic> Topics { get; set; } = new List<ContentTopic>();
+}
+
+public class SubstackFollower
+{
+    [ForeignKey("SubstackId")]
+    public string SubstackId { get; set; }
+    public Substack Substack { get; set; }
+
+    [ForeignKey("UserId")]
+    public string UserId { get; set; }
+    public User User { get; set; }
 }

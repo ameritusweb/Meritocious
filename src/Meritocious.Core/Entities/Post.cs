@@ -2,6 +2,7 @@
 using Meritocious.Common.Enums;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -306,6 +307,17 @@ namespace Meritocious.Core.Entities
             IsDeleted = true;
             UpdatedAt = DateTime.UtcNow;
         }
+    }
+
+    public class PostTag
+    {
+        [ForeignKey("PostId")]
+        public string PostId { get; set; }
+        public Post Post { get; set; }
+
+        [ForeignKey("TagId")]
+        public string TagId { get; set; }
+        public Tag Tag { get; set; }
     }
 
     public static class PostExtensions
