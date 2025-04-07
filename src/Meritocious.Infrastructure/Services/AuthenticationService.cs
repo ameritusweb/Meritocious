@@ -15,7 +15,7 @@ namespace Meritocious.Infrastructure.Services
     {
         private readonly IUserRepository userRepository;
         private readonly ITokenService tokenService;
-        private readonly GoogleAuthSettings googleSettings;
+        private readonly ISecretsService secretsService;
         private readonly ILogger<AuthenticationService> logger;
         private readonly UserManager<User> userManager;
         private readonly SignInManager<User> signInManager;
@@ -23,14 +23,14 @@ namespace Meritocious.Infrastructure.Services
         public AuthenticationService(
             IUserRepository userRepository,
             ITokenService tokenService,
-            IOptions<GoogleAuthSettings> googleSettings,
+            ISecretsService secretsService,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             ILogger<AuthenticationService> logger)
         {
             this.userRepository = userRepository;
             this.tokenService = tokenService;
-            this.googleSettings = googleSettings.Value;
+            this.secretsService = secretsService;
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.logger = logger;
@@ -40,9 +40,10 @@ namespace Meritocious.Infrastructure.Services
         {
             try
             {
+                var clientId = await secretsService.GetSecretAsync("GOOGLE_CLIENT_ID");
                 var settings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { googleSettings.ClientId }
+                    Audience = new[] { clientId }
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
@@ -63,7 +64,7 @@ namespace Meritocious.Infrastructure.Services
 
                     return Result.Success(new AuthenticationResult
                     {
-                        AccessToken = tokenService.GenerateAccessToken(externalLogin.User),
+                        AccessToken = await tokenService.GenerateAccessToken(externalLogin.User),
                         RefreshToken = externalLogin.RefreshToken,
                         ExpiresAt = tokenService.GetAccessTokenExpiration(),
                         User = externalLogin.User.ToDto(),
@@ -102,7 +103,7 @@ namespace Meritocious.Infrastructure.Services
 
                 return Result.Success(new AuthenticationResult
                 {
-                    AccessToken = tokenService.GenerateAccessToken(user),
+                    AccessToken = await tokenService.GenerateAccessToken(user),
                     RefreshToken = newExternalLogin.RefreshToken,
                     ExpiresAt = tokenService.GetAccessTokenExpiration(),
                     User = user.ToDto(),
@@ -145,7 +146,7 @@ namespace Meritocious.Infrastructure.Services
 
                 return Result.Success(new AuthenticationResult
                 {
-                    AccessToken = tokenService.GenerateAccessToken(externalLogin.User),
+                    AccessToken = await tokenService.GenerateAccessToken(externalLogin.User),
                     RefreshToken = newRefreshToken,
                     ExpiresAt = tokenService.GetAccessTokenExpiration(),
                     User = externalLogin.User.ToDto(),
@@ -190,9 +191,10 @@ namespace Meritocious.Infrastructure.Services
         {
             try
             {
+                var clientId = await secretsService.GetSecretAsync("GOOGLE_CLIENT_ID");
                 var settings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { googleSettings.ClientId }
+                    Audience = new[] { clientId }
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
@@ -297,7 +299,7 @@ namespace Meritocious.Infrastructure.Services
 
                 return Result.Success(new AuthenticationResult
                 {
-                    AccessToken = tokenService.GenerateAccessToken(user),
+                    AccessToken = await tokenService.GenerateAccessToken(user),
                     RefreshToken = refreshToken,
                     ExpiresAt = tokenService.GetAccessTokenExpiration(),
                     User = user.ToDto()

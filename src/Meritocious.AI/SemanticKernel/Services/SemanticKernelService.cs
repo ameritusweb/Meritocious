@@ -4,6 +4,8 @@ using Microsoft.SemanticKernel.Embeddings;
 using Meritocious.AI.SemanticKernel.Interfaces;
 using Meritocious.AI.Shared.Configuration;
 using Microsoft.Extensions.Options;
+using Meritocious.Core.Interfaces;
+using Meritocious.Core.Constants;
 
 namespace Meritocious.AI.SemanticKernel.Services
 {
@@ -11,17 +13,20 @@ namespace Meritocious.AI.SemanticKernel.Services
     {
         private readonly ILogger<SemanticKernelService> logger;
         private readonly AIServiceConfiguration config;
+        private readonly ISecretsService secretsService;
         private Kernel? kernel;
 
         public SemanticKernelService(
             IOptions<AIServiceConfiguration> config,
+            ISecretsService secretsService,
             ILogger<SemanticKernelService> logger)
         {
             this.config = config.Value;
+            this.secretsService = secretsService;
             this.logger = logger;
         }
 
-        private Kernel GetKernel()
+        private async Task<Kernel> GetKernel()
         {
             if (kernel != null)
             {
@@ -31,36 +36,22 @@ namespace Meritocious.AI.SemanticKernel.Services
             var builder = Kernel.CreateBuilder();
 
             // Embedding configuration
-            var embeddings = config.Embeddings;
-            if (embeddings != null && embeddings.TryGetValue("ApiKey", out var embeddingApiKey))
-            {
-                var embeddingModel = embeddings.TryGetValue("ModelId", out var model)
-                    ? model
-                    : "text-embedding-ada-002";
+            var embeddingModel = config.Embeddings?.TryGetValue("ModelId", out var model) == true
+                ? model
+                : "text-embedding-ada-002";
+
+            var embeddingApiKey = await secretsService.GetSecretAsync(SecretNames.OpenAIEmbeddingKey);
 
 #pragma warning disable SKEXP0010
-
-                builder.AddOpenAITextEmbeddingGeneration(embeddingModel, embeddingApiKey);
-            }
-            else
-            {
-                throw new InvalidOperationException("Embedding API key not configured.");
-            }
+            builder.AddOpenAITextEmbeddingGeneration(embeddingModel, embeddingApiKey);
 
             // Completion configuration
-            var completion = config.Completion;
-            if (completion != null && completion.TryGetValue("ApiKey", out var completionApiKey))
-            {
-                var completionModel = completion.TryGetValue("ModelId", out var model)
-                    ? model
-                    : "gpt-3.5-turbo";
+            var completionModel = config.Completion?.TryGetValue("ModelId", out var cModel) == true
+                ? cModel
+                : "gpt-3.5-turbo";
 
-                builder.AddOpenAIChatCompletion(completionModel, completionApiKey);
-            }
-            else
-            {
-                throw new InvalidOperationException("Completion API key not configured.");
-            }
+            var completionApiKey = await secretsService.GetSecretAsync(SecretNames.OpenAICompletionKey);
+            builder.AddOpenAIChatCompletion(completionModel, completionApiKey);
 
             kernel = builder.Build();
             return kernel;
@@ -72,7 +63,7 @@ namespace Meritocious.AI.SemanticKernel.Services
             {
 #pragma warning disable SKEXP0001
 
-                var kernel = GetKernel();
+                var kernel = await GetKernel();
                 var embeddingService = kernel.GetRequiredService<ITextEmbeddingGenerationService>();
                 var embedding = await embeddingService.GenerateEmbeddingAsync(input);
                 return embedding.ToArray();
@@ -91,7 +82,7 @@ namespace Meritocious.AI.SemanticKernel.Services
         {
             try
             {
-                var kernel = GetKernel();
+                var kernel = await GetKernel();
                 var function = kernel.CreateFunctionFromPrompt(prompt);
                 var arguments = new KernelArguments(variables, settings);
 

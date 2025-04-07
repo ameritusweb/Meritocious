@@ -26,12 +26,4 @@ namespace Meritocious.Core.Interfaces
         public UserProfileDto User { get; set; }
         public bool IsNewUser { get; set; }
     }
-
-    public interface ITokenService
-    {
-        string GenerateAccessToken(User user);
-        string GenerateRefreshToken();
-        DateTime GetAccessTokenExpiration();
-        ClaimsPrincipal ValidateToken(string token);
-    }
 }

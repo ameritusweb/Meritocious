@@ -6,19 +6,24 @@ using Microsoft.IdentityModel.Tokens;
 using Meritocious.Core.Entities;
 using Meritocious.Core.Interfaces;
 using System.Security.Claims;
+using Meritocious.Core.Constants;
 
 namespace Meritocious.Infrastructure.Services
 {
     public class TokenService : ITokenService
     {
         private readonly JwtSettings jwtSettings;
+        private readonly ISecretsService secretsService;
 
-        public TokenService(IOptions<JwtSettings> jwtSettings)
+        public TokenService(
+            IOptions<JwtSettings> jwtSettings,
+            ISecretsService secretsService)
         {
             this.jwtSettings = jwtSettings.Value;
+            this.secretsService = secretsService;
         }
 
-        public string GenerateAccessToken(User user)
+        public async Task<string> GenerateAccessToken(User user)
         {
             var claims = new[]
             {
@@ -28,7 +33,8 @@ namespace Meritocious.Infrastructure.Services
                 new Claim("merit_score", user.MeritScore.ToString())
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey));
+            var secretKey = await secretsService.GetSecretAsync(SecretNames.JwtSecret);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var expires = DateTime.UtcNow.AddMinutes(jwtSettings.AccessTokenExpirationMinutes);
 
@@ -55,10 +61,11 @@ namespace Meritocious.Infrastructure.Services
             return DateTime.UtcNow.AddMinutes(jwtSettings.AccessTokenExpirationMinutes);
         }
 
-        public ClaimsPrincipal ValidateToken(string token)
+        public async Task<ClaimsPrincipal> ValidateToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
+            var secretKey = await secretsService.GetSecretAsync(SecretNames.JwtSecret);
+            var key = Encoding.UTF8.GetBytes(secretKey);
 
             var tokenValidationParameters = new TokenValidationParameters
             {

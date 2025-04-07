@@ -4,35 +4,49 @@ using Pinecone;
 using Pinecone.Core;
 using OneOf;
 using Index = Pinecone.Index;
+using Meritocious.Core.Interfaces;
+using Meritocious.Core.Constants;
 
 namespace Meritocious.AI.VectorDB
 {
     public class PineconeVectorDatabaseService : IVectorDatabaseService, IAsyncDisposable
     {
-        private readonly BasePinecone client;
         private readonly ILogger<PineconeVectorDatabaseService> logger;
         private readonly Dictionary<string, Index> indexCache;
         private readonly SemaphoreSlim semaphore = new(1, 1);
         private readonly VectorDBSettings settings;
+        private readonly ISecretsService secretsService;
+        private BasePinecone? client;
 
         public PineconeVectorDatabaseService(
            IOptions<VectorDBSettings> settings,
+           ISecretsService secretsService,
            ILogger<PineconeVectorDatabaseService> logger)
         {
             this.settings = settings.Value;
+            this.secretsService = secretsService;
+            this.logger = logger;
+            indexCache = new Dictionary<string, Index>();
+        }
 
+        private async Task InitializeClientAsync()
+        {
+            if (client != null)
+            {
+                return;
+            }
+
+            var apiKey = await secretsService.GetSecretAsync(SecretNames.PineconeApiKey);
             var clientOptions = new ClientOptions
             {
-                BaseUrl = $"https://controller.{this.settings.Environment}.pinecone.io",
+                BaseUrl = $"https://controller.{settings.Environment}.pinecone.io",
                 HttpClient = new HttpClient(),
                 MaxRetries = 3,
                 Timeout = TimeSpan.FromSeconds(30),
                 IsTlsEnabled = true
             };
 
-            client = new BasePinecone(this.settings.ApiKey, clientOptions);
-            this.logger = logger;
-            indexCache = new Dictionary<string, Index>();
+            client = new BasePinecone(apiKey, clientOptions);
         }
 
         public async Task<bool> CreateIndexAsync(string indexName, int dimension)
@@ -41,7 +55,8 @@ namespace Meritocious.AI.VectorDB
             {
                 await semaphore.WaitAsync();
 
-                var indexes = await client.ListIndexesAsync();
+                await InitializeClientAsync();
+                var indexes = await client!.ListIndexesAsync();
                 var hasIndex = indexes?.Indexes?.Any(x => x.Name == indexName);
                 if (hasIndex.GetValueOrDefault())
                 {
@@ -75,7 +90,8 @@ namespace Meritocious.AI.VectorDB
                     Spec = OneOf<ServerlessIndexSpec, PodIndexSpec>.FromT1(podSpec)
                 };
 
-                await client.CreateIndexAsync(request);
+                await InitializeClientAsync();
+                await client!.CreateIndexAsync(request);
                 await WaitForIndexReadyAsync(indexName);
 
                 logger.LogInformation("Created index {IndexName} with dimension {Dimension}",
@@ -100,14 +116,16 @@ namespace Meritocious.AI.VectorDB
             {
                 await semaphore.WaitAsync();
 
-                var indexes = await client.ListIndexesAsync();
+                await InitializeClientAsync();
+                var indexes = await client!.ListIndexesAsync();
                 var hasIndex = indexes?.Indexes?.Any(x => x.Name == indexName);
                 if (!hasIndex.GetValueOrDefault())
                 {
                     return false;
                 }
 
-                await client.DeleteIndexAsync(indexName);
+                await InitializeClientAsync();
+                await client!.DeleteIndexAsync(indexName);
                 indexCache.Remove(indexName);
 
                 logger.LogInformation("Deleted index {IndexName}", indexName);
@@ -133,7 +151,8 @@ namespace Meritocious.AI.VectorDB
                     return cachedIndex;
                 }
 
-                var index = await client.DescribeIndexAsync(indexName);
+                await InitializeClientAsync();
+                var index = await client!.DescribeIndexAsync(indexName);
                 indexCache[indexName] = index;
                 return index;
             }
@@ -148,7 +167,8 @@ namespace Meritocious.AI.VectorDB
         {
             try
             {
-                var indexes = await client.ListIndexesAsync();
+                await InitializeClientAsync();
+                var indexes = await client!.ListIndexesAsync();
                 return indexes.Indexes.ToList();
             }
             catch (Exception ex)
@@ -201,7 +221,8 @@ namespace Meritocious.AI.VectorDB
                     };
                 }
 
-                await client.ConfigureIndexAsync(indexName, request);
+                await InitializeClientAsync();
+                await client!.ConfigureIndexAsync(indexName, request);
                 indexCache.Remove(indexName); // Clear cache to force refresh
 
                 logger.LogInformation("Configured index {IndexName}", indexName);
@@ -222,7 +243,8 @@ namespace Meritocious.AI.VectorDB
                     Vectors = vectors.Select(v => v.ToPineconeVector()).ToList()
                 };
 
-                await client.Index.UpsertAsync(request);
+                await InitializeClientAsync();
+                await client!.Index.UpsertAsync(request);
                 logger.LogInformation("Inserted {Count} vectors", vectors.Count);
                 return true;
             }
@@ -242,7 +264,8 @@ namespace Meritocious.AI.VectorDB
                     Vectors = new[] { vector.ToPineconeVector() }
                 };
 
-                await client.Index.UpsertAsync(request);
+                await InitializeClientAsync();
+                await client!.Index.UpsertAsync(request);
                 logger.LogInformation("Updated vector {VectorId}", vector.Id);
                 return true;
             }
@@ -262,7 +285,8 @@ namespace Meritocious.AI.VectorDB
                     Ids = ids
                 };
 
-                await client.Index.DeleteAsync(request);
+                await InitializeClientAsync();
+                await client!.Index.DeleteAsync(request);
                 logger.LogInformation("Deleted {Count} vectors", ids.Count);
                 return true;
             }
@@ -294,7 +318,8 @@ namespace Meritocious.AI.VectorDB
                     request.Filter = filter.ToMetadata();
                 }
 
-                var response = await client.Index.QueryAsync(request);
+                await InitializeClientAsync();
+                var response = await client!.Index.QueryAsync(request);
                 var searchResults = new List<SearchResult>();
                 if (response.Results != null)
                 {
@@ -326,7 +351,8 @@ namespace Meritocious.AI.VectorDB
 
             while (DateTime.UtcNow - start < timeout)
             {
-                var description = await client.DescribeIndexAsync(indexName);
+                await InitializeClientAsync();
+                var description = await client!.DescribeIndexAsync(indexName);
                 if (description.Status.State == IndexModelStatusState.Ready)
                 {
                     indexCache[indexName] = description;
