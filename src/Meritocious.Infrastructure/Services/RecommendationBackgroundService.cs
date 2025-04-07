@@ -52,7 +52,7 @@ namespace Meritocious.Infrastructure.Services
         private async Task UpdateTrendingContentAsync(CancellationToken stoppingToken)
         {
             using var scope = scopeFactory.CreateScope();
-            var trendingRepo = scope.ServiceProvider.GetRequiredService<TrendingContentRepository>();
+            var trendingRepo = scope.ServiceProvider.GetRequiredService<ITrendingContentRepository>();
 
             // Update trending scores for different time windows
             var windows = new[]
@@ -84,7 +84,7 @@ namespace Meritocious.Infrastructure.Services
         private async Task UpdateContentSimilaritiesAsync(CancellationToken stoppingToken)
         {
             using var scope = scopeFactory.CreateScope();
-            var similarityRepo = scope.ServiceProvider.GetRequiredService<ContentSimilarityRepository>();
+            var similarityRepo = scope.ServiceProvider.GetRequiredService<IContentSimilarityRepository>() as ContentSimilarityRepository;
             var threadAnalyzer = scope.ServiceProvider.GetRequiredService<IThreadAnalyzer>();
 
             try
@@ -155,8 +155,8 @@ namespace Meritocious.Infrastructure.Services
         private async Task<List<(string id1, string content1, string id2, string content2)>> GetContentPairsForUpdateAsync(
             IServiceScope scope)
         {
-            var postRepo = scope.ServiceProvider.GetRequiredService<PostRepository>();
-            var similarityRepo = scope.ServiceProvider.GetRequiredService<ContentSimilarityRepository>();
+            var postRepo = scope.ServiceProvider.GetRequiredService<IPostRepository>();
+            var similarityRepo = scope.ServiceProvider.GetRequiredService<IContentSimilarityRepository>();
             var results = new List<(string id1, string content1, string id2, string content2)>();
 
             try
