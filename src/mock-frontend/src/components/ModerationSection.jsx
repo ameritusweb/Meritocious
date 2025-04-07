@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://localhost:7214/api';
 
 const mockReport = {
     contentId: "00000000-0000-0000-0000-000000000001",

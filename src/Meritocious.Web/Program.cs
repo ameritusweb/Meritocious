@@ -113,7 +113,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("DefaultPolicy", builder =>
     {
         builder
-            .WithOrigins("http://localhost:3000", "http://localhost:5001") // Added mock API origin
+            .WithOrigins("http://localhost:3000", "http://localhost:5001", "http://localhost:5002") // Added mock API origin
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -152,6 +152,7 @@ app.UseMiddleware<AuditLoggingMiddleware>();
 // Add rate limiting middleware
 app.UseIpRateLimiting();
 app.UseClientRateLimiting();
+app.UseCors("DefaultPolicy");
 
 // Configure security headers
 app.Use(async (context, next) =>

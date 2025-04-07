@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://localhost:7214/api';
 
 const mockAuditLogQuery = {
     startDate: "2024-01-01",

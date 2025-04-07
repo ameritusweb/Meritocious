@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://localhost:7214/api';
 
 const mockLoginData = {
     email: "test@example.com",
@@ -22,6 +22,53 @@ export const AuthSection = ({ onLogin }) => {
     });
     const [error, setError] = useState('');
     const [response, setResponse] = useState(null);
+
+    useEffect(() => {
+        // Initialize Google Sign-In
+        if (window.google) {
+            window.google.accounts.id.initialize({
+                client_id: '412285972501-27gidm7cq4lg1mst81t3j43mahosuid8.apps.googleusercontent.com',
+                callback: handleGoogleResponse
+            });
+
+            window.google.accounts.id.renderButton(
+                document.getElementById('google-signin-button'),
+                { theme: 'outline', size: 'large', width: '100%', text: 'signin_with' }
+            );
+        }
+    }, []);
+
+    // Handle the response from Google
+    const handleGoogleResponse = async (response) => {
+        try {
+            setError('');
+
+            // The ID token is in response.credential
+            const idToken = response.credential;
+
+            // Send the token to your backend
+            const apiResponse = await fetch(`${API_BASE_URL}/auth/google`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ idToken }),
+            });
+
+            const data = await apiResponse.json();
+            setResponse(data);
+
+            if (!apiResponse.ok) {
+                throw new Error(data.message || 'Google authentication failed');
+            }
+
+            if (data.accessToken) {
+                onLogin(data.accessToken, data.user);
+            }
+        } catch (err) {
+            setError(err.message);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -123,6 +170,10 @@ export const AuthSection = ({ onLogin }) => {
                     {isLogin ? 'Login' : 'Register'}
                 </button>
             </form>
+
+            <div className="mb-4 border-t pt-4">
+                <div id="google-signin-button" className="mt-2"></div>
+            </div>
 
             {error && (
                 <div className="text-red-500 mb-4">

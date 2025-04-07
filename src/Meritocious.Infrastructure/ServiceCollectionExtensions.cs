@@ -92,7 +92,7 @@ namespace Meritocious.Infrastructure
             services.AddHttpClient<ISubstackFeedService, SubstackFeedService>();
 
             services.AddMemoryCache();
-            services.AddScoped<ISecretsService, SecretsService>();
+            services.AddSingleton<ISecretsService, SecretsService>();
 
             // Add domain validators
             services.AddDomainValidators();
