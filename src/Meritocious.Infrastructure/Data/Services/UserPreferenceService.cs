@@ -5,11 +5,11 @@ namespace Meritocious.Infrastructure.Data.Services
 {
     public class UserPreferenceService : IUserPreferenceService
     {
-        private readonly IUserTopicPreferenceRepository _userTopicPreferenceRepository;
+        private readonly IUserTopicPreferenceRepository userTopicPreferenceRepository;
 
         public UserPreferenceService(IUserTopicPreferenceRepository userTopicPreferenceRepository)
         {
-            _userTopicPreferenceRepository = userTopicPreferenceRepository;
+            this.userTopicPreferenceRepository = userTopicPreferenceRepository;
         }
 
         public async Task<Result> UpdatePreferencesAsync(string userId, IEnumerable<string> topics, Dictionary<string, decimal> contentPreferences)
@@ -29,7 +29,7 @@ namespace Meritocious.Infrastructure.Data.Services
                     }
                 }
 
-                await _userTopicPreferenceRepository.UpdateUserPreferencesAsync(userId, topicPreferences);
+                await userTopicPreferenceRepository.UpdateUserPreferencesAsync(userId, topicPreferences);
                 return Result.Success();
             }
             catch (Exception ex)
@@ -40,7 +40,7 @@ namespace Meritocious.Infrastructure.Data.Services
 
         public async Task<Dictionary<string, decimal>> GetUserPreferencesAsync(string userId)
         {
-            return await _userTopicPreferenceRepository.GetUserTopicWeightsAsync(userId);
+            return await userTopicPreferenceRepository.GetUserTopicWeightsAsync(userId);
         }
     }
 }

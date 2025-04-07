@@ -1,3 +1,5 @@
+using Meritocious.Core.Results;
+
 namespace Meritocious.Core.Interfaces
 {
     public interface IUserPreferenceService

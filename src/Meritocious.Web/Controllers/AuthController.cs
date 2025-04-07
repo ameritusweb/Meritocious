@@ -9,6 +9,7 @@ using Meritocious.Core.Results;
 using System.Security.Claims;
 using Meritocious.Common.DTOs.Auth;
 using Meritocious.Core.Extensions;
+using Meritocious.Infrastructure.Data.Services;
 
 namespace Meritocious.Web.Controllers
 {
@@ -21,18 +22,21 @@ namespace Meritocious.Web.Controllers
         private readonly UserManager<User> userManager;
         private readonly SignInManager<User> signInManager;
         private readonly IUserPreferenceService userPreferenceService;
+        private readonly ITransactionService transactionService;
 
         public AuthController(
             IAuthenticationService authService,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             IUserPreferenceService userPreferenceService,
+            ITransactionService transactionService,
             ILogger<AuthController> logger)
         {
             this.authService = authService;
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.userPreferenceService = userPreferenceService;
+            this.transactionService = transactionService;
             this.logger = logger;
         }
 
@@ -88,71 +92,73 @@ namespace Meritocious.Web.Controllers
                 return BadRequest(new { Error = string.Join(", ", passwordResult.Errors.Select(e => e.Description)) });
             }
 
-            // Start transaction
-            using var transaction = await userManager.Database.BeginTransactionAsync();
             try
             {
-                // Create user
-                var user = new User
+                // Execute registration in transaction
+                var result = await transactionService.ExecuteAsync(async () =>
                 {
-                    UserName = request.Username,
-                    Email = request.Email,
-                    DisplayName = request.DisplayName,
-                    Bio = request.Bio,
-                    AvatarUrl = request.AvatarUrl,
-                    EmailConfirmed = true // Since we require Google auth
-                };
+                    // Create user
+                    var user = Core.Entities.User.Create(request.Username, request.Email, string.Empty);
 
-                var result = await userManager.CreateAsync(user, request.Password);
-                if (!result.Succeeded)
-                {
-                    return BadRequest(new { Error = string.Join(", ", result.Errors.Select(e => e.Description)) });
-                }
+                    user.DisplayName = request.DisplayName;
+                    user.Bio = request.Bio;
+                    user.AvatarUrl = request.AvatarUrl;
+                    user.EmailConfirmed = true; // Since we require Google auth
 
-                // If Google ID token provided, link the account
-                if (!string.IsNullOrEmpty(request.GoogleIdToken))
-                {
-                    var linkResult = await authService.LinkGoogleAccountAsync(user.Id, request.GoogleIdToken);
-                    if (!linkResult.IsSuccess)
+                    var createResult = await userManager.CreateAsync(user, request.Password);
+                    if (!createResult.Succeeded)
                     {
-                        // Clean up the created user if Google linking fails
-                        await userManager.DeleteAsync(user);
-                        return BadRequest(new { Error = "Failed to link Google account: " + linkResult.Error });
+                        throw new InvalidOperationException(
+                            string.Join(", ", createResult.Errors.Select(e => e.Description)));
                     }
-                }
-                else
-                {
-                    // If no Google account linked, return flag to enforce linking
-                    return Ok(new LoginResponse { RequiresGoogleLink = true });
-                }
 
-                // Save user preferences
-                if (request.Topics != null || request.ContentPreferences != null)
-                {
-                    var pResult = await this.userPreferenceService.UpdatePreferencesAsync(
-                        user.Id,
-                        request.Topics,
-                        request.ContentPreferences);
-
-                    if (!pResult.Success)
+                    // If Google ID token provided, link the account
+                    if (!string.IsNullOrEmpty(request.GoogleIdToken))
                     {
-                        logger.LogWarning("Failed to save user preferences during registration: {Error}", pResult.Error);
+                        var linkResult = await authService.LinkGoogleAccountAsync(user.Id, request.GoogleIdToken);
+                        if (!linkResult.IsSuccess)
+                        {
+                            throw new InvalidOperationException(
+                                $"Failed to link Google account: {linkResult.Error}");
+                        }
                     }
-                }
+                    else
+                    {
+                        return new LoginResponse { RequiresGoogleLink = true };
+                    }
 
-                // Commit transaction
-                await transaction.CommitAsync();
+                    // Save user preferences
+                    if (request.Topics != null || request.ContentPreferences != null)
+                    {
+                        var prefResult = await userPreferenceService.UpdatePreferencesAsync(
+                            user.Id,
+                            request.Topics,
+                            request.ContentPreferences);
 
-                var authResult = await authService.GenerateAuthTokensAsync(user);
-                var twoFactorResult = await authService.RequiresTwoFactorAsync(user.Id);
-                return Ok(new LoginResponse
-                {
-                    AccessToken = authResult.Value.AccessToken,
-                    RefreshToken = authResult.Value.RefreshToken,
-                    ExpiresAt = authResult.Value.ExpiresAt,
-                    User = user.ToDto(),
-                    RequiresTwoFactor = twoFactorResult.Value
+                        if (!prefResult.IsSuccess)
+                        {
+                            logger.LogWarning("Failed to save user preferences during registration: {Error}", prefResult.Error);
+                        }
+                    }
+
+                    var authResult = await authService.GenerateAuthTokensAsync(user);
+                    var twoFactorResult = await authService.RequiresTwoFactorAsync(user.Id);
+                    return new LoginResponse
+                    {
+                        AccessToken = authResult.Value.AccessToken,
+                        RefreshToken = authResult.Value.RefreshToken,
+                        ExpiresAt = authResult.Value.ExpiresAt,
+                        User = user.ToDto(),
+                        RequiresTwoFactor = twoFactorResult.Value
+                    };
                 });
+
+                if (!result.IsSuccess)
+                {
+                    return BadRequest(new { Error = result.Error });
+                }
+
+                return Ok(result.Value);
             }
             catch (Exception ex)
             {

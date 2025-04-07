@@ -85,6 +85,7 @@ namespace Meritocious.Infrastructure
             services.AddScoped<IReportingService, ReportingService>();
             services.AddScoped<ISearchService, SearchService>();
             services.AddScoped<IUserPreferenceService, UserPreferenceService>();
+            services.AddScoped<ITransactionService, TransactionService>();
             services.AddHostedService<RecommendationBackgroundService>();
             services.AddScoped<IRemixService, RemixService>();
             services.AddScoped<ISubstackFeedService, SubstackFeedService>();
