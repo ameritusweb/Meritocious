@@ -144,13 +144,14 @@ namespace Meritocious.Web.Controllers
                 await transaction.CommitAsync();
 
                 var authResult = await authService.GenerateAuthTokensAsync(user);
+                var twoFactorResult = await authService.RequiresTwoFactorAsync(user.Id);
                 return Ok(new LoginResponse
                 {
                     AccessToken = authResult.Value.AccessToken,
                     RefreshToken = authResult.Value.RefreshToken,
                     ExpiresAt = authResult.Value.ExpiresAt,
                     User = user.ToDto(),
-                    RequiresTwoFactor = await authService.RequiresTwoFactorAsync(user.Id)
+                    RequiresTwoFactor = twoFactorResult.Value
                 });
             }
             catch (Exception ex)
