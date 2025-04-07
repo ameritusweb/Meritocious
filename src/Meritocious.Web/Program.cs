@@ -87,6 +87,22 @@ builder.Services.AddMeritociousAI(builder.Configuration);
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
+// Add authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .AddRequirements(new GoogleLinkedRequirement())
+        .Build();
+
+    options.AddPolicy("NoGoogleRequired", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+    });
+});
+
+builder.Services.AddScoped<IAuthorizationHandler, GoogleLinkedHandler>();
+
 // Add SignalR
 builder.Services.AddSignalR();
 

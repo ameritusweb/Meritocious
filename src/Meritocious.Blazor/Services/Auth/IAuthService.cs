@@ -6,6 +6,7 @@ namespace Meritocious.Blazor.Services.Auth
     {
         Task<LoginResult> LoginAsync(LoginRequest request);
         Task<LoginResult> GoogleLoginAsync(string idToken);
+        Task<LoginResult> LinkGoogleAccountAsync(string idToken);
         Task LogoutAsync();
         Task<bool> RefreshTokenAsync();
         Task<bool> RequiresTwoFactorAsync();

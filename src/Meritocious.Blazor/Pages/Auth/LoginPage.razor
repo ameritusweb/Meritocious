@@ -155,6 +155,12 @@
 
                 if (result.Success)
                 {
+                    if (result.RequiresGoogleLink)
+                    {
+                        NavigationManager.NavigateTo($"/account/linkgoogle?returnUrl={Uri.EscapeDataString(returnUrl ?? "/")}");
+                        return;
+                    }
+
                     var requires2FA = await AuthService.RequiresTwoFactorAsync();
                     if (requires2FA)
                     {
@@ -195,7 +201,7 @@
 
     private void NavigateToReturnUrl()
     {
-        var url = string.IsNullOrEmpty(returnUrl) ? "/" : returnUrl;
+        var url = string.IsNullOrEmpty(returnUrl) ? "/" : Uri.UnescapeDataString(returnUrl);
         NavigationManager.NavigateTo(url);
     }
 }

@@ -18,18 +18,21 @@ namespace Meritocious.Infrastructure.Services
         private readonly GoogleAuthSettings googleSettings;
         private readonly ILogger<AuthenticationService> logger;
         private readonly UserManager<User> userManager;
+        private readonly SignInManager<User> signInManager;
 
         public AuthenticationService(
             IUserRepository userRepository,
             ITokenService tokenService,
             IOptions<GoogleAuthSettings> googleSettings,
             UserManager<User> userManager,
+            SignInManager<User> signInManager,
             ILogger<AuthenticationService> logger)
         {
             this.userRepository = userRepository;
             this.tokenService = tokenService;
             this.googleSettings = googleSettings.Value;
             this.userManager = userManager;
+            this.signInManager = signInManager;
             this.logger = logger;
         }
 
@@ -271,6 +274,39 @@ namespace Meritocious.Infrastructure.Services
             {
                 logger.LogError(ex, "Error checking 2FA requirement");
                 return Result.Failure<bool>("Error checking two-factor authentication requirement");
+            }
+        }
+
+        public async Task<Result<AuthenticationResult>> GenerateAuthTokensAsync(User user)
+        {
+            try
+            {
+                var refreshToken = tokenService.GenerateRefreshToken();
+                var externalLogin = await userRepository.GetExternalLoginByUserIdAsync(user.Id, "Google");
+                
+                if (externalLogin != null)
+                {
+                    externalLogin.UpdateLoginInfo(
+                        externalLogin.Name,
+                        externalLogin.PictureUrl,
+                        refreshToken,
+                        DateTime.UtcNow.AddDays(30));
+
+                    await userRepository.UpdateExternalLoginAsync(externalLogin);
+                }
+
+                return Result.Success(new AuthenticationResult
+                {
+                    AccessToken = tokenService.GenerateAccessToken(user),
+                    RefreshToken = refreshToken,
+                    ExpiresAt = tokenService.GetAccessTokenExpiration(),
+                    User = user.ToDto()
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating auth tokens");
+                return Result.Failure<AuthenticationResult>("Error generating authentication tokens");
             }
         }
 

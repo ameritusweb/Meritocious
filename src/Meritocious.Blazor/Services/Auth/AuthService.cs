@@ -57,6 +57,43 @@ namespace Meritocious.Blazor.Services.Auth
             }
         }
 
+        public async Task<LoginResult> LinkGoogleAccountAsync(string idToken)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/auth/google/link",
+                    new { IdToken = idToken });
+
+                var result = await response.Content.ReadFromJsonAsync<LoginResult>();
+
+                if (!response.IsSuccessStatusCode || result == null)
+                {
+                    return new LoginResult
+                    {
+                        Success = false,
+                        Error = "Failed to link Google account"
+                    };
+                }
+
+                await _localStorage.SetItemAsync("authToken", result.Token);
+                await _localStorage.SetItemAsync("refreshToken", result.RefreshToken);
+
+                ((ApiAuthenticationStateProvider)_authStateProvider)
+                    .MarkUserAsAuthenticated(result.Token);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Google account linking failed");
+                return new LoginResult
+                {
+                    Success = false,
+                    Error = "An error occurred while linking Google account"
+                };
+            }
+        }
+
         public async Task<LoginResult> GoogleLoginAsync(string idToken)
         {
             try

@@ -12,29 +12,78 @@ namespace Meritocious.Web.Controllers
     {
         private readonly IAuthenticationService authService;
         private readonly ILogger<AuthController> logger;
+        private readonly UserManager<User> userManager;
+        private readonly SignInManager<User> signInManager;
 
         public AuthController(
             IAuthenticationService authService,
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
             ILogger<AuthController> logger)
         {
             this.authService = authService;
+            this.userManager = userManager;
+            this.signInManager = signInManager;
             this.logger = logger;
         }
 
+        [HttpPost("login")]
+        [AllowAnonymous]
+        public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
+        {
+            var user = await userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+                return Unauthorized(new { Error = "Invalid email or password" });
+
+            var result = await signInManager.PasswordSignInAsync(user, request.Password, false, true);
+            if (!result.Succeeded)
+                return Unauthorized(new { Error = "Invalid email or password" });
+
+            // Check if Google account is linked
+            var logins = await userManager.GetLoginsAsync(user);
+            if (!logins.Any(l => l.LoginProvider == "Google"))
+            {
+                return Ok(new { RequiresGoogleLink = true });
+            }
+
+            var authResult = await authService.GenerateAuthTokensAsync(user);
+            return Ok(new LoginResponse 
+            { 
+                AccessToken = authResult.AccessToken,
+                RefreshToken = authResult.RefreshToken,
+                ExpiresAt = authResult.ExpiresAt,
+                User = user.ToDto(),
+                RequiresTwoFactor = await authService.RequiresTwoFactorAsync(user.Id)
+            });
+        }
+
         [HttpPost("google")]
+        [AllowAnonymous]
         public async Task<ActionResult<AuthenticationResult>> GoogleSignIn([FromBody] GoogleSignInRequest request)
         {
             var result = await authService.AuthenticateGoogleUserAsync(request.IdToken);
             return HandleResult(result);
         }
 
-        [Authorize]
+        [Authorize(Policy = "NoGoogleRequired")]
         [HttpPost("google/link")]
-        public async Task<ActionResult> LinkGoogleAccount([FromBody] GoogleSignInRequest request)
+        public async Task<ActionResult<AuthenticationResult>> LinkGoogleAccount([FromBody] GoogleSignInRequest request)
         {
             var userId = GetCurrentUserId();
             var result = await authService.LinkGoogleAccountAsync(userId, request.IdToken);
-            return HandleResult(result);
+            if (!result.Success)
+                return HandleResult(result);
+
+            var user = await userManager.FindByIdAsync(userId);
+            var authResult = await authService.GenerateAuthTokensAsync(user);
+            return Ok(new LoginResponse
+            {
+                AccessToken = authResult.AccessToken,
+                RefreshToken = authResult.RefreshToken,
+                ExpiresAt = authResult.ExpiresAt,
+                User = user.ToDto(),
+                RequiresTwoFactor = await authService.RequiresTwoFactorAsync(userId)
+            });
         }
 
         [Authorize]
@@ -80,5 +129,21 @@ namespace Meritocious.Web.Controllers
     public class RefreshTokenRequest
     {
         public string RefreshToken { get; set; }
+    }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class LoginResponse
+    {
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime ExpiresAt { get; set; }
+        public UserProfileDto User { get; set; }
+        public bool RequiresTwoFactor { get; set; }
+        public bool RequiresGoogleLink { get; set; }
     }
 }

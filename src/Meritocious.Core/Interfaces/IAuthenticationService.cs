@@ -15,6 +15,7 @@ namespace Meritocious.Core.Interfaces
         Task<Result<TwoFactorSetupResult>> SetupTwoFactorAsync(string userId);
         Task<Result<bool>> ValidateTwoFactorCodeAsync(string userId, string code);
         Task<Result<bool>> RequiresTwoFactorAsync(string userId);
+        Task<Result<AuthenticationResult>> GenerateAuthTokensAsync(User user);
     }
 
     public class AuthenticationResult
