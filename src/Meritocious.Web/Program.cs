@@ -10,6 +10,8 @@ using AspNetCoreRateLimit;
 using Meritocious.Web.Middleware;
 using Meritocious.Web.Hubs;
 using Meritocious.Web.ExceptionHandling;
+using Microsoft.AspNetCore.Authorization;
+using Meritocious.Web.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Meritocious.Core.Interfaces;
 using Meritocious.Core.Results;
 using System.Security.Claims;
+using Meritocious.Core.Entities;
+using Microsoft.AspNetCore.Identity;
+using Meritocious.Common.DTOs.Auth;
+using Meritocious.Core.Extensions;
 
 namespace Meritocious.Web.Controllers
 {
@@ -33,11 +37,15 @@ namespace Meritocious.Web.Controllers
         {
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)
+            {
                 return Unauthorized(new { Error = "Invalid email or password" });
+            }
 
             var result = await signInManager.PasswordSignInAsync(user, request.Password, false, true);
             if (!result.Succeeded)
+            {
                 return Unauthorized(new { Error = "Invalid email or password" });
+            }
 
             // Check if Google account is linked
             var logins = await userManager.GetLoginsAsync(user);
@@ -47,14 +55,15 @@ namespace Meritocious.Web.Controllers
             }
 
             var authResult = await authService.GenerateAuthTokensAsync(user);
-            return Ok(new LoginResponse 
-            { 
-                AccessToken = authResult.AccessToken,
-                RefreshToken = authResult.RefreshToken,
-                ExpiresAt = authResult.ExpiresAt,
+            var twoFactorResult = await authService.RequiresTwoFactorAsync(user.Id);
+            return Ok(new LoginResponse
+            {
+                AccessToken = authResult.Value.AccessToken,
+                RefreshToken = authResult.Value.RefreshToken,
+                ExpiresAt = authResult.Value.ExpiresAt,
                 User = user.ToDto(),
-                RequiresTwoFactor = await authService.RequiresTwoFactorAsync(user.Id)
-            });
+                RequiresTwoFactor = twoFactorResult.Value
+            });     
         }
 
         [HttpPost("google")]
@@ -71,18 +80,22 @@ namespace Meritocious.Web.Controllers
         {
             var userId = GetCurrentUserId();
             var result = await authService.LinkGoogleAccountAsync(userId, request.IdToken);
-            if (!result.Success)
+            if (!result.IsSuccess)
+            {
                 return HandleResult(result);
+            }
 
             var user = await userManager.FindByIdAsync(userId);
             var authResult = await authService.GenerateAuthTokensAsync(user);
+            var twoFactorResult = await authService.RequiresTwoFactorAsync(userId);
+
             return Ok(new LoginResponse
             {
-                AccessToken = authResult.AccessToken,
-                RefreshToken = authResult.RefreshToken,
-                ExpiresAt = authResult.ExpiresAt,
+                AccessToken = authResult.Value.AccessToken,
+                RefreshToken = authResult.Value.RefreshToken,
+                ExpiresAt = authResult.Value.ExpiresAt,
                 User = user.ToDto(),
-                RequiresTwoFactor = await authService.RequiresTwoFactorAsync(userId)
+                RequiresTwoFactor = twoFactorResult.Value
             });
         }
 
