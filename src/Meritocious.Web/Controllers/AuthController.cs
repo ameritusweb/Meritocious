@@ -20,16 +20,19 @@ namespace Meritocious.Web.Controllers
         private readonly ILogger<AuthController> logger;
         private readonly UserManager<User> userManager;
         private readonly SignInManager<User> signInManager;
+        private readonly IUserPreferenceService userPreferenceService;
 
         public AuthController(
             IAuthenticationService authService,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
+            IUserPreferenceService userPreferenceService,
             ILogger<AuthController> logger)
         {
             this.authService = authService;
             this.userManager = userManager;
             this.signInManager = signInManager;
+            this.userPreferenceService = userPreferenceService;
             this.logger = logger;
         }
 
@@ -124,16 +127,16 @@ namespace Meritocious.Web.Controllers
                 }
 
                 // Save user preferences
-                foreach (var topic in request.Topics ?? Enumerable.Empty<string>())
+                if (request.Topics != null || request.ContentPreferences != null)
                 {
-                    await userManager.AddToTopicAsync(user, topic);
-                }
+                    var pResult = await this.userPreferenceService.UpdatePreferencesAsync(
+                        user.Id,
+                        request.Topics,
+                        request.ContentPreferences);
 
-                if (request.ContentPreferences != null)
-                {
-                    foreach (var pref in request.ContentPreferences)
+                    if (!pResult.Success)
                     {
-                        await userManager.SetContentPreferenceAsync(user, pref.Key, pref.Value);
+                        logger.LogWarning("Failed to save user preferences during registration: {Error}", pResult.Error);
                     }
                 }
 
@@ -141,14 +144,13 @@ namespace Meritocious.Web.Controllers
                 await transaction.CommitAsync();
 
                 var authResult = await authService.GenerateAuthTokensAsync(user);
-                var twoFactorResult = await authService.RequiresTwoFactorAsync(user.Id);
                 return Ok(new LoginResponse
                 {
                     AccessToken = authResult.Value.AccessToken,
                     RefreshToken = authResult.Value.RefreshToken,
                     ExpiresAt = authResult.Value.ExpiresAt,
                     User = user.ToDto(),
-                    RequiresTwoFactor = twoFactorResult.Value
+                    RequiresTwoFactor = await authService.RequiresTwoFactorAsync(user.Id)
                 });
             }
             catch (Exception ex)
