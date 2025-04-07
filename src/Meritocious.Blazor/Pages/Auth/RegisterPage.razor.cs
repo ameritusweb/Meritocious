@@ -169,7 +169,7 @@ namespace Meritocious.Blazor.Pages.Auth
         {
             await FormStatus.StartProcessingAsync(async () =>
             {
-                var registrationRequest = new CompleteRegistrationRequest
+                var registrationRequest = new RegistrationRequest
                 {
                     Email = registerModel.Email,
                     Username = registerModel.Username,
@@ -179,15 +179,23 @@ namespace Meritocious.Blazor.Pages.Auth
                     AvatarUrl = profileModel.AvatarUrl,
                     Topics = interestsModel.Topics,
                     ContentPreferences = contentPreferences
-                        .ToDictionary(p => p.Key, p => p.Value)
+                        .ToDictionary(p => p.Key, p => p.Value),
+                    GoogleIdToken = await JSRuntime.InvokeAsync<string>("initializeGoogleSignIn")
                 };
 
-                var result = await AuthService.CompleteRegistrationAsync(registrationRequest);
+                var result = await AuthService.RegisterAsync(registrationRequest);
 
                 if (result.Success)
                 {
-                    await MessageService.Success("Registration successful!");
-                    NavigationManager.NavigateTo("/onboarding");
+                    if (result.RequiresGoogleLink)
+                    {
+                        NavigationManager.NavigateTo("/account/linkgoogle");
+                    }
+                    else
+                    {
+                        await MessageService.Success("Registration successful!");
+                        NavigationManager.NavigateTo("/onboarding");
+                    }
                 }
                 else
                 {
@@ -196,34 +204,45 @@ namespace Meritocious.Blazor.Pages.Auth
             });
         }
 
-        private async Task HandleGoogleSignUp()
+        private async Task HandleGoogleSignUpAsync()
         {
             isGoogleLoading = true;
+            FormStatus.ClearErrors();
+
             try
             {
                 var idToken = await JSRuntime.InvokeAsync<string>("initializeGoogleSignIn");
-                if (!string.IsNullOrEmpty(idToken))
+                if (string.IsNullOrEmpty(idToken))
                 {
-                    var result = await AuthService.GoogleSignUpAsync(idToken);
-                    if (result.Success)
-                    {
-                        if (result.GoogleData != null)
-                        {
-                            registerModel.Email = result.GoogleData.Email;
-                            profileModel.DisplayName = result.GoogleData.Name;
-                            profileModel.AvatarUrl = result.GoogleData.Picture;
-                        }
-                        currentStep++;
-                    }
-                    else
-                    {
-                        FormStatus.SetErrorMessage(result.Error ?? "Google sign-up failed");
-                    }
+                    FormStatus.SetErrorMessage("Google sign-in was cancelled");
+                    return;
                 }
+
+                // First verify the token and get user info
+                var googleResult = await AuthService.GoogleLoginAsync(idToken);
+                if (!googleResult.Success)
+                {
+                    FormStatus.SetErrorMessage(googleResult.Error ?? "Failed to verify Google account");
+                    return;
+                }
+
+                // Pre-fill form with Google data
+                registerModel.Email = googleResult.User.Email;
+                registerModel.Username = await GenerateUsernameFromEmailAsync(googleResult.User.Email);
+                profileModel.DisplayName = googleResult.User.DisplayName;
+                profileModel.AvatarUrl = googleResult.User.AvatarUrl;
+
+                // Store token for later use during registration
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "pendingGoogleToken", idToken);
+                
+                // Move to next step
+                currentStep++;
+                StateHasChanged();
             }
-            catch
+            catch (Exception ex)
             {
-                FormStatus.SetErrorMessage("An error occurred during Google sign-up");
+                logger.LogError(ex, "Error during Google sign-up");
+                FormStatus.SetErrorMessage("An unexpected error occurred during Google sign-up");
             }
             finally
             {

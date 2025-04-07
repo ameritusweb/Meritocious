@@ -22,6 +22,44 @@ namespace Meritocious.Blazor.Services.Auth
             _logger = logger;
         }
 
+        public async Task<LoginResult> RegisterAsync(RegistrationRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("api/auth/register", request);
+                var result = await response.Content.ReadFromJsonAsync<LoginResult>();
+
+                if (!response.IsSuccessStatusCode || result == null)
+                {
+                    return new LoginResult
+                    {
+                        Success = false,
+                        Error = "Registration failed"
+                    };
+                }
+
+                if (!result.RequiresGoogleLink)
+                {
+                    await _localStorage.SetItemAsync("authToken", result.AccessToken);
+                    await _localStorage.SetItemAsync("refreshToken", result.RefreshToken);
+
+                    ((ApiAuthenticationStateProvider)_authStateProvider)
+                        .MarkUserAsAuthenticated(result.AccessToken);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Registration failed");
+                return new LoginResult
+                {
+                    Success = false,
+                    Error = "An error occurred during registration"
+                };
+            }
+        }
+
         public async Task<LoginResult> LoginAsync(LoginRequest request)
         {
             try

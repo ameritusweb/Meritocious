@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using Meritocious.Core.Interfaces;
+using Meritocious.Core.Entities;
 using Meritocious.Core.Results;
 using System.Security.Claims;
-using Meritocious.Core.Entities;
-using Microsoft.AspNetCore.Identity;
 using Meritocious.Common.DTOs.Auth;
 using Meritocious.Core.Extensions;
 
@@ -63,7 +65,98 @@ namespace Meritocious.Web.Controllers
                 ExpiresAt = authResult.Value.ExpiresAt,
                 User = user.ToDto(),
                 RequiresTwoFactor = twoFactorResult.Value
-            });     
+            });
+        }
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<ActionResult<LoginResponse>> Register([FromBody] RegistrationRequest request)
+        {
+            // Validate input
+            if (!new EmailAddressAttribute().IsValid(request.Email))
+            {
+                return BadRequest(new { Error = "Invalid email format" });
+            }
+
+            var passwordValidator = new PasswordValidator<User>();
+            var passwordResult = await passwordValidator.ValidateAsync(userManager, null, request.Password);
+            if (!passwordResult.Succeeded)
+            {
+                return BadRequest(new { Error = string.Join(", ", passwordResult.Errors.Select(e => e.Description)) });
+            }
+
+            // Start transaction
+            using var transaction = await userManager.Database.BeginTransactionAsync();
+            try
+            {
+                // Create user
+                var user = new User
+                {
+                    UserName = request.Username,
+                    Email = request.Email,
+                    DisplayName = request.DisplayName,
+                    Bio = request.Bio,
+                    AvatarUrl = request.AvatarUrl,
+                    EmailConfirmed = true // Since we require Google auth
+                };
+
+                var result = await userManager.CreateAsync(user, request.Password);
+                if (!result.Succeeded)
+                {
+                    return BadRequest(new { Error = string.Join(", ", result.Errors.Select(e => e.Description)) });
+                }
+
+                // If Google ID token provided, link the account
+                if (!string.IsNullOrEmpty(request.GoogleIdToken))
+                {
+                    var linkResult = await authService.LinkGoogleAccountAsync(user.Id, request.GoogleIdToken);
+                    if (!linkResult.IsSuccess)
+                    {
+                        // Clean up the created user if Google linking fails
+                        await userManager.DeleteAsync(user);
+                        return BadRequest(new { Error = "Failed to link Google account: " + linkResult.Error });
+                    }
+                }
+                else
+                {
+                    // If no Google account linked, return flag to enforce linking
+                    return Ok(new LoginResponse { RequiresGoogleLink = true });
+                }
+
+                // Save user preferences
+                foreach (var topic in request.Topics ?? Enumerable.Empty<string>())
+                {
+                    await userManager.AddToTopicAsync(user, topic);
+                }
+
+                if (request.ContentPreferences != null)
+                {
+                    foreach (var pref in request.ContentPreferences)
+                    {
+                        await userManager.SetContentPreferenceAsync(user, pref.Key, pref.Value);
+                    }
+                }
+
+                // Commit transaction
+                await transaction.CommitAsync();
+
+                var authResult = await authService.GenerateAuthTokensAsync(user);
+                var twoFactorResult = await authService.RequiresTwoFactorAsync(user.Id);
+                return Ok(new LoginResponse
+                {
+                    AccessToken = authResult.Value.AccessToken,
+                    RefreshToken = authResult.Value.RefreshToken,
+                    ExpiresAt = authResult.Value.ExpiresAt,
+                    User = user.ToDto(),
+                    RequiresTwoFactor = twoFactorResult.Value
+                });
+            }
+            catch (Exception ex)
+            {
+                // Transaction will automatically roll back
+                logger.LogError(ex, "Error during user registration");
+                return StatusCode(500, new { Error = "An error occurred during registration" });
+            }
         }
 
         [HttpPost("google")]
@@ -158,5 +251,18 @@ namespace Meritocious.Web.Controllers
         public UserProfileDto User { get; set; }
         public bool RequiresTwoFactor { get; set; }
         public bool RequiresGoogleLink { get; set; }
+    }
+
+    public class RegistrationRequest
+    {
+        public string Email { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string DisplayName { get; set; }
+        public string Bio { get; set; }
+        public string AvatarUrl { get; set; }
+        public List<string> Topics { get; set; }
+        public Dictionary<string, decimal> ContentPreferences { get; set; }
+        public string GoogleIdToken { get; set; }
     }
 }

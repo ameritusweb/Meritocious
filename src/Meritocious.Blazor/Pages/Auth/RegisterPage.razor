@@ -72,15 +72,22 @@
                         }
                     </FormItem>
 
+                    <Alert
+                        Message="Important: Google Account Required"
+                        Description="For enhanced security and trust, all accounts must be linked to a Google account. You'll be prompted to link your Google account during registration."
+                        Type="AlertType.Info"
+                        ShowIcon="true"
+                        Style="margin: 16px 0; border-radius: 4px; border: 1px solid #e6f4ff" />
+
                     <Divider>Or</Divider>
 
                     <Button Type="ButtonType.Default"
                             Block
-                            OnClick="HandleGoogleSignUp"
+                            OnClick="HandleGoogleSignUpAsync"
                             Loading="@isGoogleLoading">
                         <Space>
                             <Icon Type="google" Theme="IconThemeType.Outline" />
-                            <span>Sign up with Google</span>
+                            <span>Continue with Google</span>
                         </Space>
                     </Button>
                 </BaseFormComponent>
