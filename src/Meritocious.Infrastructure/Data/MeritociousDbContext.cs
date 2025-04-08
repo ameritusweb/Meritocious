@@ -68,6 +68,11 @@ namespace Meritocious.Infrastructure.Data
         // Substacks
         public DbSet<Substack> Substacks { get; set; }
 
+        // External Forks
+        public DbSet<ExternalForkSource> ExternalForkSources { get; set; }
+        public DbSet<ForkRequest> ForkRequests { get; set; }
+        public DbSet<ForkType> ForkTypes { get; set; }
+
         public MeritociousDbContext(DbContextOptions<MeritociousDbContext> options)
             : base(options)
         {

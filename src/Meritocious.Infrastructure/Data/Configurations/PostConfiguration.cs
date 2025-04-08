@@ -99,11 +99,32 @@ namespace Meritocious.Infrastructure.Data.Configurations
                .HasMany<Tag>(u => u.Tags)
                .WithMany(s => s.Posts);
 
-               // .UsingEntity<PostTag>(
-               //     "PostTags",
-               //    j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
-               //    j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
-               //    j => j.HasKey("TagId", "PostId"));
+            // .UsingEntity<PostTag>(
+            //     "PostTags",
+            //    j => j.HasOne<Tag>().WithMany().HasForeignKey("TagId"),
+            //    j => j.HasOne<Post>().WithMany().HasForeignKey("PostId"),
+            //    j => j.HasKey("TagId", "PostId"));
+            builder.Property(e => e.ExternalForkContext)
+            .HasMaxLength(1000);
+
+            builder.Property(e => e.ExternalForkQuote)
+                .HasMaxLength(2000);
+
+            // External fork relationships
+            builder.HasOne(p => p.ForkType)
+                .WithMany(f => f.Posts)
+                .HasForeignKey("ForkTypeId")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(p => p.ExternalForkSource)
+                .WithMany(e => e.Forks)
+                .HasForeignKey("ExternalForkSourceId")
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // New indexes for external fork queries
+            builder.HasIndex(p => new { p.ForkTypeId, p.CreatedAt });
+            builder.HasIndex(p => new { p.ExternalForkSourceId, p.CreatedAt });
+            builder.HasIndex(p => p.IsExternalFork);
         }
     }
 }

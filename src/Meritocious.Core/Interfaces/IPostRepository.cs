@@ -64,5 +64,13 @@ namespace Meritocious.Core.Interfaces
         Task RecordInteractionAsync(string postId, string interactionType);
 
         Task<List<Post>> GetRecentPostsAsync(int count);
+
+        Task<List<Post>> GetForksFromSourceAsync(string sourceUrl, CancellationToken cancellationToken = default);
+        Task<List<Post>> GetForksByTypeAsync(string forkType, CancellationToken cancellationToken = default);
+        Task<List<Post>> GetForksByPlatformAsync(string platform, CancellationToken cancellationToken = default);
+        Task<List<Post>> SearchForksByTagsAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default);
+        Task<List<Post>> GetForksWithQuotesAsync(CancellationToken cancellationToken = default);
+        Task<Dictionary<string, int>> GetForkCountsByPlatformAsync(CancellationToken cancellationToken = default);
+        Task<List<Post>> GetForksInDateRangeAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default);
     }
 }

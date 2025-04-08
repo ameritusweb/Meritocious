@@ -686,6 +686,90 @@
             return posts;
         }
 
+        public async Task<List<Post>> GetForksFromSourceAsync(
+        string sourceUrl,
+        CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(p => p.ExternalForkSource)
+                .Where(p => p.ExternalForkSource != null && p.ExternalForkSource.SourceUrl == sourceUrl)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<Post>> GetForksByTypeAsync(
+            string forkType,
+            CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(p => p.ForkType)
+                .Where(p => p.ForkType != null && p.ForkType.Name == forkType)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<Post>> GetForksByPlatformAsync(
+            string platform,
+            CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(p => p.ExternalForkSource)
+                .Where(p => p.ExternalForkSource != null && p.ExternalForkSource.Platform == platform)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<Post>> SearchForksByTagsAsync(
+            IEnumerable<string> tags,
+            CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(p => p.ExternalForkSource)
+                .Where(p =>
+                    p.ExternalForkSource != null &&
+                    p.ExternalForkSource.Tags.Any(t => tags.Contains(t)))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<Post>> GetForksWithQuotesAsync(
+            CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(p => p.ExternalForkSource)
+                .Where(p => !string.IsNullOrEmpty(p.ExternalForkQuote))
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<Dictionary<string, int>> GetForkCountsByPlatformAsync(
+            CancellationToken cancellationToken = default)
+        {
+            var counts = await dbSet
+                .Include(p => p.ExternalForkSource)
+                .Where(p => p.ExternalForkSource != null)
+                .GroupBy(p => p.ExternalForkSource.Platform)
+                .Select(g => new { Platform = g.Key, Count = g.Count() })
+                .ToListAsync(cancellationToken);
+
+            return counts.ToDictionary(x => x.Platform, x => x.Count);
+        }
+
+        public async Task<List<Post>> GetForksInDateRangeAsync(
+            DateTime start,
+            DateTime end,
+            CancellationToken cancellationToken = default)
+        {
+            return await dbSet
+                .Include(p => p.ExternalForkSource)
+                .Where(p =>
+                    p.ExternalForkSource != null &&
+                    p.CreatedAt >= start &&
+                    p.CreatedAt <= end)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync(cancellationToken);
+        }
+
         public Task<List<Post>> GetRecentPostsAsync(int count)
         {
             // TODO: Complete this.
