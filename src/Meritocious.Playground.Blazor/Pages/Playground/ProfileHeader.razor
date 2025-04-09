@@ -1,0 +1,15 @@
+﻿@page "/playground/profile-header"
+@using Meritocious.Components.Blazor.Models
+
+<MeritociousProfileHeader Username="ameritusweb" Interests="@Interests" JoinDate="@(DateTime.UtcNow.ToString())" Bio="Bio" IsOwnProfile="true" />
+
+@code {
+    public List<string> Interests { get; set; } = new List<string>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this.Interests.Add("Hobbies");
+    }
+
+}
