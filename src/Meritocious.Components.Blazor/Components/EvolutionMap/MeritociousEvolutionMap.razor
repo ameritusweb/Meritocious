@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-evolution-map">
     <div class="meritocious-map-timeline">
@@ -25,11 +26,11 @@
                             <p class="meritocious-node-excerpt">@node.Excerpt</p>
                             
                             <div class="meritocious-node-stats">
-                                <button class="meritocious-stat-button">
+                                <button type="button" class="meritocious-stat-button">
                                     <i class="fas fa-code-branch"></i>
                                     <span>@node.Forks</span>
                                 </button>
-                                <button class="meritocious-stat-button">
+                                <button type="button" class="meritocious-stat-button">
                                     <i class="fas fa-comments"></i>
                                     <span>@node.Replies</span>
                                 </button>
@@ -44,14 +45,4 @@
 
 @code {
     [Parameter] public IEnumerable<EvolutionNode> Nodes { get; set; } = Array.Empty<EvolutionNode>();
-
-    public class EvolutionNode
-    {
-        public string Title { get; set; } = "";
-        public string Author { get; set; } = "";
-        public string Excerpt { get; set; } = "";
-        public double Merit { get; set; }
-        public int Forks { get; set; }
-        public int Replies { get; set; }
-    }
 }

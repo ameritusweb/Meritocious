@@ -58,6 +58,16 @@ namespace Meritocious.Components.Blazor.Models
         public List<ForkNodeData> Children { get; set; } = new();
     }
 
+    public class EvolutionNode
+    {
+        public string Title { get; set; } = "";
+        public string Author { get; set; } = "";
+        public string Excerpt { get; set; } = "";
+        public double Merit { get; set; }
+        public int Forks { get; set; }
+        public int Replies { get; set; }
+    }
+
     public class BloomStat
     {
         public string Label { get; set; } = "";

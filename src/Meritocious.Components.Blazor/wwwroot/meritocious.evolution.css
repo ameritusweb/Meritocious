@@ -76,6 +76,14 @@
     margin-bottom: var(--meritocious-spacing-xs);
 }
 
+.meritocious-node-author {
+    color: var(--meritocious-text-secondary);
+}
+
+.meritocious-stat-button {
+    color: var(--meritocious-text-secondary);
+}
+
 .meritocious-node-meta {
     display: flex;
     gap: var(--meritocious-spacing-md);

@@ -49,6 +49,10 @@ h5 {
     color: var(--meritocious-text);
 }
 
+span {
+    color: var(--meritocious-text-secondary);
+}
+
 p.text-sm {
     color: var(--meritocious-text-secondary);
 }

@@ -1,0 +1,19 @@
+﻿@page "/playground/evolution-map"
+@using Meritocious.Components.Blazor.Models
+
+<MeritociousEvolutionMap Nodes="@Nodes" />
+
+@code {
+    public List<EvolutionNode> Nodes { get; set; } = new List<EvolutionNode>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        EvolutionNode node = new EvolutionNode();
+        node.Title = "Title";
+        node.Author = "ameritusweb";
+        node.Replies = 5;
+        node.Merit = 5d;
+        this.Nodes.Add(node);
+    }
+}
