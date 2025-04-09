@@ -58,4 +58,6 @@ namespace Meritocious.Components.Blazor.Models
         public int Replies { get; set; }
         public List<EvolutionNodeData> Children { get; set; } = new();
     }
+
+    public record FilterChip(string Id, string Label, string Type);
 }

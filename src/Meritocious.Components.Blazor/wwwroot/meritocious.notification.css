@@ -17,6 +17,7 @@
     align-items: start;
     gap: var(--meritocious-spacing-md);
     padding: var(--meritocious-spacing-md);
+    margin-bottom: 0.5rem;
     background-color: rgba(31, 41, 55, 0.95);
     backdrop-filter: blur(8px);
     border-radius: var(--meritocious-radius-lg);
@@ -62,7 +63,6 @@
 /* Notification Content */
 .meritocious-notification-icon {
     padding: var(--meritocious-spacing-sm);
-    background-color: rgba(255, 255, 255, 0.1);
     border-radius: var(--meritocious-radius-md);
 }
 

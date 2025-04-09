@@ -4,6 +4,10 @@
 
 <h1>Meritocious Component Playground</h1>
 
+<MeritociousFloatingPetalsBackground />
+
+<MeritociousNotification Title="Hello" Dismissible="true" Message="Test Message Success" Type="NotificationType.Success" />
+
 <MeritociousButton Variant="ButtonVariant.Primary" IconName="fas fa-magic">
     Click Me
 </MeritociousButton>
@@ -26,6 +30,9 @@
     <ChildContent>
         <MeritociousMeritBar Details=@map Score="@score" />
         <MeritociousTextArea />
+        <MeritociousMeritIndicator Score="10" />
+        <MeritociousTextArea />
+        <MeritociousActiveFilters ActiveFilters="@ActiveFilters" />
     </ChildContent>
 </MeritociousCard>
 
@@ -45,5 +52,14 @@
     {
         { "string", 5d }
     };
+
+    public List<FilterChip> ActiveFilters { get; set; } = new List<FilterChip>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        FilterChip chip = new FilterChip(Guid.NewGuid().ToString(), "Label", "Type");
+        this.ActiveFilters.Add(chip);
+    }
 
 }
