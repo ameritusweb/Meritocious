@@ -1,0 +1,396 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models
+
+<div class="meritocious-forkspace">
+    <div class="meritocious-forkspace-header">
+        <div class="meritocious-forkspace-info">
+            <h2>ForkSpace</h2>
+            <p>Collect and synthesize ideas from multiple sources</p>
+        </div>
+        
+        @if (SelectedPosts.Any())
+        {
+            <div class="meritocious-forkspace-actions">
+                <span class="meritocious-selection-count">
+                    @SelectedPosts.Count selected
+                </span>
+                <MeritociousButton
+                    OnClick="@ClearSelection"
+                    Variant="ButtonVariant.Secondary">
+                    Clear
+                </MeritociousButton>
+                <MeritociousButton
+                    OnClick="@CreateSynthesisFork"
+                    Disabled="@(SelectedPosts.Count < 2)">
+                    <i class="fas fa-code-merge"></i>
+                    Create Synthesis Fork
+                </MeritociousButton>
+            </div>
+        }
+    </div>
+
+    <div class="meritocious-forkspace-content">
+        <div class="meritocious-forkspace-workspace">
+            <div class="meritocious-workspace-header">
+                <h3>Selected Posts</h3>
+                @if (!SelectedPosts.Any())
+                {
+                    <div class="meritocious-empty-state">
+                        <i class="fas fa-lightbulb"></i>
+                        <p>Select posts from your collection to create a synthesis</p>
+                    </div>
+                }
+            </div>
+
+            <div class="meritocious-selected-posts"
+                 @ondragover:preventDefault
+                 @ondrop="@(e => HandleDropIntoWorkspace(e))">
+                @if (!SelectedPosts.Any())
+                {
+                    <div class="meritocious-dropzone">
+                        <i class="fas fa-plus"></i>
+                        <p>Drag posts here</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="meritocious-dropzone @(IsDropzoneActive(0) ? "active" : "")"
+                         @ondragover="@(() => ActivateDropzone(0))"
+                         @ondrop="@(e => HandleDropAtIndex(e, 0))">
+                        <div class="meritocious-dropzone-indicator"></div>
+                    </div>
+                    
+                    @for (int i = 0; i < SelectedPosts.Count; i++)
+                    {
+                        var post = SelectedPosts[i];
+                        var currentIndex = i;
+                        
+                        <div class="meritocious-selected-post @(draggedPost?.Id == post.Id ? "dragging" : "")"
+                             draggable="true"
+                             @ondragstart="@(e => HandleDragStart(e, post))"
+                             @ondragend="@HandleDragEnd">
+                            <div class="meritocious-post-handle">
+                                <i class="fas fa-grip-vertical"></i>
+                            </div>
+                            <div class="meritocious-post-content">
+                                <h4>@post.Title</h4>
+                                <p>@post.Excerpt</p>
+                                <div class="meritocious-post-meta">
+                                    <span class="meritocious-post-author">@post.Author</span>
+                                    <MeritociousBloom Score="@post.MeritScore" />
+                                </div>
+                            </div>
+                            <button 
+                                class="meritocious-remove-post" 
+                                @onclick="() => RemoveFromSelection(post)">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="meritocious-dropzone @(IsDropzoneActive(i + 1) ? "active" : "")"
+                             @ondragover="@(() => ActivateDropzone(i + 1))"
+                             @ondrop="@(e => HandleDropAtIndex(e, i + 1))">
+                            <div class="meritocious-dropzone-indicator"></div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <div class="meritocious-forkspace-collection">
+            <div class="meritocious-collection-header">
+                <h3>Your Collection</h3>
+                <div class="meritocious-collection-filters">
+                    <div class="meritocious-search">
+                        <i class="fas fa-search"></i>
+                        <input 
+                            type="text" 
+                            placeholder="Search posts..." 
+                            @bind="searchQuery"
+                            @bind:event="oninput" />
+                    </div>
+                    <select 
+                        class="meritocious-select" 
+                        @bind="sortOrder">
+                        <option value="recent">Most Recent</option>
+                        <option value="merit">Highest Merit</option>
+                        <option value="relevance">Most Relevant</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="meritocious-collection-posts">
+                @foreach (var post in FilteredPosts)
+                {
+                    <div class="meritocious-collection-post @(IsSelected(post) ? "selected" : "")"
+                         draggable="true"
+                         @ondragstart="@(e => HandleDragStart(e, post))"
+                         @onclick="() => ToggleSelection(post)">
+                        <div class="meritocious-post-content">
+                            <h4>@post.Title</h4>
+                            <p>@post.Excerpt</p>
+                            <div class="meritocious-post-meta">
+                                <span class="meritocious-post-author">@post.Author</span>
+                                <div class="meritocious-post-tags">
+                                    @foreach (var tag in post.Tags)
+                                    {
+                                        <span class="meritocious-tag">@tag</span>
+                                    }
+                                </div>
+                                <MeritociousBloom Score="@post.MeritScore" />
+                            </div>
+                        </div>
+                        <div class="meritocious-post-select">
+                            @if (IsSelected(post))
+                            {
+                                <i class="fas fa-check-circle"></i>
+                            }
+                            else
+                            {
+                                <i class="far fa-circle"></i>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (showSynthesisModal)
+    {
+        <div class="meritocious-modal">
+            <div class="meritocious-modal-content">
+                <div class="meritocious-modal-header">
+                    <h3>Create Synthesis Fork</h3>
+                    <button 
+                        class="meritocious-modal-close"
+                        @onclick="@(() => showSynthesisModal = false)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="meritocious-modal-body">
+                    <div class="meritocious-form-group">
+                        <label>Title</label>
+                        <input 
+                            type="text" 
+                            class="meritocious-input"
+                            @bind="synthesisTitle" />
+                    </div>
+
+                    <div class="meritocious-form-group">
+                        <label>Synthesis Approach</label>
+                        <textarea 
+                            class="meritocious-textarea"
+                            placeholder="Describe how these ideas will be combined..."
+                            @bind="synthesisDescription"></textarea>
+                    </div>
+
+                    <div class="meritocious-form-group">
+                        <label>Selected Sources</label>
+                        <div class="meritocious-synthesis-sources">
+                            @foreach (var post in SelectedPosts)
+                            {
+                                <div class="meritocious-source-item">
+                                    <span>@post.Title</span>
+                                    <MeritociousBloom Score="@post.MeritScore" />
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meritocious-modal-footer">
+                    <MeritociousButton
+                        OnClick="@(() => showSynthesisModal = false)"
+                        Variant="ButtonVariant.Secondary">
+                        Cancel
+                    </MeritociousButton>
+                    <MeritociousButton
+                        OnClick="@CreateSynthesisFork"
+                        Disabled="@(!CanCreateFork)">
+                        Create Fork
+                    </MeritociousButton>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<SynthesisForkModel> OnForkCreate { get; set; }
+
+    private List<Post> CollectionPosts = new();
+    private List<Post> SelectedPosts = new();
+    private string searchQuery = "";
+    private string sortOrder = "recent";
+    private Post? draggedPost;
+    private int activeDropzoneIndex = -1;
+
+    private bool showSynthesisModal;
+    private string synthesisTitle = "";
+    private string synthesisDescription = "";
+
+    private bool CanCreateFork =>
+        !string.IsNullOrWhiteSpace(synthesisTitle) &&
+        !string.IsNullOrWhiteSpace(synthesisDescription);
+
+    private bool IsDropzoneActive(int index) => activeDropzoneIndex == index;
+
+    private IEnumerable<Post> FilteredPosts => CollectionPosts
+        .Where(p => string.IsNullOrEmpty(searchQuery) ||
+            p.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+            p.Excerpt.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(p => sortOrder switch
+        {
+            "merit" => p.MeritScore,
+            "relevance" => CalculateRelevance(p),
+            _ => p.CreatedAt.Ticks
+        });
+
+    protected override void OnInitialized()
+    {
+        // Sample data - in production, this would come from a service
+        CollectionPosts = new List<Post>
+        {
+            new() {
+                Id = "1",
+                Title = "The Future of AI Governance",
+                Excerpt = "Exploring frameworks for ethical AI development...",
+                Author = "Alice Chen",
+                Tags = new() { "AI", "Ethics", "Governance" },
+                MeritScore = 0.92,
+                CreatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new() {
+                Id = "2",
+                Title = "Decentralized Decision Making",
+                Excerpt = "How distributed systems can inform organizational design...",
+                Author = "Bob Smith",
+                Tags = new() { "Organizations", "Systems", "Decision Making" },
+                MeritScore = 0.85,
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            }
+        };
+    }
+
+    private void HandleDragStart(DragEventArgs e, Post post)
+    {
+        draggedPost = post;
+        if (e.DataTransfer != null)
+        {
+            e.DataTransfer.EffectAllowed = "move";
+        }
+    }
+
+    private void HandleDragEnd()
+    {
+        draggedPost = null;
+        activeDropzoneIndex = -1;
+        StateHasChanged();
+    }
+
+    private void ActivateDropzone(int index)
+    {
+        if (draggedPost != null)
+        {
+            activeDropzoneIndex = index;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleDropIntoWorkspace(DragEventArgs e)
+    {
+        if (draggedPost != null && !IsSelected(draggedPost))
+        {
+            SelectedPosts.Add(draggedPost);
+            StateHasChanged();
+        }
+    }
+
+    private void HandleDropAtIndex(DragEventArgs e, int index)
+    {
+        if (draggedPost != null)
+        {
+            // Remove from current position if already selected
+            if (IsSelected(draggedPost))
+            {
+                var currentIndex = SelectedPosts.IndexOf(draggedPost);
+                if (currentIndex != -1)
+                {
+                    SelectedPosts.RemoveAt(currentIndex);
+                    // Adjust target index if moving within the list
+                    if (currentIndex < index)
+                    {
+                        index--;
+                    }
+                }
+            }
+
+            // Insert at new position
+            SelectedPosts.Insert(index, draggedPost);
+            activeDropzoneIndex = -1;
+            StateHasChanged();
+        }
+    }
+
+    private bool IsSelected(Post post) =>
+        SelectedPosts.Any(p => p.Id == post.Id);
+
+    private void ToggleSelection(Post post)
+    {
+        if (IsSelected(post))
+        {
+            RemoveFromSelection(post);
+        }
+        else
+        {
+            SelectedPosts.Add(post);
+        }
+    }
+
+    private void RemoveFromSelection(Post post)
+    {
+        SelectedPosts.RemoveAll(p => p.Id == post.Id);
+    }
+
+    private void ClearSelection()
+    {
+        SelectedPosts.Clear();
+    }
+
+    private void CreateSynthesisFork()
+    {
+        // Implementation for synthesis fork creation
+    }
+
+    private double CalculateRelevance(Post post)
+    {
+        if (string.IsNullOrEmpty(searchQuery)) return 0;
+
+        // Simple relevance calculation based on text similarity
+        // In production, this would use more sophisticated algorithms
+        var searchTerms = searchQuery.ToLower().Split(' ');
+        var contentTerms = (post.Title + " " + post.Excerpt).ToLower();
+        return searchTerms.Count(term => contentTerms.Contains(term)) / (double)searchTerms.Length;
+    }
+
+    public class Post
+    {
+        public string Id { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Excerpt { get; set; } = "";
+        public string Author { get; set; } = "";
+        public List<string> Tags { get; set; } = new();
+        public double MeritScore { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class SynthesisForkModel
+    {
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public List<Post> SourcePosts { get; set; } = new();
+    }
+}
