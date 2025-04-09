@@ -1,0 +1,63 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-textarea-wrapper">
+    @if (ShowCounter)
+    {
+        <div class="meritocious-textarea-counter @(IsOverLimit ? "over-limit" : "")">
+            @CurrentLength / @MaxLength
+        </div>
+    }
+
+    <textarea class="@GetTextAreaClasses()"
+              placeholder="@Placeholder"
+              rows="@Rows"
+              maxlength="@(MaxLength > 0 ? MaxLength.ToString() : null)"
+              @bind="@Value"
+              @bind:event="oninput"
+              @onkeyup="HandleKeyUp"
+              @attributes="AdditionalAttributes">
+    </textarea>
+
+    @if (AutoGrow)
+    {
+        <div class="meritocious-textarea-mirror" @ref="mirrorRef">@Value</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "";
+    [Parameter] public int Rows { get; set; } = 3;
+    [Parameter] public bool AutoGrow { get; set; }
+    [Parameter] public int MaxLength { get; set; }
+    [Parameter] public bool ShowCounter { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private ElementReference mirrorRef;
+    private int CurrentLength => Value?.Length ?? 0;
+    private bool IsOverLimit => MaxLength > 0 && CurrentLength > MaxLength;
+
+    private string GetTextAreaClasses()
+    {
+        var classes = new List<string> { "meritocious-textarea" };
+
+        if (AutoGrow)
+            classes.Add("auto-grow");
+
+        if (IsOverLimit)
+            classes.Add("over-limit");
+
+        return string.Join(" ", classes);
+    }
+
+    private async Task HandleKeyUp()
+    {
+        if (AutoGrow)
+        {
+            // Update height based on content
+            await JS.InvokeVoidAsync("adjustTextAreaHeight", mirrorRef);
+        }
+    }
+}

@@ -1,0 +1,82 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-activity-feed">
+    <div class="meritocious-feed-header">
+        <div class="meritocious-feed-tabs">
+            @foreach (var tab in Tabs)
+            {
+                <button
+                    class="meritocious-feed-tab @(ActiveTab == tab ? "meritocious-feed-tab-active" : "")"
+                    @onclick="@(() => ActiveTab = tab)">
+                    @tab
+                </button>
+            }
+        </div>
+        
+        <div class="meritocious-feed-filters">
+            <MeritociousButton
+                Variant="ButtonVariant.Secondary"
+                IconName="fas fa-filter"
+                Size="ButtonSize.Small">
+                Filter
+            </MeritociousButton>
+            
+            <select class="meritocious-select">
+                <option value="all">All Time</option>
+                <option value="month">This Month</option>
+                <option value="week">This Week</option>
+            </select>
+            
+            <div class="meritocious-sort">
+                <span>Sort by:</span>
+                <select class="meritocious-select">
+                    <option value="merit">Highest Merit</option>
+                    <option value="recent">Most Recent</option>
+                    <option value="forks">Most Forks</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="meritocious-feed-content">
+        @foreach (var activity in Activities)
+        {
+            <MeritociousActivityCard
+                Title="@activity.Title"
+                Type="@activity.Type"
+                Merit="@activity.Merit"
+                Timestamp="@activity.Timestamp"
+                Content="@activity.Content"
+                Forks="@activity.Forks"
+                Replies="@activity.Replies" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<string> Tabs { get; set; } = new();
+    [Parameter] public List<ActivityData> Activities { get; set; } = new();
+    
+    private string ActiveTab { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        if (Tabs.Any() && string.IsNullOrEmpty(ActiveTab))
+        {
+            ActiveTab = Tabs[0];
+        }
+    }
+
+    public class ActivityData
+    {
+        public string Title { get; set; } = "";
+        public string Type { get; set; } = "";
+        public double Merit { get; set; }
+        public string Timestamp { get; set; } = "";
+        public string Content { get; set; } = "";
+        public int Forks { get; set; }
+        public int Replies { get; set; }
+    }
+}

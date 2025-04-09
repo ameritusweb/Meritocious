@@ -1,0 +1,86 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-bloom-history">
+    <div class="meritocious-history-header">
+        <h3>Bloom History</h3>
+        <div class="meritocious-history-timeline">
+            @foreach (var period in TimePeriods)
+            {
+                <button class="@($"meritocious-period-button {(SelectedPeriod == period ? "active" : "")}")"
+                        @onclick="@(() => SelectedPeriod = period)">
+                    @period
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="meritocious-history-chart">
+        <div class="meritocious-chart-grid">
+            @for (var i = MaxScore; i >= 0; i--)
+            {
+                <div class="meritocious-grid-line">
+                    <span class="meritocious-grid-label">@i</span>
+                </div>
+            }
+        </div>
+
+        <div class="meritocious-chart-data">
+            @foreach (var point in ChartData)
+            {
+                <div class="meritocious-data-point"
+                     style="bottom: @(point.Score / MaxScore * 100)%"
+                     @onmouseenter="@(() => ShowTooltip(point))"
+                     @onmouseleave="@(() => HideTooltip())">
+                    <div class="meritocious-point-marker"></div>
+                    @if (ActivePoint == point)
+                    {
+                        <div class="meritocious-point-tooltip">
+                            <div class="meritocious-tooltip-content">
+                                <div class="meritocious-tooltip-score">@point.Score.ToString("F1")</div>
+                                <div class="meritocious-tooltip-date">@point.Date</div>
+                                <div class="meritocious-tooltip-stats">
+                                    <div class="meritocious-tooltip-stat">
+                                        <i class="fas fa-code-branch"></i>
+                                        <span>@point.Forks forks</span>
+                                    </div>
+                                    <div class="meritocious-tooltip-stat">
+                                        <i class="fas fa-comments"></i>
+                                        <span>@point.Replies replies</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<BloomDataPoint> ChartData { get; set; } = new();
+    [Parameter] public int MaxScore { get; set; } = 5;
+
+    private readonly string[] TimePeriods = { "Week", "Month", "Quarter", "Year" };
+    private string SelectedPeriod = "Month";
+    private BloomDataPoint? ActivePoint;
+
+    private void ShowTooltip(BloomDataPoint point)
+    {
+        ActivePoint = point;
+    }
+
+    private void HideTooltip()
+    {
+        ActivePoint = null;
+    }
+
+    public class BloomDataPoint
+    {
+        public double Score { get; set; }
+        public string Date { get; set; } = "";
+        public int Forks { get; set; }
+        public int Replies { get; set; }
+    }
+}

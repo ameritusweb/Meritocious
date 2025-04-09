@@ -1,0 +1,25 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<span class="meritocious-tag @(Interactive ? "meritocious-tag-interactive" : "")" @onclick="HandleClick">
+    @if (IconName != null)
+    {
+        <i class="@IconName meritocious-tag-icon"></i>
+    }
+    @ChildContent
+</span>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? IconName { get; set; }
+    [Parameter] public bool Interactive { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    private async Task HandleClick(MouseEventArgs args)
+    {
+        if (Interactive)
+        {
+            await OnClick.InvokeAsync(args);
+        }
+    }
+}

@@ -1,0 +1,189 @@
+﻿/* Floating Petals Container */
+.meritocious-petals-container {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Individual Petal */
+.meritocious-petal {
+    position: absolute;
+    user-select: none;
+    animation: floatPetal linear infinite;
+}
+
+/* Glassmorphic Container */
+.meritocious-glass-container {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.meritocious-glass-content {
+    position: relative;
+    z-index: 1;
+}
+
+    .meritocious-glass-content.with-blur {
+        backdrop-filter: blur(8px);
+    }
+
+/* Intro Sequence */
+.meritocious-intro {
+    min-height: 100vh;
+    background-color: var(--meritocious-background);
+    transition: opacity 0.5s ease-out;
+}
+
+    .meritocious-intro.fade-out {
+        opacity: 0;
+    }
+
+.meritocious-intro-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: var(--meritocious-spacing-xl);
+    text-align: center;
+}
+
+.meritocious-logo-icon {
+    width: 6rem;
+    height: 6rem;
+    background-color: rgba(45, 212, 191, 0.1);
+    border-radius: var(--meritocious-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--meritocious-spacing-lg);
+}
+
+    .meritocious-logo-icon i {
+        font-size: 2.5rem;
+        color: var(--meritocious-primary);
+    }
+
+.meritocious-intro-content h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--meritocious-text);
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-intro-content p {
+    font-size: 1.25rem;
+    color: var(--meritocious-text-secondary);
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+/* Intro Step Animations */
+.meritocious-intro-step {
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: all 0.5s ease-out;
+}
+
+    .meritocious-intro-step.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+.meritocious-intro-button {
+    margin-top: var(--meritocious-spacing-xl);
+    background: linear-gradient(to right, var(--meritocious-primary), #14b8a6);
+    padding: var(--meritocious-spacing-md) var(--meritocious-spacing-lg);
+    border-radius: var(--meritocious-radius-lg);
+    color: white;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    transition: all 0.3s ease;
+}
+
+    .meritocious-intro-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 2rem rgba(45, 212, 191, 0.3);
+    }
+
+/* Floating Animation */
+@keyframes floatPetal {
+    0% {
+        transform: translateY(0) rotate(0deg);
+    }
+
+    33% {
+        transform: translateY(-50px) rotate(120deg);
+    }
+
+    67% {
+        transform: translateY(50px) rotate(240deg);
+    }
+
+    100% {
+        transform: translateY(0) rotate(360deg);
+    }
+}
+
+/* Cloud Effect */
+.meritocious-cloud {
+    position: absolute;
+    width: 24rem;
+    height: 24rem;
+    border-radius: 50%;
+    filter: blur(5rem);
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.meritocious-cloud-1 {
+    background-color: var(--meritocious-primary);
+    top: 10%;
+    left: 20%;
+    animation: floatCloud 20s linear infinite;
+}
+
+.meritocious-cloud-2 {
+    background-color: #3b82f6;
+    top: 40%;
+    right: 20%;
+    animation: floatCloud 25s linear infinite reverse;
+}
+
+@keyframes floatCloud {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(-10%, -10%);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    .meritocious-intro-content h1 {
+        font-size: 2rem;
+    }
+
+    .meritocious-intro-content p {
+        font-size: 1rem;
+    }
+
+    .meritocious-logo-icon {
+        width: 4rem;
+        height: 4rem;
+    }
+
+        .meritocious-logo-icon i {
+            font-size: 2rem;
+        }
+}

@@ -1,0 +1,36 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-radio-group">
+    @foreach (var option in Options)
+    {
+        <label class="meritocious-radio">
+            <input type="radio"
+                   name="@Name"
+                   value="@option.Value"
+                   checked="@(Value == option.Value)"
+                   @onchange="@(() => HandleChange(option.Value))" />
+            <span class="meritocious-radio-mark"></span>
+            <span class="meritocious-radio-label">@option.Label</span>
+        </label>
+    }
+</div>
+
+@code {
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public List<RadioOption> Options { get; set; } = new();
+
+    private async Task HandleChange(string value)
+    {
+        Value = value;
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    public class RadioOption
+    {
+        public string Value { get; set; } = "";
+        public string Label { get; set; } = "";
+    }
+}

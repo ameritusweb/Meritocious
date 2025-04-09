@@ -1,0 +1,67 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-petals-container">
+    @foreach (var petal in _petals)
+    {
+        <div class="meritocious-petal"
+             style="@GetPetalStyle(petal)">
+            @petal.Symbol
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int PetalCount { get; set; } = 25;
+    [Parameter] public bool EnableBlur { get; set; } = true;
+
+    private readonly string[] _flowerSymbols = new[]
+    {
+        "🌸", "🌺", "🌼", "🌻", "💮", "🏵️", "⚘", "✿"
+    };
+
+    private List<PetalData> _petals = new();
+
+    protected override void OnInitialized()
+    {
+        var random = new Random();
+        _petals = Enumerable.Range(0, PetalCount)
+            .Select(_ => new PetalData
+                {
+                    Symbol = _flowerSymbols[random.Next(_flowerSymbols.Length)],
+                    Left = random.NextDouble() * 100,
+                    Top = random.NextDouble() * 100,
+                    AnimationDelay = random.NextDouble() * 5,
+                    AnimationDuration = 10 + random.NextDouble() * 10,
+                    Opacity = 0.15 + random.NextDouble() * 0.15,
+                    Rotation = random.NextDouble() * 360,
+                    Scale = 1 + random.NextDouble() * 1.5
+                })
+            .ToList();
+    }
+
+    private string GetPetalStyle(PetalData petal)
+    {
+        return $@"
+            left: {petal.Left}%;
+            top: {petal.Top}%;
+            animation-delay: {petal.AnimationDelay}s;
+            animation-duration: {petal.AnimationDuration}s;
+            opacity: {petal.Opacity};
+            transform: rotate({petal.Rotation}deg);
+            font-size: {petal.Scale}rem;
+        ";
+    }
+
+    private class PetalData
+    {
+        public string Symbol { get; set; } = "";
+        public double Left { get; set; }
+        public double Top { get; set; }
+        public double AnimationDelay { get; set; }
+        public double AnimationDuration { get; set; }
+        public double Opacity { get; set; }
+        public double Rotation { get; set; }
+        public double Scale { get; set; }
+    }
+}

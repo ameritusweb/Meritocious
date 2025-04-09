@@ -1,0 +1,88 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-search">
+    <div class="meritocious-search-input-container">
+        <i class="fas fa-search meritocious-search-icon"></i>
+        <input
+            type="text"
+            class="meritocious-search-input"
+            placeholder="@Placeholder"
+            @bind="SearchTerm"
+            @bind:event="oninput"
+            @onkeydown="@HandleKeyDown" />
+        @if (!string.IsNullOrEmpty(SearchTerm))
+        {
+            <button class="meritocious-search-clear" @onclick="@ClearSearch">
+                <i class="fas fa-times"></i>
+            </button>
+        }
+    </div>
+
+    @if (ShowFilters)
+    {
+        <div class="meritocious-search-filters">
+            <div class="meritocious-active-filters">
+                @foreach (var filter in ActiveFilters)
+                {
+                    <MeritociousTag Interactive="true" OnClick="@(() => RemoveFilter(filter))">
+                        @filter
+                        <i class="fas fa-times"></i>
+                    </MeritociousTag>
+                }
+            </div>
+            
+            <div class="meritocious-filter-actions">
+                <button class="meritocious-filter-button" @onclick="@OnAdvancedFilter">
+                    <i class="fas fa-sliders-h"></i>
+                    Advanced Filters
+                </button>
+                
+                <div class="meritocious-sort-control">
+                    <span>Sort by:</span>
+                    <select @bind="SortOption">
+                        <option value="merit">Merit Score</option>
+                        <option value="recent">Most Recent</option>
+                        <option value="forks">Most Forks</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Placeholder { get; set; } = "Search ideas, discussions, and forks...";
+    [Parameter] public bool ShowFilters { get; set; } = true;
+    [Parameter] public List<string> ActiveFilters { get; set; } = new();
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+    [Parameter] public EventCallback<string> OnFilterRemove { get; set; }
+    [Parameter] public EventCallback OnAdvancedFilter { get; set; }
+    [Parameter] public EventCallback<string> OnSortChange { get; set; }
+
+    private string SearchTerm { get; set; } = "";
+    private string SortOption { get; set; } = "merit";
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await OnSearch.InvokeAsync(SearchTerm);
+        }
+    }
+
+    private void ClearSearch()
+    {
+        SearchTerm = "";
+    }
+
+    private async Task RemoveFilter(string filter)
+    {
+        await OnFilterRemove.InvokeAsync(filter);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await OnSortChange.InvokeAsync(SortOption);
+    }
+}

@@ -1,0 +1,27 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<label class="meritocious-checkbox">
+    <input type="checkbox"
+           checked="@Checked"
+           @onchange="HandleChange"
+           @attributes="AdditionalAttributes" />
+    <span class="meritocious-checkbox-mark"></span>
+    @if (ChildContent != null)
+    {
+        <span class="meritocious-checkbox-label">@ChildContent</span>
+    }
+</label>
+
+@code {
+    [Parameter] public bool Checked { get; set; }
+    [Parameter] public EventCallback<bool> CheckedChanged { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        Checked = (bool)(e.Value ?? false);
+        await CheckedChanged.InvokeAsync(Checked);
+    }
+}

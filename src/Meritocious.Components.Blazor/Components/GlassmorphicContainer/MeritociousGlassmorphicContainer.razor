@@ -1,0 +1,21 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-glass-container @Class" style="@Style">
+    @if (EnablePetals)
+    {
+        <MeritociousFloatingPetalsBackground PetalCount="PetalCount" EnableBlur="true" />
+    }
+    <div class="meritocious-glass-content @(EnableBlur ? "with-blur" : "")">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool EnablePetals { get; set; } = true;
+    [Parameter] public bool EnableBlur { get; set; } = true;
+    [Parameter] public int PetalCount { get; set; } = 25;
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public string Style { get; set; } = "";
+}

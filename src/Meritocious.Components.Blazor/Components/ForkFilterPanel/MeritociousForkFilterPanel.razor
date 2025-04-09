@@ -1,0 +1,180 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="@($"meritocious-filter-panel {(IsOpen ? "meritocious-filter-panel-open" : "")}")">
+    <div class="meritocious-filter-panel-content">
+        <div class="meritocious-filter-header">
+            <div class="meritocious-filter-title">
+                <i class="fas fa-code-branch"></i>
+                <h2>Evolution Filters</h2>
+            </div>
+            <button class="meritocious-close-button" @onclick="@OnClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="meritocious-filter-sections">
+            <MeritociousExpandableSection Title="Fork Types" Icon="fas fa-code-branch" DefaultOpen="true">
+                <div class="meritocious-fork-types">
+                    @foreach (var category in ForkTypes)
+                    {
+                        <div class="meritocious-fork-category">
+                            <h4>@category.Key Forks</h4>
+                            <div class="meritocious-fork-options">
+                                @foreach (var type in category.Value)
+                                {
+                                    <button
+                                        class="@($"meritocious-fork-type {(SelectedTypes.Contains(type.Id) ? "selected" : "")}")"
+                                        @onclick="@(() => ToggleForkType(type.Id))">
+                                        <i class="@type.Icon"></i>
+                                        <span>@type.Label</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </MeritociousExpandableSection>
+
+            <MeritociousExpandableSection Title="Lineage Depth" Icon="fas fa-tree" DefaultOpen="true">
+                <div class="meritocious-lineage-metrics">
+                    @foreach (var metric in LineageMetrics)
+                    {
+                        <div class="meritocious-metric-slider">
+                            <div class="meritocious-metric-header">
+                                <span>@metric.Label</span>
+                                <span class="meritocious-metric-value">≥ @metric.Value</span>
+                            </div>
+                            <input
+                                type="range"
+                                min="@metric.Min"
+                                max="@metric.Max"
+                                step="@metric.Step"
+                                value="@metric.Value"
+                                @onchange="@(e => UpdateMetric(metric.Id, int.Parse(e.Value?.ToString() ?? "0")))" />
+                            <div class="meritocious-metric-range">
+                                <span>@metric.Min</span>
+                                <span>@metric.Max</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </MeritociousExpandableSection>
+
+            <div class="meritocious-evolution-patterns">
+                <h3>Evolution Patterns</h3>
+                <div class="meritocious-patterns">
+                    @foreach (var pattern in EvolutionPatterns)
+                    {
+                        <button class="meritocious-pattern-button" @onclick="@(() => ApplyPattern(pattern))">
+                            <div class="meritocious-pattern-info">
+                                <span class="meritocious-pattern-name">@pattern.Name</span>
+                                <span class="meritocious-pattern-desc">@pattern.Description</span>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="meritocious-filter-actions">
+            <MeritociousButton
+                Variant="ButtonVariant.Secondary"
+                OnClick="@OnReset">
+                Reset
+            </MeritociousButton>
+            <MeritociousButton
+                OnClick="@OnApply">
+                Apply Filters
+            </MeritociousButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnApply { get; set; }
+    [Parameter] public EventCallback OnReset { get; set; }
+
+    private HashSet<string> SelectedTypes { get; set; } = new();
+    
+    private Dictionary<string, List<ForkTypeData>> ForkTypes { get; set; } = new()
+    {
+        ["Analytical"] = new()
+        {
+            new() { Id = "extension", Label = "Extension Fork", Icon = "fas fa-code-branch" },
+            new() { Id = "critique", Label = "Critique Fork", Icon = "fas fa-balance-scale" },
+            new() { Id = "synthesis", Label = "Synthesis Fork", Icon = "fas fa-brain" },
+            new() { Id = "application", Label = "Application Fork", Icon = "fas fa-search" }
+        },
+        ["Creative"] = new()
+        {
+            new() { Id = "what-if", Label = "What-If Fork", Icon = "fas fa-lightbulb" },
+            new() { Id = "world", Label = "World Remix", Icon = "fas fa-tree" },
+            new() { Id = "perspective", Label = "Perspective Fork", Icon = "fas fa-eye" },
+            new() { Id = "narrative", Label = "Narrative Fork", Icon = "fas fa-book" }
+        }
+    };
+
+    private List<MetricData> LineageMetrics { get; set; } = new()
+    {
+        new() { Id = "generations", Label = "Generation Depth", Min = 0, Max = 10, Step = 1, Value = 2 },
+        new() { Id = "remixes", Label = "Remix Count", Min = 0, Max = 20, Step = 1, Value = 5 },
+        new() { Id = "bloom", Label = "Bloom Score", Min = 0, Max = 16, Step = 1, Value = 8 }
+    };
+
+    private List<PatternData> EvolutionPatterns { get; set; } = new()
+    {
+        new() { Name = "Deep Evolution", Description = "3+ generations, high bloom" },
+        new() { Name = "Active Remix", Description = "5+ remixes in past week" },
+        new() { Name = "Breakthrough Ideas", Description = "High merit + multiple forks" }
+    };
+
+    private void ToggleForkType(string typeId)
+    {
+        if (SelectedTypes.Contains(typeId))
+            SelectedTypes.Remove(typeId);
+        else
+            SelectedTypes.Add(typeId);
+    }
+
+    private void UpdateMetric(string metricId, int value)
+    {
+        var metric = LineageMetrics.FirstOrDefault(m => m.Id == metricId);
+        if (metric != null)
+        {
+            metric.Value = value;
+        }
+    }
+
+    private void ApplyPattern(PatternData pattern)
+    {
+        // Apply the pattern's preset values
+        // This would update SelectedTypes and LineageMetrics based on the pattern
+    }
+
+    public class ForkTypeData
+    {
+        public string Id { get; set; } = "";
+        public string Label { get; set; } = "";
+        public string Icon { get; set; } = "";
+    }
+
+    public class MetricData
+    {
+        public string Id { get; set; } = "";
+        public string Label { get; set; } = "";
+        public int Min { get; set; }
+        public int Max { get; set; }
+        public int Step { get; set; }
+        public int Value { get; set; }
+    }
+
+    public class PatternData
+    {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+}

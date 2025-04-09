@@ -1,0 +1,44 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-merit-bar @(ShowDetails ? "meritocious-merit-bar-active" : "")"
+     @onmouseenter="() => ShowDetails = true"
+     @onmouseleave="() => ShowDetails = false">
+    <div class="meritocious-merit-bar-hearts">
+        @for (int i = 0; i < 5; i++)
+        {
+            var filled = i < Math.Floor(Score);
+            var partial = i == Math.Floor(Score) && Score % 1 > 0;
+
+            <div class="meritocious-heart @(filled ? "meritocious-heart-filled" : "") @(partial ? "meritocious-heart-partial" : "")">
+                <i class="fas fa-heart"></i>
+                @if (partial)
+                {
+                    <div class="meritocious-heart-fill" style="height: @((Score % 1) * 100)%"></div>
+                }
+            </div>
+        }
+    </div>
+    <span class="meritocious-merit-score">@Score.ToString("F1")</span>
+
+    @if (ShowDetails && Details != null)
+    {
+        <div class="meritocious-merit-details">
+            <h4>Merit Breakdown</h4>
+            @foreach (var detail in Details)
+            {
+                <div class="meritocious-merit-detail">
+                    <span>@detail.Key</span>
+                    <span>@detail.Value.ToString("F1")</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public double Score { get; set; }
+    [Parameter] public Dictionary<string, double>? Details { get; set; }
+
+    private bool ShowDetails { get; set; }
+}

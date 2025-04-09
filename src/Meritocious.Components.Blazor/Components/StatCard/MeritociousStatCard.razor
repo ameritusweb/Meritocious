@@ -1,0 +1,29 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-stat-card">
+    <div class="meritocious-stat-header">
+        <div class="meritocious-stat-icon">
+            <i class="@Icon"></i>
+        </div>
+        @if (!string.IsNullOrEmpty(Trend))
+        {
+            <div class="meritocious-stat-trend">
+                <i class="fas fa-trending-up"></i>
+                @Trend
+            </div>
+        }
+    </div>
+
+    <div class="meritocious-stat-content">
+        <div class="meritocious-stat-value">@Value</div>
+        <div class="meritocious-stat-label">@Label</div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string? Trend { get; set; }
+}

@@ -1,0 +1,354 @@
+﻿/* Bloom Container */
+.meritocious-bloom {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    padding: var(--meritocious-spacing-sm);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    position: relative;
+}
+
+/* Heart Display */
+.meritocious-bloom-hearts {
+    display: flex;
+    gap: var(--meritocious-spacing-xs);
+}
+
+.meritocious-bloom-heart {
+    position: relative;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #4b5563;
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-bloom-heart.filled {
+        color: var(--meritocious-primary);
+    }
+
+    .meritocious-bloom-heart.partial {
+        overflow: hidden;
+    }
+
+.meritocious-heart-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--meritocious-primary);
+    transition: var(--meritocious-transition);
+}
+
+/* Metrics Display */
+.meritocious-bloom-metrics {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+}
+
+.meritocious-bloom-score {
+    font-weight: 600;
+    color: var(--meritocious-primary);
+}
+
+.meritocious-bloom-trend {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-xs);
+    font-size: 0.875rem;
+}
+
+    .meritocious-bloom-trend.positive {
+        color: #34d399;
+    }
+
+    .meritocious-bloom-trend.negative {
+        color: #ef4444;
+    }
+
+/* Detailed Stats */
+.meritocious-bloom-details {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: var(--meritocious-spacing-sm);
+    padding: var(--meritocious-spacing-md);
+    background-color: rgba(31, 41, 55, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    min-width: 16rem;
+    z-index: 10;
+    animation: fadeIn 0.2s ease-out;
+}
+
+    .meritocious-bloom-details h4 {
+        color: var(--meritocious-text);
+        font-weight: 500;
+        margin-bottom: var(--meritocious-spacing-md);
+    }
+
+.meritocious-bloom-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-sm);
+}
+
+.meritocious-bloom-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-stat-label {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-xs);
+    color: var(--meritocious-text-secondary);
+    width: 6rem;
+}
+
+.meritocious-stat-bar {
+    flex: 1;
+    height: 0.25rem;
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-full);
+    overflow: hidden;
+}
+
+.meritocious-stat-fill {
+    height: 100%;
+    background-color: var(--meritocious-primary);
+    border-radius: var(--meritocious-radius-full);
+    transition: width 0.3s ease-out;
+}
+
+.meritocious-stat-value {
+    color: var(--meritocious-primary);
+    font-weight: 500;
+    min-width: 2.5rem;
+    text-align: right;
+}
+
+/* History Chart */
+.meritocious-bloom-history {
+    margin-top: var(--meritocious-spacing-xl);
+    padding: var(--meritocious-spacing-lg);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+}
+
+.meritocious-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+    .meritocious-history-header h3 {
+        color: var(--meritocious-text);
+        font-weight: 500;
+    }
+
+.meritocious-history-timeline {
+    display: flex;
+    gap: var(--meritocious-spacing-xs);
+}
+
+.meritocious-period-button {
+    padding: var(--meritocious-spacing-xs) var(--meritocious-spacing-sm);
+    color: var(--meritocious-text-secondary);
+    border-radius: var(--meritocious-radius-md);
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-period-button:hover {
+        background-color: var(--meritocious-surface-hover);
+    }
+
+    .meritocious-period-button.active {
+        background-color: var(--meritocious-primary);
+        color: white;
+    }
+
+/* Chart Grid */
+.meritocious-history-chart {
+    position: relative;
+    height: 12rem;
+    margin-top: var(--meritocious-spacing-lg);
+}
+
+.meritocious-chart-grid {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.meritocious-grid-line {
+    position: relative;
+    border-bottom: 1px dashed var(--meritocious-border);
+}
+
+.meritocious-grid-label {
+    position: absolute;
+    left: -2rem;
+    top: -0.5rem;
+    color: var(--meritocious-text-secondary);
+    font-size: 0.75rem;
+}
+
+/* Data Points */
+.meritocious-chart-data {
+    position: absolute;
+    inset: 0;
+    padding: var(--meritocious-spacing-md) 0;
+}
+
+.meritocious-data-point {
+    position: absolute;
+    transform: translate(-50%, 50%);
+}
+
+.meritocious-point-marker {
+    width: 8px;
+    height: 8px;
+    background-color: var(--meritocious-primary);
+    border-radius: 50%;
+    transition: var(--meritocious-transition);
+}
+
+.meritocious-data-point:hover .meritocious-point-marker {
+    transform: scale(1.5);
+    box-shadow: 0 0 10px var(--meritocious-primary);
+}
+
+/* Tooltip */
+.meritocious-point-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: var(--meritocious-spacing-sm);
+    padding: var(--meritocious-spacing-sm);
+    background-color: rgba(31, 41, 55, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: var(--meritocious-radius-md);
+    border: 1px solid var(--meritocious-border);
+    min-width: 8rem;
+    z-index: 10;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.meritocious-tooltip-score {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--meritocious-primary);
+    text-align: center;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-tooltip-date {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+    text-align: center;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-tooltip-stats {
+    display: flex;
+    gap: var(--meritocious-spacing-sm);
+    justify-content: center;
+}
+
+.meritocious-tooltip-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-xs);
+    color: var(--meritocious-text-secondary);
+    font-size: 0.75rem;
+}
+
+/* Overview Metrics */
+.meritocious-overview-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: var(--meritocious-spacing-md);
+    margin: var(--meritocious-spacing-lg) 0;
+}
+
+.meritocious-metric-card {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+    padding: var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+}
+
+.meritocious-metric-icon {
+    padding: var(--meritocious-spacing-sm);
+    background-color: rgba(45, 212, 191, 0.1);
+    border-radius: var(--meritocious-radius-md);
+    color: var(--meritocious-primary);
+}
+
+.meritocious-metric-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--meritocious-text);
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+}
+
+.meritocious-metric-trend {
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-xs);
+}
+
+    .meritocious-metric-trend.positive {
+        color: #34d399;
+    }
+
+.meritocious-metric-label {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-0.5rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    .meritocious-history-header {
+        flex-direction: column;
+        gap: var(--meritocious-spacing-md);
+        align-items: stretch;
+    }
+
+    .meritocious-history-timeline {
+        justify-content: space-between;
+    }
+
+    .meritocious-period-button {
+        flex: 1;
+        text-align: center;
+    }
+}

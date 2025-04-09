@@ -1,0 +1,110 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-settings-section">
+    <div class="meritocious-settings-group">
+        <h3>Email Notifications</h3>
+
+        @foreach (var setting in EmailSettings)
+        {
+            <div class="meritocious-preference-item">
+                <div>
+                    <label>@setting.Label</label>
+                    <p class="meritocious-preference-desc">@setting.Description</p>
+                </div>
+                <label class="meritocious-switch">
+                    <input type="checkbox"
+                           checked="@setting.IsEnabled"
+                           @onchange="@(e => ToggleEmailSetting(setting.Id, e))" />
+                    <span class="meritocious-switch-slider"></span>
+                </label>
+            </div>
+        }
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Push Notifications</h3>
+
+        @foreach (var setting in PushSettings)
+        {
+            <div class="meritocious-preference-item">
+                <div>
+                    <label>@setting.Label</label>
+                    <p class="meritocious-preference-desc">@setting.Description</p>
+                </div>
+                <label class="meritocious-switch">
+                    <input type="checkbox"
+                           checked="@setting.IsEnabled"
+                           @onchange="@(e => TogglePushSetting(setting.Id, e))" />
+                    <span class="meritocious-switch-slider"></span>
+                </label>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<NotificationSetting> EmailSettings = new()
+    {
+        new() {
+            Id = "new_forks",
+            Label = "New Forks",
+            Description = "When someone forks your content",
+            IsEnabled = true
+        },
+        new() {
+            Id = "replies",
+            Label = "Replies",
+            Description = "When someone replies to your posts",
+            IsEnabled = true
+        },
+        new() {
+            Id = "mentions",
+            Label = "Mentions",
+            Description = "When someone mentions you",
+            IsEnabled = true
+        }
+    };
+
+    private List<NotificationSetting> PushSettings = new()
+    {
+        new() {
+            Id = "instant_forks",
+            Label = "Instant Fork Notifications",
+            Description = "Real-time notifications for new forks",
+            IsEnabled = true
+        },
+        new() {
+            Id = "merit_updates",
+            Label = "Merit Updates",
+            Description = "When your content receives merit scores",
+            IsEnabled = true
+        }
+    };
+
+    private void ToggleEmailSetting(string id, ChangeEventArgs e)
+    {
+        var setting = EmailSettings.FirstOrDefault(s => s.Id == id);
+        if (setting != null)
+        {
+            setting.IsEnabled = (bool)(e.Value ?? false);
+        }
+    }
+
+    private void TogglePushSetting(string id, ChangeEventArgs e)
+    {
+        var setting = PushSettings.FirstOrDefault(s => s.Id == id);
+        if (setting != null)
+        {
+            setting.IsEnabled = (bool)(e.Value ?? false);
+        }
+    }
+
+    private class NotificationSetting
+    {
+        public string Id { get; set; } = "";
+        public string Label { get; set; } = "";
+        public string Description { get; set; } = "";
+        public bool IsEnabled { get; set; }
+    }
+}

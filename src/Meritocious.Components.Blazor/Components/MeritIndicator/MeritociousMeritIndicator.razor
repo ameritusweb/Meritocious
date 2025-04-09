@@ -1,0 +1,11 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-merit-indicator">
+    <i class="fas fa-star"></i>
+    <span>@Score.ToString("F1")</span>
+</div>
+
+@code {
+    [Parameter] public decimal Score { get; set; }
+}

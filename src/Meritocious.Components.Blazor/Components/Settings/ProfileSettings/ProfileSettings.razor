@@ -1,0 +1,97 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-settings-section">
+    <div class="meritocious-settings-group">
+        <h3>Profile Information</h3>
+        
+        <div class="meritocious-profile-avatar">
+            <div class="meritocious-avatar-preview"></div>
+            <MeritociousButton
+                Variant="ButtonVariant.Secondary"
+                Size="ButtonSize.Small">
+                Change Avatar
+            </MeritociousButton>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Display Name</label>
+            <MeritociousAuthInput
+                Type="text"
+                Icon="fas fa-user"
+                @bind-Value="@profile.DisplayName" />
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Bio</label>
+            <textarea 
+                class="meritocious-textarea"
+                placeholder="Tell others about yourself..."
+                @bind="profile.Bio"></textarea>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Interests</label>
+            <div class="meritocious-interests-grid">
+                @foreach (var interest in AllInterests)
+                {
+                    <button
+                        type="button"
+                        class="@($"meritocious-interest-tag {(profile.Interests.Contains(interest) ? "selected" : "")}")"
+                        @onclick="@(() => ToggleInterest(interest))">
+                        @interest
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Contact Information</h3>
+        
+        <div class="meritocious-form-group">
+            <label>Email</label>
+            <MeritociousAuthInput
+                Type="email"
+                Icon="fas fa-envelope"
+                @bind-Value="@profile.Email" />
+        </div>
+    </div>
+
+    <div class="meritocious-settings-actions">
+        <MeritociousButton OnClick="@SaveChanges">
+            Save Changes
+        </MeritociousButton>
+    </div>
+</div>
+
+@code {
+    private ProfileData profile = new();
+
+    private static readonly string[] AllInterests = {
+        "Technology", "Philosophy", "Science", "Arts",
+        "Politics", "Economics", "Environment", "Education"
+    };
+
+    private void ToggleInterest(string interest)
+    {
+        if (profile.Interests.Contains(interest))
+            profile.Interests.Remove(interest);
+        else
+            profile.Interests.Add(interest);
+    }
+
+    private async Task SaveChanges()
+    {
+        // Save profile changes
+    }
+
+    private class ProfileData
+    {
+        public string DisplayName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Bio { get; set; } = "";
+        public HashSet<string> Interests { get; set; } = new();
+    }
+}

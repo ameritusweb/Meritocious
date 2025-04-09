@@ -1,0 +1,185 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="@($"meritocious-filter-panel {(IsOpen ? "open" : "")}")">
+    <div class="meritocious-filter-content">
+        <div class="meritocious-filter-header">
+            <div class="meritocious-header-title">
+                <i class="fas fa-code-branch"></i>
+                <h2>Evolution Filters</h2>
+            </div>
+            <button class="meritocious-close-button" @onclick="OnClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="meritocious-filter-sections">
+            <!-- Fork Types -->
+            <FilterSection Title="Fork Types" Icon="fas fa-code-branch" DefaultOpen="true">
+                @foreach (var category in ForkCategories)
+                {
+                    <div class="meritocious-fork-category">
+                        <h4>@category.Key Forks</h4>
+                        <div class="meritocious-fork-options">
+                            @foreach (var type in category.Value)
+                            {
+                                <button 
+                                    class="@($"meritocious-fork-type {(SelectedForkTypes.Contains(type.Id) ? "selected" : "")}")"
+                                    @onclick="@(() => ToggleForkType(type.Id))">
+                                    <i class="@type.Icon"></i>
+                                    <span>@type.Label</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </FilterSection>
+
+            <!-- Lineage Metrics -->
+            <FilterSection Title="Lineage Depth" Icon="fas fa-tree" DefaultOpen="true">
+                <div class="meritocious-lineage-metrics">
+                    @foreach (var metric in LineageMetrics)
+                    {
+                        <div class="meritocious-metric-slider">
+                            <div class="meritocious-metric-header">
+                                <label>@metric.Label</label>
+                                <span>≥ @metric.Value</span>
+                            </div>
+                            <input 
+                                type="range"
+                                min="@metric.Min"
+                                max="@metric.Max"
+                                step="@metric.Step"
+                                value="@metric.Value"
+                                @onchange="@(e => UpdateMetric(metric.Id, int.Parse(e.Value?.ToString() ?? "0")))" />
+                            <div class="meritocious-range-labels">
+                                <span>@metric.Min</span>
+                                <span>@metric.Max</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </FilterSection>
+
+            <!-- Evolution Patterns -->
+            <div class="meritocious-pattern-section">
+                <h3>Evolution Patterns</h3>
+                <div class="meritocious-patterns">
+                    @foreach (var pattern in EvolutionPatterns)
+                    {
+                        <button 
+                            class="meritocious-pattern-preset"
+                            @onclick="@(() => ApplyPattern(pattern))">
+                            <div class="meritocious-pattern-info">
+                                <span class="meritocious-pattern-name">@pattern.Name</span>
+                                <span class="meritocious-pattern-description">@pattern.Description</span>
+                            </div>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="meritocious-filter-actions">
+            <MeritosiousButton
+                Variant="ButtonVariant.Secondary"
+                OnClick="@ResetFilters">
+                Reset
+            </MeritosiousButton>
+            <MeritosiousButton
+                OnClick="@ApplyFilters">
+                Apply Filters
+            </MeritosiousButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<FilterState> OnApply { get; set; }
+
+    private HashSet<string> SelectedForkTypes = new();
+
+    private Dictionary<string, List<ForkType>> ForkCategories = new()
+    {
+        ["Analytical"] = new()
+        {
+            new("extension", "Extension Fork", "fas fa-code-branch"),
+            new("critique", "Critique Fork", "fas fa-balance-scale"),
+            new("synthesis", "Synthesis Fork", "fas fa-brain"),
+            new("application", "Application Fork", "fas fa-search")
+        },
+        ["Creative"] = new()
+        {
+            new("what-if", "What-If Fork", "fas fa-lightbulb"),
+            new("world", "World Remix", "fas fa-tree"),
+            new("perspective", "Perspective Fork", "fas fa-eye"),
+            new("narrative", "Narrative Fork", "fas fa-book")
+        }
+    };
+
+    private List<LineageMetric> LineageMetrics = new()
+    {
+        new("generations", "Generation Depth", 0, 10, 1, 2),
+        new("remixes", "Remix Count", 0, 20, 1, 5),
+        new("bloom", "Bloom Score", 0, 16, 1, 8)
+    };
+
+    private List<EvolutionPattern> EvolutionPatterns = new()
+    {
+        new("Deep Evolution", "3+ generations, high bloom score"),
+        new("Active Remix", "5+ remixes in past week"),
+        new("Breakthrough Ideas", "High merit + multiple forks")
+    };
+
+    private void ToggleForkType(string typeId)
+    {
+        if (SelectedForkTypes.Contains(typeId))
+            SelectedForkTypes.Remove(typeId);
+        else
+            SelectedForkTypes.Add(typeId);
+    }
+
+    private void UpdateMetric(string metricId, int value)
+    {
+        var metric = LineageMetrics.FirstOrDefault(m => m.Id == metricId);
+        if (metric != null)
+            metric.Value = value;
+    }
+
+    private void ApplyPattern(EvolutionPattern pattern)
+    {
+        // Apply preset values for the pattern
+    }
+
+    private void ResetFilters()
+    {
+        SelectedForkTypes.Clear();
+        foreach (var metric in LineageMetrics)
+        {
+            metric.Value = metric.Min;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        var state = new FilterState
+        {
+            ForkTypes = SelectedForkTypes.ToList(),
+            Metrics = LineageMetrics.ToDictionary(m => m.Id, m => m.Value)
+        };
+        await OnApply.InvokeAsync(state);
+        await OnClose.InvokeAsync();
+    }
+
+    private record ForkType(string Id, string Label, string Icon);
+    private record LineageMetric(string Id, string Label, int Min, int Max, int Step, int Value);
+    private record EvolutionPattern(string Name, string Description);
+
+    public class FilterState
+    {
+        public List<string> ForkTypes { get; set; } = new();
+        public Dictionary<string, int> Metrics { get; set; } = new();
+    }
+}

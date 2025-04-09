@@ -1,0 +1,248 @@
+﻿// SecuritySettings.razor
+@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-settings-section">
+    <div class="meritocious-settings-group">
+        <h3>Password Security</h3>
+
+        @if (!IsChangingPassword)
+        {
+            <MeritociousButton
+                Variant="ButtonVariant.Secondary"
+                OnClick="@(() => IsChangingPassword = true)">
+                Change Password
+            </MeritociousButton>
+        }
+        else
+        {
+            <div class="meritocious-password-change-form">
+                <MeritociousAuthInput
+                    Type="password"
+                    Icon="fas fa-lock"
+                    Placeholder="Current password"
+                    @bind-Value="@currentPassword" />
+
+                <MeritociousAuthInput
+                    Type="password"
+                    Icon="fas fa-key"
+                    Placeholder="New password"
+                    @bind-Value="@newPassword" />
+
+                <MeritociousAuthInput
+                    Type="password"
+                    Icon="fas fa-key"
+                    Placeholder="Confirm new password"
+                    @bind-Value="@confirmPassword" />
+
+                <div class="meritocious-form-actions">
+                    <MeritociousButton
+                        Variant="ButtonVariant.Secondary"
+                        OnClick="@(() => IsChangingPassword = false)">
+                        Cancel
+                    </MeritociousButton>
+                    <MeritociousButton
+                        OnClick="@UpdatePassword"
+                        Disabled="@(!CanUpdatePassword)">
+                        Update Password
+                    </MeritociousButton>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Two-Factor Authentication</h3>
+        
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Enable 2FA</label>
+                <p class="meritocious-preference-desc">
+                    Add an extra layer of security to your account
+                </p>
+            </div>
+            <label class="meritocious-switch">
+                <input 
+                    type="checkbox" 
+                    @bind="@Is2FAEnabled"
+                    @onchange="@Toggle2FA" />
+                <span class="meritocious-switch-slider"></span>
+            </label>
+        </div>
+
+        @if (Is2FAEnabled)
+        {
+            <div class="meritocious-2fa-setup">
+                <div class="meritocious-qr-placeholder">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Scan with authenticator app</span>
+                </div>
+
+                <div class="meritocious-backup-codes">
+                    <h4>Backup Codes</h4>
+                    <p>Save these codes in a secure place. You can use them to access your account if you lose your authenticator device.</p>
+                    
+                    <div class="meritocious-code-grid">
+                        @foreach (var code in BackupCodes)
+                        {
+                            <div class="meritocious-backup-code">
+                                @code
+                            </div>
+                        }
+                    </div>
+
+                    <MeritociousButton
+                        Variant="ButtonVariant.Secondary"
+                        Size="ButtonSize.Small"
+                        OnClick="@GenerateNewCodes">
+                        Generate New Codes
+                    </MeritociousButton>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Active Sessions</h3>
+        
+        <div class="meritocious-sessions-list">
+            @foreach (var session in ActiveSessions)
+            {
+                <div class="meritocious-session-item">
+                    <div class="meritocious-session-info">
+                        <i class="@GetDeviceIcon(session.DeviceType)"></i>
+                        <div>
+                            <div class="meritocious-session-device">@session.DeviceName</div>
+                            <div class="meritocious-session-details">
+                                <span>@session.Location</span>
+                                <span>•</span>
+                                <span>@session.LastActive</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if (session.IsCurrent)
+                    {
+                        <span class="meritocious-current-session">Current Session</span>
+                    }
+                    else
+                    {
+                        <MeritociousButton
+                            Variant="ButtonVariant.Secondary"
+                            Size="ButtonSize.Small"
+                            OnClick="@(() => EndSession(session.Id))">
+                            End Session
+                        </MeritociousButton>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="meritocious-danger-zone">
+        <h3>Delete Account</h3>
+        
+        <div class="meritocious-danger-action">
+            <div class="meritocious-danger-action-info">
+                <div class="meritocious-danger-action-title">
+                    Delete your account and all associated data
+                </div>
+                <div class="meritocious-danger-action-desc">
+                    This action is permanent and cannot be undone
+                </div>
+            </div>
+            <MeritociousButton
+                Variant="ButtonVariant.Danger"
+                OnClick="@ConfirmDelete">
+                Delete Account
+            </MeritociousButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool IsChangingPassword { get; set; }
+    private string currentPassword = "";
+    private string newPassword = "";
+    private string confirmPassword = "";
+    private bool Is2FAEnabled { get; set; }
+    
+    private List<string> BackupCodes { get; set; } = new()
+    {
+        "1234-5678-9012",
+        "2345-6789-0123",
+        "3456-7890-1234",
+        "4567-8901-2345"
+    };
+
+    private List<SessionData> ActiveSessions { get; set; } = new()
+    {
+        new() {
+            Id = "1",
+            DeviceType = "desktop",
+            DeviceName = "Windows PC - Chrome",
+            Location = "New York, US",
+            LastActive = "Active now",
+            IsCurrent = true
+        },
+        new() {
+            Id = "2",
+            DeviceType = "mobile",
+            DeviceName = "iPhone 13 - Safari",
+            Location = "New York, US",
+            LastActive = "2 hours ago",
+            IsCurrent = false
+        }
+    };
+
+    private bool CanUpdatePassword =>
+        !string.IsNullOrWhiteSpace(currentPassword) &&
+        !string.IsNullOrWhiteSpace(newPassword) &&
+        !string.IsNullOrWhiteSpace(confirmPassword) &&
+        newPassword == confirmPassword;
+
+    private string GetDeviceIcon(string deviceType) => deviceType switch
+    {
+        "desktop" => "fas fa-desktop",
+        "mobile" => "fas fa-mobile-alt",
+        "tablet" => "fas fa-tablet-alt",
+        _ => "fas fa-question-circle"
+    };
+
+    private async Task UpdatePassword()
+    {
+        // Update password logic
+        IsChangingPassword = false;
+    }
+
+    private async Task Toggle2FA()
+    {
+        // Toggle 2FA logic
+    }
+
+    private async Task GenerateNewCodes()
+    {
+        // Generate new backup codes
+    }
+
+    private async Task EndSession(string sessionId)
+    {
+        // End session logic
+    }
+
+    private async Task ConfirmDelete()
+    {
+        // Show delete confirmation dialog
+    }
+
+    private class SessionData
+    {
+        public string Id { get; set; } = "";
+        public string DeviceType { get; set; } = "";
+        public string DeviceName { get; set; } = "";
+        public string Location { get; set; } = "";
+        public string LastActive { get; set; } = "";
+        public bool IsCurrent { get; set; }
+    }
+}

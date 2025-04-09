@@ -1,0 +1,510 @@
+﻿/* Profile Styles */
+.meritocious-profile-header {
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    padding: var(--meritocious-spacing-xl);
+}
+
+.meritocious-profile-main {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--meritocious-spacing-xl);
+}
+
+.meritocious-profile-name {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--meritocious-text);
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-profile-joined {
+    color: var(--meritocious-text-secondary);
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-profile-bio {
+    color: var(--meritocious-text);
+    max-width: 32rem;
+    line-height: 1.6;
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-profile-interests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--meritocious-spacing-sm);
+}
+
+.meritocious-profile-actions {
+    display: flex;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-profile-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--meritocious-spacing-md);
+}
+
+/* Stat Card Styles */
+.meritocious-stat-card {
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    padding: var(--meritocious-spacing-md);
+}
+
+.meritocious-stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-stat-icon {
+    padding: var(--meritocious-spacing-sm);
+    background-color: rgba(45, 212, 191, 0.1);
+    border-radius: var(--meritocious-radius-md);
+    color: var(--meritocious-primary);
+}
+
+.meritocious-stat-trend {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-xs);
+    color: #34d399;
+    font-size: 0.875rem;
+}
+
+.meritocious-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--meritocious-text);
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-stat-label {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Activity Feed Styles */
+.meritocious-feed-header {
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+.meritocious-feed-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--meritocious-border);
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+.meritocious-feed-tab {
+    padding: var(--meritocious-spacing-md);
+    color: var(--meritocious-text-secondary);
+    font-weight: 500;
+    transition: var(--meritocious-transition);
+    border-bottom: 2px solid transparent;
+}
+
+    .meritocious-feed-tab:hover {
+        color: var(--meritocious-text);
+    }
+
+.meritocious-feed-tab-active {
+    color: var(--meritocious-primary);
+    border-bottom-color: var(--meritocious-primary);
+}
+
+.meritocious-feed-filters {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-select {
+    padding: var(--meritocious-spacing-sm) var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border: 1px solid var(--meritocious-border);
+    border-radius: var(--meritocious-radius-md);
+    color: var(--meritocious-text);
+}
+
+.meritocious-sort {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    color: var(--meritocious-text-secondary);
+}
+
+/* Activity Card Styles */
+.meritocious-activity-card {
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    padding: var(--meritocious-spacing-lg);
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-activity-title {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: var(--meritocious-text);
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-activity-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-activity-type {
+    padding: var(--meritocious-spacing-xs) var(--meritocious-spacing-sm);
+    background-color: rgba(45, 212, 191, 0.1);
+    border-radius: var(--meritocious-radius-sm);
+    color: var(--meritocious-primary);
+    font-size: 0.875rem;
+}
+
+.meritocious-activity-time {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-xs);
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+.meritocious-activity-content {
+    color: var(--meritocious-text);
+    line-height: 1.6;
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-activity-footer {
+    display: flex;
+    gap: var(--meritocious-spacing-md);
+}
+
+/* Fork Filter Panel Styles */
+.meritocious-filter-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 24rem;
+    background-color: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(8px);
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 50;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+}
+
+.meritocious-filter-panel-open {
+    transform: translateX(0);
+}
+
+.meritocious-filter-panel-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.meritocious-filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--meritocious-spacing-lg);
+    border-bottom: 1px solid var(--meritocious-border);
+}
+
+.meritocious-filter-title {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    color: var(--meritocious-text);
+}
+
+    .meritocious-filter-title h2 {
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+.meritocious-close-button {
+    color: var(--meritocious-text-secondary);
+    padding: var(--meritocious-spacing-sm);
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-close-button:hover {
+        color: var(--meritocious-text);
+    }
+
+.meritocious-filter-sections {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--meritocious-spacing-lg);
+}
+
+/* Fork Type Styles */
+.meritocious-fork-category {
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+    .meritocious-fork-category h4 {
+        font-size: 0.875rem;
+        color: var(--meritocious-text-secondary);
+        margin-bottom: var(--meritocious-spacing-sm);
+    }
+
+.meritocious-fork-options {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: var(--meritocious-spacing-sm);
+}
+
+.meritocious-fork-type {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    padding: var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-md);
+    color: var(--meritocious-text-secondary);
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-fork-type:hover {
+        background-color: var(--meritocious-surface-hover);
+    }
+
+    .meritocious-fork-type.selected {
+        background-color: var(--meritocious-primary);
+        color: var(--meritocious-text);
+    }
+
+/* Lineage Metrics Styles */
+.meritocious-metric-slider {
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+.meritocious-metric-header {
+    display: flex;
+    justify-content: space-between;
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: var(--meritocious-spacing-sm);
+}
+
+.meritocious-metric-value {
+    color: var(--meritocious-primary);
+}
+
+.meritocious-metric-range {
+    display: flex;
+    justify-content: space-between;
+    color: var(--meritocious-text-secondary);
+    font-size: 0.75rem;
+    margin-top: var(--meritocious-spacing-xs);
+}
+
+/* Evolution Patterns Styles */
+.meritocious-evolution-patterns {
+    margin-top: var(--meritocious-spacing-xl);
+}
+
+    .meritocious-evolution-patterns h3 {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--meritocious-text);
+        margin-bottom: var(--meritocious-spacing-md);
+    }
+
+.meritocious-patterns {
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-sm);
+}
+
+.meritocious-pattern-button {
+    padding: var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-md);
+    text-align: left;
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-pattern-button:hover {
+        background-color: var(--meritocious-surface-hover);
+    }
+
+.meritocious-pattern-name {
+    display: block;
+    color: var(--meritocious-text);
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-pattern-desc {
+    display: block;
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Expandable Section Styles */
+.meritocious-expandable-section {
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+.meritocious-expandable-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-md);
+    color: var(--meritocious-text);
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-expandable-header:hover {
+        background-color: var(--meritocious-surface-hover);
+    }
+
+.meritocious-expandable-title {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    font-weight: 500;
+}
+
+.meritocious-expandable-content {
+    padding: var(--meritocious-spacing-md);
+    animation: expandSection 0.3s ease-out;
+}
+
+@keyframes expandSection {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fa-chevron-down.rotated {
+    transform: rotate(180deg);
+    transition: transform 0.3s ease;
+}
+
+/* Filter Actions */
+.meritocious-filter-actions {
+    display: flex;
+    gap: var(--meritocious-spacing-md);
+    padding: var(--meritocious-spacing-lg);
+    border-top: 1px solid var(--meritocious-border);
+}
+
+    .meritocious-filter-actions button {
+        flex: 1;
+    }
+
+/* Range Input Styling */
+input[type="range"] {
+    width: 100%;
+    height: 4px;
+    background-color: var(--meritocious-secondary);
+    border-radius: var(--meritocious-radius-full);
+    outline: none;
+    -webkit-appearance: none;
+}
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background-color: var(--meritocious-primary);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+    }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+/* Custom Select Styling */
+.meritocious-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1.5rem;
+    padding-right: 2.5rem;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .meritocious-filter-panel {
+        width: 100%;
+    }
+
+    .meritocious-profile-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .meritocious-feed-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .meritocious-sort {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 480px) {
+    .meritocious-profile-main {
+        flex-direction: column;
+        gap: var(--meritocious-spacing-lg);
+    }
+
+    .meritocious-profile-stats {
+        grid-template-columns: 1fr;
+    }
+}

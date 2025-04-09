@@ -1,0 +1,70 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-bloom @(ShowDetails ? "show-details" : "")"
+     @onmouseenter="() => ShowDetails = true"
+     @onmouseleave="() => ShowDetails = false">
+
+    <div class="meritocious-bloom-hearts">
+        @for (var i = 0; i < MaxScore; i++)
+        {
+            var filled = i < Math.Floor(Score);
+            var partial = i == Math.Floor(Score) && Score % 1 > 0;
+
+            <div class="meritocious-bloom-heart @(filled ? "filled" : "") @(partial ? "partial" : "")">
+                <i class="fas fa-heart"></i>
+                @if (partial)
+                {
+                    <div class="meritocious-heart-fill" style="height: @((Score % 1) * 100)%"></div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="meritocious-bloom-metrics">
+        <span class="meritocious-bloom-score">@Score.ToString("F1")</span>
+        <div class="meritocious-bloom-trend @(TrendDirection > 0 ? "positive" : TrendDirection < 0 ? "negative" : "")">
+            <i class="fas @(TrendDirection > 0 ? "fa-arrow-up" : TrendDirection < 0 ? "fa-arrow-down" : "fa-minus")"></i>
+            <span>@Math.Abs(TrendValue).ToString("F1")</span>
+        </div>
+    </div>
+
+    @if (ShowDetails)
+    {
+        <div class="meritocious-bloom-details">
+            <h4>Bloom Score Analysis</h4>
+            <div class="meritocious-bloom-stats">
+                @foreach (var stat in BloomStats)
+                {
+                    <div class="meritocious-bloom-stat">
+                        <div class="meritocious-stat-label">
+                            <i class="@stat.Icon"></i>
+                            <span>@stat.Label</span>
+                        </div>
+                        <div class="meritocious-stat-bar">
+                            <div class="meritocious-stat-fill" style="width: @(stat.Value * 20)%"></div>
+                        </div>
+                        <span class="meritocious-stat-value">@stat.Value.ToString("F1")</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public double Score { get; set; }
+    [Parameter] public int MaxScore { get; set; } = 5;
+    [Parameter] public double TrendValue { get; set; }
+    [Parameter] public List<BloomStat> BloomStats { get; set; } = new();
+
+    private bool ShowDetails { get; set; }
+    private int TrendDirection => TrendValue > 0 ? 1 : TrendValue < 0 ? -1 : 0;
+
+    public class BloomStat
+    {
+        public string Label { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public double Value { get; set; }
+    }
+}

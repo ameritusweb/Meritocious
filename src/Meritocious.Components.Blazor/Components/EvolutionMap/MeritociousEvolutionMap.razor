@@ -1,0 +1,57 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-evolution-map">
+    <div class="meritocious-map-timeline">
+        @foreach (var node in Nodes)
+        {
+            <div class="meritocious-map-node">
+                <div class="meritocious-node-connector"></div>
+                <div class="meritocious-node-content">
+                    <i class="fas fa-map-marker-alt meritocious-node-icon"></i>
+                    
+                    <MeritociousCard Interactive="true">
+                        <HeaderContent>
+                            <div class="meritocious-node-header">
+                                <div>
+                                    <h3 class="meritocious-node-title">@node.Title</h3>
+                                    <p class="meritocious-node-author">@node.Author</p>
+                                </div>
+                                <MeritociousMeritBar Score="@node.Merit" />
+                            </div>
+                        </HeaderContent>
+                        
+                        <ChildContent>
+                            <p class="meritocious-node-excerpt">@node.Excerpt</p>
+                            
+                            <div class="meritocious-node-stats">
+                                <button class="meritocious-stat-button">
+                                    <i class="fas fa-code-branch"></i>
+                                    <span>@node.Forks</span>
+                                </button>
+                                <button class="meritocious-stat-button">
+                                    <i class="fas fa-comments"></i>
+                                    <span>@node.Replies</span>
+                                </button>
+                            </div>
+                        </ChildContent>
+                    </MeritociousCard>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<EvolutionNode> Nodes { get; set; } = Array.Empty<EvolutionNode>();
+
+    public class EvolutionNode
+    {
+        public string Title { get; set; } = "";
+        public string Author { get; set; } = "";
+        public string Excerpt { get; set; } = "";
+        public double Merit { get; set; }
+        public int Forks { get; set; }
+        public int Replies { get; set; }
+    }
+}

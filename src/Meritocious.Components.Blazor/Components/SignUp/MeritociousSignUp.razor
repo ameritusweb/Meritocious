@@ -1,0 +1,119 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-auth-container">
+    <button class="meritocious-back-button" @onclick="OnBack">
+        <i class="fas fa-arrow-left"></i>
+        Back
+    </button>
+
+    <div class="meritocious-auth-content">
+        <div class="meritocious-auth-header">
+            <div class="meritocious-logo-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h1>Join Meritocious</h1>
+            <p>Start your journey of idea evolution</p>
+        </div>
+
+        <form class="meritocious-auth-form" @onsubmit="HandleSubmit">
+            <MeritociousAuthInput
+                Type="text"
+                Icon="fas fa-user"
+                Placeholder="Username"
+                @bind-Value="@formData.Username" />
+
+            <MeritociousAuthInput
+                Type="email"
+                Icon="fas fa-envelope"
+                Placeholder="Email address"
+                @bind-Value="@formData.Email" />
+
+            <MeritociousAuthInput
+                Type="password"
+                Icon="fas fa-lock"
+                Placeholder="Password"
+                @bind-Value="@formData.Password" />
+
+            <div class="meritocious-interests">
+                <label>Select your interests</label>
+                <div class="meritocious-interests-grid">
+                    @foreach (var interest in Interests)
+                    {
+                        <button
+                            type="button"
+                            class="@($"meritocious-interest-tag {(formData.Interests.Contains(interest) ? "selected" : "")}")"
+                            @onclick="@(() => ToggleInterest(interest))">
+                            @interest
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <MeritociousButton
+                Type="submit"
+                Disabled="@(!IsValid())"
+                FullWidth="true">
+                Create Account
+            </MeritociousButton>
+
+            <p class="meritocious-auth-terms">
+                By signing up, you agree to our 
+                <a href="#" class="meritocious-link">Terms of Service</a>
+                and
+                <a href="#" class="meritocious-link">Privacy Policy</a>
+            </p>
+        </form>
+
+        <p class="meritocious-auth-footer">
+            Already have an account?
+            <a href="#" class="meritocious-link" @onclick="OnLoginClick">Log in</a>
+        </p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public EventCallback OnLoginClick { get; set; }
+    [Parameter] public EventCallback<SignUpData> OnSubmit { get; set; }
+
+    private SignUpData formData = new();
+
+    private static readonly string[] Interests = new[]
+    {
+        "Technology", "Philosophy", "Science", "Arts",
+        "Politics", "Economics", "Environment", "Education"
+    };
+
+    private void ToggleInterest(string interest)
+    {
+        if (formData.Interests.Contains(interest))
+            formData.Interests.Remove(interest);
+        else
+            formData.Interests.Add(interest);
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (IsValid())
+        {
+            await OnSubmit.InvokeAsync(formData);
+        }
+    }
+
+    private bool IsValid()
+    {
+        return !string.IsNullOrWhiteSpace(formData.Username)
+            && !string.IsNullOrWhiteSpace(formData.Email)
+            && !string.IsNullOrWhiteSpace(formData.Password)
+            && formData.Interests.Count > 0;
+    }
+
+    public class SignUpData
+    {
+        public string Username { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+        public HashSet<string> Interests { get; set; } = new();
+    }
+}

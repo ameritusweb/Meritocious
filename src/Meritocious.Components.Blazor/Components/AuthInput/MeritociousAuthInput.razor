@@ -1,0 +1,40 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-input-container">
+    <div class="meritocious-input-icon">
+        <i class="@Icon"></i>
+    </div>
+    <input type="@(ShowPassword ? "text" : Type)"
+           class="meritocious-input"
+           placeholder="@Placeholder"
+           value="@Value"
+           @oninput="@HandleInput"
+           @onblur="@OnBlur" />
+
+    @if (Type == "password")
+    {
+        <button type="button"
+                class="meritocious-input-action"
+                @onclick="@(() => ShowPassword = !ShowPassword)">
+            <i class="fas @(ShowPassword ? "fa-eye-slash" : "fa-eye")"></i>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public string Placeholder { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<FocusEventArgs> OnBlur { get; set; }
+
+    private bool ShowPassword { get; set; }
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString() ?? "";
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

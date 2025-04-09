@@ -1,0 +1,54 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<button class="@GetButtonClasses()" @onclick="@OnClick" disabled="@Disabled">
+    @if (IconName != null)
+    {
+        <span class="meritocious-icon">
+            <i class="@IconName"></i>
+        </span>
+    }
+    @ChildContent
+</button>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? IconName { get; set; }
+    [Parameter] public ButtonVariant Variant { get; set; } = ButtonVariant.Primary;
+    [Parameter] public ButtonSize Size { get; set; } = ButtonSize.Medium;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    private string GetButtonClasses()
+    {
+        var classes = new List<string> { "meritocious-button" };
+
+        classes.Add(Variant switch
+        {
+            ButtonVariant.Primary => "meritocious-button-primary",
+            ButtonVariant.Secondary => "meritocious-button-secondary",
+            ButtonVariant.Teal => "meritocious-button-teal",
+            _ => "meritocious-button-primary"
+        });
+
+        classes.Add(Size switch
+        {
+            ButtonSize.Small => "meritocious-button-sm",
+            ButtonSize.Large => "meritocious-button-lg",
+            _ => "meritocious-button-md"
+        });
+
+        if (Disabled)
+        {
+            classes.Add("meritocious-button-disabled");
+        }
+
+        if (IconName != null)
+        {
+            classes.Add("meritocious-button-with-icon");
+        }
+
+        return string.Join(" ", classes);
+    }
+}

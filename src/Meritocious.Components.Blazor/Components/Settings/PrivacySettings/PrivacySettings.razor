@@ -1,0 +1,217 @@
+﻿// PrivacySettings.razor
+@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-settings-section">
+    <div class="meritocious-settings-group">
+        <h3>Profile Privacy</h3>
+        
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Profile Visibility</label>
+                <p class="meritocious-preference-desc">
+                    Control who can see your profile and activity
+                </p>
+            </div>
+            <select class="meritocious-select" @bind="profileVisibility">
+                <option value="public">Public</option>
+                <option value="members">Members Only</option>
+                <option value="private">Private</option>
+            </select>
+        </div>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Show Merit Score</label>
+                <p class="meritocious-preference-desc">
+                    Display your merit score on your profile
+                </p>
+            </div>
+            <label class="meritocious-switch">
+                <input type="checkbox" @bind="showMeritScore" />
+                <span class="meritocious-switch-slider"></span>
+            </label>
+        </div>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Activity History</label>
+                <p class="meritocious-preference-desc">
+                    Show your recent activity in public feeds
+                </p>
+            </div>
+            <label class="meritocious-switch">
+                <input type="checkbox" @bind="showActivity" />
+                <span class="meritocious-switch-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Fork and Discussion Settings</h3>
+        
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Who Can Fork My Ideas</label>
+                <p class="meritocious-preference-desc">
+                    Control who can create forks from your content
+                </p>
+            </div>
+            <select class="meritocious-select" @bind="forkPermission">
+                <option value="anyone">Anyone</option>
+                <option value="members">Members Only</option>
+                <option value="approved">Approved Users</option>
+            </select>
+        </div>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Discussion Participation</label>
+                <p class="meritocious-preference-desc">
+                    Who can participate in discussions on your content
+                </p>
+            </div>
+            <select class="meritocious-select" @bind="discussionPermission">
+                <option value="anyone">Anyone</option>
+                <option value="members">Members Only</option>
+                <option value="followers">Followers Only</option>
+            </select>
+        </div>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Comment Approval</label>
+                <p class="meritocious-preference-desc">
+                    Review comments before they appear on your content
+                </p>
+            </div>
+            <label class="meritocious-switch">
+                <input type="checkbox" @bind="requireCommentApproval" />
+                <span class="meritocious-switch-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Data Management</h3>
+
+        <div class="meritocious-data-export">
+            <div class="meritocious-data-section-header">
+                <div>
+                    <h4>Export Your Data</h4>
+                    <p>Download a copy of your Meritocious data</p>
+                </div>
+                <MeritosiousButton
+                    Variant="ButtonVariant.Secondary"
+                    OnClick="@ExportData">
+                    <i class="fas fa-download"></i>
+                    Export Data
+                </MeritosiousButton>
+            </div>
+
+            <div class="meritocious-data-options">
+                <label class="meritocious-checkbox">
+                    <input type="checkbox" @bind="exportPosts" />
+                    <span>Posts and Discussions</span>
+                </label>
+                <label class="meritocious-checkbox">
+                    <input type="checkbox" @bind="exportForks" />
+                    <span>Forks and Evolution Trees</span>
+                </label>
+                <label class="meritocious-checkbox">
+                    <input type="checkbox" @bind="exportMerit" />
+                    <span>Merit History</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="meritocious-divider"></div>
+
+        <div class="meritocious-data-retention">
+            <div class="meritocious-data-section-header">
+                <div>
+                    <h4>Data Retention</h4>
+                    <p>Choose how long to keep your activity data</p>
+                </div>
+            </div>
+
+            <div class="meritocious-retention-options">
+                <select class="meritocious-select" @bind="retentionPeriod">
+                    <option value="forever">Keep Forever</option>
+                    <option value="year">Keep for 1 Year</option>
+                    <option value="6months">Keep for 6 Months</option>
+                    <option value="3months">Keep for 3 Months</option>
+                </select>
+                <p class="meritocious-helper-text">
+                    Data older than this will be automatically archived
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Block List</h3>
+        
+        <div class="meritocious-blocked-users">
+            @foreach (var user in blockedUsers)
+            {
+                <div class="meritocious-blocked-user">
+                    <div class="meritocious-user-info">
+                        <div class="meritocious-user-avatar"></div>
+                        <span>@user.Username</span>
+                    </div>
+                    <MeritosiousButton
+                        Variant="ButtonVariant.Secondary"
+                        Size="ButtonSize.Small"
+                        OnClick="@(() => UnblockUser(user.Id))">
+                        Unblock
+                    </MeritosiousButton>
+                </div>
+            }
+
+            @if (!blockedUsers.Any())
+            {
+                <p class="meritocious-empty-state">
+                    No blocked users
+                </p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string profileVisibility = "public";
+    private bool showMeritScore = true;
+    private bool showActivity = true;
+    private string forkPermission = "anyone";
+    private string discussionPermission = "anyone";
+    private bool requireCommentApproval = false;
+    private string retentionPeriod = "forever";
+    
+    // Export options
+    private bool exportPosts = true;
+    private bool exportForks = true;
+    private bool exportMerit = true;
+
+    private List<BlockedUser> blockedUsers = new()
+    {
+        new() { Id = "1", Username = "BlockedUser1" },
+        new() { Id = "2", Username = "BlockedUser2" }
+    };
+
+    private async Task ExportData()
+    {
+        // Handle data export
+    }
+
+    private async Task UnblockUser(string userId)
+    {
+        blockedUsers = blockedUsers.Where(u => u.Id != userId).ToList();
+    }
+
+    private class BlockedUser
+    {
+        public string Id { get; set; } = "";
+        public string Username { get; set; } = "";
+    }
+}

@@ -1,0 +1,111 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-comment @(Depth > 0 ? "meritocious-comment-nested" : "")">
+    <div class="meritocious-comment-container">
+        <div class="meritocious-comment-header">
+            <div class="meritocious-comment-author">
+                <div class="meritocious-avatar"></div>
+                <div class="meritocious-author-info">
+                    <span class="meritocious-author-name">@Author</span>
+                    <span class="meritocious-timestamp">@Timestamp</span>
+                </div>
+            </div>
+            <MeritociousMeritBar Score="@Merit" />
+        </div>
+
+        <div class="meritocious-comment-content">
+            @Content
+        </div>
+
+        <div class="meritocious-comment-actions">
+            <button class="meritocious-action-button" @onclick="@OnLike">
+                <i class="fas fa-thumbs-up"></i>
+                <span>@Likes</span>
+            </button>
+            <button class="meritocious-action-button" @onclick="@(() => ShowReply = !ShowReply)">
+                <i class="fas fa-reply"></i>
+                <span>Reply</span>
+            </button>
+            <button class="meritocious-action-button" @onclick="@OnFork">
+                <i class="fas fa-code-branch"></i>
+                <span>Fork Thread</span>
+            </button>
+        </div>
+
+        @if (Merit >= 4.5)
+        {
+            <div class="meritocious-fork-suggestion">
+                <div class="meritocious-fork-suggestion-content">
+                    <i class="fas fa-code-branch"></i>
+                    <span>This comment shows potential for a new perspective</span>
+                </div>
+                <MeritociousButton 
+                    Variant="ButtonVariant.Teal" 
+                    Size="ButtonSize.Small"
+                    OnClick="@OnFork">
+                    Fork This
+                    <i class="fas fa-arrow-right"></i>
+                </MeritociousButton>
+            </div>
+        }
+
+        @if (ShowReply)
+        {
+            <div class="meritocious-reply-composer">
+                <MeritociousCommentComposer 
+                    Placeholder="Write a reply..."
+                    OnSubmit="@HandleReplySubmit" />
+            </div>
+        }
+    </div>
+
+    @if (ChildComments != null && ChildComments.Any())
+    {
+        <div class="meritocious-nested-comments">
+            @foreach (var comment in ChildComments)
+            {
+                <MeritociousComment 
+                    Author="@comment.Author"
+                    Timestamp="@comment.Timestamp"
+                    Content="@comment.Content"
+                    Merit="@comment.Merit"
+                    Likes="@comment.Likes"
+                    Depth="@(Depth + 1)"
+                    ChildComments="@comment.Children" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Author { get; set; } = "";
+    [Parameter] public string Timestamp { get; set; } = "";
+    [Parameter] public string Content { get; set; } = "";
+    [Parameter] public double Merit { get; set; }
+    [Parameter] public int Likes { get; set; }
+    [Parameter] public int Depth { get; set; }
+    [Parameter] public IEnumerable<CommentData>? ChildComments { get; set; }
+    [Parameter] public EventCallback<string> OnReply { get; set; }
+    [Parameter] public EventCallback OnLike { get; set; }
+    [Parameter] public EventCallback OnFork { get; set; }
+
+    private bool ShowReply { get; set; }
+
+    private async Task HandleReplySubmit(string content)
+    {
+        await OnReply.InvokeAsync(content);
+        ShowReply = false;
+    }
+
+    public class CommentData
+    {
+        public string Author { get; set; } = "";
+        public string Timestamp { get; set; } = "";
+        public string Content { get; set; } = "";
+        public double Merit { get; set; }
+        public int Likes { get; set; }
+        public List<CommentData> Children { get; set; } = new();
+    }
+}

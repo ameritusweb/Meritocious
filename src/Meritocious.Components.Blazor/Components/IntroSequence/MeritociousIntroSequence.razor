@@ -1,0 +1,73 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-intro @(IsComplete ? "fade-out" : "")">
+    <GlassmorphicContainer EnablePetals="true" PetalCount="35">
+        <div class="meritocious-intro-content">
+            <div class="@GetStepClass(0)">
+                <div class="meritocious-logo-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h1>Welcome to Meritocious</h1>
+            </div>
+
+            @if (CurrentStep >= 1)
+            {
+                <div class="@GetStepClass(1)">
+                    <p>Where ideas evolve through merit</p>
+                </div>
+            }
+
+            @if (CurrentStep >= 2)
+            {
+                <div class="@GetStepClass(2)">
+                    <MeritosiousMeritBar Score="8.5" MaxScore="5" />
+                    <p>Track your impact</p>
+                </div>
+            }
+
+            @if (CurrentStep >= 3)
+            {
+                <div class="@GetStepClass(3)">
+                    <MeritosiousButton
+                        OnClick="@CompleteIntro"
+                        Class="meritocious-intro-button">
+                        Get Started
+                        <i class="fas fa-arrow-right"></i>
+                    </MeritosiousButton>
+                </div>
+            }
+        </div>
+    </GlassmorphicContainer>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnComplete { get; set; }
+
+    private int CurrentStep { get; set; }
+    private bool IsComplete { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AdvanceSequence();
+    }
+
+    private async Task AdvanceSequence()
+    {
+        while (CurrentStep < 4)
+        {
+            await Task.Delay(2000);
+            CurrentStep++;
+            StateHasChanged();
+        }
+    }
+
+    private string GetStepClass(int step) =>
+        $"meritocious-intro-step {(CurrentStep == step ? "active" : "")}";
+
+    private async Task CompleteIntro()
+    {
+        IsComplete = true;
+        await OnComplete.InvokeAsync();
+    }
+}

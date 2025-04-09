@@ -1,0 +1,41 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<button
+    class="@GetNavItemClasses()"
+    @onclick="@OnClick">
+    <i class="@Item.Icon"></i>
+    @if (!IsCollapsed)
+    {
+        <div class="meritocious-nav-item-content">
+            <span>@Item.Label</span>
+            @if (Item.Merit.HasValue)
+            {
+                <MeritociousMeritIndicator Score="@Item.Merit.Value" />
+            }
+            @if (Item.NotificationCount > 0)
+            {
+                <div class="meritocious-notification-badge">
+                    @Item.NotificationCount
+                </div>
+            }
+        </div>
+    }
+</button>
+
+@code {
+    [Parameter] public NavItem Item { get; set; } = new();
+    [Parameter] public bool IsCollapsed { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private string GetNavItemClasses()
+    {
+        var classes = new List<string> { "meritocious-nav-item" };
+        
+        if (Item.IsActive)
+            classes.Add("meritocious-nav-item-active");
+            
+        return string.Join(" ", classes);
+    }
+}

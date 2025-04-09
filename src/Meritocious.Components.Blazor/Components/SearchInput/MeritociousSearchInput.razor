@@ -1,0 +1,48 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-search-input">
+    <i class="fas fa-search meritocious-search-icon"></i>
+
+    <input type="text"
+           class="meritocious-search-field"
+           placeholder="@Placeholder"
+           value="@Value"
+           @oninput="HandleInput"
+           @onkeyup="HandleKeyUp" />
+
+    @if (!string.IsNullOrEmpty(Value))
+    {
+        <button class="meritocious-search-clear"
+                @onclick="Clear">
+            <i class="fas fa-times"></i>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<string> OnSearch { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Search...";
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString() ?? "";
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await OnSearch.InvokeAsync(Value);
+        }
+    }
+
+    private async Task Clear()
+    {
+        Value = "";
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

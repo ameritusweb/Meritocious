@@ -1,0 +1,68 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-profile-header">
+    <div class="meritocious-profile-main">
+        <div>
+            <h1 class="meritocious-profile-name">@Username</h1>
+            <p class="meritocious-profile-joined">@JoinDate</p>
+            <p class="meritocious-profile-bio">@Bio</p>
+            
+            <div class="meritocious-profile-interests">
+                @foreach (var interest in Interests)
+                {
+                    <MeritociousTag>@interest</MeritociousTag>
+                }
+            </div>
+        </div>
+        
+        <div class="meritocious-profile-actions">
+            @if (IsOwnProfile)
+            {
+                <MeritociousButton 
+                    Variant="ButtonVariant.Secondary"
+                    IconName="fas fa-cog"
+                    OnClick="@OnEditProfile">
+                    Edit Profile
+                </MeritociousButton>
+            }
+            <MeritociousButton 
+                Variant="ButtonVariant.Primary"
+                IconName="fas fa-share"
+                OnClick="@OnShareProfile">
+                Share Profile
+            </MeritociousButton>
+        </div>
+    </div>
+
+    <div class="meritocious-profile-stats">
+        @foreach (var stat in Stats)
+        {
+            <MeritociousStatCard
+                Icon="@stat.Icon"
+                Label="@stat.Label"
+                Value="@stat.Value"
+                Trend="@stat.Trend" />
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Username { get; set; } = "";
+    [Parameter] public string JoinDate { get; set; } = "";
+    [Parameter] public string Bio { get; set; } = "";
+    [Parameter] public List<string> Interests { get; set; } = new();
+    [Parameter] public List<StatData> Stats { get; set; } = new();
+    [Parameter] public bool IsOwnProfile { get; set; }
+    [Parameter] public EventCallback OnEditProfile { get; set; }
+    [Parameter] public EventCallback OnShareProfile { get; set; }
+
+    public class StatData
+    {
+        public string Icon { get; set; } = "";
+        public string Label { get; set; } = "";
+        public string Value { get; set; } = "";
+        public string? Trend { get; set; }
+    }
+}

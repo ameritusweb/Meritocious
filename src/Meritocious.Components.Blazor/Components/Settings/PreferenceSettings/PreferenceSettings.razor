@@ -1,0 +1,58 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-settings-section">
+    <div class="meritocious-settings-group">
+        <h3>Display Preferences</h3>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Theme</label>
+                <p class="meritocious-preference-desc">Choose your preferred color theme</p>
+            </div>
+            <select class="meritocious-select">
+                <option value="system">System Default</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+            </select>
+        </div>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Compact View</label>
+                <p class="meritocious-preference-desc">Show more content in less space</p>
+            </div>
+            <label class="meritocious-switch">
+                <input type="checkbox" />
+                <span class="meritocious-switch-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="meritocious-settings-group">
+        <h3>Reading Experience</h3>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Content Density</label>
+                <p class="meritocious-preference-desc">Adjust the amount of content shown per page</p>
+            </div>
+            <select class="meritocious-select">
+                <option value="comfortable">Comfortable</option>
+                <option value="compact">Compact</option>
+                <option value="dense">Dense</option>
+            </select>
+        </div>
+
+        <div class="meritocious-preference-item">
+            <div>
+                <label>Auto-expand Threads</label>
+                <p class="meritocious-preference-desc">Automatically show full discussion threads</p>
+            </div>
+            <label class="meritocious-switch">
+                <input type="checkbox" />
+                <span class="meritocious-switch-slider"></span>
+            </label>
+        </div>
+    </div>
+</div>

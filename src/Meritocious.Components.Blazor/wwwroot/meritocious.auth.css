@@ -1,0 +1,465 @@
+﻿/* Auth Container Styles */
+.meritocious-auth-container {
+    min-height: 100vh;
+    background-color: var(--meritocious-background);
+    padding: var(--meritocious-spacing-lg);
+    position: relative;
+}
+
+.meritocious-auth-content {
+    max-width: 28rem;
+    margin: 0 auto;
+    padding-top: var(--meritocious-spacing-xl);
+}
+
+.meritocious-auth-header {
+    text-align: center;
+    margin-bottom: var(--meritocious-spacing-xl);
+}
+
+    .meritocious-auth-header h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--meritocious-text);
+        margin-bottom: var(--meritocious-spacing-sm);
+    }
+
+    .meritocious-auth-header p {
+        color: var(--meritocious-text-secondary);
+    }
+
+/* Form Elements */
+.meritocious-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-input-container {
+    position: relative;
+}
+
+.meritocious-input-icon {
+    position: absolute;
+    left: var(--meritocious-spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--meritocious-text-secondary);
+}
+
+.meritocious-input {
+    width: 100%;
+    padding: var(--meritocious-spacing-md) var(--meritocious-spacing-md) var(--meritocious-spacing-md) 3rem;
+    background-color: var(--meritocious-surface);
+    border: 1px solid var(--meritocious-border);
+    border-radius: var(--meritocious-radius-lg);
+    color: var(--meritocious-text);
+}
+
+    .meritocious-input:focus {
+        outline: none;
+        border-color: var(--meritocious-primary);
+        box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.1);
+    }
+
+.meritocious-input-action {
+    position: absolute;
+    right: var(--meritocious-spacing-md);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--meritocious-text-secondary);
+    padding: var(--meritocious-spacing-xs);
+}
+
+/* Auth Navigation */
+.meritocious-back-button {
+    position: absolute;
+    top: var(--meritocious-spacing-md);
+    left: var(--meritocious-spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    color: var(--meritocious-text-secondary);
+    padding: var(--meritocious-spacing-sm) var(--meritocious-spacing-md);
+    border-radius: var(--meritocious-radius-md);
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-back-button:hover {
+        background-color: var(--meritocious-surface);
+        color: var(--meritocious-text);
+    }
+
+/* Settings Styles */
+.meritocious-settings {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--meritocious-background);
+}
+
+.meritocious-settings-sidebar {
+    width: 16rem;
+    padding: var(--meritocious-spacing-lg);
+    border-right: 1px solid var(--meritocious-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-xs);
+}
+
+.meritocious-settings-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    padding: var(--meritocious-spacing-md);
+    color: var(--meritocious-text-secondary);
+    border-radius: var(--meritocious-radius-md);
+    transition: var(--meritocious-transition);
+    text-align: left;
+}
+
+    .meritocious-settings-nav:hover {
+        background-color: var(--meritocious-surface);
+        color: var(--meritocious-text);
+    }
+
+    .meritocious-settings-nav.active {
+        background-color: rgba(45, 212, 191, 0.1);
+        color: var(--meritocious-primary);
+    }
+
+.meritocious-settings-content {
+    flex: 1;
+    padding: var(--meritocious-spacing-xl);
+    max-width: 48rem;
+}
+
+.meritocious-settings-header {
+    margin-bottom: var(--meritocious-spacing-xl);
+}
+
+    .meritocious-settings-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--meritocious-text);
+        margin-bottom: var(--meritocious-spacing-sm);
+    }
+
+    .meritocious-settings-header p {
+        color: var(--meritocious-text-secondary);
+    }
+
+.meritocious-settings-group {
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    padding: var(--meritocious-spacing-lg);
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+    .meritocious-settings-group h3 {
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--meritocious-text);
+        margin-bottom: var(--meritocious-spacing-lg);
+    }
+
+/* Form Components */
+.meritocious-form-group {
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+    .meritocious-form-group label {
+        display: block;
+        color: var(--meritocious-text);
+        margin-bottom: var(--meritocious-spacing-sm);
+    }
+
+.meritocious-textarea {
+    width: 100%;
+    min-height: 6rem;
+    padding: var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border: 1px solid var(--meritocious-border);
+    border-radius: var(--meritocious-radius-lg);
+    color: var(--meritocious-text);
+    resize: vertical;
+}
+
+    .meritocious-textarea:focus {
+        outline: none;
+        border-color: var(--meritocious-primary);
+        box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.1);
+    }
+
+/* Switch Component */
+.meritocious-switch {
+    position: relative;
+    display: inline-block;
+    width: 3rem;
+    height: 1.5rem;
+}
+
+    .meritocious-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+.meritocious-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--meritocious-secondary);
+    transition: var(--meritocious-transition);
+    border-radius: var(--meritocious-radius-full);
+}
+
+    /* Switch Component (continued) */
+    .meritocious-switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 1.25rem;
+        width: 1.25rem;
+        left: 0.125rem;
+        bottom: 0.125rem;
+        background-color: white;
+        transition: var(--meritocious-transition);
+        border-radius: 50%;
+    }
+
+.meritocious-switch input:checked + .meritocious-switch-slider {
+    background-color: var(--meritocious-primary);
+}
+
+.meritocious-switch input:focus + .meritocious-switch-slider {
+    box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2);
+}
+
+.meritocious-switch input:checked + .meritocious-switch-slider:before {
+    transform: translateX(1.5rem);
+}
+
+/* Preference Items */
+.meritocious-preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    padding: var(--meritocious-spacing-md) 0;
+    border-bottom: 1px solid var(--meritocious-border);
+}
+
+    .meritocious-preference-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .meritocious-preference-item label {
+        color: var(--meritocious-text);
+        font-weight: 500;
+    }
+
+.meritocious-preference-desc {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+    margin-top: var(--meritocious-spacing-xs);
+}
+
+/* Profile Avatar Section */
+.meritocious-profile-avatar {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+.meritocious-avatar-preview {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: var(--meritocious-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+    .meritocious-avatar-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .meritocious-avatar-preview:hover::after {
+        content: "Change";
+        position: absolute;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+/* Interest Tags Grid */
+.meritocious-interests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    gap: var(--meritocious-spacing-sm);
+    margin-top: var(--meritocious-spacing-sm);
+}
+
+.meritocious-interest-tag {
+    padding: var(--meritocious-spacing-sm) var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border: 1px solid var(--meritocious-border);
+    border-radius: var(--meritocious-radius-full);
+    color: var(--meritocious-text-secondary);
+    transition: var(--meritocious-transition);
+    text-align: center;
+}
+
+    .meritocious-interest-tag:hover {
+        background-color: var(--meritocious-surface-hover);
+        color: var(--meritocious-text);
+    }
+
+    .meritocious-interest-tag.selected {
+        background-color: var(--meritocious-primary);
+        border-color: var(--meritocious-primary);
+        color: var(--meritocious-text);
+    }
+
+/* Settings Actions */
+.meritocious-settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--meritocious-spacing-md);
+    margin-top: var(--meritocious-spacing-xl);
+    padding-top: var(--meritocious-spacing-lg);
+    border-top: 1px solid var(--meritocious-border);
+}
+
+/* Select Dropdown Styling */
+.meritocious-select {
+    padding: var(--meritocious-spacing-sm) var(--meritocious-spacing-lg) var(--meritocious-spacing-sm) var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border: 1px solid var(--meritocious-border);
+    border-radius: var(--meritocious-radius-md);
+    color: var(--meritocious-text);
+    min-width: 10rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.25rem;
+}
+
+    .meritocious-select:focus {
+        outline: none;
+        border-color: var(--meritocious-primary);
+        box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.1);
+    }
+
+/* Danger Zone Section */
+.meritocious-danger-zone {
+    margin-top: var(--meritocious-spacing-xl);
+    padding: var(--meritocious-spacing-lg);
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--meritocious-radius-lg);
+}
+
+    .meritocious-danger-zone h3 {
+        color: #ef4444;
+        margin-bottom: var(--meritocious-spacing-md);
+    }
+
+.meritocious-danger-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-md);
+}
+
+.meritocious-danger-action-info {
+    flex: 1;
+}
+
+.meritocious-danger-action-title {
+    color: var(--meritocious-text);
+    font-weight: 500;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-danger-action-desc {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .meritocious-settings {
+        flex-direction: column;
+    }
+
+    .meritocious-settings-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--meritocious-border);
+        padding: var(--meritocious-spacing-md);
+    }
+
+    .meritocious-settings-nav {
+        padding: var(--meritocious-spacing-sm);
+    }
+
+    .meritocious-settings-content {
+        padding: var(--meritocious-spacing-md);
+    }
+
+    .meritocious-preference-item {
+        flex-direction: column;
+        gap: var(--meritocious-spacing-md);
+    }
+
+    .meritocious-interests-grid {
+        grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+    }
+}
+
+/* Animation Keyframes */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-1rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Apply Animations */
+.meritocious-settings-group {
+    animation: slideDown 0.3s ease-out;
+}
+
+.meritocious-preference-item {
+    animation: fadeIn 0.2s ease-out;
+}

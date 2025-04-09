@@ -1,0 +1,67 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-bloom-overview">
+    <div class="meritocious-overview-score">
+        <BloomIndicator 
+            Score="@CurrentScore"
+            TrendValue="@ScoreTrend"
+            BloomStats="@GetBloomStats()" />
+    </div>
+
+    <div class="meritocious-overview-metrics">
+        <div class="meritocious-metric-card">
+            <div class="meritocious-metric-icon">
+                <i class="fas fa-code-branch"></i>
+            </div>
+            <div class="meritocious-metric-content">
+                <div class="meritocious-metric-value">
+                    @Forks
+                    <span class="meritocious-metric-trend @(ForkTrend > 0 ? "positive" : "")">
+                        <i class="fas @(ForkTrend > 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                        @Math.Abs(ForkTrend)
+                    </span>
+                </div>
+                <div class="meritocious-metric-label">Total Forks</div>
+            </div>
+        </div>
+
+        <div class="meritocious-metric-card">
+            <div class="meritocious-metric-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="meritocious-metric-content">
+                <div class="meritocious-metric-value">
+                    @Replies
+                    <span class="meritocious-metric-trend @(ReplyTrend > 0 ? "positive" : "")">
+                        <i class="fas @(ReplyTrend > 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                        @Math.Abs(ReplyTrend)
+                    </span>
+                </div>
+                <div class="meritocious-metric-label">Active Discussions</div>
+            </div>
+        </div>
+    </div>
+
+    <MeritociousBloomHistory 
+        ChartData="@HistoryData" 
+        MaxScore="5" />
+</div>
+
+@code {
+    [Parameter] public double CurrentScore { get; set; }
+    [Parameter] public double ScoreTrend { get; set; }
+    [Parameter] public int Forks { get; set; }
+    [Parameter] public int ForkTrend { get; set; }
+    [Parameter] public int Replies { get; set; }
+    [Parameter] public int ReplyTrend { get; set; }
+    [Parameter] public List<MeritociousBloomHistory.BloomDataPoint> HistoryData { get; set; } = new();
+
+    private List<MeritociousBloomIndicator.BloomStat> GetBloomStats() => new()
+    {
+        new() { Label = "Clarity", Icon = "fas fa-lightbulb", Value = 4.8 },
+        new() { Label = "Novelty", Icon = "fas fa-star", Value = 4.2 },
+        new() { Label = "Impact", Icon = "fas fa-chart-line", Value = 4.5 },
+        new() { Label = "Depth", Icon = "fas fa-layer-group", Value = 4.6 }
+    };
+}

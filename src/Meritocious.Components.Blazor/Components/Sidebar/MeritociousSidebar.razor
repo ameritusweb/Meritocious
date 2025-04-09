@@ -1,0 +1,103 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="@($"meritocious-sidebar {(IsCollapsed ? "meritocious-sidebar-collapsed" : "")}")">
+    <!-- Logo Section -->
+    <div class="meritocious-sidebar-header">
+        <div class="meritocious-logo">
+            <div class="meritocious-logo-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            @if (!IsCollapsed)
+            {
+                <span class="meritocious-logo-text">Meritocious</span>
+            }
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <div class="meritocious-sidebar-content">
+        <!-- Main Items -->
+        <div class="meritocious-nav-section">
+            @foreach (var item in MainNavItems)
+            {
+                <MeritociousNavItem Item="@item" IsCollapsed="@IsCollapsed" OnClick="@(() => HandleNavClick(item))" />
+            }
+        </div>
+
+        <!-- Community Section -->
+        @if (!IsCollapsed)
+        {
+            <div class="meritocious-nav-label">COMMUNITY</div>
+        }
+        <div class="meritocious-nav-section">
+            @foreach (var item in CommunityItems)
+            {
+                <NavItem Item="@item" IsCollapsed="@IsCollapsed" OnClick="@(() => HandleNavClick(item))" />
+            }
+        </div>
+    </div>
+
+    <!-- User Section -->
+    <div class="meritocious-sidebar-footer">
+        @if (!IsCollapsed)
+        {
+            <div class="meritocious-user-profile">
+                <div class="meritocious-user-avatar"></div>
+                <div class="meritocious-user-info">
+                    <div class="meritocious-user-name">@UserName</div>
+                    <div class="meritocious-user-status">View Profile</div>
+                </div>
+            </div>
+        }
+
+        <div class="meritocious-footer-actions">
+            @foreach (var item in FooterItems)
+            {
+                <MeritociousNavItem Item="@item" IsCollapsed="@IsCollapsed" OnClick="@(() => HandleNavClick(item))" />
+            }
+        </div>
+    </div>
+
+    <!-- Collapse Toggle -->
+    <button 
+        class="meritocious-collapse-toggle"
+        @onclick="@(() => IsCollapsed = !IsCollapsed)">
+        <i class="fas @(IsCollapsed ? "fa-chevron-right" : "fa-chevron-left")"></i>
+    </button>
+</div>
+
+@code {
+    [Parameter] public string UserName { get; set; } = "";
+    [Parameter] public EventCallback<NavItem> OnNavigate { get; set; }
+    
+    private bool IsCollapsed { get; set; }
+
+    private List<NavItem> MainNavItems = new()
+    {
+        new NavItem { Id = "home", Label = "Home", Icon = "fas fa-home" },
+        new NavItem { Id = "explore", Label = "Explore", Icon = "fas fa-compass" },
+        new NavItem { Id = "search", Label = "Search", Icon = "fas fa-search" },
+        new NavItem { Id = "forks", Label = "My Forks", Icon = "fas fa-code-branch", Merit = 4.2m },
+        new NavItem { Id = "tree", Label = "Idea Tree", Icon = "fas fa-tree" }
+    };
+
+    private List<NavItem> CommunityItems = new()
+    {
+        new NavItem { Id = "trending", Label = "Trending", Icon = "fas fa-bolt", NotificationCount = 3 },
+        new NavItem { Id = "substacks", Label = "Substacks", Icon = "fas fa-book" },
+        new NavItem { Id = "people", Label = "People", Icon = "fas fa-users" }
+    };
+
+    private List<NavItem> FooterItems = new()
+    {
+        new NavItem { Id = "notifications", Label = "Notifications", Icon = "fas fa-bell", NotificationCount = 5 },
+        new NavItem { Id = "settings", Label = "Settings", Icon = "fas fa-cog" }
+    };
+
+    private async Task HandleNavClick(NavItem item)
+    {
+        await OnNavigate.InvokeAsync(item);
+    }
+}

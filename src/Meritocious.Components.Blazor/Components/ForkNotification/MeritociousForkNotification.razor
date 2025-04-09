@@ -1,0 +1,14 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<MeritociousNotification Type="NotificationType.Fork"
+                         Title="New Fork Available"
+                         Message="@($"{Title} by {Author}")"
+                         AutoDismissTimeout="7000">
+</MeritociousNotification>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Author { get; set; } = "";
+}

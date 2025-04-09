@@ -1,0 +1,46 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-activity-card">
+    <div class="meritocious-activity-header">
+        <div>
+            <h3 class="meritocious-activity-title">@Title</h3>
+            <div class="meritocious-activity-meta">
+                <span class="meritocious-activity-type">@Type</span>
+                <span class="meritocious-activity-time">
+                    <i class="fas fa-clock"></i>
+                    @Timestamp
+                </span>
+            </div>
+        </div>
+        <MeritociousMeritBar Score="@Merit" />
+    </div>
+    
+    <p class="meritocious-activity-content">@Content</p>
+    
+    <div class="meritocious-activity-footer">
+        <MeritociousButton
+            Variant="ButtonVariant.Secondary"
+            IconName="fas fa-code-branch"
+            Size="ButtonSize.Small">
+            @Forks Forks
+        </MeritociousButton>
+        <MeritociousButton
+            Variant="ButtonVariant.Secondary"
+            IconName="fas fa-comments"
+            Size="ButtonSize.Small">
+            @Replies Replies
+        </MeritociousButton>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Type { get; set; } = "";
+    [Parameter] public double Merit { get; set; }
+    [Parameter] public string Timestamp { get; set; } = "";
+    [Parameter] public string Content { get; set; } = "";
+    [Parameter] public int Forks { get; set; }
+    [Parameter] public int Replies { get; set; }
+}

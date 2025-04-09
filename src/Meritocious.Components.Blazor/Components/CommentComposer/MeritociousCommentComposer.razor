@@ -1,0 +1,69 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-composer">
+    <textarea
+        @bind="@Content"
+        @bind:event="oninput"
+        placeholder="@Placeholder"
+        class="meritocious-composer-input"
+    ></textarea>
+    
+    <div class="meritocious-composer-footer">
+        @if (ShowFormatting)
+        {
+            <div class="meritocious-composer-formatting">
+                <button class="meritocious-format-button" title="Bold">
+                    <i class="fas fa-bold"></i>
+                </button>
+                <button class="meritocious-format-button" title="Italic">
+                    <i class="fas fa-italic"></i>
+                </button>
+                <button class="meritocious-format-button" title="Link">
+                    <i class="fas fa-link"></i>
+                </button>
+                <button class="meritocious-format-button" title="Code">
+                    <i class="fas fa-code"></i>
+                </button>
+            </div>
+        }
+        
+        <div class="meritocious-composer-actions">
+            @if (ShowPreview)
+            {
+                <button 
+                    class="meritocious-preview-button"
+                    @onclick="@(() => IsPreviewMode = !IsPreviewMode)">
+                    @(IsPreviewMode ? "Edit" : "Preview")
+                </button>
+            }
+            
+            <MeritociousButton
+                OnClick="@HandleSubmit"
+                Disabled="@string.IsNullOrWhiteSpace(Content)"
+                Size="ButtonSize.Small">
+                Post Comment
+            </MeritociousButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Placeholder { get; set; } = "Add to the discussion...";
+    [Parameter] public bool ShowFormatting { get; set; } = true;
+    [Parameter] public bool ShowPreview { get; set; } = true;
+    [Parameter] public EventCallback<string> OnSubmit { get; set; }
+
+    private string Content { get; set; } = "";
+    private bool IsPreviewMode { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        if (!string.IsNullOrWhiteSpace(Content))
+        {
+            await OnSubmit.InvokeAsync(Content);
+            Content = "";
+        }
+    }
+}

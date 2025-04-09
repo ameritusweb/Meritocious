@@ -1,0 +1,48 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-active-filters">
+    <div class="meritocious-filter-chips">
+        @foreach (var filter in ActiveFilters)
+        {
+            <button 
+                class="meritocious-filter-chip"
+                @onclick="@(() => RemoveFilter(filter))">
+                <span>@filter.Label</span>
+                <i class="fas fa-times"></i>
+            </button>
+        }
+    </div>
+
+    <div class="meritocious-filter-controls">
+        <div class="meritocious-sort-control">
+            <span>Sort by:</span>
+            <select @bind="SortOption">
+                <option value="merit">Merit Score</option>
+                <option value="recent">Most Recent</option>
+                <option value="forks">Most Forks</option>
+            </select>
+        </div>
+
+        <MeritosiousButton
+            Variant="ButtonVariant.Secondary"
+            OnClick="@OnAdvancedFilters">
+            Advanced Filters
+        </MeritosiousButton>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<FilterChip> ActiveFilters { get; set; } = new();
+    [Parameter] public EventCallback<FilterChip> OnRemoveFilter { get; set; }
+    [Parameter] public EventCallback OnAdvancedFilters { get; set; }
+    [Parameter] public string SortOption { get; set; } = "merit";
+    [Parameter] public EventCallback<string> SortOptionChanged { get; set; }
+
+    private async Task RemoveFilter(FilterChip filter)
+    {
+        await OnRemoveFilter.InvokeAsync(filter);
+    }
+
+    public record FilterChip(string Id, string Label, string Type);
+}

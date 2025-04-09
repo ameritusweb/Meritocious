@@ -1,0 +1,44 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-select-container">
+    <select class="meritocious-select"
+            value="@Value"
+            @onchange="HandleChange"
+            @attributes="AdditionalAttributes">
+
+        @if (!string.IsNullOrEmpty(Placeholder))
+        {
+            <option value="" disabled selected>@Placeholder</option>
+        }
+
+        @foreach (var option in Options)
+        {
+            <option value="@option.Value">@option.Label</option>
+        }
+    </select>
+
+    <div class="meritocious-select-arrow">
+        <i class="fas fa-chevron-down"></i>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "";
+    [Parameter] public List<SelectOption> Options { get; set; } = new();
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString() ?? "";
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    public class SelectOption
+    {
+        public string Value { get; set; } = "";
+        public string Label { get; set; } = "";
+    }
+}

@@ -1,0 +1,83 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@implements IDisposable
+@using Meritocious.Components.Blazor.Models;
+
+<div class="@GetNotificationClasses()">
+    <div class="meritocious-notification-icon">
+        <i class="@GetNotificationIcon()"></i>
+    </div>
+    <div class="meritocious-notification-content">
+        <div class="meritocious-notification-title">@Title</div>
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="meritocious-notification-message">@Message</div>
+        }
+    </div>
+    @if (Dismissible)
+    {
+        <button class="meritocious-notification-close" @onclick="Dismiss">
+            <i class="fas fa-times"></i>
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public NotificationType Type { get; set; } = NotificationType.Info;
+    [Parameter] public bool Dismissible { get; set; } = true;
+    [Parameter] public int AutoDismissTimeout { get; set; } = 0; // In milliseconds, 0 for no auto-dismiss
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    private Timer? _autoDismissTimer;
+
+    protected override void OnInitialized()
+    {
+        if (AutoDismissTimeout > 0)
+        {
+            _autoDismissTimer = new Timer(async _ => await AutoDismiss(), null, AutoDismissTimeout, Timeout.Infinite);
+        }
+    }
+
+    private string GetNotificationClasses()
+    {
+        var baseClasses = "meritocious-notification";
+        var typeClass = Type switch
+        {
+            NotificationType.Success => "meritocious-notification-success",
+            NotificationType.Warning => "meritocious-notification-warning",
+            NotificationType.Error => "meritocious-notification-error",
+            NotificationType.Fork => "meritocious-notification-fork",
+            _ => "meritocious-notification-info"
+        };
+        return $"{baseClasses} {typeClass}";
+    }
+
+    private string GetNotificationIcon()
+    {
+        return Type switch
+        {
+            NotificationType.Success => "fas fa-check-circle",
+            NotificationType.Warning => "fas fa-exclamation-triangle",
+            NotificationType.Error => "fas fa-times-circle",
+            NotificationType.Fork => "fas fa-code-branch",
+            _ => "fas fa-info-circle"
+        };
+    }
+
+    private async Task AutoDismiss()
+    {
+        await InvokeAsync(async () => await Dismiss());
+    }
+
+    private async Task Dismiss()
+    {
+        await OnDismiss.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        _autoDismissTimer?.Dispose();
+    }
+}

@@ -1,0 +1,123 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-fork-view">
+    <div class="meritocious-fork-header">
+        <h2>Idea Evolution Map</h2>
+        <div class="meritocious-fork-controls">
+            <MeritosiousButton
+                Variant="ButtonVariant.Secondary"
+                OnClick="@(() => CurrentView = "timeline")">
+                <i class="fas fa-stream"></i>
+                Timeline
+            </MeritosiousButton>
+            <MeritosiousButton
+                Variant="ButtonVariant.Secondary"
+                OnClick="@(() => CurrentView = "tree")">
+                <i class="fas fa-sitemap"></i>
+                Tree
+            </MeritosiousButton>
+        </div>
+    </div>
+
+    <div class="meritocious-fork-filters">
+        <div class="meritocious-filter-group">
+            <span>Filter by:</span>
+            <MeritosiousSelect
+                Options="@timeRangeOptions"
+                @bind-Value="@selectedTimeRange"
+                Placeholder="Time Range" />
+            <MeritosiousSelect
+                Options="@sortOptions"
+                @bind-Value="@selectedSort"
+                Placeholder="Sort" />
+        </div>
+
+        <MeritosiousButton
+            Variant="ButtonVariant.Primary"
+            OnClick="@OnAdvancedFilters">
+            <i class="fas fa-sliders-h"></i>
+            Advanced Filters
+        </MeritosiousButton>
+    </div>
+
+    <div class="@($"meritocious-fork-content view-{CurrentView}")">
+        @if (CurrentView == "timeline")
+        {
+            <EvolutionTimeline
+                Nodes="@evolutionData"
+                OnNodeClick="@HandleNodeClick" />
+        }
+        else
+        {
+            <EvolutionTree
+                Nodes="@evolutionData"
+                OnNodeClick="@HandleNodeClick" />
+        }
+    </div>
+</div>
+
+@code {
+    private string CurrentView { get; set; } = "timeline";
+    private string selectedTimeRange = "";
+    private string selectedSort = "";
+
+    private List<SelectOption> timeRangeOptions = new()
+    {
+        new() { Value = "week", Label = "Past Week" },
+        new() { Value = "month", Label = "Past Month" },
+        new() { Value = "year", Label = "Past Year" },
+        new() { Value = "all", Label = "All Time" }
+    };
+
+    private List<SelectOption> sortOptions = new()
+    {
+        new() { Value = "merit", Label = "Highest Merit" },
+        new() { Value = "recent", Label = "Most Recent" },
+        new() { Value = "forks", Label = "Most Forks" }
+    };
+
+    private List<EvolutionNodeData> evolutionData = new()
+    {
+        new()
+        {
+            Title = "Original Thesis",
+            Author = "AIResearcher",
+            Merit = 8.5,
+            Excerpt = "Initial exploration of recursive self-improvement...",
+            Forks = 12,
+            Replies = 24,
+            Children = new()
+            {
+                new()
+                {
+                    Title = "Alternative Approach",
+                    Author = "SystemsTheorist",
+                    Merit = 7.25,
+                    Excerpt = "A different perspective on the original thesis...",
+                    Forks = 8,
+                    Replies = 16
+                },
+                new()
+                {
+                    Title = "Synthesis",
+                    Author = "SafetyFirst",
+                    Merit = 9.0,
+                    Excerpt = "Combining both approaches into a unified theory...",
+                    Forks = 15,
+                    Replies = 30
+                }
+            }
+        }
+    };
+
+    private async Task HandleNodeClick(EvolutionNodeData node)
+    {
+        // Handle node click
+    }
+
+    private void OnAdvancedFilters()
+    {
+        // Open advanced filters panel
+    }
+}

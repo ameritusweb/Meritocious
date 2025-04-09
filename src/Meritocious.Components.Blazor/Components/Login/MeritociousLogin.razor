@@ -1,0 +1,91 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-auth-container">
+    <button class="meritocious-back-button" @onclick="OnBack">
+        <i class="fas fa-arrow-left"></i>
+        Back
+    </button>
+
+    <div class="meritocious-auth-content">
+        <div class="meritocious-auth-header">
+            <div class="meritocious-logo-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h1>Welcome Back</h1>
+            <p>Continue your journey of idea evolution</p>
+        </div>
+
+        <form class="meritocious-auth-form" @onsubmit="HandleSubmit">
+            <MeritociousAuthInput
+                Type="email"
+                Icon="fas fa-envelope"
+                Placeholder="Email address"
+                @bind-Value="@formData.Email" />
+
+            <MeritociousAuthInput
+                Type="password"
+                Icon="fas fa-lock"
+                Placeholder="Password"
+                @bind-Value="@formData.Password" />
+
+            <div class="meritocious-form-options">
+                <label class="meritocious-checkbox">
+                    <input 
+                        type="checkbox" 
+                        @bind="@formData.RememberMe" />
+                    <span>Remember me</span>
+                </label>
+
+                <button 
+                    type="button"
+                    class="meritocious-link"
+                    @onclick="OnForgotPassword">
+                    Forgot password?
+                </button>
+            </div>
+
+            <MeritociousButton
+                Type="submit"
+                Disabled="@(!IsValid())"
+                FullWidth="true">
+                Log In
+            </MeritociousButton>
+        </form>
+
+        <p class="meritocious-auth-footer">
+            Don't have an account?
+            <a href="#" class="meritocious-link" @onclick="OnSignUpClick">Sign up</a>
+        </p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Parameter] public EventCallback OnSignUpClick { get; set; }
+    [Parameter] public EventCallback OnForgotPassword { get; set; }
+    [Parameter] public EventCallback<LoginData> OnSubmit { get; set; }
+
+    private LoginData formData = new();
+
+    private async Task HandleSubmit()
+    {
+        if (IsValid())
+        {
+            await OnSubmit.InvokeAsync(formData);
+        }
+    }
+
+    private bool IsValid()
+    {
+        return !string.IsNullOrWhiteSpace(formData.Email)
+            && !string.IsNullOrWhiteSpace(formData.Password);
+    }
+
+    public class LoginData
+    {
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+        public bool RememberMe { get; set; }
+    }
+}

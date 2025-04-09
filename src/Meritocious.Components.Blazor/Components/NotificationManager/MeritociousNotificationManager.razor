@@ -1,0 +1,44 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-notification-container">
+    @foreach (var notification in ActiveNotifications)
+    {
+        <MeritociousNotification
+            Title="@notification.Title"
+            Message="@notification.Message"
+            Type="@notification.Type"
+            Dismissible="@notification.Dismissible"
+            AutoDismissTimeout="@notification.AutoDismissTimeout"
+            OnDismiss="@(() => DismissNotification(notification.Id))" />
+    }
+</div>
+
+@code {
+    private List<NotificationData> ActiveNotifications { get; set; } = new();
+    private int _nextId = 1;
+
+    public void Show(NotificationData notification)
+    {
+        notification.Id = _nextId++;
+        ActiveNotifications.Add(notification);
+        StateHasChanged();
+    }
+
+    private void DismissNotification(int id)
+    {
+        ActiveNotifications.RemoveAll(n => n.Id == id);
+        StateHasChanged();
+    }
+
+    public class NotificationData
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string? Message { get; set; }
+        public NotificationType Type { get; set; }
+        public bool Dismissible { get; set; } = true;
+        public int AutoDismissTimeout { get; set; } = 5000;
+    }
+}

@@ -1,0 +1,117 @@
+﻿/* Notification Container */
+.meritocious-notification-container {
+    position: fixed;
+    top: var(--meritocious-spacing-md);
+    right: var(--meritocious-spacing-md);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-sm);
+    max-width: 24rem;
+    pointer-events: none;
+}
+
+/* Base Notification */
+.meritocious-notification {
+    display: flex;
+    align-items: start;
+    gap: var(--meritocious-spacing-md);
+    padding: var(--meritocious-spacing-md);
+    background-color: rgba(31, 41, 55, 0.95);
+    backdrop-filter: blur(8px);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    pointer-events: auto;
+    animation: slideInNotification 0.3s ease-out;
+}
+
+/* Notification Types */
+.meritocious-notification-success {
+    border-color: rgba(52, 211, 153, 0.2);
+}
+
+    .meritocious-notification-success .meritocious-notification-icon {
+        color: #34d399;
+    }
+
+.meritocious-notification-warning {
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+    .meritocious-notification-warning .meritocious-notification-icon {
+        color: #f59e0b;
+    }
+
+.meritocious-notification-error {
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+    .meritocious-notification-error .meritocious-notification-icon {
+        color: #ef4444;
+    }
+
+.meritocious-notification-fork {
+    border-color: rgba(45, 212, 191, 0.2);
+}
+
+    .meritocious-notification-fork .meritocious-notification-icon {
+        color: var(--meritocious-primary);
+    }
+
+/* Notification Content */
+.meritocious-notification-icon {
+    padding: var(--meritocious-spacing-sm);
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: var(--meritocious-radius-md);
+}
+
+.meritocious-notification-content {
+    flex: 1;
+}
+
+.meritocious-notification-title {
+    color: var(--meritocious-text);
+    font-weight: 500;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-notification-message {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+.meritocious-notification-close {
+    color: var(--meritocious-text-secondary);
+    padding: var(--meritocious-spacing-xs);
+    transition: var(--meritocious-transition);
+}
+
+    .meritocious-notification-close:hover {
+        color: var(--meritocious-text);
+    }
+
+/* Animations */
+@keyframes slideInNotification {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutNotification {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}

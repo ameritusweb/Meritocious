@@ -1,0 +1,89 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-fork-tree">
+    <div class="meritocious-fork-node @(IsRoot ? "meritocious-fork-root" : "")"
+         style="@GetNodeStyle()">
+        <div class="meritocious-fork-content">
+            <div class="meritocious-fork-header">
+                <h3 class="meritocious-fork-title">@Title</h3>
+                <MeritociousMeritBar Score="@Merit" />
+            </div>
+            
+            <div class="meritocious-fork-meta">
+                <span class="meritocious-fork-author">
+                    <i class="fas fa-user"></i>
+                    @Author
+                </span>
+                <span class="meritocious-fork-timestamp">
+                    <i class="fas fa-clock"></i>
+                    @Timestamp
+                </span>
+            </div>
+
+            <p class="meritocious-fork-excerpt">@Excerpt</p>
+
+            <div class="meritocious-fork-stats">
+                <span class="meritocious-stat">
+                    <i class="fas fa-code-branch"></i>
+                    @Forks forks
+                </span>
+                <span class="meritocious-stat">
+                    <i class="fas fa-comments"></i>
+                    @Replies replies
+                </span>
+            </div>
+        </div>
+
+        @if (ChildNodes != null && ChildNodes.Any())
+        {
+            <div class="meritocious-fork-children">
+                @foreach (var node in ChildNodes)
+                {
+                    <div class="meritocious-fork-branch">
+                        <MeritociousForkTree
+                            Title="@node.Title"
+                            Author="@node.Author"
+                            Timestamp="@node.Timestamp"
+                            Excerpt="@node.Excerpt"
+                            Merit="@node.Merit"
+                            Forks="@node.Forks"
+                            Replies="@node.Replies"
+                            ChildNodes="@node.Children"
+                            IsRoot="false" />
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Author { get; set; } = "";
+    [Parameter] public string Timestamp { get; set; } = "";
+    [Parameter] public string Excerpt { get; set; } = "";
+    [Parameter] public double Merit { get; set; }
+    [Parameter] public int Forks { get; set; }
+    [Parameter] public int Replies { get; set; }
+    [Parameter] public bool IsRoot { get; set; } = true;
+    [Parameter] public IEnumerable<ForkNodeData>? ChildNodes { get; set; }
+
+    private string GetNodeStyle()
+    {
+        // Add any dynamic styling based on node properties
+        return "";
+    }
+
+    public class ForkNodeData
+    {
+        public string Title { get; set; } = "";
+        public string Author { get; set; } = "";
+        public string Timestamp { get; set; } = "";
+        public string Excerpt { get; set; } = "";
+        public double Merit { get; set; }
+        public int Forks { get; set; }
+        public int Replies { get; set; }
+        public List<ForkNodeData> Children { get; set; } = new();
+    }
+}

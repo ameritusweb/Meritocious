@@ -1,0 +1,42 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-form-field @(HasError ? "has-error" : "")">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label class="meritocious-form-label" for="@Id">
+            @Label
+            @if (Required)
+            {
+                <span class="meritocious-required">*</span>
+            }
+        </label>
+    }
+
+    <div class="meritocious-form-control">
+        @ChildContent
+
+        @if (!string.IsNullOrEmpty(HelperText))
+        {
+            <div class="meritocious-helper-text">@HelperText</div>
+        }
+
+        @if (HasError && !string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="meritocious-error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                @ErrorMessage
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string HelperText { get; set; } = "";
+    [Parameter] public bool Required { get; set; }
+    [Parameter] public bool HasError { get; set; }
+    [Parameter] public string ErrorMessage { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

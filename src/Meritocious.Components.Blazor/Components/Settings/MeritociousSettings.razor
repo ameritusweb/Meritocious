@@ -1,0 +1,85 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-settings">
+    <div class="meritocious-settings-sidebar">
+        @foreach (var section in Sections)
+        {
+            <button
+                class="@($"meritocious-settings-nav {(ActiveSection == section.Id ? "active" : "")}")"
+                @onclick="@(() => ActiveSection = section.Id)">
+                <i class="@section.Icon"></i>
+                <span>@section.Label</span>
+            </button>
+        }
+    </div>
+
+    <div class="meritocious-settings-content">
+        @{
+            var currentSection = Sections.FirstOrDefault(s => s.Id == ActiveSection);
+        }
+        @if (currentSection != null)
+        {
+            <div class="meritocious-settings-header">
+                <h2>@currentSection.Label</h2>
+                <p>@currentSection.Description</p>
+            </div>
+
+            @switch (ActiveSection)
+            {
+                case "profile":
+                    <ProfileSettings />
+                    break;
+                case "preferences":
+                    <PreferenceSettings />
+                    break;
+                case "notifications":
+                    <NotificationSettings />
+                    break;
+                case "privacy":
+                    <PrivacySettings />
+                    break;
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private string ActiveSection { get; set; } = "profile";
+
+    private static readonly List<SettingsSection> Sections = new()
+    {
+        new() { 
+            Id = "profile", 
+            Label = "Profile", 
+            Icon = "fas fa-user",
+            Description = "Manage your personal information and public profile"
+        },
+        new() { 
+            Id = "preferences", 
+            Label = "Preferences", 
+            Icon = "fas fa-sliders-h",
+            Description = "Customize your Meritocious experience"
+        },
+        new() { 
+            Id = "notifications", 
+            Label = "Notifications", 
+            Icon = "fas fa-bell",
+            Description = "Control how and when you receive updates"
+        },
+        new() { 
+            Id = "privacy", 
+            Label = "Privacy & Security", 
+            Icon = "fas fa-shield-alt",
+            Description = "Manage your account security and privacy settings"
+        }
+    };
+
+    private class SettingsSection
+    {
+        public string Id { get; set; } = "";
+        public string Label { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Description { get; set; } = "";
+    }
+}

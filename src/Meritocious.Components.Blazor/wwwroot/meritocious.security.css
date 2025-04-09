@@ -1,0 +1,176 @@
+﻿/* Security Settings Styles */
+.meritocious-password-change-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-md);
+    max-width: 24rem;
+}
+
+.meritocious-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--meritocious-spacing-sm);
+    margin-top: var(--meritocious-spacing-md);
+}
+
+/* 2FA Setup Styles */
+.meritocious-2fa-setup {
+    margin-top: var(--meritocious-spacing-lg);
+    padding: var(--meritocious-spacing-lg);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+}
+
+.meritocious-qr-placeholder {
+    width: 12rem;
+    height: 12rem;
+    background-color: var(--meritocious-surface-hover);
+    border-radius: var(--meritocious-radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+    .meritocious-qr-placeholder i {
+        font-size: 3rem;
+        color: var(--meritocious-text-secondary);
+        margin-bottom: var(--meritocious-spacing-sm);
+    }
+
+    .meritocious-qr-placeholder span {
+        color: var(--meritocious-text-secondary);
+        font-size: 0.875rem;
+    }
+
+.meritocious-backup-codes h4 {
+    color: var(--meritocious-text);
+    font-weight: 500;
+    margin-bottom: var(--meritocious-spacing-sm);
+}
+
+.meritocious-backup-codes p {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-code-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--meritocious-spacing-sm);
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-backup-code {
+    padding: var(--meritocious-spacing-sm);
+    background-color: var(--meritocious-surface-hover);
+    border-radius: var(--meritocious-radius-sm);
+    font-family: monospace;
+    color: var(--meritocious-text);
+    text-align: center;
+}
+
+/* Active Sessions Styles */
+.meritocious-sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-md);
+    border: 1px solid var(--meritocious-border);
+}
+
+.meritocious-session-info {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+}
+
+    .meritocious-session-info i {
+        font-size: 1.25rem;
+        color: var(--meritocious-text-secondary);
+        width: 1.5rem;
+        text-align: center;
+    }
+
+.meritocious-session-device {
+    color: var(--meritocious-text);
+    font-weight: 500;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-session-details {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+.meritocious-current-session {
+    padding: var(--meritocious-spacing-xs) var(--meritocious-spacing-sm);
+    background-color: rgba(45, 212, 191, 0.1);
+    color: var(--meritocious-primary);
+    border-radius: var(--meritocious-radius-full);
+    font-size: 0.875rem;
+}
+
+/* Delete Account Button */
+.meritocious-button-danger {
+    background-color: #ef4444;
+    color: white;
+}
+
+    .meritocious-button-danger:hover {
+        background-color: #dc2626;
+    }
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    .meritocious-session-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--meritocious-spacing-md);
+    }
+
+    .meritocious-code-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Animations */
+.meritocious-password-change-form {
+    animation: slideDown 0.3s ease-out;
+}
+
+.meritocious-2fa-setup {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+.meritocious-danger-action:hover {
+    animation: shake 0.5s ease-in-out;
+}

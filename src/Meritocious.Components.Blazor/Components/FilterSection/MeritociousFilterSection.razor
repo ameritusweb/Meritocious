@@ -1,0 +1,34 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="meritocious-filter-section">
+    <button class="meritocious-section-header"
+            @onclick="@(() => IsOpen = !IsOpen)">
+        <div class="meritocious-section-title">
+            <i class="@Icon"></i>
+            <span>@Title</span>
+        </div>
+        <i class="@($"fas fa-chevron-down {(IsOpen ? "rotated" : "")}")"></i>
+    </button>
+
+    @if (IsOpen)
+    {
+        <div class="meritocious-section-content">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Icon { get; set; } = "";
+    [Parameter] public bool DefaultOpen { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool IsOpen { get; set; }
+
+    protected override void OnInitialized()
+    {
+        IsOpen = DefaultOpen;
+    }
+}
