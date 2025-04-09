@@ -1,5 +1,7 @@
 ﻿@page "/"
-@using Meritocious.Components.Blazor.Models
+@using Meritocious.Components.Blazor.Models;
+@using System.Collections.Generic;
+
 <h1>Meritocious Component Playground</h1>
 
 <MeritociousButton Variant="ButtonVariant.Primary" IconName="fas fa-magic">
@@ -22,6 +24,26 @@
         <h3>Card Header</h3>
     </HeaderContent>
     <ChildContent>
-        <MeritociousLogin />
+        <MeritociousMeritBar Details=@map Score="@score" />
+        <MeritociousTextArea />
     </ChildContent>
 </MeritociousCard>
+
+<MeritociousCard FullWidth="true" Interactive="true">
+    <HeaderContent>
+        <h3>Card Header - Comments</h3>
+    </HeaderContent>
+    <ChildContent>
+        <MeritociousComment Author="ameritusweb" Timestamp="@(DateTime.UtcNow.AddDays(-2).ToShortDateString())" Content="Test Content" Merit="5d" Likes="5" />
+    </ChildContent>
+</MeritociousCard>
+
+@code {
+    private double score = 10d;
+
+    private Dictionary<string, double> map = new Dictionary<string, double>()
+    {
+        { "string", 5d }
+    };
+
+}

@@ -20,15 +20,15 @@
         </div>
 
         <div class="meritocious-comment-actions">
-            <button class="meritocious-action-button" @onclick="@OnLike">
+            <button type="button" class="meritocious-action-button" @onclick="@OnLike">
                 <i class="fas fa-thumbs-up"></i>
                 <span>@Likes</span>
             </button>
-            <button class="meritocious-action-button" @onclick="@(() => ShowReply = !ShowReply)">
+            <button type="button" class="meritocious-action-button" @onclick="@(() => ShowReply = !ShowReply)">
                 <i class="fas fa-reply"></i>
                 <span>Reply</span>
             </button>
-            <button class="meritocious-action-button" @onclick="@OnFork">
+            <button type="button" class="meritocious-action-button" @onclick="@OnFork">
                 <i class="fas fa-code-branch"></i>
                 <span>Fork Thread</span>
             </button>
