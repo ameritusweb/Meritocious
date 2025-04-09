@@ -1,6 +1,7 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
 @using Meritocious.Components.Blazor.Models
+@inject IJSRuntime JS
 
 <div class="meritocious-forkspace">
     <div class="meritocious-forkspace-header">
@@ -138,7 +139,7 @@
                                         <span class="meritocious-tag">@tag</span>
                                     }
                                 </div>
-                                <MeritociousBloom Score="@post.MeritScore" />
+                                <MeritociousBloomIndicator Score="@post.MeritScore" />
                             </div>
                         </div>
                         <div class="meritocious-post-select">
@@ -194,7 +195,7 @@
                             {
                                 <div class="meritocious-source-item">
                                     <span>@post.Title</span>
-                                    <MeritociousBloom Score="@post.MeritScore" />
+                                    <MeritociousBloomIndicator Score="@post.MeritScore" />
                                 </div>
                             }
                         </div>
@@ -284,15 +285,17 @@
         }
     }
 
-    private void HandleDragEnd()
+    private async void HandleDragEnd()
     {
+        await JS.InvokeVoidAsync("console.log", "" + activeDropzoneIndex);
         draggedPost = null;
         activeDropzoneIndex = -1;
         StateHasChanged();
     }
 
-    private void ActivateDropzone(int index)
+    private async void ActivateDropzone(int index)
     {
+        await JS.InvokeVoidAsync("console.log", "AA " + index);
         if (draggedPost != null)
         {
             activeDropzoneIndex = index;
@@ -309,17 +312,20 @@
         }
     }
 
-    private void HandleDropAtIndex(DragEventArgs e, int index)
+    private async Task HandleDropAtIndex(DragEventArgs e, int index)
     {
+        await JS.InvokeVoidAsync("console.log", "" + e + " " + (draggedPost == null));
         if (draggedPost != null)
         {
+            var newList = new List<Post>(SelectedPosts);
+
             // Remove from current position if already selected
             if (IsSelected(draggedPost))
             {
-                var currentIndex = SelectedPosts.IndexOf(draggedPost);
+                var currentIndex = newList.FindIndex(p => p.Id == draggedPost.Id);
                 if (currentIndex != -1)
                 {
-                    SelectedPosts.RemoveAt(currentIndex);
+                    newList.RemoveAt(currentIndex);
                     // Adjust target index if moving within the list
                     if (currentIndex < index)
                     {
@@ -329,7 +335,9 @@
             }
 
             // Insert at new position
-            SelectedPosts.Insert(index, draggedPost);
+            newList.Insert(index, draggedPost);
+            SelectedPosts = newList;
+            draggedPost = null;
             activeDropzoneIndex = -1;
             StateHasChanged();
         }

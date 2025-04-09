@@ -95,6 +95,8 @@
     .meritocious-selected-post.dragging {
         opacity: 0.5;
         border-style: dashed;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .meritocious-selected-post.drag-over {
@@ -352,4 +354,75 @@
     .meritocious-modal-content {
         margin: var(--meritocious-spacing-md);
     }
+}
+
+/* Drop Zones */
+.meritocious-dropzone {
+    height: 0.25rem;
+    margin: var(--meritocious-spacing-xs) 0;
+    position: relative;
+    transition: all 0.2s ease;
+    border-radius: var(--meritocious-radius-full);
+    background-color: transparent;
+}
+
+    .meritocious-dropzone:first-child {
+        margin-top: 0;
+    }
+
+    .meritocious-dropzone:last-child {
+        margin-bottom: 0;
+    }
+
+    .meritocious-dropzone:hover,
+    .meritocious-dropzone.active {
+        height: 2rem;
+        background-color: rgba(45, 212, 191, 0.1);
+        border: 2px dashed var(--meritocious-primary);
+    }
+
+.meritocious-dropzone-indicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background-color: var(--meritocious-primary);
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+}
+
+.meritocious-dropzone.active .meritocious-dropzone-indicator {
+    transform: scaleY(1);
+}
+
+/* Empty State Dropzone */
+.meritocious-dropzone:only-child {
+    height: 8rem;
+    border: 2px dashed var(--meritocious-border);
+    border-radius: var(--meritocious-radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--meritocious-text-secondary);
+    margin: 1rem 0;
+}
+
+    .meritocious-dropzone:only-child i {
+        font-size: 2rem;
+        margin-bottom: var(--meritocious-spacing-sm);
+    }
+
+    .meritocious-dropzone:only-child.active {
+        border-color: var(--meritocious-primary);
+        background-color: rgba(45, 212, 191, 0.1);
+        color: var(--meritocious-primary);
+    }
+
+/* Selected Posts Container */
+.meritocious-selected-posts {
+    position: relative;
+    min-height: 4rem;
+    padding: var(--meritocious-spacing-sm);
 }
