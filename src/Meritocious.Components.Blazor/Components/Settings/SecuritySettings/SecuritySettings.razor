@@ -65,7 +65,7 @@
             <label class="meritocious-switch">
                 <input 
                     type="checkbox" 
-                    @bind="@Is2FAEnabled"
+                    @value="@Is2FAEnabled"
                     @onchange="@Toggle2FA" />
                 <span class="meritocious-switch-slider"></span>
             </label>
@@ -84,10 +84,10 @@
                     <p>Save these codes in a secure place. You can use them to access your account if you lose your authenticator device.</p>
                     
                     <div class="meritocious-code-grid">
-                        @foreach (var code in BackupCodes)
+                        @foreach (var backupCode in BackupCodes)
                         {
                             <div class="meritocious-backup-code">
-                                @code
+                                @backupCode
                             </div>
                         }
                     </div>

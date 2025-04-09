@@ -25,8 +25,8 @@
                             @foreach (var type in category.Value)
                             {
                                 <button 
-                                    class="@($"meritocious-fork-type {(SelectedForkTypes.Contains(type.Id) ? "selected" : "")}")"
-                                    @onclick="@(() => ToggleForkType(type.Id))">
+                                class="@($"meritocious-fork-type {(SelectedForkTypes.Contains(type.Id) ? "selected" : "")}")"
+                                @onclick="@(() => ToggleForkType(type.Id))">
                                     <i class="@type.Icon"></i>
                                     <span>@type.Label</span>
                                 </button>
@@ -47,12 +47,12 @@
                                 <span>≥ @metric.Value</span>
                             </div>
                             <input 
-                                type="range"
-                                min="@metric.Min"
-                                max="@metric.Max"
-                                step="@metric.Step"
-                                value="@metric.Value"
-                                @onchange="@(e => UpdateMetric(metric.Id, int.Parse(e.Value?.ToString() ?? "0")))" />
+                            type="range"
+                            min="@metric.Min"
+                            max="@metric.Max"
+                            step="@metric.Step"
+                            value="@metric.Value"
+                            @onchange="@(e => UpdateMetric(metric.Id, int.Parse(e.Value?.ToString() ?? "0")))" />
                             <div class="meritocious-range-labels">
                                 <span>@metric.Min</span>
                                 <span>@metric.Max</span>
@@ -69,8 +69,8 @@
                     @foreach (var pattern in EvolutionPatterns)
                     {
                         <button 
-                            class="meritocious-pattern-preset"
-                            @onclick="@(() => ApplyPattern(pattern))">
+                        class="meritocious-pattern-preset"
+                        @onclick="@(() => ApplyPattern(pattern))">
                             <div class="meritocious-pattern-info">
                                 <span class="meritocious-pattern-name">@pattern.Name</span>
                                 <span class="meritocious-pattern-description">@pattern.Description</span>
@@ -83,12 +83,12 @@
 
         <div class="meritocious-filter-actions">
             <MeritociousButton
-                Variant="ButtonVariant.Secondary"
-                OnClick="@ResetFilters">
+            Variant="ButtonVariant.Secondary"
+            OnClick="@ResetFilters">
                 Reset
             </MeritociousButton>
             <MeritociousButton
-                OnClick="@ApplyFilters">
+            OnClick="@ApplyFilters">
                 Apply Filters
             </MeritociousButton>
         </div>
@@ -175,8 +175,32 @@
     }
 
     private record ForkType(string Id, string Label, string Icon);
-    private record LineageMetric(string Id, string Label, int Min, int Max, int Step, int Value);
     private record EvolutionPattern(string Name, string Description);
+
+    public class LineageMetric
+    {
+        public LineageMetric(string id, string label, int min, int max, int step, int value)
+        {
+            this.Id = id;
+            this.Label = label;
+            this.Min = min;
+            this.Max = max;
+            this.Step = step;
+            this.Value = value;
+        }
+
+        public string Id { get; set; }
+
+        public string Label { get; set; }
+
+        public int Min { get; set; }
+
+        public int Max { get; set; }
+
+        public int Step { get; set; }
+
+        public int Value { get; set; }
+    }
 
     public class FilterState
     {
