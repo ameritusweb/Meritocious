@@ -20,6 +20,7 @@
     --meritocious-spacing-lg: 1.5rem;
     --meritocious-spacing-xl: 2rem;
     /* Border Radius */
+    --meritocious-radius-xs: 0.25rem;
     --meritocious-radius-sm: 0.375rem;
     --meritocious-radius-md: 0.5rem;
     --meritocious-radius-lg: 0.75rem;
@@ -54,6 +55,10 @@ p.text-sm {
 
 p.text-md {
     color: var(--meritocious-paragraph);
+}
+
+.display-block-override {
+    display: block !important;
 }
 
 body {
@@ -274,9 +279,9 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.25rem 0.75rem;
-    background-color: var(--meritocious-surface);
-    border-radius: var(--meritocious-radius-full);
+    padding: 0.5rem;
+    background-color: var(--meritocious-border);
+    border-radius: var(--meritocious-radius-xs);
     font-size: 0.875rem;
     color: var(--meritocious-text-secondary);
     transition: var(--meritocious-transition);

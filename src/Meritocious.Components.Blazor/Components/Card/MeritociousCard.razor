@@ -3,23 +3,23 @@
 
 <div class="meritocious-card @(Interactive ? "meritocious-card-interactive" : "")">
     <div class="meritocious-card-body">
-        <div class="meritocious-card-content">
+        <div class="meritocious-card-content @(FullWidth ? "display-block-override" : "")">
             <div>
-            @if (HeaderContent != null)
-            {
-                <div class="meritocious-card-header">
-                    @HeaderContent
-                </div>
-            }
+                @if (HeaderContent != null)
+                {
+                    <div class="meritocious-card-header">
+                        @HeaderContent
+                    </div>
+                }
 
-            @ChildContent
+                @ChildContent
 
-            @if (FooterContent != null)
-            {
-                <div class="meritocious-card-footer">
-                    @FooterContent
-                </div>
-            }
+                @if (FooterContent != null)
+                {
+                    <div class="meritocious-card-footer">
+                        @FooterContent
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -30,4 +30,5 @@
     [Parameter] public RenderFragment? HeaderContent { get; set; }
     [Parameter] public RenderFragment? FooterContent { get; set; }
     [Parameter] public bool Interactive { get; set; }
+    [Parameter] public bool FullWidth { get; set; }
 }
