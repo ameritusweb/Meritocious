@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meritocious.Components.Blazor", "src\Meritocious.Components.Blazor\Meritocious.Components.Blazor.csproj", "{76892D24-DAEA-37F4-AE6B-5B50DF26FF88}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Meritocious.Playground.Blazor", "src\Meritocious.Playground.Blazor\Meritocious.Playground.Blazor.csproj", "{67E23729-11E6-C6AB-DAD3-607D606F769F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{76892D24-DAEA-37F4-AE6B-5B50DF26FF88}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{76892D24-DAEA-37F4-AE6B-5B50DF26FF88}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{76892D24-DAEA-37F4-AE6B-5B50DF26FF88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67E23729-11E6-C6AB-DAD3-607D606F769F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67E23729-11E6-C6AB-DAD3-607D606F769F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67E23729-11E6-C6AB-DAD3-607D606F769F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67E23729-11E6-C6AB-DAD3-607D606F769F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

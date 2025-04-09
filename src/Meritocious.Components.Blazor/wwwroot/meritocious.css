@@ -3,6 +3,7 @@
     /* Colors */
     --meritocious-primary: #2dd4bf;
     --meritocious-primary-hover: #14b8a6;
+    --meritocious-primary-alt: #5eead4;
     --meritocious-secondary: #374151;
     --meritocious-secondary-hover: #4b5563;
     --meritocious-background: #111827;
@@ -11,6 +12,7 @@
     --meritocious-border: rgba(55, 65, 81, 0.5);
     --meritocious-text: #ffffff;
     --meritocious-text-secondary: #9ca3af;
+    --meritocious-paragraph: #dbd5d1;
     /* Spacing */
     --meritocious-spacing-xs: 0.25rem;
     --meritocious-spacing-sm: 0.5rem;
@@ -23,28 +25,71 @@
     --meritocious-radius-lg: 0.75rem;
     --meritocious-radius-full: 9999px;
     /* Transitions */
-    --meritocious-transition: all 0.2s ease-in-out;
+    --meritocious-transition: all 0.3s ease;
+}
+
+h1 {
+    color: var(--meritocious-text);
+}
+
+h2 {
+    color: var(--meritocious-text);
+}
+
+h3 {
+    color: var(--meritocious-text);
+}
+
+h4 {
+    color: var(--meritocious-text);
+}
+
+h5 {
+    color: var(--meritocious-text);
+}
+
+p.text-sm {
+    color: var(--meritocious-text-secondary);
+}
+
+p.text-md {
+    color: var(--meritocious-paragraph);
+}
+
+body {
+    background-color: var(--meritocious-background);
+    font-family: ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
 }
 
 /* Button Styles */
 .meritocious-button {
-    display: inline-flex;
-    align-items: center;
+    padding-left: 2rem; /* px-8 */
+    padding-right: 2rem;
+    padding-top: 0.75rem; /* py-3 */
+    padding-bottom: 0.75rem;
+    font-size: 1.125rem; /* text-lg */
+    display: flex; /* flex */
+    align-items: center; /* items-center */
+    margin-left: auto; /* mx-auto */
+    margin-right: auto;
     justify-content: center;
-    gap: 0.5rem;
+    gap: 0rem;
     font-weight: 500;
     border-radius: var(--meritocious-radius-md);
     transition: var(--meritocious-transition);
     cursor: pointer;
+    outline: none;
+    border: 0;
 }
 
 .meritocious-button-primary {
-    background-color: var(--meritocious-primary);
+    background: linear-gradient(to right, var(--meritocious-primary-hover), var(--meritocious-primary));
     color: var(--meritocious-text);
 }
 
     .meritocious-button-primary:hover:not(.meritocious-button-disabled) {
-        background-color: var(--meritocious-primary-hover);
+        background: linear-gradient(to right, var(--meritocious-primary), var(--meritocious-primary-alt)); /* hover:from-teal-400 to-teal-300 */
+        box-shadow: 0 10px 20px rgba(13, 148, 136, 0.25); /* hover:shadow-xl + hover:shadow-teal-500/25 */
     }
 
 .meritocious-button-secondary {
@@ -55,6 +100,7 @@
     .meritocious-button-secondary:hover:not(.meritocious-button-disabled) {
         background-color: var(--meritocious-secondary-hover);
         color: var(--meritocious-text);
+        box-shadow: 0 10px 20px rgba(13, 148, 136, 0.25); /* hover:shadow-xl + hover:shadow-teal-500/25 */
     }
 
 .meritocious-button-teal {
@@ -65,6 +111,7 @@
 
     .meritocious-button-teal:hover:not(.meritocious-button-disabled) {
         background-color: rgba(45, 212, 191, 0.2);
+        box-shadow: 0 10px 20px rgba(13, 148, 136, 0.25); /* hover:shadow-xl + hover:shadow-teal-500/25 */
     }
 
 .meritocious-button-sm {
@@ -172,12 +219,31 @@
 
 /* Card Styles */
 .meritocious-card {
-    background-color: var(--meritocious-surface);
     backdrop-filter: blur(8px);
     border-radius: var(--meritocious-radius-lg);
-    border: 1px solid var(--meritocious-border);
     overflow: hidden;
     transition: var(--meritocious-transition);
+
+    max-width: 72rem; /* max-w-6xl */
+    margin-left: auto; /* mx-auto */
+    margin-right: auto;
+}
+
+.meritocious-card-body {
+    background-color: rgba(31, 41, 55, 0.5); /* bg-gray-800/50 */
+    backdrop-filter: blur(4px); /* backdrop-blur-sm */
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 2rem; /* p-8 */
+    border: 1px solid rgba(55, 65, 81, 0.5); /* border border-gray-700/50 */
+    margin-bottom: 2rem; /* mb-8 */
+}
+
+.meritocious-card-content {
+    display: flex; /* flex */
+    align-items: flex-start; /* items-start */
+    justify-content: space-between; /* justify-between */
+    margin-bottom: 1.5rem; /* mb-6 */
+    padding: var(--meritocious-spacing-md);
 }
 
 .meritocious-card-interactive {
@@ -189,12 +255,13 @@
     }
 
 .meritocious-card-header {
-    padding: var(--meritocious-spacing-md);
     border-bottom: 1px solid var(--meritocious-border);
 }
 
-.meritocious-card-content {
-    padding: var(--meritocious-spacing-md);
+.meritocious-card-header h3 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 700;
 }
 
 .meritocious-card-footer {

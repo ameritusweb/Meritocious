@@ -2,23 +2,27 @@
 @inherits ComponentBase
 
 <div class="meritocious-card @(Interactive ? "meritocious-card-interactive" : "")">
-    @if (HeaderContent != null)
-    {
-        <div class="meritocious-card-header">
-            @HeaderContent
-        </div>
-    }
+    <div class="meritocious-card-body">
+        <div class="meritocious-card-content">
+            <div>
+            @if (HeaderContent != null)
+            {
+                <div class="meritocious-card-header">
+                    @HeaderContent
+                </div>
+            }
 
-    <div class="meritocious-card-content">
-        @ChildContent
+            @ChildContent
+
+            @if (FooterContent != null)
+            {
+                <div class="meritocious-card-footer">
+                    @FooterContent
+                </div>
+            }
+            </div>
+        </div>
     </div>
-
-    @if (FooterContent != null)
-    {
-        <div class="meritocious-card-footer">
-            @FooterContent
-        </div>
-    }
 </div>
 
 @code {

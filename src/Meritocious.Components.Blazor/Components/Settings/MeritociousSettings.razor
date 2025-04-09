@@ -3,13 +3,13 @@
 
 <div class="meritocious-settings">
     <div class="meritocious-settings-sidebar">
-        @foreach (var section in Sections)
+        @foreach (var msection in Sections)
         {
             <button
-                class="@($"meritocious-settings-nav {(ActiveSection == section.Id ? "active" : "")}")"
-                @onclick="@(() => ActiveSection = section.Id)">
-                <i class="@section.Icon"></i>
-                <span>@section.Label</span>
+                class="@($"meritocious-settings-nav {(ActiveSection == msection.Id ? "active" : "")}")"
+                @onclick="@(() => ActiveSection = msection.Id)">
+                <i class="@msection.Icon"></i>
+                <span>@msection.Label</span>
             </button>
         }
     </div>

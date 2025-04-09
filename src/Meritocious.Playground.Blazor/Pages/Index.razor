@@ -1,0 +1,16 @@
+﻿@page "/"
+@using Meritocious.Components.Blazor.Models
+<h1>Meritocious Component Playground</h1>
+
+<MeritociousButton Variant="ButtonVariant.Primary" IconName="fas fa-magic">
+    Click Me
+</MeritociousButton>
+
+<MeritociousCard Interactive="true">
+    <HeaderContent>
+        <h3>Card Header</h3>
+    </HeaderContent>
+    <ChildContent>
+        <p class="text-md">This is a test card content.</p>
+    </ChildContent>
+</MeritociousCard>
