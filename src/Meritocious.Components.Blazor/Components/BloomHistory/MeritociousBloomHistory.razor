@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-bloom-history">
     <div class="meritocious-history-header">
@@ -74,13 +75,5 @@
     private void HideTooltip()
     {
         ActivePoint = null;
-    }
-
-    public class BloomDataPoint
-    {
-        public double Score { get; set; }
-        public string Date { get; set; } = "";
-        public int Forks { get; set; }
-        public int Replies { get; set; }
     }
 }

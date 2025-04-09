@@ -4,6 +4,8 @@
 
 <h1>Meritocious Component Playground</h1>
 
+<MeritociousForkFilterPanel IsOpen="true" />
+
 <MeritociousFloatingPetalsBackground />
 
 <MeritociousNotification Title="Hello" Dismissible="true" Message="Test Message Success" Type="NotificationType.Success" />
@@ -51,6 +53,15 @@
     </HeaderContent>
     <ChildContent>
         <MeritociousSearchBar />
+    </ChildContent>
+</MeritociousCard>
+
+<MeritociousCard FullWidth="true" Interactive="true">
+    <HeaderContent>
+        <h3>Card Header - Filter Section</h3>
+    </HeaderContent>
+    <ChildContent>
+        <MeritociousFilterSection DefaultOpen="true" />
     </ChildContent>
 </MeritociousCard>
 

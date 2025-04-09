@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-bloom @(ShowDetails ? "show-details" : "")"
      @onmouseenter="() => ShowDetails = true"
@@ -60,11 +61,4 @@
 
     private bool ShowDetails { get; set; }
     private int TrendDirection => TrendValue > 0 ? 1 : TrendValue < 0 ? -1 : 0;
-
-    public class BloomStat
-    {
-        public string Label { get; set; } = "";
-        public string Icon { get; set; } = "";
-        public double Value { get; set; }
-    }
 }

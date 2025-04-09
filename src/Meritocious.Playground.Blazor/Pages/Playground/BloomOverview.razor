@@ -1,0 +1,26 @@
+﻿@page "/playground/bloom-overview"
+@using Meritocious.Components.Blazor.Models
+
+<MeritociousBloomOverview HistoryData="@HistoryData" />
+
+@code {
+    private List<BloomDataPoint> HistoryData { get; set; } = new List<BloomDataPoint>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        BloomDataPoint point = new BloomDataPoint();
+        point.Replies = 10;
+        point.Date = DateTime.UtcNow.ToShortDateString();
+        point.Forks = 2;
+        point.Score = 5d;
+        HistoryData.Add(point);
+
+        BloomDataPoint point1 = new BloomDataPoint();
+        point1.Replies = 11;
+        point1.Date = DateTime.UtcNow.AddDays(-5).ToShortDateString();
+        point1.Forks = 3;
+        point1.Score = 5.5d;
+        HistoryData.Add(point1);
+    }
+}

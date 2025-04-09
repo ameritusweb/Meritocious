@@ -1,0 +1,211 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models
+
+<div class="meritocious-new-substack">
+    <div class="meritocious-new-substack-header">
+        <h2>Create New Substack</h2>
+        <p>Launch a new topic-driven micro-community for exploring and evolving ideas.</p>
+    </div>
+
+    <div class="meritocious-new-substack-form">
+        <div class="meritocious-form-group">
+            <label>Title</label>
+            <input type="text"
+                   class="meritocious-input"
+                   placeholder="e.g., AI Ethics & Governance"
+                   @bind="model.Title"
+                   @bind:event="oninput" />
+            <p class="meritocious-helper-text">Choose a clear, descriptive name</p>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Description</label>
+            <textarea class="meritocious-textarea"
+                      placeholder="Describe the focus and goals of this Substack..."
+                      @bind="model.Description"
+                      @bind:event="oninput" />
+            <p class="meritocious-helper-text">What topics will be explored here?</p>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Category</label>
+            <select class="meritocious-select" @bind="model.Category">
+                <option value="">Select a category...</option>
+                @foreach (var category in Categories)
+                {
+                    <option value="@category">@category</option>
+                }
+            </select>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Tags</label>
+            <div class="meritocious-tag-input">
+                <div class="meritocious-tag-list">
+                    @foreach (var tag in model.Tags)
+                    {
+                        <span class="meritocious-tag">
+                            @tag
+                            <button @onclick="() => RemoveTag(tag)" class="meritocious-tag-remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </span>
+                    }
+                </div>
+                <input type="text"
+                       class="meritocious-input"
+                       placeholder="Add tags..."
+                       @bind="currentTag"
+                       @onkeydown="@HandleTagKeyDown" />
+            </div>
+            <p class="meritocious-helper-text">Press Enter to add each tag</p>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Default Post Structure</label>
+            <select class="meritocious-select" @bind="model.DefaultStructure">
+                <option value="discussion">Open Discussion</option>
+                <option value="essay">Essay Format</option>
+                <option value="question">Question & Answers</option>
+                <option value="research">Research Analysis</option>
+            </select>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Privacy Settings</label>
+            <div class="meritocious-radio-group">
+                <label class="meritocious-radio">
+                    <input type="radio"
+                           name="privacy"
+                           value="public"
+                           checked="@(model.Privacy == "public")"
+                           @onchange="@(() => model.Privacy = "public")" />
+                    <span class="meritocious-radio-mark"></span>
+                    <span>Public - Anyone can view and contribute</span>
+                </label>
+                <label class="meritocious-radio">
+                    <input type="radio"
+                           name="privacy"
+                           value="restricted"
+                           checked="@(model.Privacy == "restricted")"
+                           @onchange="@(() => model.Privacy = "restricted")" />
+                    <span class="meritocious-radio-mark"></span>
+                    <span>Restricted - Approval required to contribute</span>
+                </label>
+                <label class="meritocious-radio">
+                    <input type="radio"
+                           name="privacy"
+                           value="private"
+                           checked="@(model.Privacy == "private")"
+                           @onchange="@(() => model.Privacy = "private")" />
+                    <span class="meritocious-radio-mark"></span>
+                    <span>Private - Invitation only</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="meritocious-form-group">
+            <label>Merit Thresholds</label>
+            <div class="meritocious-merit-thresholds">
+                <div class="meritocious-merit-threshold">
+                    <span>Minimum Post Merit</span>
+                    <input type="range"
+                           min="0"
+                           max="1"
+                           step="0.1"
+                           @bind="model.MinimumPostMerit" />
+                    <span>@(model.MinimumPostMerit.ToString("N1"))</span>
+                </div>
+                <div class="meritocious-merit-threshold">
+                    <span>Promotion Threshold</span>
+                    <input type="range"
+                           min="0"
+                           max="1"
+                           step="0.1"
+                           @bind="model.PromotionThreshold" />
+                    <span>@(model.PromotionThreshold.ToString("N1"))</span>
+                </div>
+            </div>
+            <p class="meritocious-helper-text">Set quality thresholds for content visibility</p>
+        </div>
+
+        <div class="meritocious-form-actions">
+            <MeritociousButton Variant="ButtonVariant.Secondary"
+                               OnClick="@OnCancel">
+                Cancel
+            </MeritociousButton>
+            <MeritociousButton OnClick="@CreateSubstack"
+                               Disabled="@(!IsValid)">
+                Create Substack
+            </MeritociousButton>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<NewSubstackModel> OnCreate { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private NewSubstackModel model = new();
+    private string currentTag = "";
+
+    private static readonly string[] Categories = new[] {
+        "Technology",
+        "Philosophy",
+        "Science",
+        "Arts",
+        "Politics",
+        "Economics",
+        "Environment",
+        "Education"
+    };
+
+    private bool IsValid =>
+        !string.IsNullOrWhiteSpace(model.Title) &&
+        !string.IsNullOrWhiteSpace(model.Description) &&
+        !string.IsNullOrWhiteSpace(model.Category) &&
+        model.Tags.Any();
+
+    private void HandleTagKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(currentTag))
+        {
+            AddTag(currentTag);
+            currentTag = "";
+        }
+    }
+
+    private void AddTag(string tag)
+    {
+        if (!model.Tags.Contains(tag))
+        {
+            model.Tags.Add(tag);
+        }
+    }
+
+    private void RemoveTag(string tag)
+    {
+        model.Tags.Remove(tag);
+    }
+
+    private async Task CreateSubstack()
+    {
+        if (IsValid)
+        {
+            await OnCreate.InvokeAsync(model);
+        }
+    }
+
+    public class NewSubstackModel
+    {
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Category { get; set; } = "";
+        public List<string> Tags { get; set; } = new();
+        public string DefaultStructure { get; set; } = "discussion";
+        public string Privacy { get; set; } = "public";
+        public double MinimumPostMerit { get; set; } = 0.6;
+        public double PromotionThreshold { get; set; } = 0.8;
+    }
+}

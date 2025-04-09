@@ -1,9 +1,10 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models
 
 <div class="meritocious-bloom-overview">
     <div class="meritocious-overview-score">
-        <BloomIndicator 
+        <MeritociousBloomIndicator 
             Score="@CurrentScore"
             TrendValue="@ScoreTrend"
             BloomStats="@GetBloomStats()" />
@@ -55,9 +56,9 @@
     [Parameter] public int ForkTrend { get; set; }
     [Parameter] public int Replies { get; set; }
     [Parameter] public int ReplyTrend { get; set; }
-    [Parameter] public List<MeritociousBloomHistory.BloomDataPoint> HistoryData { get; set; } = new();
+    [Parameter] public List<BloomDataPoint> HistoryData { get; set; } = new();
 
-    private List<MeritociousBloomIndicator.BloomStat> GetBloomStats() => new()
+    private List<BloomStat> GetBloomStats() => new()
     {
         new() { Label = "Clarity", Icon = "fas fa-lightbulb", Value = 4.8 },
         new() { Label = "Novelty", Icon = "fas fa-star", Value = 4.2 },
