@@ -1,0 +1,22 @@
+﻿@page "/playground/fork-tree"
+@using Meritocious.Components.Blazor.Models
+
+<MeritociousForkTree Title="Title" Author="ameritusweb" Excerpt="Excerpt" ChildNodes="@NodeData" Forks="2" Replies="2" Merit="5d" IsRoot="true" Timestamp="@(DateTime.UtcNow.ToString())" />
+
+@code {
+    public List<ForkNodeData> NodeData { get; set; } = new List<ForkNodeData>();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ForkNodeData data = new ForkNodeData();
+        data.Title = "Title2";
+        data.Author = "Author2";
+        data.Replies = 2;
+        data.Merit = 4d;
+        data.Excerpt = "Excerpt";
+
+        NodeData.Add(data);
+    }
+
+}

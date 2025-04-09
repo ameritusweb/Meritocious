@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models
 
 <div class="meritocious-fork-tree">
     <div class="meritocious-fork-node @(IsRoot ? "meritocious-fork-root" : "")"
@@ -73,17 +74,5 @@
     {
         // Add any dynamic styling based on node properties
         return "";
-    }
-
-    public class ForkNodeData
-    {
-        public string Title { get; set; } = "";
-        public string Author { get; set; } = "";
-        public string Timestamp { get; set; } = "";
-        public string Excerpt { get; set; } = "";
-        public double Merit { get; set; }
-        public int Forks { get; set; }
-        public int Replies { get; set; }
-        public List<ForkNodeData> Children { get; set; } = new();
     }
 }

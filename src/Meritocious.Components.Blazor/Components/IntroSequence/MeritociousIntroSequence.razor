@@ -1,8 +1,8 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
 
-<div class="meritocious-intro @(IsComplete ? "fade-out" : "")">
-    <GlassmorphicContainer EnablePetals="true" PetalCount="35">
+<div class="meritocious-intro"> <!-- To fade out: @(IsComplete ? "fade-out" : "") -->
+    <MeritociousGlassmorphicContainer EnablePetals="true" PetalCount="35">
         <div class="meritocious-intro-content">
             <div class="@GetStepClass(0)">
                 <div class="meritocious-logo-icon">
@@ -21,7 +21,7 @@
             @if (CurrentStep >= 2)
             {
                 <div class="@GetStepClass(2)">
-                    <MeritociousMeritBar Score="8.5" MaxScore="5" />
+                    <MeritociousMeritBar Score="8.5" />
                     <p>Track your impact</p>
                 </div>
             }
@@ -31,14 +31,14 @@
                 <div class="@GetStepClass(3)">
                     <MeritociousButton
                         OnClick="@CompleteIntro"
-                        Class="meritocious-intro-button">
+                        Intro="true">
                         Get Started
                         <i class="fas fa-arrow-right"></i>
                     </MeritociousButton>
                 </div>
             }
         </div>
-    </GlassmorphicContainer>
+    </MeritociousGlassmorphicContainer>
 </div>
 
 @code {
@@ -63,7 +63,7 @@
     }
 
     private string GetStepClass(int step) =>
-        $"meritocious-intro-step {(CurrentStep == step ? "active" : "")}";
+        $"meritocious-intro-step {(CurrentStep >= step ? "active" : "")}";
 
     private async Task CompleteIntro()
     {
