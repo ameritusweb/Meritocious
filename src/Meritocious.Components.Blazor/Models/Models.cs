@@ -40,6 +40,12 @@ namespace Meritocious.Components.Blazor.Models
         public int NotificationCount { get; set; }
     }
 
+    public class SelectOption
+    {
+        public string Value { get; set; } = "";
+        public string Label { get; set; } = "";
+    }
+
     public class EvolutionNodeData
     {
         public string Id { get; set; } = "";

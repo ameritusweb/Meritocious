@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-evolution-map">
     <div class="meritocious-timeline">
@@ -19,7 +20,7 @@
                         <i class="fas fa-map-marker-alt"></i>
                     </div>
                     
-                    <MeritosiousCard Interactive="true" OnClick="@(() => OnNodeClick.InvokeAsync(node))">
+                    <MeritociousCard Interactive="true" OnClick="@(() => OnNodeClick.InvokeAsync(node))">
                         <HeaderContent>
                             <div class="meritocious-node-header">
                                 <div>
@@ -35,7 +36,7 @@
                                         </span>
                                     </div>
                                 </div>
-                                <MeritosiousMeritBar Score="@node.Merit" />
+                                <MeritociousMeritBar Score="@node.Merit" />
                             </div>
                         </HeaderContent>
 
@@ -53,7 +54,7 @@
                                 </div>
                             </div>
                         </ChildContent>
-                    </MeritosiousCard>
+                    </MeritociousCard>
 
                     @if (node.Children?.Any() == true)
                     {

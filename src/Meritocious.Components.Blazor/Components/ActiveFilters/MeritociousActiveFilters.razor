@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-active-filters">
     <div class="meritocious-filter-chips">
@@ -24,11 +25,11 @@
             </select>
         </div>
 
-        <MeritosiousButton
+        <MeritociousButton
             Variant="ButtonVariant.Secondary"
             OnClick="@OnAdvancedFilters">
             Advanced Filters
-        </MeritosiousButton>
+        </MeritociousButton>
     </div>
 </div>
 

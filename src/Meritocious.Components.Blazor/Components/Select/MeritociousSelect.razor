@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-select-container">
     <select class="meritocious-select"
@@ -34,11 +35,5 @@
     {
         Value = e.Value?.ToString() ?? "";
         await ValueChanged.InvokeAsync(Value);
-    }
-
-    public class SelectOption
-    {
-        public string Value { get; set; } = "";
-        public string Label { get; set; } = "";
     }
 }

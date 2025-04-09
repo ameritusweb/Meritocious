@@ -1,56 +1,57 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-fork-view">
     <div class="meritocious-fork-header">
         <h2>Idea Evolution Map</h2>
         <div class="meritocious-fork-controls">
-            <MeritosiousButton
+            <MeritociousButton
                 Variant="ButtonVariant.Secondary"
                 OnClick="@(() => CurrentView = "timeline")">
                 <i class="fas fa-stream"></i>
                 Timeline
-            </MeritosiousButton>
-            <MeritosiousButton
+            </MeritociousButton>
+            <MeritociousButton
                 Variant="ButtonVariant.Secondary"
                 OnClick="@(() => CurrentView = "tree")">
                 <i class="fas fa-sitemap"></i>
                 Tree
-            </MeritosiousButton>
+            </MeritociousButton>
         </div>
     </div>
 
     <div class="meritocious-fork-filters">
         <div class="meritocious-filter-group">
             <span>Filter by:</span>
-            <MeritosiousSelect
+            <MeritociousSelect
                 Options="@timeRangeOptions"
                 @bind-Value="@selectedTimeRange"
                 Placeholder="Time Range" />
-            <MeritosiousSelect
+            <MeritociousSelect
                 Options="@sortOptions"
                 @bind-Value="@selectedSort"
                 Placeholder="Sort" />
         </div>
 
-        <MeritosiousButton
+        <MeritociousButton
             Variant="ButtonVariant.Primary"
             OnClick="@OnAdvancedFilters">
             <i class="fas fa-sliders-h"></i>
             Advanced Filters
-        </MeritosiousButton>
+        </MeritociousButton>
     </div>
 
     <div class="@($"meritocious-fork-content view-{CurrentView}")">
         @if (CurrentView == "timeline")
         {
-            <EvolutionTimeline
+            <MeritociousEvolutionTimeline
                 Nodes="@evolutionData"
                 OnNodeClick="@HandleNodeClick" />
         }
         else
         {
-            <EvolutionTree
+            <MeritociousEvolutionTree
                 Nodes="@evolutionData"
                 OnNodeClick="@HandleNodeClick" />
         }

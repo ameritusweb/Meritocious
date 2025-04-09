@@ -1,5 +1,6 @@
 ﻿@namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="@($"meritocious-filter-panel {(IsOpen ? "open" : "")}")">
     <div class="meritocious-filter-content">
@@ -81,15 +82,15 @@
         </div>
 
         <div class="meritocious-filter-actions">
-            <MeritosiousButton
+            <MeritociousButton
                 Variant="ButtonVariant.Secondary"
                 OnClick="@ResetFilters">
                 Reset
-            </MeritosiousButton>
-            <MeritosiousButton
+            </MeritociousButton>
+            <MeritociousButton
                 OnClick="@ApplyFilters">
                 Apply Filters
-            </MeritosiousButton>
+            </MeritociousButton>
         </div>
     </div>
 </div>

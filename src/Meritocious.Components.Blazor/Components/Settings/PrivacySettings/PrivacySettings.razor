@@ -1,6 +1,7 @@
 ﻿// PrivacySettings.razor
 @namespace Meritocious.Components.Blazor
 @inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
 
 <div class="meritocious-settings-section">
     <div class="meritocious-settings-group">
@@ -101,12 +102,12 @@
                     <h4>Export Your Data</h4>
                     <p>Download a copy of your Meritocious data</p>
                 </div>
-                <MeritosiousButton
+                <MeritociousButton
                     Variant="ButtonVariant.Secondary"
                     OnClick="@ExportData">
                     <i class="fas fa-download"></i>
                     Export Data
-                </MeritosiousButton>
+                </MeritociousButton>
             </div>
 
             <div class="meritocious-data-options">
@@ -160,12 +161,12 @@
                         <div class="meritocious-user-avatar"></div>
                         <span>@user.Username</span>
                     </div>
-                    <MeritosiousButton
+                    <MeritociousButton
                         Variant="ButtonVariant.Secondary"
                         Size="ButtonSize.Small"
                         OnClick="@(() => UnblockUser(user.Id))">
                         Unblock
-                    </MeritosiousButton>
+                    </MeritociousButton>
                 </div>
             }
 

@@ -21,7 +21,7 @@
             @if (CurrentStep >= 2)
             {
                 <div class="@GetStepClass(2)">
-                    <MeritosiousMeritBar Score="8.5" MaxScore="5" />
+                    <MeritociousMeritBar Score="8.5" MaxScore="5" />
                     <p>Track your impact</p>
                 </div>
             }
@@ -29,12 +29,12 @@
             @if (CurrentStep >= 3)
             {
                 <div class="@GetStepClass(3)">
-                    <MeritosiousButton
+                    <MeritociousButton
                         OnClick="@CompleteIntro"
                         Class="meritocious-intro-button">
                         Get Started
                         <i class="fas fa-arrow-right"></i>
-                    </MeritosiousButton>
+                    </MeritociousButton>
                 </div>
             }
         </div>

@@ -1,0 +1,78 @@
+﻿// EvolutionTree.razor
+@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="meritocious-tree-view">
+    @foreach (var node in Nodes)
+    {
+        <div class="meritocious-tree-node @(IsRootNode(node) ? "tree-root" : "")">
+            <div class="meritocious-tree-content">
+                <MeritociousCard Interactive="true" OnClick="@(() => OnNodeClick.InvokeAsync(node))">
+                    <HeaderContent>
+                        <div class="meritocious-node-header">
+                            <div class="meritocious-node-info">
+                                <h3 class="meritocious-node-title">@node.Title</h3>
+                                <div class="meritocious-node-meta">
+                                    <span class="meritocious-node-author">
+                                        <i class="fas fa-user"></i>
+                                        @node.Author
+                                    </span>
+                                    <span class="meritocious-node-timestamp">
+                                        <i class="fas fa-clock"></i>
+                                        @node.Timestamp
+                                    </span>
+                                </div>
+                            </div>
+                            <MeritociousMeritBar Score="@node.Merit" />
+                        </div>
+                    </HeaderContent>
+
+                    <ChildContent>
+                        <p class="meritocious-node-excerpt">@node.Excerpt</p>
+                        
+                        <div class="meritocious-node-stats">
+                            <span class="meritocious-node-stat">
+                                <i class="fas fa-code-branch"></i>
+                                @node.Forks forks
+                            </span>
+                            <span class="meritocious-node-stat">
+                                <i class="fas fa-comments"></i>
+                                @node.Replies replies
+                            </span>
+                        </div>
+                    </ChildContent>
+                </MeritociousCard>
+            </div>
+
+            @if (node.Children?.Any() == true)
+            {
+                <div class="meritocious-tree-children">
+                    <div class="meritocious-branch-connections">
+                        @foreach (var _ in node.Children)
+                        {
+                            <div class="meritocious-branch-line"></div>
+                        }
+                    </div>
+                    
+                    <div class="meritocious-child-nodes">
+                        @foreach (var child in node.Children)
+                        {
+                            <EvolutionTree 
+                                Nodes="new[] { child }"
+                                OnNodeClick="@OnNodeClick" />
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<EvolutionNodeData> Nodes { get; set; } = Array.Empty<EvolutionNodeData>();
+    [Parameter] public EventCallback<EvolutionNodeData> OnNodeClick { get; set; }
+
+    private bool IsRootNode(EvolutionNodeData node) =>
+        Nodes.Count() == 1 && Nodes.First() == node;
+}

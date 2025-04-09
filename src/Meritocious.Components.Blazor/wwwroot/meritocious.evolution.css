@@ -258,3 +258,210 @@
         gap: var(--meritocious-spacing-sm);
     }
 }
+
+/* Tree View Container */
+.meritocious-tree-view {
+    padding: var(--meritocious-spacing-xl);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Tree Node */
+.meritocious-tree-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 48rem;
+    margin-bottom: var(--meritocious-spacing-xl);
+}
+
+    .meritocious-tree-node.tree-root {
+        margin-top: var(--meritocious-spacing-xl);
+    }
+
+/* Tree Content */
+.meritocious-tree-content {
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+/* Branch Connections */
+.meritocious-tree-children {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: var(--meritocious-spacing-lg);
+    position: relative;
+}
+
+.meritocious-branch-connections {
+    width: 100%;
+    height: var(--meritocious-spacing-xl);
+    position: relative;
+    display: flex;
+    justify-content: space-around;
+}
+
+.meritocious-branch-line {
+    position: relative;
+    width: 2px;
+    height: 100%;
+    background-color: var(--meritocious-border);
+}
+
+    .meritocious-branch-line::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background-color: var(--meritocious-border);
+        transform: translateX(-50%);
+    }
+
+/* Child Nodes Container */
+.meritocious-child-nodes {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    gap: var(--meritocious-spacing-lg);
+}
+
+/* Node Content Styling */
+.meritocious-node-info {
+    flex: 1;
+}
+
+.meritocious-node-title {
+    color: var(--meritocious-text);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-node-meta {
+    display: flex;
+    gap: var(--meritocious-spacing-md);
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+    .meritocious-node-meta i {
+        margin-right: var(--meritocious-spacing-xs);
+    }
+
+.meritocious-node-excerpt {
+    color: var(--meritocious-text);
+    margin: var(--meritocious-spacing-md) 0;
+    line-height: 1.6;
+}
+
+.meritocious-node-stats {
+    display: flex;
+    gap: var(--meritocious-spacing-md);
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+.meritocious-node-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-xs);
+}
+
+/* Hover Effects */
+.meritocious-tree-node:hover > .meritocious-tree-content {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+
+.meritocious-tree-node:hover .meritocious-branch-line {
+    background-color: var(--meritocious-primary);
+}
+
+    .meritocious-tree-node:hover .meritocious-branch-line::before {
+        background-color: var(--meritocious-primary);
+    }
+
+/* Animations */
+.meritocious-tree-node {
+    animation: fadeInScale 0.3s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Branch Line Animation */
+.meritocious-branch-line {
+    transition: background-color 0.3s ease;
+}
+
+    .meritocious-branch-line::before {
+        transition: background-color 0.3s ease;
+    }
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .meritocious-child-nodes {
+        flex-direction: column;
+        align-items: center;
+        gap: var(--meritocious-spacing-xl);
+    }
+
+    .meritocious-branch-connections {
+        display: none;
+    }
+}
+
+@media (max-width: 640px) {
+    .meritocious-tree-view {
+        padding: var(--meritocious-spacing-md);
+    }
+
+    .meritocious-node-header {
+        flex-direction: column;
+        gap: var(--meritocious-spacing-md);
+    }
+
+    .meritocious-node-meta {
+        flex-direction: column;
+        gap: var(--meritocious-spacing-xs);
+    }
+}
+
+/* Enhanced Visual Hierarchy */
+.tree-root > .meritocious-tree-content {
+    position: relative;
+}
+
+    .tree-root > .meritocious-tree-content::after {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border: 2px solid var(--meritocious-primary);
+        border-radius: var(--meritocious-radius-lg);
+        opacity: 0.2;
+        pointer-events: none;
+    }
+
+/* Focus State */
+.meritocious-tree-content:focus-within {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--meritocious-primary);
+    border-radius: var(--meritocious-radius-lg);
+}
