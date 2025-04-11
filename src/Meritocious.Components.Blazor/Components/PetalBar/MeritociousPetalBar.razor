@@ -1,0 +1,84 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="@($"meritocious-petal-bar {Class}")">
+    <div class="meritocious-petals">
+        @for (int i = 0; i < MaxPetals; i++)
+        {
+            var fillPercentage = GetPetalFillPercentage(i);
+            <div class="meritocious-petal-container">
+                <div class="meritocious-petal @(fillPercentage >= 0 ? "has-fill" : "")">
+                    <svg viewBox="0 0 @(_petalWidth * 1.85) 60" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <clipPath id="petalClip@(i)">
+                                <path d="@GetPetalPath()" />
+                            </clipPath>
+                            <clipPath id="fillMask@(i)">
+                                @if (fillPercentage >= 0 && fillPercentage < 100)
+                                {
+                                    var y = 48 - (fillPercentage / 100.0m * 56);
+                                    <path d="M0 60 L0 @(y + 25) L@(_petalWidth) @(y) L@(_petalWidth) 60 Z" />
+                                }
+                                else if (fillPercentage >= 100)
+                                {
+                                    <path d="M0 0 L@(_petalWidth) 0 L@(_petalWidth) 60 L0 60 Z" />
+                                }
+                            </clipPath>
+                        </defs>
+                        <g transform="scale(1.85, 1)">
+                        <path d="@GetPetalPath()"
+                              class="petal-outline"
+                              stroke="currentColor"
+                              fill="none"
+                              stroke-width="3.25" />
+                        @if (fillPercentage >= 0)
+                        {
+                            <g clip-path="url(#petalClip@(i))">
+                                <path d="@GetPetalPath()"
+                                      class="petal-fill"
+                                      fill="currentColor"
+                                      clip-path="url(#fillMask@(i))" />
+                            </g>
+                        }
+                        </g>
+                    </svg>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (ShowValue)
+    {
+        <div class="meritocious-merit-value">@Value</div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public decimal Value { get; set; } = 0;
+
+    [Parameter]
+    public int MaxPetals { get; set; } = 5;
+
+    [Parameter]
+    public bool ShowValue { get; set; } = true;
+
+    private const int _petalWidth = 15;
+    private int _centerX => _petalWidth / 2;
+
+    private string GetPetalPath()
+    {
+        return $"M{_centerX} 2 C{_centerX + 10} 12, {_centerX + 10} 48, {_centerX} 58 C{_centerX - 10} 48, {_centerX - 10} 12, {_centerX} 2 Z";
+    }
+
+    private decimal GetPetalFillPercentage(int petalIndex)
+    {
+        var petalValue = Value - petalIndex;
+        if (petalValue <= 0) return 0;
+        if (petalValue >= 1) return 100;
+        return Math.Round(petalValue * 100, 1);
+    }
+}

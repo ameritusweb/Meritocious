@@ -1,0 +1,55 @@
+﻿.meritocious-petal-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+    padding: var(--meritocious-spacing-sm) var(--meritocious-spacing-md);
+    background-color: var(--meritocious-surface);
+    border-radius: var(--meritocious-radius-md);
+}
+
+.meritocious-petals {
+    display: flex;
+    gap: 0.7rem; /* Slightly tighter spacing between petals */
+}
+
+.meritocious-petal-container {
+    width: 1.5rem; /* Slightly narrower petals */
+    height: 2rem; /* Adjusted height for better proportion */
+    position: relative;
+}
+
+.meritocious-petal {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    color: rgba(75, 85, 99, 0.3); /* More subtle empty state */
+    transition: color 0.3s ease;
+}
+
+    .meritocious-petal.has-fill {
+        color: var(--meritocious-primary);
+    }
+
+    .meritocious-petal svg {
+        width: 100%;
+        height: 100%;
+        display: block; /* Removes tiny gap at bottom */
+    }
+
+    .meritocious-petal .petal-outline {
+        opacity: 0.6; /* Slightly more visible outline */
+    }
+
+    .meritocious-petal .petal-fill {
+        transform-origin: center bottom;
+        transition: all 0.3s ease;
+    }
+
+.meritocious-merit-value {
+    color: var(--meritocious-primary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    min-width: 2rem;
+    text-align: right;
+    margin-left: 0.25rem; /* Slight adjustment to spacing */
+}
