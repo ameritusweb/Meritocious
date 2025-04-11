@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -56,6 +57,29 @@ namespace Meritocious.Components.Blazor.Models
         public int Forks { get; set; }
         public int Replies { get; set; }
         public List<ForkNodeData> Children { get; set; } = new();
+    }
+
+    public enum RoadmapStatus
+    {
+        Completed,
+        InProgress,
+        Upcoming
+    }
+
+    public class TabItem
+    {
+        public string Title { get; set; } = "";
+        public RenderFragment? Icon { get; set; }
+        public RenderFragment Content { get; set; } = builder => { };
+    }
+
+    public class RoadmapItem
+    {
+        public string Title { get; set; } = "";
+        public RoadmapStatus Status { get; set; }
+        public string? CompletionDate { get; set; }
+        public int? Progress { get; set; }
+        public string? StartDate { get; set; }
     }
 
     public class EvolutionNode

@@ -1,0 +1,71 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="@($"meritocious-tabs {Class}")">
+    <div class="meritocious-tabs-list" role="tablist">
+        @for (int i = 0; i < internalTabs.Count; i++)
+        {
+            var tab = internalTabs[i];
+            var isActive = i == activeIndex;
+            var index = i;
+
+            <button @onclick="() => SetActive(index)"
+                    class="@($"meritocious-tab-button {(isActive ? "active" : "")}")"
+                    role="tab"
+                    aria-selected="@isActive"
+                    aria-controls="@($"tab-panel-{index}")">
+                @if (tab.Icon != null)
+                {
+                    <div class="meritocious-tab-icon">
+                        @tab.Icon
+                    </div>
+                }
+                <span class="meritocious-tab-text">@tab.Title</span>
+            </button>
+        }
+    </div>
+
+    <div class="meritocious-tab-panels">
+        @if (activeIndex < internalTabs.Count)
+        {
+            <div id="@($"tab-panel-{activeIndex}")"
+                 class="meritocious-tab-panel active"
+                 role="tabpanel">
+                @internalTabs[activeIndex].ChildContent
+            </div>
+        }
+    </div>
+
+    <CascadingValue Value="this">
+        @ChildContent
+    </CascadingValue>
+</div>
+
+@code {
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<int> OnTabChange { get; set; }
+
+    private int activeIndex = 0;
+    private List<MeritociousTab> internalTabs = new();
+
+    internal void RegisterTab(MeritociousTab tab)
+    {
+        internalTabs.Add(tab);
+        StateHasChanged();
+    }
+
+    private async Task SetActive(int index)
+    {
+        if (activeIndex != index)
+        {
+            activeIndex = index;
+            await OnTabChange.InvokeAsync(index);
+        }
+    }
+}

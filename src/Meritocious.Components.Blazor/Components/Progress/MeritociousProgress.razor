@@ -1,0 +1,60 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="@($"meritocious-feature-progress {Class}")">
+    <div class="meritocious-feature-progress-content">
+        @if (Icon != null)
+        {
+            <div class="meritocious-feature-progress-icon">
+                @Icon
+            </div>
+        }
+        else
+        {
+            <div class="meritocious-feature-progress-icon">
+                <i class="fas fa-code-branch"></i>
+            </div>
+        }
+        <div class="meritocious-feature-progress-text">
+            <h3 class="meritocious-feature-progress-title">@Title</h3>
+            <p class="meritocious-feature-progress-description">@Description</p>
+
+            <div class="meritocious-progress-section">
+                @if (!string.IsNullOrEmpty(ProgressLabel))
+                {
+                    <div class="meritocious-progress-label">@ProgressLabel</div>
+                }
+                <div class="meritocious-progress-bar">
+                    <div class="meritocious-progress-bar-fill" style="width: @($"{Progress}%")"></div>
+                </div>
+                @if (ShowPercentage)
+                {
+                    <div class="meritocious-progress-percentage">@Progress%</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment? Icon { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Feature In Development";
+
+    [Parameter]
+    public string Description { get; set; } = "This feature is currently under development.";
+
+    [Parameter]
+    public string ProgressLabel { get; set; } = "Progress";
+
+    [Parameter]
+    public int Progress { get; set; } = 0;
+
+    [Parameter]
+    public bool ShowPercentage { get; set; } = true;
+}

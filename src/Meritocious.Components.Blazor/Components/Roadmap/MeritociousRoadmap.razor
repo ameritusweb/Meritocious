@@ -1,0 +1,66 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+@using Meritocious.Components.Blazor.Models;
+
+<div class="@($"meritocious-roadmap {Class}")">
+    <h2 class="meritocious-roadmap-title">@Title</h2>
+
+    <div class="meritocious-roadmap-items">
+        @foreach (var item in Items)
+        {
+            <button @onclick="() => OnItemClick.InvokeAsync(item)"
+                    class="meritocious-roadmap-item">
+                <div class="meritocious-roadmap-item-content">
+                    <div class="@($"meritocious-roadmap-icon {GetStatusClass(item.Status)}")">
+                        <i class="@GetStatusIcon(item.Status)"></i>
+                    </div>
+                    <div class="meritocious-roadmap-text">
+                        <div class="meritocious-roadmap-item-title">@item.Title</div>
+                        <div class="meritocious-roadmap-item-subtitle">
+                            @GetStatusText(item)
+                        </div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right meritocious-roadmap-arrow"></i>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public string Title { get; set; } = "Development Roadmap";
+
+    [Parameter]
+    public List<RoadmapItem> Items { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<RoadmapItem> OnItemClick { get; set; }
+
+    private string GetStatusClass(RoadmapStatus status) => status switch
+    {
+        RoadmapStatus.Completed => "status-completed",
+        RoadmapStatus.InProgress => "status-in-progress",
+        RoadmapStatus.Upcoming => "status-upcoming",
+        _ => ""
+    };
+
+    private string GetStatusIcon(RoadmapStatus status) => status switch
+    {
+        RoadmapStatus.Completed => "fas fa-check",
+        RoadmapStatus.InProgress => "fas fa-spinner",
+        RoadmapStatus.Upcoming => "fas fa-clock",
+        _ => "fas fa-circle"
+    };
+
+    private string GetStatusText(RoadmapItem item) => item.Status switch
+    {
+        RoadmapStatus.Completed => $"Completed {item.CompletionDate}",
+        RoadmapStatus.InProgress => $"In Progress - {item.Progress}%",
+        RoadmapStatus.Upcoming => $"Starting {item.StartDate}",
+        _ => ""
+    };
+}

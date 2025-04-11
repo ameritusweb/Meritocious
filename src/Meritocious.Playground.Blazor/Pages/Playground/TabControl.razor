@@ -1,0 +1,38 @@
+﻿@page "/playground/tab-control"
+@using Meritocious.Components.Blazor.Models
+
+<MeritociousTabControl OnTabChange="@HandleTabChange">
+    <MeritociousTab Title="Create Fork">
+        <Icon>
+            <i class="fas fa-code-branch text-teal-400"></i>
+        </Icon>
+        <ChildContent>
+            <div>Create Fork Content Here</div>
+        </ChildContent>
+    </MeritociousTab>
+
+    <MeritociousTab Title="Browse External Forks">
+        <Icon>
+            <i class="fas fa-globe text-gray-400"></i>
+        </Icon>
+        <ChildContent>
+            <div>Browse Forks Content Here</div>
+        </ChildContent>
+    </MeritociousTab>
+
+    <MeritociousTab Title="Fork Requests">
+        <Icon>
+            <i class="fas fa-code-pull-request text-gray-400"></i>
+        </Icon>
+        <ChildContent>
+            <div>Fork Requests Content Here</div>
+        </ChildContent>
+    </MeritociousTab>
+</MeritociousTabControl>
+
+@code {
+    private async Task HandleTabChange(int index)
+    {
+        // Handle tab change
+    }
+}

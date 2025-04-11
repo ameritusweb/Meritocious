@@ -1,0 +1,34 @@
+﻿.meritocious-placeholder {
+    background-color: var(--meritocious-surface);
+    backdrop-filter: blur(8px);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    padding: var(--meritocious-spacing-lg);
+}
+
+.meritocious-placeholder-content {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-placeholder-icon {
+    color: var(--meritocious-primary);
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.meritocious-placeholder-text {
+    flex: 1;
+}
+
+.meritocious-placeholder-title {
+    color: var(--meritocious-text);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-placeholder-description {
+    color: var(--meritocious-text-secondary);
+}

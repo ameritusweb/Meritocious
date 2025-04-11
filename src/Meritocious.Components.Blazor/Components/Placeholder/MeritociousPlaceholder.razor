@@ -1,0 +1,37 @@
+﻿@namespace Meritocious.Components.Blazor
+@inherits ComponentBase
+
+<div class="@($"meritocious-placeholder {Class}")">
+    <div class="meritocious-placeholder-content">
+        @if (Icon != null)
+        {
+            <div class="meritocious-placeholder-icon">
+                @Icon
+            </div>
+        }
+        else
+        {
+            <div class="meritocious-placeholder-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+        }
+        <div class="meritocious-placeholder-text">
+            <h3 class="meritocious-placeholder-title">@Title</h3>
+            <p class="meritocious-placeholder-description">@Description</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public RenderFragment? Icon { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Feature Coming Soon";
+
+    [Parameter]
+    public string Description { get; set; } = "This feature is currently under development.";
+}

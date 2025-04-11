@@ -1,0 +1,77 @@
+﻿.meritocious-feature-progress {
+    background-color: var(--meritocious-surface);
+    backdrop-filter: blur(8px);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    padding: var(--meritocious-spacing-lg);
+}
+
+.meritocious-feature-progress-content {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-feature-progress-icon {
+    color: #FCD34D; /* Yellow for development features */
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: rgba(251, 191, 36, 0.1);
+    border-radius: var(--meritocious-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.meritocious-feature-progress-text {
+    flex: 1;
+}
+
+.meritocious-feature-progress-title {
+    color: var(--meritocious-text);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-feature-progress-description {
+    color: var(--meritocious-text-secondary);
+    margin-bottom: var(--meritocious-spacing-md);
+}
+
+.meritocious-progress-section {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-progress-label {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+    min-width: 4rem;
+}
+
+.meritocious-progress-bar {
+    flex: 1;
+    height: 0.5rem;
+    background-color: rgba(55, 65, 81, 0.5);
+    border-radius: var(--meritocious-radius-full);
+    overflow: hidden;
+}
+
+.meritocious-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, #FCD34D, #F59E0B);
+    border-radius: var(--meritocious-radius-full);
+    transition: width 0.3s ease;
+}
+
+.meritocious-progress-percentage {
+    color: #FCD34D;
+    font-size: 0.875rem;
+    font-weight: 500;
+    min-width: 3rem;
+    text-align: right;
+}

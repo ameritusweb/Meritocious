@@ -1,0 +1,64 @@
+﻿.meritocious-tabs {
+    width: 100%;
+}
+
+.meritocious-tabs-list {
+    display: flex;
+    gap: var(--meritocious-spacing-md);
+    border-bottom: 1px solid var(--meritocious-border);
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+.meritocious-tab-button {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-sm);
+    padding: var(--meritocious-spacing-md) var(--meritocious-spacing-lg);
+    color: var(--meritocious-text-secondary);
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--meritocious-transition);
+    position: relative;
+    top: 1px;
+}
+
+    .meritocious-tab-button:hover {
+        color: var(--meritocious-text);
+    }
+
+    .meritocious-tab-button.active {
+        color: var(--meritocious-primary);
+        border-bottom-color: var(--meritocious-primary);
+    }
+
+.meritocious-tab-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}
+
+.meritocious-tab-text {
+    font-size: 0.875rem;
+}
+
+.meritocious-tab-panels {
+    position: relative;
+}
+
+.meritocious-tab-panel {
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    width: 100%;
+    transition: opacity 0.2s ease-in-out;
+}
+
+    .meritocious-tab-panel.active {
+        opacity: 1;
+        visibility: visible;
+        position: relative;
+    }

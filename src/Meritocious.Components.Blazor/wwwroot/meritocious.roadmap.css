@@ -1,0 +1,93 @@
+﻿.meritocious-roadmap {
+    background-color: var(--meritocious-surface);
+    backdrop-filter: blur(8px);
+    border-radius: var(--meritocious-radius-lg);
+    border: 1px solid var(--meritocious-border);
+    padding: var(--meritocious-spacing-lg);
+}
+
+.meritocious-roadmap-title {
+    color: var(--meritocious-text);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: var(--meritocious-spacing-lg);
+}
+
+.meritocious-roadmap-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-roadmap-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--meritocious-spacing-md);
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: var(--meritocious-transition);
+    border-radius: var(--meritocious-radius-md);
+}
+
+    .meritocious-roadmap-item:hover {
+        background-color: rgba(55, 65, 81, 0.3);
+    }
+
+.meritocious-roadmap-item-content {
+    display: flex;
+    align-items: center;
+    gap: var(--meritocious-spacing-md);
+}
+
+.meritocious-roadmap-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--meritocious-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+    .meritocious-roadmap-icon.status-completed {
+        background-color: rgba(45, 212, 191, 0.1);
+        color: #2dd4bf;
+    }
+
+    .meritocious-roadmap-icon.status-in-progress {
+        background-color: rgba(251, 191, 36, 0.1);
+        color: #fcd34d;
+    }
+
+    .meritocious-roadmap-icon.status-upcoming {
+        background-color: rgba(45, 212, 191, 0.1);
+        color: #2dd4bf;
+    }
+
+.meritocious-roadmap-text {
+    text-align: left;
+}
+
+.meritocious-roadmap-item-title {
+    color: var(--meritocious-text);
+    font-weight: 500;
+    margin-bottom: var(--meritocious-spacing-xs);
+}
+
+.meritocious-roadmap-item-subtitle {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+}
+
+.meritocious-roadmap-arrow {
+    color: var(--meritocious-text-secondary);
+    font-size: 0.875rem;
+    transition: transform 0.2s ease;
+}
+
+.meritocious-roadmap-item:hover .meritocious-roadmap-arrow {
+    transform: translateX(4px);
+}

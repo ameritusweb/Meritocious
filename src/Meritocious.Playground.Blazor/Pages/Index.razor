@@ -74,6 +74,12 @@
     </ChildContent>
 </MeritociousCard>
 
+<MeritociousPlaceholder />
+
+<MeritociousProgress />
+
+<MeritociousRoadmap Items="@RoadmapItems" />
+
 @code {
     private double score = 10d;
 
@@ -82,6 +88,8 @@
         { "string", 5d }
     };
 
+    public List<RoadmapItem> RoadmapItems { get; set; } = new List<RoadmapItem>();
+
     public List<FilterChip> ActiveFilters { get; set; } = new List<FilterChip>();
 
     protected override void OnInitialized()
@@ -89,6 +97,14 @@
         base.OnInitialized();
         FilterChip chip = new FilterChip(Guid.NewGuid().ToString(), "Label", "Type");
         this.ActiveFilters.Add(chip);
+
+        RoadmapItem item = new RoadmapItem();
+        item.StartDate = DateTime.UtcNow.ToShortDateString();
+        item.Status = RoadmapStatus.InProgress;
+        item.Progress = 65;
+        item.Title = "Petal Bar";
+        item.CompletionDate = DateTime.UtcNow.AddDays(90).ToShortDateString();
+        this.RoadmapItems.Add(item);
     }
 
 }
